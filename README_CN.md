@@ -22,8 +22,8 @@
 * Golang >= 1.8
 
 ## 链接
-* [English](https://github.com/sandwich-go/redisson/README.md)
-* [中文文档](https://github.com/sandwich-go/redisson/README_CN.md)
+* [English](https://github.com/sandwich-go/redisson/blob/master/README.md)
+* [中文文档](https://github.com/sandwich-go/redisson/blob/master/README_CN.md)
 
 ## 开始
 
