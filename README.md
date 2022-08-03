@@ -7,6 +7,7 @@ A Type-safe Golang Redis RESP2/RESP3 client.
 * Check Redis commands version in development mode.
 * Check Redis deprecated commands in development mode.
 * Check Redis slot when use multiple keys in development mode.
+* Check forbid Redis commands in development mode.
 * Monitoring cost of Redis commands.
 * Monitoring status of connections.
 * Monitoring hits/miss of Redis RESP3 client side caching.
@@ -31,9 +32,9 @@ import (
 
 func main() {
 	c := redisson.MustNewClient(redisson.NewConf(
-		    redisson.WithResp(redisson.RESP3), 
-		    redisson.WithDevelopment(false), 
-		))
+	      redisson.WithResp(redisson.RESP3), 
+	      redisson.WithDevelopment(false), 
+	))
 	defer c.Close()
 
 	ctx := context.Background()
@@ -44,6 +45,92 @@ func main() {
 	_ = c.Get(ctx, "key").Val()
 }
 ```
+
+## Check
+### Check version
+if Redis < 6.0
+```go
+c := redisson.MustNewClient(redisson.NewConf(
+      redisson.WithResp(redisson.RESP3), 
+      redisson.WithDevelopment(true), 
+))
+defer c.Close()
+
+res := c.Set(ctx, "key", "10", -1)
+```
+Output:
+```go
+Line 34: - redis 'SET KEEPTTL' are not supported in version "5.0.0", available since 6.0.0
+```
+
+### Check deprecated
+if Redis >= 4.0
+```go
+c := redisson.MustNewClient(redisson.NewConf(
+      redisson.WithResp(redisson.RESP3), 
+      redisson.WithDevelopment(true), 
+))
+defer c.Close()
+
+res := c.HMSet(ctx, "key", "10")
+```
+Output:
+```go
+As of Redis version 4.0.0, this command is regarded as deprecated.
+It can be replaced by HSET with multiple field-value pairs when migrating or writing new code.
+```
+
+### Check slot for multiple keys
+```go
+c := redisson.MustNewClient(redisson.NewConf(
+      redisson.WithResp(redisson.RESP3), 
+      redisson.WithDevelopment(true), 
+))
+defer c.Close()
+
+res := c.MSet(ctx, "key1", "10", "key2", "20")
+```
+Output:
+```go
+Line 34: - multi key command with different key slots are not allowed 
+```
+
+### Check forbid
+```go
+c := redisson.MustNewClient(redisson.NewConf(
+      redisson.WithResp(redisson.RESP3), 
+      redisson.WithDevelopment(true), 
+))
+defer c.Close()
+
+res := c.ClusterFailover(ctx)
+```
+Output:
+```go
+Line 34: - command 'CLUSTER FAILOVER' not allowed 
+```
+
+## Monitor
+
+```go
+import (
+    "github.com/prometheus/client_golang/prometheus"
+    "github.com/sandwich-go/redisson"
+)
+
+var DefaultPrometheusRegistry = prometheus.NewRegistry()
+
+c := redisson.MustNewClient(redisson.NewConf(
+      redisson.WithResp(redisson.RESP3),
+      redisson.WithDevelopment(true),
+))
+defer c.Close()
+
+c.RegisterCollector(func(c prometheus.Collector) {
+    DefaultPrometheusRegistry.Register(c)
+})
+```
+
 
 ## Auto Pipeline
 
