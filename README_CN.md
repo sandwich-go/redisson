@@ -154,7 +154,7 @@ c.Cache(time.Minute).Get(ctx, "key").Val()
 ```
 
 需要显式指定客户端`TTL`，因为`Redis`服务器在以下情况下可能无法及时发送失效消息：
-服务器上的密钥已过期。请遵循 [#6833](https://github.com/redis/redis/issues/6833) and [#6867](https://github.com/redis/redis/issues/6867)
+服务器上的密钥已过期。请遵循 [#6833](https://github.com/redis/redis/issues/6833) 和 [#6867](https://github.com/redis/redis/issues/6867)
 
 尽管需要显式的指定客户端`TTL`，`Cache()`仍然向服务器发送`PTTL`命令，并确保客户端`TTL`不长于服务器端`TTL`。
 
