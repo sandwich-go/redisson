@@ -34,9 +34,7 @@ func main() {
 		    redisson.WithResp(redisson.RESP3), 
 		    redisson.WithDevelopment(false), 
 		))
-	defer func() {
-		_ = c.Close()
-    }()
+	defer c.Close()
 
 	ctx := context.Background()
 
