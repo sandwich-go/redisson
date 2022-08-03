@@ -1,9 +1,7 @@
 package sandwich_redis
 
 import (
-	"encoding"
 	"fmt"
-	"github.com/sandwich-go/rueidis"
 	"strconv"
 	"time"
 )
@@ -104,32 +102,6 @@ var (
 	sinceFunc = time.Since
 )
 
-func usePrecise(dur time.Duration) bool {
-	return dur < time.Second || dur%time.Second != 0
-}
-
-func formatMs(dur time.Duration) int64 {
-	if dur > 0 && dur < time.Millisecond {
-		warning(fmt.Sprintf(
-			"specified duration is %s, but minimal supported value is %s - truncating to 1ms",
-			dur, time.Millisecond,
-		))
-		return 1
-	}
-	return int64(dur / time.Millisecond)
-}
-
-func formatSec(dur time.Duration) int64 {
-	if dur > 0 && dur < time.Second {
-		warning(fmt.Sprintf(
-			"specified duration is %s, but minimal supported value is %s - truncating to 1s",
-			dur, time.Second,
-		))
-		return 1
-	}
-	return int64(dur / time.Second)
-}
-
 func appendString(s string, ss ...string) []string {
 	sss := make([]string, 0, len(ss)+1)
 	sss = append(sss, s)
@@ -158,31 +130,8 @@ func str(arg interface{}) string {
 		return "0"
 	case time.Time:
 		return v.Format(time.RFC3339Nano)
-	case encoding.BinaryMarshaler:
-		if data, err := v.MarshalBinary(); err == nil {
-			return rueidis.BinaryString(data)
-		}
 	}
 	return fmt.Sprint(arg)
-}
-
-func intSliceToInt64ToSlice(src []int) []int64 {
-	dst := make([]int64, 0, len(src))
-	for _, v := range src {
-		dst = append(dst, int64(v))
-	}
-	return dst
-}
-
-func argsToSlice(src []interface{}) []string {
-	if len(src) == 1 {
-		return argToSlice(src[0])
-	}
-	dst := make([]string, 0, len(src))
-	for _, v := range src {
-		dst = append(dst, str(v))
-	}
-	return dst
 }
 
 func argsToSliceWithValues(src []interface{}) []string {
@@ -221,10 +170,6 @@ func argToSlice(a interface{}) []string {
 	default:
 		return []string{str(arg)}
 	}
-}
-
-func parseInt(s string) (int64, error) {
-	return strconv.ParseInt(s, 10, 64)
 }
 
 func warning(msg string) {

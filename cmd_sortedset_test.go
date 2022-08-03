@@ -1961,4 +1961,3 @@ func sortedSetTestUnits() []TestUnit {
 }
 
 func TestResp2Client_SortedSet(t *testing.T) { doTestUnits(t, RESP2, sortedSetTestUnits) }
-func TestResp3Client_SortedSet(t *testing.T) { doTestUnits(t, RESP3, sortedSetTestUnits) }

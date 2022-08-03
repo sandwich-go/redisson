@@ -2,7 +2,6 @@ package sandwich_redis
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"github.com/coreos/go-semver/semver"
 	goredis "github.com/go-redis/redis/v8"
@@ -14,19 +13,7 @@ import (
 
 type RESP int
 
-const (
-	RESP2 RESP = 0
-	RESP3 RESP = 1
-)
-
-var (
-	errTooManyArguments                    = errors.New("too many arguments")
-	errGeoRadiusByMemberNotSupportStore    = errors.New("GeoRadiusByMember does not support Store or StoreDist")
-	errGeoRadiusNotSupportStore            = errors.New("GeoRadius does not support Store or StoreDist")
-	errGeoRadiusStoreRequiresStore         = errors.New("GeoRadiusStore requires Store or StoreDist")
-	errGeoRadiusByMemberStoreRequiresStore = errors.New("GeoRadiusByMemberStore requires Store or StoreDist")
-	errMemoryUsageArgsCount                = errors.New("MemoryUsage expects single sample count")
-)
+const RESP2 RESP = 0
 
 const Nil = goredis.Nil
 
@@ -76,8 +63,6 @@ func Connect(v ConfVisitor) (Cmdable, error) {
 	switch v.GetResp() {
 	case RESP2:
 		c.cmdable, err = connectResp2(v, c.handler)
-	case RESP3:
-		c.cmdable, err = connectResp3(v, c.handler)
 	default:
 		err = fmt.Errorf("unknown RESP version, %d", v.GetResp())
 	}

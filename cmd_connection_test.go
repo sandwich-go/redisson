@@ -107,4 +107,3 @@ func connectionTestUnits() []TestUnit {
 }
 
 func TestResp2Client_Connection(t *testing.T) { doTestUnits(t, RESP2, connectionTestUnits) }
-func TestResp3Client_Connection(t *testing.T) { doTestUnits(t, RESP3, connectionTestUnits) }

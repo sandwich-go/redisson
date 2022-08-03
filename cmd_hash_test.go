@@ -361,4 +361,3 @@ func hashTestUnits() []TestUnit {
 }
 
 func TestResp2Client_Hash(t *testing.T) { doTestUnits(t, RESP2, hashTestUnits) }
-func TestResp3Client_Hash(t *testing.T) { doTestUnits(t, RESP3, hashTestUnits) }

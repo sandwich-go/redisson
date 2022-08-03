@@ -160,4 +160,3 @@ func pubSubTestUnits() []TestUnit {
 }
 
 func TestResp2Client_PubSub(t *testing.T) { doTestUnits(t, RESP2, pubSubTestUnits) }
-func TestResp3Client_PubSub(t *testing.T) { doTestUnits(t, RESP3, pubSubTestUnits) }

@@ -1,6 +1,6 @@
 # redisson
 
-一个类型安全的`Golang Redis`客户端，支持`RESP2/RESP3`协议
+一个类型安全的`Golang Redis`客户端，支持`RESP2`协议
 
 ## 特征
 
@@ -10,20 +10,17 @@
 * 开发模式下，检查禁止使用的`Redis`命令
 * 监控`Redis`命令耗时时间 
 * 监控`Redis`连接状态
-* 监控`Redis RESP3`客户端缓存命中状态
-* 支持`RESP2/RESP3`协议
-* 支持`Redis RESP3`客户端缓存
-* `Redis RESP3`客户端命令自动进行`pipeline`
-* `Redis RESP3`客户端自动管理阻塞的连接
+* 支持`RESP2`协议
+
 
 ## 要求
 
 * 当前只支持 Redis < 7.x
-* Golang >= 1.8
+* Golang >= 1.6
 
 ## 链接
-* [English](https://github.com/sandwich-go/redisson/blob/master/README.md)
-* [中文文档](https://github.com/sandwich-go/redisson/blob/master/README_CN.md)
+* [English](https://github.com/sandwich-go/redisson/blob/version/1.0/README.md)
+* [中文文档](https://github.com/sandwich-go/redisson/blob/version/1.0/README_CN.md)
 
 ## 开始
 
@@ -37,7 +34,7 @@ import (
 
 func main() {
 	c := redisson.MustNewClient(redisson.NewConf(
-	      redisson.WithResp(redisson.RESP3), 
+	      redisson.WithResp(redisson.RESP2), 
 	      redisson.WithDevelopment(false), 
 	))
 	defer c.Close()
@@ -56,7 +53,7 @@ func main() {
 如果 Redis < 6.0
 ```go
 c := redisson.MustNewClient(redisson.NewConf(
-      redisson.WithResp(redisson.RESP3), 
+      redisson.WithResp(redisson.RESP2), 
       redisson.WithDevelopment(true), 
 ))
 defer c.Close()
@@ -72,7 +69,7 @@ Line 34: - redis 'SET KEEPTTL' are not supported in version "5.0.0", available s
 如果 Redis >= 4.0
 ```go
 c := redisson.MustNewClient(redisson.NewConf(
-      redisson.WithResp(redisson.RESP3), 
+      redisson.WithResp(redisson.RESP2), 
       redisson.WithDevelopment(true), 
 ))
 defer c.Close()
@@ -88,7 +85,7 @@ It can be replaced by HSET with multiple field-value pairs when migrating or wri
 ### 检查槽位
 ```go
 c := redisson.MustNewClient(redisson.NewConf(
-      redisson.WithResp(redisson.RESP3), 
+      redisson.WithResp(redisson.RESP2), 
       redisson.WithDevelopment(true), 
 ))
 defer c.Close()
@@ -103,7 +100,7 @@ Line 34: - multi key command with different key slots are not allowed
 ### 命令禁用
 ```go
 c := redisson.MustNewClient(redisson.NewConf(
-      redisson.WithResp(redisson.RESP3), 
+      redisson.WithResp(redisson.RESP2), 
       redisson.WithDevelopment(true), 
 ))
 defer c.Close()
@@ -126,7 +123,7 @@ import (
 var DefaultPrometheusRegistry = prometheus.NewRegistry()
 
 c := redisson.MustNewClient(redisson.NewConf(
-      redisson.WithResp(redisson.RESP3),
+      redisson.WithResp(redisson.RESP2),
       redisson.WithDevelopment(true),
 ))
 defer c.Close()
@@ -135,31 +132,6 @@ c.RegisterCollector(func(c prometheus.Collector) {
     DefaultPrometheusRegistry.Register(c)
 })
 ```
-
-
-## 自动`pipeline`
-
-所有发送到单个`Redis`节点的非阻塞命令都会通过一个tcp连接自动`pipeline`传输，
-这减少了整体往返和系统调用，并获得了更高的吞吐量。
-
-注意：仅在使用`Redis RESP3`客户端时支持。
-
-
-## 客户端缓存
-
-始终启用服务器辅助客户端缓存的加入模式
-
-```golang
-c.Cache(time.Minute).Get(ctx, "key").Val()
-```
-
-需要显式指定客户端`TTL`，因为`Redis`服务器在以下情况下可能无法及时发送失效消息：
-服务器上的密钥已过期。请遵循 [#6833](https://github.com/redis/redis/issues/6833) 和 [#6867](https://github.com/redis/redis/issues/6867)
-
-尽管需要显式的指定客户端`TTL`，`Cache()`仍然向服务器发送`PTTL`命令，并确保客户端`TTL`不长于服务器端`TTL`。
-
-注意：仅在使用`Redis RESP3`客户端时支持。
-
 
 * [Opt-in client side caching](https://redis.io/docs/manual/client-side-caching/)
 * [RESP](https://redis.io/docs/reference/protocol-spec/)

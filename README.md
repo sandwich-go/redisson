@@ -1,6 +1,6 @@
 # redisson
 
-A Type-safe Golang Redis RESP2/RESP3 client.
+A Type-safe Golang Redis RESP2 client.
 
 ## Features
 
@@ -10,20 +10,16 @@ A Type-safe Golang Redis RESP2/RESP3 client.
 * Check forbid Redis commands in development mode.
 * Monitoring cost of Redis commands.
 * Monitoring status of connections.
-* Monitoring hits/miss of Redis RESP3 client side caching.
-* Support Redis RESP2/RESP3.
-* Opt-in client side caching.
-* Auto pipeline for non-blocking Redis RESP3 commands.
-* Connection pooling for blocking Redis RESP3 commands.
+* Support Redis RESP2.
 
 ## Requirement
 
 * Currently, only supports Redis < 7.x
-* Golang >= 1.8
+* Golang >= 1.6
 
 ## Links
-* [English](https://github.com/sandwich-go/redisson/blob/master/README.md)
-* [中文文档](https://github.com/sandwich-go/redisson/blob/master/README_CN.md)
+* [English](https://github.com/sandwich-go/redisson/blob/version/1.0/README.md)
+* [中文文档](https://github.com/sandwich-go/redisson/blob/version/1.0/README_CN.md)
 
 ## Getting Started
 
@@ -37,7 +33,7 @@ import (
 
 func main() {
 	c := redisson.MustNewClient(redisson.NewConf(
-	      redisson.WithResp(redisson.RESP3), 
+	      redisson.WithResp(redisson.RESP2), 
 	      redisson.WithDevelopment(false), 
 	))
 	defer c.Close()
@@ -56,7 +52,7 @@ func main() {
 if Redis < 6.0
 ```go
 c := redisson.MustNewClient(redisson.NewConf(
-      redisson.WithResp(redisson.RESP3), 
+      redisson.WithResp(redisson.RESP2), 
       redisson.WithDevelopment(true), 
 ))
 defer c.Close()
@@ -72,7 +68,7 @@ Line 34: - redis 'SET KEEPTTL' are not supported in version "5.0.0", available s
 if Redis >= 4.0
 ```go
 c := redisson.MustNewClient(redisson.NewConf(
-      redisson.WithResp(redisson.RESP3), 
+      redisson.WithResp(redisson.RESP2), 
       redisson.WithDevelopment(true), 
 ))
 defer c.Close()
@@ -88,7 +84,7 @@ It can be replaced by HSET with multiple field-value pairs when migrating or wri
 ### Check slot for multiple keys
 ```go
 c := redisson.MustNewClient(redisson.NewConf(
-      redisson.WithResp(redisson.RESP3), 
+      redisson.WithResp(redisson.RESP2), 
       redisson.WithDevelopment(true), 
 ))
 defer c.Close()
@@ -103,7 +99,7 @@ Line 34: - multi key command with different key slots are not allowed
 ### Check forbid
 ```go
 c := redisson.MustNewClient(redisson.NewConf(
-      redisson.WithResp(redisson.RESP3), 
+      redisson.WithResp(redisson.RESP2), 
       redisson.WithDevelopment(true), 
 ))
 defer c.Close()
@@ -135,32 +131,6 @@ c.RegisterCollector(func(c prometheus.Collector) {
     DefaultPrometheusRegistry.Register(c)
 })
 ```
-
-
-## Auto Pipeline
-
-All non-blocking commands sending to a single Redis node are automatically pipelined through one tcp connection,
-which reduces the overall round trips and system calls, and gets higher throughput.
-
-Notice: Only supports when use Redis RESP3 client.
-
-
-## Client Side Caching
-
-The Opt-In mode of server-assisted client side caching is always enabled.
-
-```golang
-c.Cache(time.Minute).Get(ctx, "key").Val()
-```
-
-An explicit client side TTL is required because Redis server may not send invalidation message in time when
-a key is expired on the server. Please follow [#6833](https://github.com/redis/redis/issues/6833) and [#6867](https://github.com/redis/redis/issues/6867)
-
-Although an explicit client side TTL is required, the `Cache()` still sends a `PTTL` command to server and make sure that
-the client side TTL is not longer than the TTL on server side.
-
-Notice: Only supports when use Redis RESP3 client.
-
 
 * [Opt-in client side caching](https://redis.io/docs/manual/client-side-caching/)
 * [RESP](https://redis.io/docs/reference/protocol-spec/)

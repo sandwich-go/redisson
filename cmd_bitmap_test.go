@@ -280,4 +280,3 @@ func doTestUnits(t *testing.T, r RESP, unitsFunc func() []TestUnit) {
 }
 
 func TestResp2Client_BitMap(t *testing.T) { doTestUnits(t, RESP2, bitMapTestUnits) }
-func TestResp3Client_BitMap(t *testing.T) { doTestUnits(t, RESP3, bitMapTestUnits) }
