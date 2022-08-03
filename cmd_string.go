@@ -212,9 +212,7 @@ type StringWriter interface {
 	SetRange(ctx context.Context, key string, offset int64, value string) IntCmd
 }
 
-type StringReader interface {
-	StringCacheCmdable
-}
+type StringReader interface{}
 
 type StringCacheCmdable interface {
 	// Get
@@ -278,7 +276,7 @@ func (c *client) DecrBy(ctx context.Context, key string, decrement int64) IntCmd
 
 func (c *client) Get(ctx context.Context, key string) StringCmd {
 	ctx = c.handler.before(ctx, CommandGet)
-	r := c.cmdable.Get(ctx, key)
+	r := c.cacheCmdable.Get(ctx, key)
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -299,7 +297,7 @@ func (c *client) GetEx(ctx context.Context, key string, expiration time.Duration
 
 func (c *client) GetRange(ctx context.Context, key string, start, end int64) StringCmd {
 	ctx = c.handler.before(ctx, CommandGetRange)
-	r := c.cmdable.GetRange(ctx, key, start, end)
+	r := c.cacheCmdable.GetRange(ctx, key, start, end)
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -334,7 +332,7 @@ func (c *client) IncrByFloat(ctx context.Context, key string, value float64) Flo
 
 func (c *client) MGet(ctx context.Context, keys ...string) SliceCmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandMGet, func() []string { return keys })
-	r := c.cmdable.MGet(ctx, keys...)
+	r := c.cacheCmdable.MGet(ctx, keys...)
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -423,7 +421,7 @@ func (c *client) SetRange(ctx context.Context, key string, offset int64, value s
 
 func (c *client) StrLen(ctx context.Context, key string) IntCmd {
 	ctx = c.handler.before(ctx, CommandStrLen)
-	r := c.cmdable.StrLen(ctx, key)
+	r := c.cacheCmdable.StrLen(ctx, key)
 	c.handler.after(ctx, r.Err())
 	return r
 }

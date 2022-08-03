@@ -74,8 +74,6 @@ type HashWriter interface {
 }
 
 type HashReader interface {
-	HashCacheCmdable
-
 	// HRandField
 	// Available since: 6.2.0
 	// Time complexity: O(N) where N is the number of fields returned
@@ -178,21 +176,21 @@ func (c *client) HDel(ctx context.Context, key string, fields ...string) IntCmd 
 
 func (c *client) HExists(ctx context.Context, key, field string) BoolCmd {
 	ctx = c.handler.before(ctx, CommandHExists)
-	r := c.cmdable.HExists(ctx, key, field)
+	r := c.cacheCmdable.HExists(ctx, key, field)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) HGet(ctx context.Context, key, field string) StringCmd {
 	ctx = c.handler.before(ctx, CommandHGet)
-	r := c.cmdable.HGet(ctx, key, field)
+	r := c.cacheCmdable.HGet(ctx, key, field)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) HGetAll(ctx context.Context, key string) StringStringMapCmd {
 	ctx = c.handler.before(ctx, CommandHGetAll)
-	r := c.cmdable.HGetAll(ctx, key)
+	r := c.cacheCmdable.HGetAll(ctx, key)
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -213,21 +211,21 @@ func (c *client) HIncrByFloat(ctx context.Context, key, field string, incr float
 
 func (c *client) HKeys(ctx context.Context, key string) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandHKeys)
-	r := c.cmdable.HKeys(ctx, key)
+	r := c.cacheCmdable.HKeys(ctx, key)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) HLen(ctx context.Context, key string) IntCmd {
 	ctx = c.handler.before(ctx, CommandHLen)
-	r := c.cmdable.HLen(ctx, key)
+	r := c.cacheCmdable.HLen(ctx, key)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) HMGet(ctx context.Context, key string, fields ...string) SliceCmd {
 	ctx = c.handler.before(ctx, CommandHMGet)
-	r := c.cmdable.HMGet(ctx, key, fields...)
+	r := c.cacheCmdable.HMGet(ctx, key, fields...)
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -273,7 +271,7 @@ func (c *client) HSetNX(ctx context.Context, key, field string, value interface{
 
 func (c *client) HVals(ctx context.Context, key string) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandHVals)
-	r := c.cmdable.HVals(ctx, key)
+	r := c.cacheCmdable.HVals(ctx, key)
 	c.handler.after(ctx, r.Err())
 	return r
 }

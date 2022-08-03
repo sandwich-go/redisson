@@ -47,7 +47,9 @@ func (r *resp3) Cache(ttl time.Duration) CacheCmdable {
 	return r
 }
 func (r *resp3Cache) Do(ctx context.Context, completed rueidis.Completed) rueidis.RedisResult {
-	return r.resp.cmd.DoCache(ctx, rueidis.Cacheable(completed), r.ttl)
+	rsp := r.resp.cmd.DoCache(ctx, rueidis.Cacheable(completed), r.ttl)
+	r.resp.handler.cache(ctx, rsp.IsCacheHit())
+	return rsp
 }
 
 func (r *resp3) getBitCountCompleted(key string, bitCount *BitCount) rueidis.Completed {

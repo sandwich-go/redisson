@@ -33,11 +33,12 @@ const Nil = goredis.Nil
 func IsNil(err error) bool { return err == Nil }
 
 type client struct {
-	v       ConfVisitor
-	cmdable Cmdable
-	handler handler
-	version semver.Version
-	once    sync.Once
+	v            ConfVisitor
+	cmdable      Cmdable
+	cacheCmdable CacheCmdable
+	handler      handler
+	version      semver.Version
+	once         sync.Once
 }
 
 var versionRE = regexp.MustCompile(`redis_version:(.+)`)
@@ -87,10 +88,24 @@ func Connect(v ConfVisitor) (Cmdable, error) {
 	if err = c.initVersion(); err != nil {
 		return nil, err
 	}
+	c.cacheCmdable = c.cmdable
 	c.handler.setSilentErrCallback(func(err error) bool { return err == Nil })
 	return c, nil
 }
 
-func (c *client) Cache(ttl time.Duration) CacheCmdable { return c.cmdable.Cache(ttl) }
-func (c *client) PoolStats() PoolStats                 { return c.cmdable.PoolStats() }
-func (c *client) Close() error                         { return c.cmdable.Close() }
+func (c *client) copy() *client {
+	return &client{
+		v:            c.v,
+		cmdable:      c.cmdable,
+		cacheCmdable: c.cacheCmdable,
+		handler:      c.handler,
+		version:      c.version,
+	}
+}
+func (c *client) Cache(ttl time.Duration) CacheCmdable {
+	cp := c.copy()
+	cp.cacheCmdable = c.cmdable.Cache(ttl)
+	return cp
+}
+func (c *client) PoolStats() PoolStats { return c.cmdable.PoolStats() }
+func (c *client) Close() error         { return c.cmdable.Close() }

@@ -36,6 +36,10 @@ func testBitCount(ctx context.Context, c Cmdable) []string {
 		bc = cacheCmd(c).BitCount(ctx, v.key, v.bc)
 		So(bc.Err(), ShouldBeNil)
 		So(bc.Val(), ShouldEqual, v.expected)
+
+		bc = cacheCmd(c).BitCount(ctx, v.key, v.bc)
+		So(bc.Err(), ShouldBeNil)
+		So(bc.Val(), ShouldEqual, v.expected)
 	}
 	return []string{key}
 }
@@ -203,7 +207,7 @@ func testGetBit(ctx context.Context, c Cmdable) []string {
 	So(g.Err(), ShouldBeNil)
 	So(g.Val(), ShouldEqual, 1)
 
-	g = c.GetBit(ctx, key1, 100)
+	g = cacheCmd(c).GetBit(ctx, key1, 100)
 	So(g.Err(), ShouldBeNil)
 	So(g.Val(), ShouldEqual, 0)
 

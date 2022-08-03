@@ -10,6 +10,7 @@ type Cmdable interface {
 	RegisterCollector(RegisterCollectorFunc)
 	Close() error
 
+	CacheCmdable
 	BitmapCmdable
 	ClusterCmdable
 	ConnectionCmdable

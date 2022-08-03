@@ -225,9 +225,7 @@ type ListWriter interface {
 	RPushX(ctx context.Context, key string, values ...interface{}) IntCmd
 }
 
-type ListReader interface {
-	ListCacheCmdable
-}
+type ListReader interface{}
 
 type ListCacheCmdable interface {
 	// LIndex
@@ -308,7 +306,7 @@ func (c *client) BRPopLPush(ctx context.Context, source, destination string, tim
 
 func (c *client) LIndex(ctx context.Context, key string, index int64) StringCmd {
 	ctx = c.handler.before(ctx, CommandLIndex)
-	r := c.cmdable.LIndex(ctx, key, index)
+	r := c.cacheCmdable.LIndex(ctx, key, index)
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -336,7 +334,7 @@ func (c *client) LInsertAfter(ctx context.Context, key string, pivot, value inte
 
 func (c *client) LLen(ctx context.Context, key string) IntCmd {
 	ctx = c.handler.before(ctx, CommandLLen)
-	r := c.cmdable.LLen(ctx, key)
+	r := c.cacheCmdable.LLen(ctx, key)
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -364,14 +362,14 @@ func (c *client) LPopCount(ctx context.Context, key string, count int) StringSli
 
 func (c *client) LPos(ctx context.Context, key string, value string, args LPosArgs) IntCmd {
 	ctx = c.handler.before(ctx, CommandLPos)
-	r := c.cmdable.LPos(ctx, key, value, args)
+	r := c.cacheCmdable.LPos(ctx, key, value, args)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) LPosCount(ctx context.Context, key string, value string, count int64, args LPosArgs) IntSliceCmd {
 	ctx = c.handler.before(ctx, CommandLPos)
-	r := c.cmdable.LPosCount(ctx, key, value, count, args)
+	r := c.cacheCmdable.LPosCount(ctx, key, value, count, args)
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -400,7 +398,7 @@ func (c *client) LPushX(ctx context.Context, key string, values ...interface{}) 
 
 func (c *client) LRange(ctx context.Context, key string, start, stop int64) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandLRange)
-	r := c.cmdable.LRange(ctx, key, start, stop)
+	r := c.cacheCmdable.LRange(ctx, key, start, stop)
 	c.handler.after(ctx, r.Err())
 	return r
 }

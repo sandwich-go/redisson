@@ -96,8 +96,6 @@ type SetWriter interface {
 }
 
 type SetReader interface {
-	SetCacheCmdable
-
 	// SDiff
 	// Available since: 1.0.0
 	// Time complexity: O(N) where N is the total number of elements in all given sets.
@@ -235,7 +233,7 @@ func (c *client) SAdd(ctx context.Context, key string, members ...interface{}) I
 
 func (c *client) SCard(ctx context.Context, key string) IntCmd {
 	ctx = c.handler.before(ctx, CommandSCard)
-	r := c.cmdable.SCard(ctx, key)
+	r := c.cacheCmdable.SCard(ctx, key)
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -270,28 +268,28 @@ func (c *client) SInterStore(ctx context.Context, destination string, keys ...st
 
 func (c *client) SIsMember(ctx context.Context, key string, member interface{}) BoolCmd {
 	ctx = c.handler.before(ctx, CommandSIsMember)
-	r := c.cmdable.SIsMember(ctx, key, member)
+	r := c.cacheCmdable.SIsMember(ctx, key, member)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) SMIsMember(ctx context.Context, key string, members ...interface{}) BoolSliceCmd {
 	ctx = c.handler.before(ctx, CommandSMIsMember)
-	r := c.cmdable.SMIsMember(ctx, key, members...)
+	r := c.cacheCmdable.SMIsMember(ctx, key, members...)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) SMembers(ctx context.Context, key string) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandSMembers)
-	r := c.cmdable.SMembers(ctx, key)
+	r := c.cacheCmdable.SMembers(ctx, key)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) SMembersMap(ctx context.Context, key string) StringStructMapCmd {
 	ctx = c.handler.before(ctx, CommandSMembers)
-	r := c.cmdable.SMembersMap(ctx, key)
+	r := c.cacheCmdable.SMembersMap(ctx, key)
 	c.handler.after(ctx, r.Err())
 	return r
 }

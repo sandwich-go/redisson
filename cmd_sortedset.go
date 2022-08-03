@@ -247,8 +247,6 @@ type SortedSetWriter interface {
 }
 
 type SortedSetReader interface {
-	SortedSetCacheCmdable
-
 	// ZInter
 	// Available since: 6.2.0
 	// Time complexity: O(NK)+O(Mlog(M)) worst case with N being the smallest input sorted set, K being the number of input sorted sets and M being the number of elements in the resulting sorted set.
@@ -630,14 +628,14 @@ func (c *client) ZIncrXX(ctx context.Context, key string, member Z) FloatCmd {
 
 func (c *client) ZCard(ctx context.Context, key string) IntCmd {
 	ctx = c.handler.before(ctx, CommandZCard)
-	r := c.cmdable.ZCard(ctx, key)
+	r := c.cacheCmdable.ZCard(ctx, key)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ZCount(ctx context.Context, key, min, max string) IntCmd {
 	ctx = c.handler.before(ctx, CommandZCount)
-	r := c.cmdable.ZCount(ctx, key, min, max)
+	r := c.cacheCmdable.ZCount(ctx, key, min, max)
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -693,14 +691,14 @@ func (c *client) ZInterStore(ctx context.Context, destination string, store ZSto
 
 func (c *client) ZLexCount(ctx context.Context, key, min, max string) IntCmd {
 	ctx = c.handler.before(ctx, CommandZLexCount)
-	r := c.cmdable.ZLexCount(ctx, key, min, max)
+	r := c.cacheCmdable.ZLexCount(ctx, key, min, max)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ZMScore(ctx context.Context, key string, members ...string) FloatSliceCmd {
 	ctx = c.handler.before(ctx, CommandZMScore)
-	r := c.cmdable.ZMScore(ctx, key, members...)
+	r := c.cacheCmdable.ZMScore(ctx, key, members...)
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -728,14 +726,14 @@ func (c *client) ZRandMember(ctx context.Context, key string, count int, withSco
 
 func (c *client) ZRange(ctx context.Context, key string, start, stop int64) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandZRange)
-	r := c.cmdable.ZRange(ctx, key, start, stop)
+	r := c.cacheCmdable.ZRange(ctx, key, start, stop)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ZRangeWithScores(ctx context.Context, key string, start, stop int64) ZSliceCmd {
 	ctx = c.handler.before(ctx, CommandZRange)
-	r := c.cmdable.ZRangeWithScores(ctx, key, start, stop)
+	r := c.cacheCmdable.ZRangeWithScores(ctx, key, start, stop)
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -752,7 +750,7 @@ func (c *client) ZRangeArgs(ctx context.Context, z ZRangeArgs) StringSliceCmd {
 	} else {
 		ctx = c.handler.before(ctx, CommandZRange)
 	}
-	r := c.cmdable.ZRangeArgs(ctx, z)
+	r := c.cacheCmdable.ZRangeArgs(ctx, z)
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -769,28 +767,28 @@ func (c *client) ZRangeArgsWithScores(ctx context.Context, z ZRangeArgs) ZSliceC
 	} else {
 		ctx = c.handler.before(ctx, CommandZRange)
 	}
-	r := c.cmdable.ZRangeArgsWithScores(ctx, z)
+	r := c.cacheCmdable.ZRangeArgsWithScores(ctx, z)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ZRangeByLex(ctx context.Context, key string, opt ZRangeBy) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandZRangebylex)
-	r := c.cmdable.ZRangeByLex(ctx, key, opt)
+	r := c.cacheCmdable.ZRangeByLex(ctx, key, opt)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ZRangeByScore(ctx context.Context, key string, opt ZRangeBy) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandZrangebyscore)
-	r := c.cmdable.ZRangeByScore(ctx, key, opt)
+	r := c.cacheCmdable.ZRangeByScore(ctx, key, opt)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ZRangeByScoreWithScores(ctx context.Context, key string, opt ZRangeBy) ZSliceCmd {
 	ctx = c.handler.before(ctx, CommandZrangebyscoreWithScores)
-	r := c.cmdable.ZRangeByScoreWithScores(ctx, key, opt)
+	r := c.cacheCmdable.ZRangeByScoreWithScores(ctx, key, opt)
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -804,7 +802,7 @@ func (c *client) ZRangeStore(ctx context.Context, dst string, z ZRangeArgs) IntC
 
 func (c *client) ZRank(ctx context.Context, key, member string) IntCmd {
 	ctx = c.handler.before(ctx, CommandZRank)
-	r := c.cmdable.ZRank(ctx, key, member)
+	r := c.cacheCmdable.ZRank(ctx, key, member)
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -843,42 +841,42 @@ func (c *client) ZRemRangeByScore(ctx context.Context, key, min, max string) Int
 
 func (c *client) ZRevRange(ctx context.Context, key string, start, stop int64) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandZRevRange)
-	r := c.cmdable.ZRevRange(ctx, key, start, stop)
+	r := c.cacheCmdable.ZRevRange(ctx, key, start, stop)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ZRevRangeWithScores(ctx context.Context, key string, start, stop int64) ZSliceCmd {
 	ctx = c.handler.before(ctx, CommandZRevRange)
-	r := c.cmdable.ZRevRangeWithScores(ctx, key, start, stop)
+	r := c.cacheCmdable.ZRevRangeWithScores(ctx, key, start, stop)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ZRevRangeByLex(ctx context.Context, key string, opt ZRangeBy) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandZRevRangeByLex)
-	r := c.cmdable.ZRevRangeByLex(ctx, key, opt)
+	r := c.cacheCmdable.ZRevRangeByLex(ctx, key, opt)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ZRevRangeByScore(ctx context.Context, key string, opt ZRangeBy) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandZRevRangeByScore)
-	r := c.cmdable.ZRevRangeByScore(ctx, key, opt)
+	r := c.cacheCmdable.ZRevRangeByScore(ctx, key, opt)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ZRevRangeByScoreWithScores(ctx context.Context, key string, opt ZRangeBy) ZSliceCmd {
 	ctx = c.handler.before(ctx, CommandZRevRangeByScore)
-	r := c.cmdable.ZRevRangeByScoreWithScores(ctx, key, opt)
+	r := c.cacheCmdable.ZRevRangeByScoreWithScores(ctx, key, opt)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ZRevRank(ctx context.Context, key, member string) IntCmd {
 	ctx = c.handler.before(ctx, CommandZRevRank)
-	r := c.cmdable.ZRevRank(ctx, key, member)
+	r := c.cacheCmdable.ZRevRank(ctx, key, member)
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -892,7 +890,7 @@ func (c *client) ZScan(ctx context.Context, key string, cursor uint64, match str
 
 func (c *client) ZScore(ctx context.Context, key, member string) FloatCmd {
 	ctx = c.handler.before(ctx, CommandZScore)
-	r := c.cmdable.ZScore(ctx, key, member)
+	r := c.cacheCmdable.ZScore(ctx, key, member)
 	c.handler.after(ctx, r.Err())
 	return r
 }

@@ -207,8 +207,6 @@ type GenericWriter interface {
 }
 
 type GenericReader interface {
-	GenericCacheCmdable
-
 	// Dump
 	// Available since: 2.6.0
 	// Time complexity: O(1) to access the key and additional O(NM) to serialize it, where N is the number of Redis objects composing the value and M their average size. For small string values the time complexity is thus O(1)+O(1M) where M is small, so simply O(1).
@@ -404,7 +402,7 @@ func (c *client) Exists(ctx context.Context, keys ...string) IntCmd {
 	} else {
 		ctx = c.handler.before(ctx, CommandExists)
 	}
-	r := c.cmdable.Exists(ctx, keys...)
+	r := c.cacheCmdable.Exists(ctx, keys...)
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -488,7 +486,7 @@ func (c *client) PExpireAt(ctx context.Context, key string, tm time.Time) BoolCm
 
 func (c *client) PTTL(ctx context.Context, key string) DurationCmd {
 	ctx = c.handler.before(ctx, CommandPTTL)
-	r := c.cmdable.PTTL(ctx, key)
+	r := c.cacheCmdable.PTTL(ctx, key)
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -548,7 +546,7 @@ func (c *client) ScanType(ctx context.Context, cursor uint64, match string, coun
 
 func (c *client) Sort(ctx context.Context, key string, sort Sort) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandSort)
-	r := c.cmdable.Sort(ctx, key, sort)
+	r := c.cacheCmdable.Sort(ctx, key, sort)
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -562,7 +560,7 @@ func (c *client) SortStore(ctx context.Context, key, store string, sort Sort) In
 
 func (c *client) SortInterfaces(ctx context.Context, key string, sort Sort) SliceCmd {
 	ctx = c.handler.before(ctx, CommandSort)
-	r := c.cmdable.SortInterfaces(ctx, key, sort)
+	r := c.cacheCmdable.SortInterfaces(ctx, key, sort)
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -576,14 +574,14 @@ func (c *client) Touch(ctx context.Context, keys ...string) IntCmd {
 
 func (c *client) TTL(ctx context.Context, key string) DurationCmd {
 	ctx = c.handler.before(ctx, CommandTTL)
-	r := c.cmdable.TTL(ctx, key)
+	r := c.cacheCmdable.TTL(ctx, key)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) Type(ctx context.Context, key string) StatusCmd {
 	ctx = c.handler.before(ctx, CommandType)
-	r := c.cmdable.Type(ctx, key)
+	r := c.cacheCmdable.Type(ctx, key)
 	c.handler.after(ctx, r.Err())
 	return r
 }

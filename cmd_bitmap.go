@@ -68,9 +68,7 @@ type BitmapWriter interface {
 	SetBit(ctx context.Context, key string, offset int64, value int) IntCmd
 }
 
-type BitmapReader interface {
-	BitmapCacheCmdable
-}
+type BitmapReader interface{}
 
 type BitmapCacheCmdable interface {
 	// BitCount
@@ -121,7 +119,7 @@ type BitmapCacheCmdable interface {
 
 func (c *client) BitCount(ctx context.Context, key string, bc *BitCount) IntCmd {
 	ctx = c.handler.before(ctx, CommandBitCount)
-	r := c.cmdable.BitCount(ctx, key, bc)
+	r := c.cacheCmdable.BitCount(ctx, key, bc)
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -163,14 +161,14 @@ func (c *client) BitOpNot(ctx context.Context, destKey string, key string) IntCm
 
 func (c *client) BitPos(ctx context.Context, key string, bit int64, pos ...int64) IntCmd {
 	ctx = c.handler.before(ctx, CommandBitPos)
-	r := c.cmdable.BitPos(ctx, key, bit, pos...)
+	r := c.cacheCmdable.BitPos(ctx, key, bit, pos...)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) GetBit(ctx context.Context, key string, offset int64) IntCmd {
 	ctx = c.handler.before(ctx, CommandGetBit)
-	r := c.cmdable.GetBit(ctx, key, offset)
+	r := c.cacheCmdable.GetBit(ctx, key, offset)
 	c.handler.after(ctx, r.Err())
 	return r
 }

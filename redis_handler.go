@@ -11,6 +11,8 @@ import (
 const (
 	timingMetric = "redis_exec_timing"
 	errorMetric  = "redis_exec_error"
+	hitsMetric   = "redis_cache_hits"
+	missMetric   = "redis_cache_miss"
 )
 
 type isSilentError func(error) bool
@@ -23,6 +25,7 @@ type handler interface {
 	before(ctx context.Context, command Command) context.Context
 	beforeWithKeys(ctx context.Context, command Command, getKeys func() []string) context.Context
 	after(ctx context.Context, err error)
+	cache(ctx context.Context, hit bool)
 }
 
 func newSemVersion(version string) (semver.Version, error) {
@@ -44,17 +47,23 @@ func mustNewSemVersion(version string) semver.Version {
 var labelKeys = []string{"command", "s_command"}
 
 type baseHandler struct {
-	metric            *prometheus.SummaryVec
-	errMetric         *prometheus.CounterVec
-	silentErrCallback isSilentError
-	v                 ConfVisitor
-	version           *semver.Version
+	metric                            *prometheus.SummaryVec
+	errMetric, hitsMetric, missMetric *prometheus.CounterVec
+	silentErrCallback                 isSilentError
+	v                                 ConfVisitor
+	version                           *semver.Version
 }
 
 func newBaseHandler(v ConfVisitor) handler {
 	h := &baseHandler{v: v}
 	h.errMetric = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: errorMetric,
+	}, labelKeys)
+	h.hitsMetric = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: hitsMetric,
+	}, labelKeys)
+	h.missMetric = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: missMetric,
 	}, labelKeys)
 	h.metric = prometheus.NewSummaryVec(prometheus.SummaryOpts{
 		Name:       timingMetric,
@@ -123,6 +132,15 @@ func (r *baseHandler) after(ctx context.Context, err error) {
 		} else {
 			r.metric.WithLabelValues(ctx.Value(commandContextKey).(string), ctx.Value(subCommandContextKey).(string)).
 				Observe(sinceFunc(ctx.Value(startTimeContextKey).(time.Time)).Seconds())
+		}
+	}
+}
+func (r *baseHandler) cache(ctx context.Context, hit bool) {
+	if r.v.GetEnableMonitor() {
+		if hit {
+			r.hitsMetric.WithLabelValues(ctx.Value(commandContextKey).(string), ctx.Value(subCommandContextKey).(string)).Inc()
+		} else {
+			r.missMetric.WithLabelValues(ctx.Value(commandContextKey).(string), ctx.Value(subCommandContextKey).(string)).Inc()
 		}
 	}
 }
