@@ -21,6 +21,8 @@ A Type-safe Golang Redis RESP2/RESP3 client.
 * Currently, only supports Redis < 7.x
 * Golang >= 1.8
 
+If you can't upgrade Golang to 1.8, install redisson/version/0.1.
+
 ## Links
 * [English](https://github.com/sandwich-go/redisson/blob/master/README.md)
 * [中文文档](https://github.com/sandwich-go/redisson/blob/master/README_CN.md)
@@ -53,7 +55,7 @@ func main() {
 
 ## Check
 ### Check version
-if Redis < 6.0
+If Redis < 6.0
 ```go
 c := redisson.MustNewClient(redisson.NewConf(
       redisson.WithResp(redisson.RESP3), 
@@ -69,7 +71,7 @@ Line 34: - redis 'SET KEEPTTL' are not supported in version "5.0.0", available s
 ```
 
 ### Check deprecated
-if Redis >= 4.0
+If Redis >= 4.0
 ```go
 c := redisson.MustNewClient(redisson.NewConf(
       redisson.WithResp(redisson.RESP3), 
