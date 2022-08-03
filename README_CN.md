@@ -1,31 +1,31 @@
 # redisson
 
-A Type-safe Golang Redis RESP2/RESP3 client.
+一个类型安全的`Golang Redis`客户端，支持`RESP2/RESP3`协议
 
-## Features
+## 特征
 
-* Check Redis commands version in development mode.
-* Check Redis deprecated commands in development mode.
-* Check Redis slot when use multiple keys in development mode.
-* Check forbid Redis commands in development mode.
-* Monitoring cost of Redis commands.
-* Monitoring status of connections.
-* Monitoring hits/miss of Redis RESP3 client side caching.
-* Support Redis RESP2/RESP3.
-* Opt-in client side caching.
-* Auto pipeline for non-blocking Redis RESP3 commands.
-* Connection pooling for blocking Redis RESP3 commands.
+* 开发模式下，检查`Redis`命令的版本要求
+* 开发模式下，检查在当前版本已过期的`Redis`命令
+* 开发模式下，检查多`Key`是否属于同一`Redis`槽
+* 开发模式下，检查禁止使用的`Redis`命令
+* 监控`Redis`命令耗时时间 
+* 监控`Redis`连接状态
+* 监控`Redis RESP3`客户端缓存命中状态
+* 支持`RESP2/RESP3`协议
+* 支持`Redis RESP3`客户端缓存
+* `Redis RESP3`客户端命令自动进行`pipeline`
+* `Redis RESP3`客户端自动管理阻塞的连接
 
-## Requirement
+## 要求
 
-* Currently, only supports Redis < 7.x
+* 当前只支持 Redis < 7.x
 * Golang >= 1.8
 
-## Links
+## 链接
 * [English](https://github.com/sandwich-go/redisson/README.md)
 * [中文文档](https://github.com/sandwich-go/redisson/README_CN.md)
 
-## Getting Started
+## 开始
 
 ```golang
 package main
@@ -51,9 +51,9 @@ func main() {
 }
 ```
 
-## Check
-### Check version
-if Redis < 6.0
+## 检查
+### 版本检查
+如果 Redis < 6.0
 ```go
 c := redisson.MustNewClient(redisson.NewConf(
       redisson.WithResp(redisson.RESP3), 
@@ -63,13 +63,13 @@ defer c.Close()
 
 res := c.Set(ctx, "key", "10", -1)
 ```
-Output:
+输出:
 ```go
 Line 34: - redis 'SET KEEPTTL' are not supported in version "5.0.0", available since 6.0.0
 ```
 
-### Check deprecated
-if Redis >= 4.0
+### 检查过期
+如果 Redis >= 4.0
 ```go
 c := redisson.MustNewClient(redisson.NewConf(
       redisson.WithResp(redisson.RESP3), 
@@ -79,13 +79,13 @@ defer c.Close()
 
 res := c.HMSet(ctx, "key", "10")
 ```
-Output:
+输出:
 ```go
 As of Redis version 4.0.0, this command is regarded as deprecated.
 It can be replaced by HSET with multiple field-value pairs when migrating or writing new code.
 ```
 
-### Check slot for multiple keys
+### 检查槽位
 ```go
 c := redisson.MustNewClient(redisson.NewConf(
       redisson.WithResp(redisson.RESP3), 
@@ -95,12 +95,12 @@ defer c.Close()
 
 res := c.MSet(ctx, "key1", "10", "key2", "20")
 ```
-Output:
+输出:
 ```go
 Line 34: - multi key command with different key slots are not allowed 
 ```
 
-### Check forbid
+### 命令禁用
 ```go
 c := redisson.MustNewClient(redisson.NewConf(
       redisson.WithResp(redisson.RESP3), 
@@ -110,12 +110,12 @@ defer c.Close()
 
 res := c.ClusterFailover(ctx)
 ```
-Output:
+输出:
 ```go
 Line 34: - command 'CLUSTER FAILOVER' not allowed 
 ```
 
-## Monitor
+## 监控
 
 ```go
 import (
@@ -137,29 +137,28 @@ c.RegisterCollector(func(c prometheus.Collector) {
 ```
 
 
-## Auto Pipeline
+## 自动`pipeline`
 
-All non-blocking commands sending to a single Redis node are automatically pipelined through one tcp connection,
-which reduces the overall round trips and system calls, and gets higher throughput.
+所有发送到单个`Redis`节点的非阻塞命令都会通过一个tcp连接自动`pipeline`传输，
+这减少了整体往返和系统调用，并获得了更高的吞吐量。
 
-Notice: Only supports when use Redis RESP3 client.
+注意：仅在使用`Redis RESP3`客户端时支持。
 
 
-## Client Side Caching
+## 客户端缓存
 
-The Opt-In mode of server-assisted client side caching is always enabled.
+始终启用服务器辅助客户端缓存的加入模式
 
 ```golang
 c.Cache(time.Minute).Get(ctx, "key").Val()
 ```
 
-An explicit client side TTL is required because Redis server may not send invalidation message in time when
-a key is expired on the server. Please follow [#6833](https://github.com/redis/redis/issues/6833) and [#6867](https://github.com/redis/redis/issues/6867)
+需要显式指定客户端`TTL`，因为`Redis`服务器在以下情况下可能无法及时发送失效消息：
+服务器上的密钥已过期。请遵循 [#6833](https://github.com/redis/redis/issues/6833) and [#6867](https://github.com/redis/redis/issues/6867)
 
-Although an explicit client side TTL is required, the `Cache()` still sends a `PTTL` command to server and make sure that
-the client side TTL is not longer than the TTL on server side.
+尽管需要显式的指定客户端`TTL`，`Cache()`仍然向服务器发送`PTTL`命令，并确保客户端`TTL`不长于服务器端`TTL`。
 
-Notice: Only supports when use Redis RESP3 client.
+注意：仅在使用`Redis RESP3`客户端时支持。
 
 
 * [Opt-in client side caching](https://redis.io/docs/manual/client-side-caching/)
