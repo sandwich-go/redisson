@@ -1,4 +1,4 @@
-package sandwich_redis
+package redisson
 
 import (
 	goredis "github.com/go-redis/redis/v8"

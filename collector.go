@@ -1,4 +1,4 @@
-package sandwich_redis
+package redisson
 
 import "github.com/prometheus/client_golang/prometheus"
 
