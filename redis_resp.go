@@ -60,7 +60,7 @@ func MustNewClient(v ConfVisitor) Cmdable {
 func Connect(v ConfVisitor) (Cmdable, error) {
 	var err error
 	c := &client{v: v, handler: newBaseHandler(v)}
-	switch v.GetResp() {
+	switch strings.ToUpper(v.GetResp()) {
 	case RESP2:
 		c.cmdable, err = connectResp2(v, c.handler)
 	default:
