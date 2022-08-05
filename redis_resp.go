@@ -12,11 +12,11 @@ import (
 	"time"
 )
 
-type RESP int
+type RESP string
 
 const (
-	RESP2 RESP = 0
-	RESP3 RESP = 1
+	RESP2 RESP = "RESP2"
+	RESP3 RESP = "RESP3"
 )
 
 var (
@@ -79,7 +79,7 @@ func Connect(v ConfVisitor) (Cmdable, error) {
 	case RESP3:
 		c.cmdable, err = connectResp3(v, c.handler)
 	default:
-		err = fmt.Errorf("unknown RESP version, %d", v.GetResp())
+		err = fmt.Errorf("unknown RESP version, %s", v.GetResp())
 	}
 	if err != nil {
 		return nil, err
