@@ -1,19 +1,17 @@
 package redisson
 
-import "errors"
+import "fmt"
 
-type getKeysFunc = func() []string
-
-func panicIfUseMultipleKeySlots(f getKeysFunc) {
+func panicIfUseMultipleKeySlots(command Command, f func() []string) {
 	if f == nil {
 		return
 	}
-	if err := checkSlots(f()...); err != nil {
+	if err := checkSlots(command, f()...); err != nil {
 		panic(err)
 	}
 }
 
-func checkSlots(keys ...string) error {
+func checkSlots(command Command, keys ...string) error {
 	if len(keys) <= 1 {
 		return nil
 	}
@@ -21,7 +19,7 @@ func checkSlots(keys ...string) error {
 	for k, v := range keys {
 		s := slot(v)
 		if k > 0 && pre != s {
-			return errors.New("multi key command with different key slots are not allowed")
+			return fmt.Errorf("(%s) multiple keys command with different key slots are not allowed", command.String())
 		}
 		pre = s
 	}

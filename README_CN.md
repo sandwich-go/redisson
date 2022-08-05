@@ -66,8 +66,8 @@ defer c.Close()
 res := c.Set(ctx, "key", "10", -1)
 ```
 输出:
-```go
-Line 34: - redis 'SET KEEPTTL' are not supported in version "5.0.0", available since 6.0.0
+```text
+[SET KEEPTTL]: redis command are not supported in version "5.0.0", available since 6.0.0
 ```
 
 ### 检查过期
@@ -82,8 +82,8 @@ defer c.Close()
 res := c.HMSet(ctx, "key", "10")
 ```
 输出:
-```go
-As of Redis version 4.0.0, this command is regarded as deprecated.
+```text
+[HMSET]: As of Redis version 4.0.0, this command is regarded as deprecated.
 It can be replaced by HSET with multiple field-value pairs when migrating or writing new code.
 ```
 
@@ -98,8 +98,8 @@ defer c.Close()
 res := c.MSet(ctx, "key1", "10", "key2", "20")
 ```
 输出:
-```go
-Line 34: - multi key command with different key slots are not allowed 
+```text
+[MSET]: multiple keys command with different key slots are not allowed
 ```
 
 ### 命令禁用
@@ -113,8 +113,8 @@ defer c.Close()
 res := c.ClusterFailover(ctx)
 ```
 输出:
-```go
-Line 34: - command 'CLUSTER FAILOVER' not allowed 
+```text
+[CLUSTER FAILOVER]: redis command not allowed
 ```
 
 ## 监控
