@@ -16,7 +16,7 @@
 ## 要求
 
 * 当前只支持 Redis < 7.x
-* Golang >= 1.6
+* Golang >= 1.16
 
 ## 链接
 * [English](https://github.com/sandwich-go/redisson/blob/version/1.0/README.md)
