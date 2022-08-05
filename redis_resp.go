@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-type RESP string
+type RESP = string
 
 const (
 	RESP2 RESP = "RESP2"
