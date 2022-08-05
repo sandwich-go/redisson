@@ -11,9 +11,9 @@ import (
 	"time"
 )
 
-type RESP int
+type RESP string
 
-const RESP2 RESP = 0
+const RESP2 RESP = "RESP2"
 
 const Nil = goredis.Nil
 
@@ -64,7 +64,7 @@ func Connect(v ConfVisitor) (Cmdable, error) {
 	case RESP2:
 		c.cmdable, err = connectResp2(v, c.handler)
 	default:
-		err = fmt.Errorf("unknown RESP version, %d", v.GetResp())
+		err = fmt.Errorf("unknown RESP version, %s", v.GetResp())
 	}
 	if err != nil {
 		return nil, err
