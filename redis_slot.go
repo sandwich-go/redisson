@@ -19,7 +19,7 @@ func checkSlots(command Command, keys ...string) error {
 	for k, v := range keys {
 		s := slot(v)
 		if k > 0 && pre != s {
-			return fmt.Errorf("(%s) multiple keys command with different key slots are not allowed", command.String())
+			return fmt.Errorf("[%s]: multiple keys command with different key slots are not allowed", command.String())
 		}
 		pre = s
 	}

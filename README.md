@@ -60,8 +60,8 @@ defer c.Close()
 res := c.Set(ctx, "key", "10", -1)
 ```
 Output:
-```go
-Line 34: - redis 'SET KEEPTTL' are not supported in version "5.0.0", available since 6.0.0
+```text
+[SET KEEPTTL]: redis command are not supported in version "5.0.0", available since 6.0.0
 ```
 
 ### Check deprecated
@@ -76,13 +76,13 @@ defer c.Close()
 res := c.HMSet(ctx, "key", "10")
 ```
 Output:
-```go
-As of Redis version 4.0.0, this command is regarded as deprecated.
+```text
+[HMSET]: As of Redis version 4.0.0, this command is regarded as deprecated.
 It can be replaced by HSET with multiple field-value pairs when migrating or writing new code.
 ```
 
 ### Check slot for multiple keys
-```go
+```text
 c := redisson.MustNewClient(redisson.NewConf(
       redisson.WithResp(redisson.RESP2), 
       redisson.WithDevelopment(true), 
@@ -92,8 +92,8 @@ defer c.Close()
 res := c.MSet(ctx, "key1", "10", "key2", "20")
 ```
 Output:
-```go
-Line 34: - multi key command with different key slots are not allowed 
+```text
+[MSET]: multi key command with different key slots are not allowed 
 ```
 
 ### Check forbid
@@ -107,8 +107,8 @@ defer c.Close()
 res := c.ClusterFailover(ctx)
 ```
 Output:
-```go
-Line 34: - command 'CLUSTER FAILOVER' not allowed 
+```text
+[CLUSTER FAILOVER]: redis command not allowed 
 ```
 
 ## Monitor
