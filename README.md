@@ -19,9 +19,9 @@ A Type-safe Golang Redis RESP2/RESP3 client.
 ## Requirement
 
 * Currently, only supports Redis < 7.x
-* Golang >= 1.8
+* Golang >= 1.18
 
-If you can't upgrade Golang to 1.8, install redisson/version/0.1.
+If you can't upgrade Golang to 1.18, install redisson/version/0.1.
 
 ## Links
 * [English](https://github.com/sandwich-go/redisson/blob/master/README.md)

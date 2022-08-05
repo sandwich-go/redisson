@@ -19,9 +19,9 @@
 ## 要求
 
 * 当前只支持 Redis < 7.x
-* Golang >= 1.8
+* Golang >= 1.18
 
-如果不能升级`Golang`至`1.8`，请使用`redisson/version/0.1`版本。
+如果不能升级`Golang`至`1.18`，请使用`redisson/version/0.1`版本。
 
 ## 链接
 * [English](https://github.com/sandwich-go/redisson/blob/master/README.md)
