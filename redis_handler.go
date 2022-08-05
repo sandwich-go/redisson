@@ -99,17 +99,17 @@ func (r *baseHandler) beforeWithKeys(ctx context.Context, command Command, getKe
 	if r.v.GetDevelopment() {
 		// 需要检验命令是否在黑名单
 		if command.Forbid() {
-			panic(fmt.Errorf("command '%s' not allowed", command.String()))
+			panic(fmt.Errorf("(%s) redis command not allowed", command.String()))
 		}
 		// 需要检验版本是否支持该命令
 		if r.version.LessThan(mustNewSemVersion(command.RequireVersion())) {
-			panic(fmt.Errorf("redis '%s' are not supported in version %q, available since %s", command, r.version, command.RequireVersion()))
+			panic(fmt.Errorf("(%s) redis command are not supported in version %q, available since %s", command, r.version, command.RequireVersion()))
 		}
 		// 需要检验所有的key是否均在同一槽位
-		panicIfUseMultipleKeySlots(getKeys)
+		panicIfUseMultipleKeySlots(command, getKeys)
 		// 该命令是否有警告日志输出
 		if len(command.WarnVersion()) > 0 && mustNewSemVersion(command.WarnVersion()).LessThan(*r.version) {
-			warning(command.Warning())
+			warning(fmt.Sprintf("(%s) %s", command.String(), command.Warning()))
 		}
 	}
 	if r.v.GetEnableMonitor() {
