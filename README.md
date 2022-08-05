@@ -99,7 +99,7 @@ res := c.MSet(ctx, "key1", "10", "key2", "20")
 ```
 Output:
 ```text
-[MSET]: multiple keys command with different key slots are not allowed .
+[MSET]: multiple keys command with different key slots are not allowed
 ```
 
 ### Check forbid
