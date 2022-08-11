@@ -561,18 +561,29 @@ type pipelineResp2 struct {
 	mx       sync.RWMutex
 }
 
+type pipelineCommand struct{}
+
+func (pipelineCommand) String() string         { return "PIPELINE" }
+func (pipelineCommand) Class() string          { return "Pipeline" }
+func (pipelineCommand) RequireVersion() string { return "0.0.0" }
+func (pipelineCommand) Forbid() bool           { return false }
+func (pipelineCommand) WarnVersion() string    { return "" }
+func (pipelineCommand) Warning() string        { return "" }
+func (pipelineCommand) Cmd() []string          { return nil }
+
+var pipelineCmd = &pipelineCommand{}
+
 func (r *resp2) Pipeline() Pipeliner { return &pipelineResp2{resp: r} }
 
-func (p *pipelineResp2) Put(ctx context.Context, cmd Command, keys []string, args ...interface{}) (err error) {
-	ctx = p.resp.handler.before(ctx, cmd)
+func (p *pipelineResp2) Put(_ context.Context, cmd Command, keys []string, args ...interface{}) (err error) {
 	p.mx.Lock()
 	p.commands = append(p.commands, pipeCommand{cmd: cmd.Cmd(), keys: keys, args: args})
 	p.mx.Unlock()
-	p.resp.handler.after(ctx, err)
-	return err
+	return
 }
 
 func (p *pipelineResp2) Exec(ctx context.Context) ([]interface{}, error) {
+	ctx = p.resp.handler.before(ctx, pipelineCmd)
 	res, err := p.resp.cmd.Pipelined(ctx, func(pip goredis.Pipeliner) error {
 		p.mx.RLock()
 		defer p.mx.RUnlock()
@@ -602,6 +613,7 @@ func (p *pipelineResp2) Exec(ctx context.Context) ([]interface{}, error) {
 			result[i] = j
 		}
 	}
+	p.resp.handler.after(ctx, err)
 	return result, err
 }
 
