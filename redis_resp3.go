@@ -1953,7 +1953,14 @@ func (r *resp3) xRead(ctx context.Context, arbitrary rueidis.Arbitrary, a XReadG
 	if a.NoAck {
 		arbitrary = arbitrary.Args(NOACK)
 	}
-	return newXStreamSliceCmd(r.cmd.Do(ctx, arbitrary.Args(STREAMS).Args(a.Streams...).Build()))
+	arbitrary = arbitrary.Args(STREAMS).Args(a.Streams...)
+	var com rueidis.Completed
+	if a.Block >= 0 {
+		com = arbitrary.Blocking()
+	} else {
+		com = arbitrary.Build()
+	}
+	return newXStreamSliceCmd(r.cmd.Do(ctx, com))
 }
 
 func (r *resp3) XRead(ctx context.Context, a XReadArgs) XStreamSliceCmd {
