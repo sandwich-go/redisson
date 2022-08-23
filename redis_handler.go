@@ -89,9 +89,14 @@ var (
 	subCommandContextKey = subCommandContextKeyType(struct{}{})
 )
 
-func (r *baseHandler) setVersion(v *semver.Version)                  { r.version = v }
-func (r *baseHandler) setSilentErrCallback(b isSilentError)          { r.silentErrCallback = b }
-func (r *baseHandler) setRegisterCollector(rc RegisterCollectorFunc) { rc(r.metric); rc(r.errMetric) }
+func (r *baseHandler) setVersion(v *semver.Version)         { r.version = v }
+func (r *baseHandler) setSilentErrCallback(b isSilentError) { r.silentErrCallback = b }
+func (r *baseHandler) setRegisterCollector(rc RegisterCollectorFunc) {
+	rc(r.errMetric)
+	rc(r.hitsMetric)
+	rc(r.missMetric)
+	rc(r.metric)
+}
 func (r *baseHandler) before(ctx context.Context, command Command) context.Context {
 	return r.beforeWithKeys(ctx, command, nil)
 }
