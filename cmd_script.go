@@ -134,7 +134,7 @@ type ScriptCmdable interface {
 	ScriptLoad(ctx context.Context, script string) StringCmd
 }
 
-func (c *client) CreateScript(src string) Scripter { return newScript(c.cmdable, src) }
+func (c *client) CreateScript(src string) Scripter { return newScript(c, src) }
 
 func (c *client) Eval(ctx context.Context, script string, keys []string, args ...interface{}) Cmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandEval, func() []string { return keys })
