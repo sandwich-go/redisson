@@ -119,6 +119,8 @@ Output:
 
 ## Monitor
 
+Import Grafana dashboard id `16768`
+
 ```go
 import (
     "github.com/prometheus/client_golang/prometheus"
@@ -138,6 +140,7 @@ c.RegisterCollector(func(c prometheus.Collector) {
 })
 ```
 
+![grafana_dashboard](https://github.com/sandwich-go/redisson/blob/version/1.0/grafana_dashboard.png)
 
 ## Auto Pipeline
 
