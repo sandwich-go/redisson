@@ -30,6 +30,7 @@ func connectResp3(v ConfVisitor, h handler) (*resp3, error) {
 		RingScaleEachConn: v.GetRingScaleEachConn(),
 		BlockingPoolSize:  v.GetConnPoolSize(),
 		ConnWriteTimeout:  v.GetWriteTimeout(),
+		ShuffleInit:       true,
 	})
 	if err != nil {
 		return nil, err
@@ -1953,7 +1954,7 @@ func (r *resp3) xRead(ctx context.Context, arbitrary rueidis.Arbitrary, a XReadG
 	if a.NoAck {
 		arbitrary = arbitrary.Args(NOACK)
 	}
-	arbitrary = arbitrary.Args(STREAMS).Args(a.Streams...)
+	arbitrary = arbitrary.Args(STREAMS).Keys(a.Streams[:len(a.Streams)/2]...).Args(a.Streams[len(a.Streams)/2:]...)
 	var com rueidis.Completed
 	if a.Block >= 0 {
 		com = arbitrary.Blocking()
