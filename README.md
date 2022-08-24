@@ -113,6 +113,8 @@ Output:
 
 ## Monitor
 
+Import Grafana dashboard id `16768`
+
 ```go
 import (
     "github.com/prometheus/client_golang/prometheus"
@@ -131,6 +133,8 @@ c.RegisterCollector(func(c prometheus.Collector) {
     DefaultPrometheusRegistry.Register(c)
 })
 ```
+
+![grafana_dashboard](https://github.com/sandwich-go/redisson/blob/version/1.0/grafana_dashboard.png)
 
 * [Opt-in client side caching](https://redis.io/docs/manual/client-side-caching/)
 * [RESP](https://redis.io/docs/reference/protocol-spec/)
