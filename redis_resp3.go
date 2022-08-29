@@ -31,6 +31,12 @@ func connectResp3(v ConfVisitor, h handler) (*resp3, error) {
 		BlockingPoolSize:  v.GetConnPoolSize(),
 		ConnWriteTimeout:  v.GetWriteTimeout(),
 		ShuffleInit:       true,
+		Sentinel: rueidis.SentinelOption{
+			Username:   v.GetUsername(),
+			Password:   v.GetPassword(),
+			ClientName: v.GetName(),
+			MasterSet:  v.GetMasterName(),
+		},
 	})
 	if err != nil {
 		return nil, err

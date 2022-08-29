@@ -7,6 +7,7 @@ func ConfOptionDeclareWithDefault() interface{} {
 	return map[string]interface{}{
 		"Resp":              RESP(RESP2),                     // @MethodComment(RESP版本)
 		"Name":              "",                              // @MethodComment(Redis客户端名字)
+		"MasterName":        "",                              // @MethodComment(Redis Sentinel模式下，master名字)
 		"EnableMonitor":     true,                            // @MethodComment(是否开启监控)
 		"Addrs":             []string{"127.0.0.1:6379"},      // @MethodComment(Redis地址列表)
 		"DB":                0,                               // @MethodComment(Redis实例数据库编号，集群下只能用0)

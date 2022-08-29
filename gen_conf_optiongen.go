@@ -13,6 +13,7 @@ import (
 type Conf struct {
 	Resp              RESP          `xconf:"resp" usage:"RESP版本"`
 	Name              string        `xconf:"name" usage:"Redis客户端名字"`
+	MasterName        string        `xconf:"master_name" usage:"Redis Sentinel模式下，master名字"`
 	EnableMonitor     bool          `xconf:"enable_monitor" usage:"是否开启监控"`
 	Addrs             []string      `xconf:"addrs" usage:"Redis地址列表"`
 	DB                int           `xconf:"db" usage:"Redis实例数据库编号，集群下只能用0"`
@@ -74,6 +75,15 @@ func WithName(v string) ConfOption {
 		previous := cc.Name
 		cc.Name = v
 		return WithName(previous)
+	}
+}
+
+// WithMasterName Redis Sentinel模式下，master名字
+func WithMasterName(v string) ConfOption {
+	return func(cc *Conf) ConfOption {
+		previous := cc.MasterName
+		cc.MasterName = v
+		return WithMasterName(previous)
 	}
 }
 
@@ -243,6 +253,7 @@ func newDefaultConf() *Conf {
 	for _, opt := range [...]ConfOption{
 		WithResp(RESP2),
 		WithName(""),
+		WithMasterName(""),
 		WithEnableMonitor(true),
 		WithAddrs([]string{"127.0.0.1:6379"}...),
 		WithDB(0),
@@ -307,6 +318,7 @@ func AtomicConf() ConfVisitor {
 // all getter func
 func (cc *Conf) GetResp() RESP                     { return cc.Resp }
 func (cc *Conf) GetName() string                   { return cc.Name }
+func (cc *Conf) GetMasterName() string             { return cc.MasterName }
 func (cc *Conf) GetEnableMonitor() bool            { return cc.EnableMonitor }
 func (cc *Conf) GetAddrs() []string                { return cc.Addrs }
 func (cc *Conf) GetDB() int                        { return cc.DB }
@@ -329,6 +341,7 @@ func (cc *Conf) GetDevelopment() bool              { return cc.Development }
 type ConfVisitor interface {
 	GetResp() RESP
 	GetName() string
+	GetMasterName() string
 	GetEnableMonitor() bool
 	GetAddrs() []string
 	GetDB() int
