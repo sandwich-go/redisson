@@ -126,7 +126,7 @@ var DefaultPrometheusRegistry = prometheus.NewRegistry()
 
 c := redisson.MustNewClient(redisson.NewConf(
       redisson.WithResp(redisson.RESP2),
-      redisson.WithDevelopment(true),
+      redisson.WithEnableMonitor(true),
 ))
 defer c.Close()
 
