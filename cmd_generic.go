@@ -311,9 +311,7 @@ type GenericReader interface {
 	// Return:
 	//	Integer reply: The number of keys that were touched.
 	Touch(ctx context.Context, keys ...string) IntCmd
-}
 
-type GenericCacheCmdable interface {
 	// TTL
 	// Available since: 1.0.0
 	// Time complexity: O(1)
@@ -328,15 +326,6 @@ type GenericCacheCmdable interface {
 	// 	Integer reply: TTL in seconds, or a negative value in order to signal an error (see the description above).
 	TTL(ctx context.Context, key string) DurationCmd
 
-	// Type
-	// Available since: 1.0.0
-	// Time complexity: O(1)
-	// ACL categories: @keyspace @read @fast
-	// Returns the string representation of the type of the value stored at key. The different types that can be returned are: string, list, set, zset, hash and stream.
-	// Return:
-	// 	Simple string reply: type of key, or none when key does not exist.
-	Type(ctx context.Context, key string) StatusCmd
-
 	// PTTL
 	// Available since: 2.6.0
 	// Time complexity: O(1)
@@ -349,6 +338,17 @@ type GenericCacheCmdable interface {
 	// Return:
 	// 	Integer reply: TTL in milliseconds, or a negative value in order to signal an error (see the description above).
 	PTTL(ctx context.Context, key string) DurationCmd
+}
+
+type GenericCacheCmdable interface {
+	// Type
+	// Available since: 1.0.0
+	// Time complexity: O(1)
+	// ACL categories: @keyspace @read @fast
+	// Returns the string representation of the type of the value stored at key. The different types that can be returned are: string, list, set, zset, hash and stream.
+	// Return:
+	// 	Simple string reply: type of key, or none when key does not exist.
+	Type(ctx context.Context, key string) StatusCmd
 
 	// Sort
 	// Available since: 1.0.0
@@ -486,7 +486,7 @@ func (c *client) PExpireAt(ctx context.Context, key string, tm time.Time) BoolCm
 
 func (c *client) PTTL(ctx context.Context, key string) DurationCmd {
 	ctx = c.handler.before(ctx, CommandPTTL)
-	r := c.cacheCmdable.PTTL(ctx, key)
+	r := c.cmdable.PTTL(ctx, key)
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -574,7 +574,7 @@ func (c *client) Touch(ctx context.Context, keys ...string) IntCmd {
 
 func (c *client) TTL(ctx context.Context, key string) DurationCmd {
 	ctx = c.handler.before(ctx, CommandTTL)
-	r := c.cacheCmdable.TTL(ctx, key)
+	r := c.cmdable.TTL(ctx, key)
 	c.handler.after(ctx, r.Err())
 	return r
 }

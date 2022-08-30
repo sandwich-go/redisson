@@ -397,11 +397,7 @@ func testPTTL(ctx context.Context, c Cmdable) []string {
 	So(expire.Err(), ShouldBeNil)
 	So(expire.Val(), ShouldBeTrue)
 
-	pttl := cacheCmd(c).PTTL(ctx, key)
-	So(pttl.Err(), ShouldBeNil)
-	So(pttl.Val(), ShouldNotEqual, 100*time.Millisecond)
-
-	pttl = c.PTTL(ctx, key)
+	pttl := c.PTTL(ctx, key)
 	So(pttl.Err(), ShouldBeNil)
 	So(pttl.Val(), ShouldNotEqual, 100*time.Millisecond)
 
@@ -699,10 +695,6 @@ func testTTL(ctx context.Context, c Cmdable) []string {
 	So(expire.Val(), ShouldBeTrue)
 
 	ttl = c.TTL(ctx, key)
-	So(ttl.Err(), ShouldBeNil)
-	So(ttl.Val(), ShouldEqual, 60*time.Second)
-
-	ttl = cacheCmd(c).TTL(ctx, key)
 	So(ttl.Err(), ShouldBeNil)
 	So(ttl.Val(), ShouldEqual, 60*time.Second)
 
