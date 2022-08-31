@@ -6,7 +6,7 @@ require (
 	github.com/coreos/go-semver v0.3.0
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/prometheus/client_golang v1.11.0
-	github.com/sandwich-go/rueidis v0.1.7
+	github.com/sandwich-go/rueidis v0.1.8
 	github.com/smartystreets/goconvey v1.7.2
 )
 
