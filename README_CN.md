@@ -73,6 +73,8 @@ res := c.Set(ctx, "key", "10", -1)
 [SET KEEPTTL]: redis command are not supported in version "5.0.0", available since 6.0.0
 ```
 
+> :warning: Development模式下，当校验失败会***Panic***
+
 ### 检查过期
 如果 Redis >= 4.0
 ```go

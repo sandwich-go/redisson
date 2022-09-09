@@ -73,6 +73,8 @@ Output:
 [SET KEEPTTL]: redis command are not supported in version "5.0.0", available since 6.0.0
 ```
 
+> :warning: Development Mode, will ***Panic*** when check version failed.
+
 ### Check deprecated
 If Redis >= 4.0
 ```go
