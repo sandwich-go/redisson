@@ -57,6 +57,8 @@ func main() {
 ```
 
 ## Check
+Check only in development mode.
+
 ### Check version
 If Redis < 6.0
 ```go
