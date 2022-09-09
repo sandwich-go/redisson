@@ -16,6 +16,10 @@ A Type-safe Golang Redis RESP2 client.
 
 * Golang >= 1.16
 
+## Base Library
+- RESP2, using [go-redis/redis](https://github.com/go-redis/redis) library.
+- RESP3, using [rueian/rueidis](https://github.com/rueian/rueidis) library.
+
 ## Links
 * [English](https://github.com/sandwich-go/redisson/blob/version/1.0/README.md)
 * [中文文档](https://github.com/sandwich-go/redisson/blob/version/1.0/README_CN.md)

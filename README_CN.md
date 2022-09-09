@@ -17,6 +17,10 @@
 
 * Golang >= 1.16
 
+## 基础库
+- RESP2, 使用 [go-redis/redis](https://github.com/go-redis/redis).
+- RESP3, 使用 [rueian/rueidis](https://github.com/rueian/rueidis).
+
 ## 链接
 * [English](https://github.com/sandwich-go/redisson/blob/version/1.0/README.md)
 * [中文文档](https://github.com/sandwich-go/redisson/blob/version/1.0/README_CN.md)
