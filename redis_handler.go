@@ -104,7 +104,7 @@ func (r *baseHandler) beforeWithKeys(ctx context.Context, command Command, getKe
 	if r.v.GetDevelopment() {
 		// 需要检验命令是否在黑名单
 		if command.Forbid() {
-			panic(fmt.Errorf("[%s]: redis command not allowed", command.String()))
+			panic(fmt.Errorf("[%s]: redis command are not allowed", command.String()))
 		}
 		// 需要检验版本是否支持该命令
 		if r.version.LessThan(mustNewSemVersion(command.RequireVersion())) {
