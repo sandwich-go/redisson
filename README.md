@@ -111,7 +111,7 @@ res := c.ClusterFailover(ctx)
 ```
 Output:
 ```text
-[CLUSTER FAILOVER]: redis command not allowed 
+[CLUSTER FAILOVER]: redis command are not allowed 
 ```
 
 ## Monitor
