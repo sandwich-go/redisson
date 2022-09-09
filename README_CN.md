@@ -145,7 +145,7 @@ c.RegisterCollector(func(c prometheus.Collector) {
 - [sandwich-go/redisson](https://github.com/sandwich-go/redisson) v1.1.14
 
 ### Benchmarking Result
-##### Parallel mode, Get Command
+##### Single, Parallel mode, Get Command
 ```markdown
 +---------------------------------------------------+-----------+-------+-------+-----------+
 | Single Parallel(128) Get                          | iteration | ns/op | B/op  | allocs/op |
@@ -182,7 +182,7 @@ c.RegisterCollector(func(c prometheus.Collector) {
 
 ![BenchmarkSingleClientGetParallel](https://github.com/sandwich-go/go-redis-client-benchmark/blob/master/BenchmarkSingleClientGetParallel.png)
 
-##### Parallel mode, Get Command
+##### Cluster, Parallel mode, Get Command
 ```markdown
 +---------------------------------------------------+-----------+-------+-------+-----------+ 
 | Cluster Parallel(128) Get                         | iteration | ns/op | B/op  | allocs/op | 
