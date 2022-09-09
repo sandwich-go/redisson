@@ -52,6 +52,9 @@ func main() {
 ```
 
 ## 检查
+仅在development模式下才会检查
+
+
 ### 版本检查
 如果 Redis < 6.0
 ```go
@@ -67,6 +70,8 @@ res := c.Set(ctx, "key", "10", -1)
 ```text
 [SET KEEPTTL]: redis command are not supported in version "5.0.0", available since 6.0.0
 ```
+
+> :warning: 在development模式下，若校验版本失败，则会发生Panic
 
 ### 检查过期
 如果 Redis >= 4.0
@@ -100,6 +105,8 @@ res := c.MSet(ctx, "key1", "10", "key2", "20")
 [MSET]: multi key command with different key slots are not allowed 
 ```
 
+> :warning: 在development模式下，若多个key分布在不同的slot中，则会发生Panic
+
 ### 命令禁用
 ```go
 c := redisson.MustNewClient(redisson.NewConf(
@@ -114,6 +121,35 @@ res := c.ClusterFailover(ctx)
 ```text
 [CLUSTER FAILOVER]: redis command are not allowed 
 ```
+
+> :warning: 在development模式下，若使用禁用命令，则会发生Panic
+
+#### 禁用命令集
+* CLUSTER ADDSLOTS
+* CLUSTER ADDSLOTSRANGE
+* CLUSTER DELSLOTS
+* CLUSTER DELSLOTSRANGE
+* CLUSTER FAILOVER
+* CLUSTER FORGET
+* CLUSTER MEET
+* CLUSTER REPLICATE
+* CLUSTER RESET HARD/SOFT
+* CLUSTER SAVECONFIG
+* CLUSTER SLAVES
+* KEYS
+* MIGRATE
+* BGREWRITEAOF
+* BGSAVE
+* CONFIG GET
+* CONFIG RESETSTAT
+* CONFIG REWRITE
+* CONFIG SET
+* FLUSHALL ASYNC/SYNC
+* FLUSHDB ASYNC/SYNC
+* SAVE
+* SHUTDOWN NOSAVE/SAVE
+* SLAVEOF
+* SELECT
 
 ## 监控
 

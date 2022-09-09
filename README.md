@@ -51,6 +51,8 @@ func main() {
 ```
 
 ## Check
+Check only in development mode.
+
 ### Check version
 if Redis < 6.0
 ```go
@@ -66,6 +68,8 @@ Output:
 ```text
 [SET KEEPTTL]: redis command are not supported in version "5.0.0", available since 6.0.0
 ```
+
+> :warning: Will Panic when check version failed in development mode.
 
 ### Check deprecated
 if Redis >= 4.0
@@ -99,6 +103,8 @@ Output:
 [MSET]: multi key command with different key slots are not allowed 
 ```
 
+> :warning: Will Panic when has different slots of keys in development mode.
+
 ### Check forbid
 ```go
 c := redisson.MustNewClient(redisson.NewConf(
@@ -113,6 +119,35 @@ Output:
 ```text
 [CLUSTER FAILOVER]: redis command are not allowed 
 ```
+
+> :warning: Will Panic when exec forbid command in development mode.
+
+#### Forbid commands
+* CLUSTER ADDSLOTS
+* CLUSTER ADDSLOTSRANGE
+* CLUSTER DELSLOTS
+* CLUSTER DELSLOTSRANGE
+* CLUSTER FAILOVER
+* CLUSTER FORGET
+* CLUSTER MEET
+* CLUSTER REPLICATE
+* CLUSTER RESET HARD/SOFT
+* CLUSTER SAVECONFIG
+* CLUSTER SLAVES
+* KEYS
+* MIGRATE
+* BGREWRITEAOF
+* BGSAVE
+* CONFIG GET
+* CONFIG RESETSTAT
+* CONFIG REWRITE
+* CONFIG SET
+* FLUSHALL ASYNC/SYNC
+* FLUSHDB ASYNC/SYNC
+* SAVE
+* SHUTDOWN NOSAVE/SAVE
+* SLAVEOF
+* SELECT
 
 ## Monitor
 
