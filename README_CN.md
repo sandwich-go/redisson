@@ -22,6 +22,10 @@
 
 如果不能升级`Golang`至`1.18`，请使用`redisson/version/0.1`版本。
 
+## 基础库
+- RESP2, 使用 [go-redis/redis](https://github.com/go-redis/redis).
+- RESP3, 使用 [rueian/rueidis](https://github.com/rueian/rueidis).
+
 ## 链接
 * [English](https://github.com/sandwich-go/redisson/blob/master/README.md)
 * [中文文档](https://github.com/sandwich-go/redisson/blob/master/README_CN.md)
