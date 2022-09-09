@@ -15,7 +15,6 @@
 
 ## 要求
 
-* 当前只支持 Redis < 7.x
 * Golang >= 1.16
 
 ## 链接
@@ -221,6 +220,8 @@ c.RegisterCollector(func(c prometheus.Collector) {
 ![BenchmarkClusterClientGetParallel](https://github.com/sandwich-go/go-redis-client-benchmark/blob/master/BenchmarkClusterClientGetParallel.png)
 
 详见 [Benchmark Detail Result](https://github.com/sandwich-go/go-redis-client-benchmark)
+
+
 
 * [Opt-in client side caching](https://redis.io/docs/manual/client-side-caching/)
 * [RESP](https://redis.io/docs/reference/protocol-spec/)

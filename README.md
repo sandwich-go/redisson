@@ -14,7 +14,6 @@ A Type-safe Golang Redis RESP2 client.
 
 ## Requirement
 
-* Currently, only supports Redis < 7.x
 * Golang >= 1.16
 
 ## Links
