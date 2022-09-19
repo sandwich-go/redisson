@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/sandwich-go/rueidis"
+	"github.com/sandwich-go/rueidis/rueidiscompat"
 	"strings"
 	"sync"
 	"time"
@@ -12,6 +13,7 @@ import (
 type resp3 struct {
 	v       ConfVisitor
 	cmd     rueidis.Client
+	adapter rueidiscompat.Cmdable
 	handler handler
 }
 
@@ -41,7 +43,7 @@ func connectResp3(v ConfVisitor, h handler) (*resp3, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &resp3{cmd: cmd, v: v, handler: h}, nil
+	return &resp3{cmd: cmd, v: v, handler: h, adapter: rueidiscompat.NewAdapter(cmd)}, nil
 }
 
 func (r *resp3) PoolStats() PoolStats                    { return PoolStats{} }
@@ -200,15 +202,18 @@ func (r *resp3) ClusterReplicate(ctx context.Context, nodeID string) StatusCmd {
 }
 
 func (r *resp3) ClusterResetSoft(ctx context.Context) StatusCmd {
-	return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().ClusterReset().Soft().Build()))
+	//return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().ClusterReset().Soft().Build()))
+	return r.adapter.ClusterResetSoft(ctx)
 }
 
 func (r *resp3) ClusterResetHard(ctx context.Context) StatusCmd {
-	return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().ClusterReset().Hard().Build()))
+	//return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().ClusterReset().Hard().Build()))
+	return r.adapter.ClusterResetHard(ctx)
 }
 
 func (r *resp3) ClusterSaveConfig(ctx context.Context) StatusCmd {
-	return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().ClusterSaveconfig().Build()))
+	//return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().ClusterSaveconfig().Build()))
+	return r.adapter.ClusterSaveConfig(ctx)
 }
 
 func (r *resp3) ClusterSlaves(ctx context.Context, nodeID string) StringSliceCmd {
@@ -240,11 +245,13 @@ func (r *resp3) ClientID(ctx context.Context) IntCmd {
 }
 
 func (r *resp3) ClientKill(ctx context.Context, ipPort string) StatusCmd {
-	return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().Arbitrary(CLIENT).Args(KILL).Args(ipPort).Build()))
+	//return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().Arbitrary(CLIENT).Args(KILL).Args(ipPort).Build()))
+	return r.adapter.ClientKill(ctx, ipPort)
 }
 
 func (r *resp3) ClientKillByFilter(ctx context.Context, keys ...string) IntCmd {
-	return newIntCmd(r.cmd.Do(ctx, r.cmd.B().Arbitrary(CLIENT).Args(KILL).Args(keys...).Build()))
+	//return newIntCmd(r.cmd.Do(ctx, r.cmd.B().Arbitrary(CLIENT).Args(KILL).Args(keys...).Build()))
+	return r.adapter.ClientKillByFilter(ctx, keys...)
 }
 
 func (r *resp3) ClientList(ctx context.Context) StringCmd {
@@ -252,7 +259,8 @@ func (r *resp3) ClientList(ctx context.Context) StringCmd {
 }
 
 func (r *resp3) ClientPause(ctx context.Context, dur time.Duration) BoolCmd {
-	return newBoolCmd(r.cmd.Do(ctx, r.cmd.B().ClientPause().Timeout(formatSec(dur)).Build()))
+	//return newBoolCmd(r.cmd.Do(ctx, r.cmd.B().ClientPause().Timeout(formatSec(dur)).Build()))
+	return r.adapter.ClientPause(ctx, dur)
 }
 
 func (r *resp3) Echo(ctx context.Context, message interface{}) StringCmd {
@@ -307,7 +315,8 @@ func (r *resp3) ExpireAt(ctx context.Context, key string, tm time.Time) BoolCmd 
 }
 
 func (r *resp3) Keys(ctx context.Context, pattern string) StringSliceCmd {
-	return newStringSliceCmd(r.cmd.Do(ctx, r.cmd.B().Keys().Pattern(pattern).Build()))
+	//return newStringSliceCmd(r.cmd.Do(ctx, r.cmd.B().Keys().Pattern(pattern).Build()))
+	return newStringSliceCmdFromStringSliceCmd(r.adapter.Keys(ctx, pattern))
 }
 
 func (r *resp3) Migrate(ctx context.Context, host, port, key string, db int, timeout time.Duration) StatusCmd {
@@ -363,7 +372,8 @@ func (r *resp3Cache) PTTL(ctx context.Context, key string) DurationCmd {
 }
 
 func (r *resp3) RandomKey(ctx context.Context) StringCmd {
-	return newStringCmd(r.cmd.Do(ctx, r.cmd.B().Randomkey().Build()))
+	//	return newStringCmd(r.cmd.Do(ctx, r.cmd.B().Randomkey().Build()))
+	return newStringCmdFromStringCmd(r.adapter.RandomKey(ctx))
 }
 
 func (r *resp3) Rename(ctx context.Context, key, newkey string) StatusCmd {
@@ -1049,27 +1059,33 @@ func (r *resp3) EvalSha(ctx context.Context, sha1 string, keys []string, args ..
 }
 
 func (r *resp3) ScriptExists(ctx context.Context, hashes ...string) BoolSliceCmd {
-	return newBoolSliceCmd(r.cmd.Do(ctx, r.cmd.B().ScriptExists().Sha1(hashes...).Build()))
+	//return newBoolSliceCmd(r.cmd.Do(ctx, r.cmd.B().ScriptExists().Sha1(hashes...).Build()))
+	return r.adapter.ScriptExists(ctx, hashes...)
 }
 
 func (r *resp3) ScriptFlush(ctx context.Context) StatusCmd {
-	return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().ScriptFlush().Build()))
+	//return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().ScriptFlush().Build()))
+	return r.adapter.ScriptFlush(ctx)
 }
 
 func (r *resp3) ScriptKill(ctx context.Context) StatusCmd {
-	return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().ScriptKill().Build()))
+	//return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().ScriptKill().Build()))
+	return r.adapter.ScriptKill(ctx)
 }
 
 func (r *resp3) ScriptLoad(ctx context.Context, script string) StringCmd {
-	return newStringCmd(r.cmd.Do(ctx, r.cmd.B().ScriptLoad().Script(script).Build()))
+	//return newStringCmd(r.cmd.Do(ctx, r.cmd.B().ScriptLoad().Script(script).Build()))
+	return newStringCmdFromStringCmd(r.adapter.ScriptLoad(ctx, script))
 }
 
 func (r *resp3) BgRewriteAOF(ctx context.Context) StatusCmd {
-	return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().Bgrewriteaof().Build()))
+	//return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().Bgrewriteaof().Build()))
+	return r.adapter.BgRewriteAOF(ctx)
 }
 
 func (r *resp3) BgSave(ctx context.Context) StatusCmd {
-	return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().Bgsave().Build()))
+	//return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().Bgsave().Build()))
+	return r.adapter.BgSave(ctx)
 }
 
 func (r *resp3) Command(ctx context.Context) CommandsInfoCmd {
@@ -1081,35 +1097,43 @@ func (r *resp3) ConfigGet(ctx context.Context, parameter string) SliceCmd {
 }
 
 func (r *resp3) ConfigResetStat(ctx context.Context) StatusCmd {
-	return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().ConfigResetstat().Build()))
+	//return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().ConfigResetstat().Build()))
+	return r.adapter.ConfigResetStat(ctx)
 }
 
 func (r *resp3) ConfigRewrite(ctx context.Context) StatusCmd {
-	return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().ConfigRewrite().Build()))
+	//return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().ConfigRewrite().Build()))
+	return r.adapter.ConfigRewrite(ctx)
 }
 
 func (r *resp3) ConfigSet(ctx context.Context, parameter, value string) StatusCmd {
-	return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().ConfigSet().ParameterValue().ParameterValue(parameter, value).Build()))
+	//return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().ConfigSet().ParameterValue().ParameterValue(parameter, value).Build()))
+	return r.adapter.ConfigSet(ctx, parameter, value)
 }
 
 func (r *resp3) DBSize(ctx context.Context) IntCmd {
-	return newIntCmd(r.cmd.Do(ctx, r.cmd.B().Dbsize().Build()))
+	//return newIntCmd(r.cmd.Do(ctx, r.cmd.B().Dbsize().Build()))
+	return r.adapter.DBSize(ctx)
 }
 
 func (r *resp3) FlushAll(ctx context.Context) StatusCmd {
-	return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().Flushall().Build()))
+	//return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().Flushall().Build()))
+	return r.adapter.FlushAll(ctx)
 }
 
 func (r *resp3) FlushAllAsync(ctx context.Context) StatusCmd {
-	return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().Flushall().Async().Build()))
+	//return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().Flushall().Async().Build()))
+	return r.adapter.FlushAllAsync(ctx)
 }
 
 func (r *resp3) FlushDB(ctx context.Context) StatusCmd {
-	return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().Flushdb().Build()))
+	//return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().Flushdb().Build()))
+	return r.adapter.FlushDB(ctx)
 }
 
 func (r *resp3) FlushDBAsync(ctx context.Context) StatusCmd {
-	return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().Flushdb().Async().Build()))
+	//return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().Flushdb().Async().Build()))
+	return r.adapter.FlushDBAsync(ctx)
 }
 
 func (r *resp3) Info(ctx context.Context, section ...string) StringCmd {
@@ -1134,19 +1158,23 @@ func (r *resp3) MemoryUsage(ctx context.Context, key string, samples ...int) Int
 }
 
 func (r *resp3) Save(ctx context.Context) StatusCmd {
-	return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().Save().Build()))
+	//return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().Save().Build()))
+	return r.adapter.Save(ctx)
 }
 
 func (r *resp3) Shutdown(ctx context.Context) StatusCmd {
-	return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().Shutdown().Build()))
+	//return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().Shutdown().Build()))
+	return r.adapter.Shutdown(ctx)
 }
 
 func (r *resp3) ShutdownSave(ctx context.Context) StatusCmd {
-	return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().Shutdown().Save().Build()))
+	//return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().Shutdown().Save().Build()))
+	return r.adapter.ShutdownSave(ctx)
 }
 
 func (r *resp3) ShutdownNoSave(ctx context.Context) StatusCmd {
-	return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().Shutdown().Nosave().Build()))
+	//return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().Shutdown().Nosave().Build()))
+	return r.adapter.ShutdownNoSave(ctx)
 }
 
 func (r *resp3) SlaveOf(ctx context.Context, host, port string) StatusCmd {

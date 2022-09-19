@@ -5,6 +5,7 @@ import (
 	"fmt"
 	goredis "github.com/go-redis/redis/v8"
 	"github.com/sandwich-go/rueidis"
+	"github.com/sandwich-go/rueidis/rueidiscompat"
 	"net"
 	"time"
 )
@@ -167,7 +168,7 @@ type DurationCmd interface {
 }
 
 func newDurationCmd(res rueidis.RedisResult, precision time.Duration, args ...interface{}) DurationCmd {
-	val, err := res.ToInt64()
+	val, err := res.AsInt64()
 	cmd := goredis.NewDurationCmd(context.Background(), precision, args...)
 	if err != nil {
 		cmd.SetErr(wrapError(err))
@@ -247,6 +248,13 @@ type StringCmd interface {
 	Scan(val interface{}) error
 }
 
+func newStringCmdFromStringCmd(res *rueidiscompat.StringCmd, args ...interface{}) StringCmd {
+	cmd := goredis.NewStringCmd(context.Background(), args...)
+	cmd.SetErr(wrapError(res.Err()))
+	cmd.SetVal(res.Val())
+	return cmd
+}
+
 func newStringCmd(res rueidis.RedisResult, args ...interface{}) StringCmd {
 	val, err := res.ToString()
 	cmd := goredis.NewStringCmd(context.Background(), args...)
@@ -288,6 +296,13 @@ type StringSliceCmd interface {
 	Val() []string
 	Result() ([]string, error)
 	ScanSlice(container interface{}) error
+}
+
+func newStringSliceCmdFromStringSliceCmd(res *rueidiscompat.StringSliceCmd, args ...interface{}) StringSliceCmd {
+	cmd := goredis.NewStringSliceCmd(context.Background(), args...)
+	cmd.SetErr(wrapError(res.Err()))
+	cmd.SetVal(res.Val())
+	return cmd
 }
 
 func newStringSliceCmd(res rueidis.RedisResult, args ...interface{}) StringSliceCmd {
@@ -400,7 +415,7 @@ type XMessageSliceCmd interface {
 }
 
 func newXMessageSliceCmd(res rueidis.RedisResult, args ...interface{}) XMessageSliceCmd {
-	val, err := res.AsXRangeSlice()
+	val, err := res.AsXRange()
 	cmd := goredis.NewXMessageSliceCmd(context.Background(), args...)
 	if err != nil {
 		cmd.SetErr(wrapError(err))
@@ -414,7 +429,7 @@ func newXMessageSliceCmd(res rueidis.RedisResult, args ...interface{}) XMessageS
 	return cmd
 }
 
-func newXMessage(r rueidis.XRange) XMessage {
+func newXMessage(r rueidis.XRangeEntry) XMessage {
 	if r.FieldValues == nil {
 		return XMessage{ID: r.ID, Values: nil}
 	}
@@ -436,21 +451,16 @@ type XStreamSliceCmd interface {
 }
 
 func newXStreamSliceCmd(res rueidis.RedisResult, args ...interface{}) XStreamSliceCmd {
-	streams, err := res.ToMap()
+	streams, err := res.AsXRead()
 	cmd := goredis.NewXStreamSliceCmd(context.Background(), args...)
 	if err != nil {
 		cmd.SetErr(wrapError(err))
 		return cmd
 	}
 	val := make([]XStream, 0, len(streams))
-	for name, stream := range streams {
-		ranges, err0 := stream.AsXRangeSlice()
-		if err0 != nil {
-			cmd.SetErr(wrapError(err0))
-			return cmd
-		}
-		msgs := make([]XMessage, 0, len(ranges))
-		for _, r := range ranges {
+	for name, messages := range streams {
+		msgs := make([]XMessage, 0, len(messages))
+		for _, r := range messages {
 			msgs = append(msgs, newXMessage(r))
 		}
 		val = append(val, XStream{Stream: name, Messages: msgs})
@@ -480,7 +490,7 @@ func newXPendingCmd(res rueidis.RedisResult, args ...interface{}) XPendingCmd {
 		cmd.SetErr(fmt.Errorf("got %d, wanted 4", len(arr)))
 		return cmd
 	}
-	count, err0 := arr[0].ToInt64()
+	count, err0 := arr[0].AsInt64()
 	if err0 != nil {
 		cmd.SetErr(wrapError(err0))
 		return cmd
@@ -572,12 +582,12 @@ func newXPendingExtCmd(res rueidis.RedisResult, args ...interface{}) XPendingExt
 			cmd.SetErr(wrapError(err2))
 			return cmd
 		}
-		idle, err3 := arr[2].ToInt64()
+		idle, err3 := arr[2].AsInt64()
 		if err3 != nil {
 			cmd.SetErr(wrapError(err3))
 			return cmd
 		}
-		retryCount, err4 := arr[3].ToInt64()
+		retryCount, err4 := arr[3].AsInt64()
 		if err4 != nil {
 			cmd.SetErr(wrapError(err4))
 			return cmd
@@ -617,7 +627,7 @@ func newXAutoClaimCmd(res rueidis.RedisResult, args ...interface{}) XAutoClaimCm
 		cmd.SetErr(wrapError(err0))
 		return cmd
 	}
-	ranges, err1 := arr[1].AsXRangeSlice()
+	ranges, err1 := arr[1].AsXRange()
 	if err1 != nil {
 		cmd.SetErr(wrapError(err1))
 		return cmd
@@ -682,7 +692,7 @@ func newXInfoConsumersCmd(res rueidis.RedisResult, stream string, group string) 
 	}
 	val := make([]XInfoConsumer, 0, len(arr))
 	for _, v := range arr {
-		info, err0 := v.ToMap()
+		info, err0 := v.AsMap()
 		if err0 != nil {
 			cmd.SetErr(wrapError(err0))
 			return cmd
@@ -723,7 +733,7 @@ func newXInfoGroupsCmd(res rueidis.RedisResult, stream string) XInfoGroupsCmd {
 	}
 	groupInfos := make([]XInfoGroup, 0, len(arr))
 	for _, v := range arr {
-		info, err0 := v.ToMap()
+		info, err0 := v.AsMap()
 		if err0 != nil {
 			cmd.SetErr(wrapError(err0))
 			return cmd
@@ -764,7 +774,7 @@ type XInfoStreamCmd interface {
 }
 
 func newXInfoStreamCmd(res rueidis.RedisResult, stream string) XInfoStreamCmd {
-	kv, err := res.ToMap()
+	kv, err := res.AsMap()
 	cmd := goredis.NewXInfoStreamCmd(context.Background(), stream)
 	if err != nil {
 		cmd.SetErr(wrapError(err))
@@ -772,16 +782,16 @@ func newXInfoStreamCmd(res rueidis.RedisResult, stream string) XInfoStreamCmd {
 	}
 	var val = new(XInfoStream)
 	if v, ok := kv["length"]; ok {
-		val.Length, _ = v.ToInt64()
+		val.Length, _ = v.AsInt64()
 	}
 	if v, ok := kv["radix-tree-keys"]; ok {
-		val.RadixTreeKeys, _ = v.ToInt64()
+		val.RadixTreeKeys, _ = v.AsInt64()
 	}
 	if v, ok := kv["radix-tree-nodes"]; ok {
-		val.RadixTreeNodes, _ = v.ToInt64()
+		val.RadixTreeNodes, _ = v.AsInt64()
 	}
 	if v, ok := kv["groups"]; ok {
-		val.Groups, _ = v.ToInt64()
+		val.Groups, _ = v.AsInt64()
 	}
 	if v, ok := kv["last-generated-id"]; ok {
 		val.LastGeneratedID, _ = v.ToString()
@@ -793,15 +803,15 @@ func newXInfoStreamCmd(res rueidis.RedisResult, stream string) XInfoStreamCmd {
 	//	val.RecordedFirstEntryID, _ = v.ToString()
 	//}
 	//if v, ok := kv["entries-added"]; ok {
-	//	val.EntriesAdded, _ = v.ToInt64()
+	//	val.EntriesAdded, _ = v.AsInt64()
 	//}
 	if v, ok := kv["first-entry"]; ok {
-		if r, err := v.AsXRange(); err == nil {
+		if r, err := v.AsXRangeEntry(); err == nil {
 			val.FirstEntry = newXMessage(r)
 		}
 	}
 	if v, ok := kv["last-entry"]; ok {
-		if r, err := v.AsXRange(); err == nil {
+		if r, err := v.AsXRangeEntry(); err == nil {
 			val.LastEntry = newXMessage(r)
 		}
 	}
@@ -826,7 +836,7 @@ type XInfoStreamFullCmd interface {
 }
 
 func newXInfoStreamFullCmd(res rueidis.RedisResult, args ...interface{}) XInfoStreamFullCmd {
-	kv, err := res.ToMap()
+	kv, err := res.AsMap()
 	cmd := goredis.NewXInfoStreamFullCmd(context.Background(), args...)
 	if err != nil {
 		cmd.SetErr(wrapError(err))
@@ -834,19 +844,19 @@ func newXInfoStreamFullCmd(res rueidis.RedisResult, args ...interface{}) XInfoSt
 	}
 	var val = new(XInfoStreamFull)
 	if v, ok := kv["length"]; ok {
-		val.Length, _ = v.ToInt64()
+		val.Length, _ = v.AsInt64()
 	}
 	if v, ok := kv["radix-tree-keys"]; ok {
-		val.RadixTreeKeys, _ = v.ToInt64()
+		val.RadixTreeKeys, _ = v.AsInt64()
 	}
 	if v, ok := kv["radix-tree-nodes"]; ok {
-		val.RadixTreeNodes, _ = v.ToInt64()
+		val.RadixTreeNodes, _ = v.AsInt64()
 	}
 	if v, ok := kv["last-generated-id"]; ok {
 		val.LastGeneratedID, _ = v.ToString()
 	}
 	//if v, ok := kv["entries-added"]; ok {
-	//	val.EntriesAdded, _ = v.ToInt64()
+	//	val.EntriesAdded, _ = v.AsInt64()
 	//}
 	//if v, ok := kv["max-deleted-entry-id"]; ok {
 	//	val.MaxDeletedEntryID, _ = v.ToString()
@@ -862,7 +872,7 @@ func newXInfoStreamFullCmd(res rueidis.RedisResult, args ...interface{}) XInfoSt
 		}
 	}
 	if v, ok := kv["entries"]; ok {
-		ranges, err0 := v.AsXRangeSlice()
+		ranges, err0 := v.AsXRange()
 		if err0 != nil {
 			cmd.SetErr(wrapError(err0))
 			return cmd
@@ -883,7 +893,7 @@ func readStreamGroups(res rueidis.RedisMessage) ([]XInfoStreamGroup, error) {
 	}
 	groups := make([]XInfoStreamGroup, 0, len(arr))
 	for _, v := range arr {
-		info, err := v.ToMap()
+		info, err := v.AsMap()
 		if err != nil {
 			return nil, err
 		}
@@ -895,13 +905,13 @@ func readStreamGroups(res rueidis.RedisMessage) ([]XInfoStreamGroup, error) {
 			group.LastDeliveredID, _ = attr.ToString()
 		}
 		//if attr, ok := info["entries-read"]; ok {
-		//	group.EntriesRead, _ = attr.ToInt64()
+		//	group.EntriesRead, _ = attr.AsInt64()
 		//}
 		//if attr, ok := info["lag"]; ok {
-		//	group.Lag, _ = attr.ToInt64()
+		//	group.Lag, _ = attr.AsInt64()
 		//}
 		if attr, ok := info["pel-count"]; ok {
-			group.PelCount, _ = attr.ToInt64()
+			group.PelCount, _ = attr.AsInt64()
 		}
 		if attr, ok := info["pending"]; ok {
 			group.Pending, err = readXInfoStreamGroupPending(attr)
@@ -943,12 +953,12 @@ func readXInfoStreamGroupPending(res rueidis.RedisMessage) ([]XInfoStreamGroupPe
 		if err != nil {
 			return nil, err
 		}
-		delivery, err1 := info[2].ToInt64()
+		delivery, err1 := info[2].AsInt64()
 		if err1 != nil {
 			return nil, err1
 		}
 		p.DeliveryTime = time.Unix(delivery/1000, delivery%1000*int64(time.Millisecond))
-		p.DeliveryCount, err = info[3].ToInt64()
+		p.DeliveryCount, err = info[3].AsInt64()
 		if err != nil {
 			return nil, err
 		}
@@ -964,7 +974,7 @@ func readXInfoStreamConsumers(res rueidis.RedisMessage) ([]XInfoStreamConsumer, 
 	}
 	consumer := make([]XInfoStreamConsumer, 0, len(arr))
 	for _, v := range arr {
-		info, err := v.ToMap()
+		info, err := v.AsMap()
 		if err != nil {
 			return nil, err
 		}
@@ -973,11 +983,11 @@ func readXInfoStreamConsumers(res rueidis.RedisMessage) ([]XInfoStreamConsumer, 
 			c.Name, _ = attr.ToString()
 		}
 		if attr, ok := info["seen-time"]; ok {
-			seen, _ := attr.ToInt64()
+			seen, _ := attr.AsInt64()
 			c.SeenTime = time.Unix(seen/1000, seen%1000*int64(time.Millisecond))
 		}
 		if attr, ok := info["pel-count"]; ok {
-			c.PelCount, _ = attr.ToInt64()
+			c.PelCount, _ = attr.AsInt64()
 		}
 		if attr, ok := info["pending"]; ok {
 			pending, err1 := attr.ToArray()
@@ -998,12 +1008,12 @@ func readXInfoStreamConsumers(res rueidis.RedisMessage) ([]XInfoStreamConsumer, 
 				if err != nil {
 					return nil, err
 				}
-				delivery, err3 := pendingInfo[1].ToInt64()
+				delivery, err3 := pendingInfo[1].AsInt64()
 				if err3 != nil {
 					return nil, err3
 				}
 				p.DeliveryTime = time.Unix(delivery/1000, delivery%1000*int64(time.Millisecond))
-				p.DeliveryCount, err = pendingInfo[2].ToInt64()
+				p.DeliveryCount, err = pendingInfo[2].AsInt64()
 				if err != nil {
 					return nil, err
 				}
@@ -1026,58 +1036,30 @@ type ZSliceCmd interface {
 }
 
 func newZSliceCmd(res rueidis.RedisResult, args ...interface{}) ZSliceCmd {
-	arr, err := res.ToArray()
+	scores, err := res.AsZScores()
 	cmd := goredis.NewZSliceCmd(context.Background(), args...)
 	if err != nil {
 		cmd.SetErr(wrapError(err))
 		return cmd
 	}
-	val := make([]Z, 0, len(arr))
-	for _, s := range arr {
-		kv, err0 := s.ToArray()
-		if err0 != nil {
-			cmd.SetErr(wrapError(err0))
-			return cmd
-		}
-		member, err1 := kv[0].ToString()
-		if err1 != nil {
-			cmd.SetErr(wrapError(err1))
-			return cmd
-		}
-		score, err2 := kv[1].AsFloat64()
-		if err2 != nil {
-			cmd.SetErr(wrapError(err2))
-			return cmd
-		}
-		val = append(val, Z{
-			Member: member,
-			Score:  score,
-		})
+	val := make([]Z, 0, len(scores))
+	for _, s := range scores {
+		val = append(val, Z{Member: s.Member, Score: s.Score})
 	}
 	cmd.SetVal(val)
 	return cmd
 }
 
 func newZSliceSingleCmd(res rueidis.RedisResult, args ...interface{}) ZSliceCmd {
-	arr, err := res.ToArray()
+	s, err := res.AsZScore()
 	cmd := goredis.NewZSliceCmd(context.Background(), args...)
 	if err != nil {
 		cmd.SetErr(wrapError(err))
 		return cmd
 	}
-	member, err0 := arr[0].ToString()
-	if err0 != nil {
-		cmd.SetErr(wrapError(err0))
-		return cmd
-	}
-	score, err1 := arr[1].AsFloat64()
-	if err1 != nil {
-		cmd.SetErr(wrapError(err1))
-		return cmd
-	}
 	cmd.SetVal([]Z{{
-		Member: member,
-		Score:  score,
+		Member: s.Member,
+		Score:  s.Score,
 	}})
 	return cmd
 }
@@ -1184,12 +1166,12 @@ func newClusterSlotsCmd(res rueidis.RedisResult, args ...interface{}) ClusterSlo
 			cmd.SetErr(fmt.Errorf("got %d, excpected atleast 2", len(slots)))
 			return cmd
 		}
-		start, err1 := slots[0].ToInt64()
+		start, err1 := slots[0].AsInt64()
 		if err1 != nil {
 			cmd.SetErr(wrapError(err1))
 			return cmd
 		}
-		end, err2 := slots[1].ToInt64()
+		end, err2 := slots[1].AsInt64()
 		if err2 != nil {
 			cmd.SetErr(wrapError(err2))
 			return cmd
@@ -1210,7 +1192,7 @@ func newClusterSlotsCmd(res rueidis.RedisResult, args ...interface{}) ClusterSlo
 				cmd.SetErr(wrapError(err4))
 				return cmd
 			}
-			port, err5 := node[1].ToInt64()
+			port, err5 := node[1].AsInt64()
 			if err5 != nil {
 				cmd.SetErr(wrapError(err5))
 				return cmd
@@ -1425,8 +1407,8 @@ func newCommandsInfoCmd(res rueidis.RedisResult, args ...interface{}) CommandsIn
 			cmd.SetErr(wrapError(err0))
 			return cmd
 		}
-		if len(info) < 7 {
-			cmd.SetErr(fmt.Errorf("got %d, wanted at least 7", len(info)))
+		if len(info) < 6 {
+			cmd.SetErr(fmt.Errorf("got %d, wanted at least 6", len(info)))
 			return cmd
 		}
 		var cmdInfo = &CommandInfo{}
@@ -1435,7 +1417,7 @@ func newCommandsInfoCmd(res rueidis.RedisResult, args ...interface{}) CommandsIn
 			cmd.SetErr(wrapError(err))
 			return cmd
 		}
-		arity, err1 := info[1].ToInt64()
+		arity, err1 := info[1].AsInt64()
 		if err1 != nil {
 			cmd.SetErr(wrapError(err1))
 			return cmd
@@ -1450,19 +1432,19 @@ func newCommandsInfoCmd(res rueidis.RedisResult, args ...interface{}) CommandsIn
 				return cmd
 			}
 		}
-		firstKeyPos, err2 := info[3].ToInt64()
+		firstKeyPos, err2 := info[3].AsInt64()
 		if err2 != nil {
 			cmd.SetErr(wrapError(err2))
 			return cmd
 		}
 		cmdInfo.FirstKeyPos = int8(firstKeyPos)
-		lastKeyPos, err3 := info[4].ToInt64()
+		lastKeyPos, err3 := info[4].AsInt64()
 		if err3 != nil {
 			cmd.SetErr(wrapError(err3))
 			return cmd
 		}
 		cmdInfo.LastKeyPos = int8(lastKeyPos)
-		stepCount, err4 := info[5].ToInt64()
+		stepCount, err4 := info[5].AsInt64()
 		if err4 != nil {
 			cmd.SetErr(wrapError(err4))
 			return cmd
@@ -1474,7 +1456,7 @@ func newCommandsInfoCmd(res rueidis.RedisResult, args ...interface{}) CommandsIn
 				break
 			}
 		}
-		if len(arr) == 6 {
+		if len(info) == 6 {
 			val[cmdInfo.Name] = cmdInfo
 			continue
 		}

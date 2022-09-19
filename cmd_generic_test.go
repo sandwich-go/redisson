@@ -265,9 +265,8 @@ func testMove(ctx context.Context, c Cmdable) []string {
 	So(IsNil(g.Err()), ShouldBeTrue)
 	So(g.Val(), ShouldBeEmpty)
 
-	s = c.Select(ctx, 2)
-	So(s.Err(), ShouldBeNil)
-	So(s.Val(), ShouldEqual, OK)
+	del := c.FlushAll(ctx)
+	So(del.Err(), ShouldBeNil)
 
 	return []string{key}
 }
