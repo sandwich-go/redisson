@@ -325,10 +325,7 @@ func (r *resp3) Migrate(ctx context.Context, host, port, key string, db int, tim
 		return newStatusCmdWithError(err)
 	}
 	var migratePort = r.cmd.B().Migrate().Host(host).Port(iport)
-	if len(key) > 0 {
-		return newStatusCmd(r.cmd.Do(ctx, migratePort.Key().DestinationDb(int64(db)).Timeout(formatSec(timeout)).Build()))
-	}
-	return newStatusCmd(r.cmd.Do(ctx, migratePort.Empty().DestinationDb(int64(db)).Timeout(formatSec(timeout)).Build()))
+	return newStatusCmd(r.cmd.Do(ctx, migratePort.Key(key).DestinationDb(int64(db)).Timeout(formatSec(timeout)).Build()))
 }
 
 func (r *resp3) Move(ctx context.Context, key string, db int) BoolCmd {
