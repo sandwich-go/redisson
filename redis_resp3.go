@@ -964,6 +964,8 @@ func (p *pipelineResp3) Exec(_ context.Context) ([]interface{}, error) {
 	return p.res, p.firstError
 }
 
+func (r *resp3) RawCmdable() interface{} { return r.cmd }
+
 func (r *resp3) Publish(ctx context.Context, channel string, message interface{}) IntCmd {
 	return newIntCmd(r.cmd.Do(ctx, r.cmd.B().Publish().Channel(channel).Message(str(message)).Build()))
 }

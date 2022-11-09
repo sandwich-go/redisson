@@ -618,6 +618,8 @@ func (p *pipelineResp2) Exec(ctx context.Context) ([]interface{}, error) {
 	return result, err
 }
 
+func (r *resp2) RawCmdable() interface{} { return r.cmd }
+
 func (r *resp2) Publish(ctx context.Context, channel string, message interface{}) IntCmd {
 	return r.cmd.Publish(ctx, channel, message)
 }

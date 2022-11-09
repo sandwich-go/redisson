@@ -9,6 +9,7 @@ type Cmdable interface {
 	PoolStats() PoolStats
 	RegisterCollector(RegisterCollectorFunc)
 	Close() error
+	RawCmdable() interface{}
 
 	CacheCmdable
 	BitmapCmdable
