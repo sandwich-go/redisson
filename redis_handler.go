@@ -77,17 +77,26 @@ type (
 	startTimeContextKeyType  struct{}
 	commandContextKeyType    struct{}
 	subCommandContextKeyType struct{}
+	skipCheckContextKeyType  struct{}
 )
 
 func (*startTimeContextKeyType) String() string  { return "start_time" }
 func (*commandContextKeyType) String() string    { return "command" }
 func (*subCommandContextKeyType) String() string { return "sub_command" }
+func (*skipCheckContextKeyType) String() string  { return "skip_check" }
 
 var (
 	startTimeContextKey  = startTimeContextKeyType(struct{}{})
 	commandContextKey    = commandContextKeyType(struct{}{})
 	subCommandContextKey = subCommandContextKeyType(struct{}{})
+	skipCheckContextKey  = skipCheckContextKeyType(struct{}{})
 )
+
+// WithSkipCheck 是否跳过检测
+// 在 Development 的情况下，会跳过 黑名单检验、版本检验、槽位检测以及警告输出
+func WithSkipCheck(ctx context.Context) context.Context {
+	return context.WithValue(ctx, skipCheckContextKey, true)
+}
 
 func (r *baseHandler) setVersion(v *semver.Version)         { r.version = v }
 func (r *baseHandler) setSilentErrCallback(b isSilentError) { r.silentErrCallback = b }
@@ -102,19 +111,21 @@ func (r *baseHandler) before(ctx context.Context, command Command) context.Conte
 }
 func (r *baseHandler) beforeWithKeys(ctx context.Context, command Command, getKeys func() []string) context.Context {
 	if r.v.GetDevelopment() {
-		// 需要检验命令是否在黑名单
-		if command.Forbid() {
-			panic(fmt.Errorf("[%s]: redis command are not allowed", command.String()))
-		}
-		// 需要检验版本是否支持该命令
-		if r.version.LessThan(mustNewSemVersion(command.RequireVersion())) {
-			panic(fmt.Errorf("[%s]: redis command are not supported in version %q, available since %s", command, r.version, command.RequireVersion()))
-		}
-		// 需要检验所有的key是否均在同一槽位
-		panicIfUseMultipleKeySlots(command, getKeys)
-		// 该命令是否有警告日志输出
-		if len(command.WarnVersion()) > 0 && mustNewSemVersion(command.WarnVersion()).LessThan(*r.version) {
-			warning(fmt.Sprintf("[%s]: %s", command.String(), command.Warning()))
+		if skipCheck := ctx.Value(skipCheckContextKey); skipCheck == nil {
+			// 需要检验命令是否在黑名单
+			if command.Forbid() {
+				panic(fmt.Errorf("[%s]: redis command are not allowed", command.String()))
+			}
+			// 需要检验版本是否支持该命令
+			if r.version.LessThan(mustNewSemVersion(command.RequireVersion())) {
+				panic(fmt.Errorf("[%s]: redis command are not supported in version %q, available since %s", command, r.version, command.RequireVersion()))
+			}
+			// 需要检验所有的key是否均在同一槽位
+			panicIfUseMultipleKeySlots(command, getKeys)
+			// 该命令是否有警告日志输出
+			if len(command.WarnVersion()) > 0 && mustNewSemVersion(command.WarnVersion()).LessThan(*r.version) {
+				warning(fmt.Sprintf("[%s]: %s", command.String(), command.Warning()))
+			}
 		}
 	}
 	if r.v.GetEnableMonitor() {
