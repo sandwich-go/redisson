@@ -1012,8 +1012,8 @@ func (r *resp2) ZRandMember(ctx context.Context, key string, count int, withScor
 	result := r.cmd.ZRandMemberWithScores(ctx, key, count)
 	var val []string
 	for _, v := range result.Val() {
-		val = append(val, v.Member.(string))
-		val = append(val, fmt.Sprintf("%f", v.Score))
+		val = append(val, fmt.Sprintf("%v", v.Member))
+		val = append(val, fmt.Sprintf("%v", v.Score))
 	}
 	return goredis.NewStringSliceResult(val, result.Err())
 }
