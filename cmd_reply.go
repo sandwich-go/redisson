@@ -3,11 +3,12 @@ package redisson
 import (
 	"context"
 	"fmt"
-	goredis "github.com/go-redis/redis/v8"
-	"github.com/sandwich-go/rueidis"
-	"github.com/sandwich-go/rueidis/rueidiscompat"
 	"net"
 	"time"
+
+	goredis "github.com/redis/go-redis/v9"
+	"github.com/sandwich-go/rueidis"
+	"github.com/sandwich-go/rueidis/rueidiscompat"
 )
 
 //------------------------------------------------------------------------------
@@ -363,7 +364,7 @@ type StringStringMapCmd interface {
 
 func newStringStringMapCmd(res rueidis.RedisResult, args ...interface{}) StringStringMapCmd {
 	val, err := res.AsStrMap()
-	cmd := goredis.NewStringStringMapCmd(context.Background(), args...)
+	cmd := goredis.NewMapStringStringCmd(context.Background(), args...)
 	cmd.SetErr(wrapError(err))
 	cmd.SetVal(val)
 	return cmd
@@ -377,7 +378,7 @@ type StringIntMapCmd interface {
 
 func newStringIntMapCmd(res rueidis.RedisResult, args ...interface{}) StringIntMapCmd {
 	val, err := res.AsIntMap()
-	cmd := goredis.NewStringIntMapCmd(context.Background(), args...)
+	cmd := goredis.NewMapStringIntCmd(context.Background(), args...)
 	cmd.SetErr(wrapError(err))
 	cmd.SetVal(val)
 	return cmd
@@ -706,7 +707,7 @@ func newXInfoConsumersCmd(res rueidis.RedisResult, stream string, group string) 
 		}
 		if attr, ok := info["idle"]; ok {
 			idle, _ := attr.AsInt64()
-			consumer.Idle = idle
+			consumer.Idle = time.Duration(idle)
 		}
 		val = append(val, consumer)
 	}
