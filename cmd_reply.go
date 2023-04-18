@@ -707,7 +707,7 @@ func newXInfoConsumersCmd(res rueidis.RedisResult, stream string, group string) 
 		}
 		if attr, ok := info["idle"]; ok {
 			idle, _ := attr.AsInt64()
-			consumer.Idle = time.Duration(idle)
+			consumer.Idle = time.Duration(idle) * time.Millisecond
 		}
 		val = append(val, consumer)
 	}
