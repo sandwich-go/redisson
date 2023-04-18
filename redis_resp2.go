@@ -1228,7 +1228,7 @@ func (r *resp2) XTrim(ctx context.Context, key string, maxLen int64) IntCmd {
 
 func (r *resp2) XTrimApprox(ctx context.Context, key string, maxLen int64) IntCmd {
 	// TODO use limit
-	return r.cmd.XTrimMaxLenApprox(ctx, key, maxLen, -1)
+	return r.cmd.XTrimMaxLenApprox(ctx, key, maxLen, 0)
 }
 
 func (r *resp2) XTrimMaxLen(ctx context.Context, key string, maxLen int64) IntCmd {
