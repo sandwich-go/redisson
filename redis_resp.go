@@ -4,12 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/coreos/go-semver/semver"
-	goredis "github.com/go-redis/redis/v8"
 	"regexp"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/coreos/go-semver/semver"
+	goredis "github.com/redis/go-redis/v9"
 )
 
 type RESP = string

@@ -2,9 +2,10 @@ package redisson
 
 import (
 	"context"
-	. "github.com/smartystreets/goconvey/convey"
 	"testing"
 	"time"
+
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 func testPublish(ctx context.Context, c Cmdable) []string {
@@ -19,7 +20,7 @@ func testSubscribe(ctx context.Context, c Cmdable) []string {
 	s := c.Subscribe(ctx)
 	err := s.Subscribe(ctx, "channel")
 	So(err, ShouldBeNil)
-
+	time.Sleep(time.Millisecond * 10)
 	p := c.Publish(ctx, "channel", "one")
 	So(p.Err(), ShouldBeNil)
 	So(p.Val(), ShouldEqual, 1)
@@ -46,6 +47,7 @@ func testPubSubChannels(ctx context.Context, c Cmdable) []string {
 	s := c.Subscribe(ctx)
 	err := s.Subscribe(ctx, "channel1", "channel2")
 	So(err, ShouldBeNil)
+	time.Sleep(time.Millisecond * 10)
 
 	pubSubChannels := c.PubSubChannels(ctx, "*")
 	So(pubSubChannels.Err(), ShouldBeNil)
@@ -53,6 +55,7 @@ func testPubSubChannels(ctx context.Context, c Cmdable) []string {
 
 	err = s.Unsubscribe(ctx, "channel1")
 	So(err, ShouldBeNil)
+	time.Sleep(time.Millisecond * 10)
 
 	pubSubChannels = c.PubSubChannels(ctx, "*")
 	So(pubSubChannels.Err(), ShouldBeNil)
@@ -84,9 +87,11 @@ func testPSubscribe(ctx context.Context, c Cmdable) []string {
 
 func testPUnsubscribe(ctx context.Context, c Cmdable) []string {
 	s := c.Subscribe(ctx)
+	time.Sleep(time.Millisecond * 10)
 
 	err := s.PSubscribe(ctx, "channel1.*")
 	So(err, ShouldBeNil)
+	time.Sleep(time.Millisecond * 10)
 
 	pubSubNumPat := c.PubSubNumPat(ctx)
 	So(pubSubNumPat.Err(), ShouldBeNil)
@@ -94,6 +99,7 @@ func testPUnsubscribe(ctx context.Context, c Cmdable) []string {
 
 	err = s.PUnsubscribe(ctx)
 	So(err, ShouldBeNil)
+	time.Sleep(time.Millisecond * 10)
 
 	pubSubNumPat = c.PubSubNumPat(ctx)
 	So(pubSubNumPat.Err(), ShouldBeNil)
@@ -107,6 +113,7 @@ func testPUnsubscribe(ctx context.Context, c Cmdable) []string {
 
 func testPubSubNumPat(ctx context.Context, c Cmdable) []string {
 	s := c.Subscribe(ctx)
+	time.Sleep(time.Millisecond * 10)
 
 	pubSubNumPat := c.PubSubNumPat(ctx)
 	So(pubSubNumPat.Err(), ShouldBeNil)
@@ -114,6 +121,7 @@ func testPubSubNumPat(ctx context.Context, c Cmdable) []string {
 
 	err := s.PSubscribe(ctx, "channel1.*", "channel2.*")
 	So(err, ShouldBeNil)
+	time.Sleep(time.Millisecond * 10)
 
 	pubSubNumPat = c.PubSubNumPat(ctx)
 	So(pubSubNumPat.Err(), ShouldBeNil)
@@ -129,6 +137,7 @@ func testPubSubNumSub(ctx context.Context, c Cmdable) []string {
 	s := c.Subscribe(ctx)
 	err := s.Subscribe(ctx, "channel1", "channel2")
 	So(err, ShouldBeNil)
+	time.Sleep(time.Millisecond * 10)
 
 	pubSubNumSub := c.PubSubNumSub(ctx, "channel1", "channel2", "channel3")
 	So(pubSubNumSub.Err(), ShouldBeNil)
