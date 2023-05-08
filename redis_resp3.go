@@ -931,34 +931,40 @@ func (r *resp3) RPushX(ctx context.Context, key string, values ...interface{}) I
 }
 
 type pipelineResp3 struct {
-	resp       *resp3
-	mx         sync.Mutex
-	firstError error
-	res        []interface{}
+	resp     *resp3
+	commands []pipeCommand
+	mx       sync.RWMutex
 }
 
 func (r *resp3) Pipeline() Pipeliner { return &pipelineResp3{resp: r} }
 
-func (p *pipelineResp3) Put(ctx context.Context, cmd Command, keys []string, args ...interface{}) (err error) {
-	ctx = p.resp.handler.before(ctx, cmd)
-	var r interface{}
-	r, err = p.resp.cmd.Do(ctx, p.resp.cmd.B().Arbitrary(cmd.Cmd()...).Keys(keys...).Args(argsToSlice(args)...).Build()).ToAny()
+func (p *pipelineResp3) Put(_ context.Context, cmd Command, keys []string, args ...interface{}) (err error) {
 	p.mx.Lock()
-	if err != nil {
-		p.res = append(p.res, err)
-		if p.firstError == nil {
-			p.firstError = err
-		}
-	} else {
-		p.res = append(p.res, r)
-	}
+	p.commands = append(p.commands, pipeCommand{cmd: cmd.Cmd(), keys: keys, args: args})
 	p.mx.Unlock()
-	p.resp.handler.after(ctx, err)
-	return err
+	return
 }
 
-func (p *pipelineResp3) Exec(_ context.Context) ([]interface{}, error) {
-	return p.res, p.firstError
+func (p *pipelineResp3) Exec(ctx context.Context) ([]interface{}, error) {
+	ctx = p.resp.handler.before(ctx, pipelineCmd)
+
+	p.mx.RLock()
+	defer p.mx.RUnlock()
+	var firstError error
+	var result = make([]interface{}, 0, len(p.commands))
+	for _, cmd := range p.commands {
+		r, err := p.resp.cmd.Do(ctx, p.resp.cmd.B().Arbitrary(cmd.cmd...).Keys(cmd.keys...).Args(argsToSlice(cmd.args)...).Build()).ToAny()
+		if err != nil {
+			result = append(result, err)
+			if firstError == nil {
+				firstError = err
+			}
+		} else {
+			result = append(result, r)
+		}
+	}
+	p.resp.handler.after(ctx, firstError)
+	return result, firstError
 }
 
 func (r *resp3) RawCmdable() interface{} { return r.adapter }
