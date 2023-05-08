@@ -954,6 +954,7 @@ func (p *pipelineResp3) Exec(ctx context.Context) ([]interface{}, error) {
 	var result = make([]interface{}, 0, len(p.commands))
 	for _, cmd := range p.commands {
 		r, err := p.resp.cmd.Do(ctx, p.resp.cmd.B().Arbitrary(cmd.cmd...).Keys(cmd.keys...).Args(argsToSlice(cmd.args)...).Build()).ToAny()
+		err = wrapError(err)
 		if err != nil {
 			result = append(result, err)
 			if firstError == nil {
