@@ -96,6 +96,7 @@ const (
 	PX                   = "PX"
 	EX                   = "EX"
 	SERVER               = "SERVER"
+	CLUSTER              = "CLUSTER"
 	LADDR                = "LADDR"
 )
 

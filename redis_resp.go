@@ -34,15 +34,34 @@ const Nil = goredis.Nil
 func IsNil(err error) bool { return err == Nil }
 
 type client struct {
-	v            ConfVisitor
+	v            ConfInterface
 	cmdable      Cmdable
 	cacheCmdable CacheCmdable
 	handler      handler
 	version      semver.Version
 	once         sync.Once
+	isCluster    bool
 }
 
-var versionRE = regexp.MustCompile(`redis_version:(.+)`)
+var (
+	versionRE      = regexp.MustCompile(`redis_version:(.+)`)
+	clusterEnabled = regexp.MustCompile(`cluster_enabled:(.+)`)
+)
+
+func (c *client) clusterEnable() error {
+	res, err := c.cmdable.Info(context.Background(), CLUSTER).Result()
+	if err != nil {
+		return err
+	}
+	match := clusterEnabled.FindAllStringSubmatch(res, -1)
+	if len(match) < 1 || len(strings.TrimSpace(match[0][1])) == 0 || strings.TrimSpace(match[0][1]) == "0" {
+		c.isCluster = false
+	} else {
+		c.isCluster = true
+	}
+	return nil
+
+}
 
 func (c *client) initVersion() (err error) {
 	var res string
@@ -63,7 +82,7 @@ func (c *client) initVersion() (err error) {
 	return err
 }
 
-func MustNewClient(v ConfVisitor) Cmdable {
+func MustNewClient(v ConfInterface) Cmdable {
 	cmd, err := Connect(v)
 	if err != nil {
 		panic(err)
@@ -71,23 +90,51 @@ func MustNewClient(v ConfVisitor) Cmdable {
 	return cmd
 }
 
-func Connect(v ConfVisitor) (Cmdable, error) {
-	var err error
-	c := &client{v: v, handler: newBaseHandler(v)}
-	switch strings.ToUpper(v.GetResp()) {
-	case RESP2:
-		c.cmdable, err = connectResp2(v, c.handler)
-	case RESP3:
-		c.cmdable, err = connectResp3(v, c.handler)
-	default:
-		err = fmt.Errorf("unknown RESP version, %s", v.GetResp())
+func (c *client) initialize() error {
+	// 初始化版本号
+	if err := c.initVersion(); err != nil {
+		return err
 	}
+	if err := c.clusterEnable(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *client) connect() error {
+	var err error
+	switch strings.ToUpper(c.v.GetResp()) {
+	case RESP2:
+		c.cmdable, err = connectResp2(c.v, c.handler)
+	case RESP3:
+		c.cmdable, err = connectResp3(c.v, c.handler)
+	default:
+		err = fmt.Errorf("unknown RESP version, %s", c.v.GetResp())
+	}
+	if err != nil {
+		return err
+	}
+	// 初始化
+	if err = c.initialize(); err != nil {
+		_ = c.Close()
+		return err
+	}
+	return nil
+}
+
+func Connect(v ConfInterface) (Cmdable, error) {
+	c := &client{v: v, handler: newBaseHandler(v)}
+	err := c.connect()
 	if err != nil {
 		return nil, err
 	}
-	// 初始化版本号
-	if err = c.initVersion(); err != nil {
-		return nil, err
+	if c.isCluster != c.v.GetCluster() {
+		warning(fmt.Sprintf("redis server is cluster_enabled=%t, but redis client is cluster_enabled=%t, reconnect...", c.isCluster, c.v.GetCluster()))
+		c.v.ApplyOption(WithCluster(c.isCluster))
+		err = c.connect()
+		if err != nil {
+			return nil, err
+		}
 	}
 	c.cacheCmdable = c.cmdable
 	c.handler.setSilentErrCallback(func(err error) bool { return err == Nil })
