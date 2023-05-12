@@ -122,19 +122,28 @@ func (c *client) connect() error {
 	return nil
 }
 
+func (c *client) reconnectWhenError(err error) error {
+	if err == nil {
+		return nil
+	}
+	if errString := err.Error(); strings.Contains(errString, "ERR This instance has cluster support disabled") ||
+		strings.Contains(errString, "ERR Cluster setting conflict") {
+		warning(fmt.Sprintf("%s, reconnect...", errString))
+		c.v.ApplyOption(WithCluster(!c.v.GetCluster()))
+		return c.connect()
+	}
+	return err
+}
+
 func Connect(v ConfInterface) (Cmdable, error) {
 	c := &client{v: v, handler: newBaseHandler(v)}
 	err := c.connect()
+	if err == nil && c.isCluster != c.v.GetCluster() {
+		err = fmt.Errorf("ERR Cluster setting conflict, server's cluster_enabled is %t, but client's cluster_enabled is %t", c.isCluster, c.v.GetCluster())
+	}
+	err = c.reconnectWhenError(err)
 	if err != nil {
 		return nil, err
-	}
-	if c.isCluster != c.v.GetCluster() {
-		warning(fmt.Sprintf("redis server is cluster_enabled=%t, but redis client is cluster_enabled=%t, reconnect...", c.isCluster, c.v.GetCluster()))
-		c.v.ApplyOption(WithCluster(c.isCluster))
-		err = c.connect()
-		if err != nil {
-			return nil, err
-		}
 	}
 	c.cacheCmdable = c.cmdable
 	c.handler.setSilentErrCallback(func(err error) bool { return err == Nil })
