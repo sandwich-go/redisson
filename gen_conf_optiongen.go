@@ -251,7 +251,7 @@ func newDefaultConf() *Conf {
 	cc := &Conf{}
 
 	for _, opt := range [...]ConfOption{
-		WithResp(RESP2),
+		WithResp(RESP3),
 		WithName(""),
 		WithMasterName(""),
 		WithEnableMonitor(true),
