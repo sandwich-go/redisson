@@ -2,11 +2,10 @@ package redisson
 
 import (
 	"context"
-	"fmt"
 	"sync"
 	"time"
 
-	goredis "github.com/redis/go-redis/v9"
+	goredis "github.com/go-redis/redis/v8"
 )
 
 type resp2 struct {
@@ -16,18 +15,18 @@ type resp2 struct {
 
 func connectResp2(v ConfVisitor, h handler) (*resp2, error) {
 	var opts = &goredis.UniversalOptions{
-		Addrs:           v.GetAddrs(),
-		DB:              v.GetDB(),
-		Username:        v.GetUsername(),
-		Password:        v.GetPassword(),
-		ReadTimeout:     v.GetReadTimeout(),
-		WriteTimeout:    v.GetWriteTimeout(),
-		PoolSize:        v.GetConnPoolSize(),
-		MinIdleConns:    v.GetMinIdleConns(),
-		ConnMaxLifetime: v.GetConnMaxAge(),
-		ConnMaxIdleTime: v.GetIdleConnTimeout(),
-		PoolTimeout:     v.GetConnPoolTimeout(),
-		MasterName:      v.GetMasterName(),
+		Addrs:        v.GetAddrs(),
+		DB:           v.GetDB(),
+		Username:     v.GetUsername(),
+		Password:     v.GetPassword(),
+		ReadTimeout:  v.GetReadTimeout(),
+		WriteTimeout: v.GetWriteTimeout(),
+		PoolSize:     v.GetConnPoolSize(),
+		MinIdleConns: v.GetMinIdleConns(),
+		MaxConnAge:   v.GetConnMaxAge(),
+		IdleTimeout:  v.GetIdleConnTimeout(),
+		PoolTimeout:  v.GetConnPoolTimeout(),
+		MasterName:   v.GetMasterName(),
 	}
 	var cmd goredis.UniversalClient
 	if v.GetCluster() {
@@ -421,17 +420,7 @@ func (r *resp2) HMSet(ctx context.Context, key string, values ...interface{}) Bo
 }
 
 func (r *resp2) HRandField(ctx context.Context, key string, count int, withValues bool) StringSliceCmd {
-	if !withValues {
-		return r.cmd.HRandField(ctx, key, count)
-	}
-	// TODO fix goredis
-	result := r.cmd.HRandFieldWithValues(ctx, key, count)
-	var val []string
-	for _, v := range result.Val() {
-		val = append(val, v.Key)
-		val = append(val, v.Value)
-	}
-	return goredis.NewStringSliceResult(val, result.Err())
+	return r.cmd.HRandField(ctx, key, count, withValues)
 }
 
 func (r *resp2) HScan(ctx context.Context, key string, cursor uint64, match string, count int64) ScanCmd {
@@ -734,14 +723,7 @@ func (r *resp2) Command(ctx context.Context) CommandsInfoCmd {
 }
 
 func (r *resp2) ConfigGet(ctx context.Context, parameter string) SliceCmd {
-	// TODO: fix goredis
-	result := r.cmd.ConfigGet(ctx, parameter)
-	var val []interface{}
-	for k, v := range result.Val() {
-		val = append(val, k)
-		val = append(val, v)
-	}
-	return goredis.NewSliceResult(val, result.Err())
+	return r.cmd.ConfigGet(ctx, parameter)
 }
 
 func (r *resp2) ConfigResetStat(ctx context.Context) StatusCmd {
@@ -909,27 +891,27 @@ func (r *resp2) toZs(members ...Z) []*Z {
 }
 
 func (r *resp2) ZAdd(ctx context.Context, key string, members ...Z) IntCmd {
-	return r.cmd.ZAdd(ctx, key, members...)
+	return r.cmd.ZAdd(ctx, key, r.toZs(members...)...)
 }
 
 func (r *resp2) ZAddNX(ctx context.Context, key string, members ...Z) IntCmd {
-	return r.cmd.ZAddNX(ctx, key, members...)
+	return r.cmd.ZAddNX(ctx, key, r.toZs(members...)...)
 }
 
 func (r *resp2) ZAddXX(ctx context.Context, key string, members ...Z) IntCmd {
-	return r.cmd.ZAddXX(ctx, key, members...)
+	return r.cmd.ZAddXX(ctx, key, r.toZs(members...)...)
 }
 
 func (r *resp2) ZAddCh(ctx context.Context, key string, members ...Z) IntCmd {
-	return r.cmd.ZAddArgs(ctx, key, goredis.ZAddArgs{Ch: true, Members: members})
+	return r.cmd.ZAddCh(ctx, key, r.toZs(members...)...)
 }
 
 func (r *resp2) ZAddNXCh(ctx context.Context, key string, members ...Z) IntCmd {
-	return r.cmd.ZAddArgs(ctx, key, goredis.ZAddArgs{NX: true, Ch: true, Members: members})
+	return r.cmd.ZAddNXCh(ctx, key, r.toZs(members...)...)
 }
 
 func (r *resp2) ZAddXXCh(ctx context.Context, key string, members ...Z) IntCmd {
-	return r.cmd.ZAddArgs(ctx, key, goredis.ZAddArgs{XX: true, Ch: true, Members: members})
+	return r.cmd.ZAddXXCh(ctx, key, r.toZs(members...)...)
 }
 
 func (r *resp2) ZAddArgs(ctx context.Context, key string, args ZAddArgs) IntCmd {
@@ -961,15 +943,15 @@ func (r *resp2) ZDiffStore(ctx context.Context, destination string, keys ...stri
 }
 
 func (r *resp2) ZIncr(ctx context.Context, key string, member Z) FloatCmd {
-	return r.cmd.ZAddArgsIncr(ctx, key, goredis.ZAddArgs{Members: []Z{member}})
+	return r.cmd.ZIncr(ctx, key, &member)
 }
 
 func (r *resp2) ZIncrNX(ctx context.Context, key string, member Z) FloatCmd {
-	return r.cmd.ZAddArgsIncr(ctx, key, goredis.ZAddArgs{Members: []Z{member}, NX: true})
+	return r.cmd.ZIncrNX(ctx, key, &member)
 }
 
 func (r *resp2) ZIncrXX(ctx context.Context, key string, member Z) FloatCmd {
-	return r.cmd.ZAddArgsIncr(ctx, key, goredis.ZAddArgs{Members: []Z{member}, XX: true})
+	return r.cmd.ZIncrXX(ctx, key, &member)
 }
 
 func (r *resp2) ZIncrBy(ctx context.Context, key string, increment float64, member string) FloatCmd {
@@ -1005,17 +987,7 @@ func (r *resp2) ZPopMin(ctx context.Context, key string, count ...int64) ZSliceC
 }
 
 func (r *resp2) ZRandMember(ctx context.Context, key string, count int, withScores bool) StringSliceCmd {
-	if !withScores {
-		return r.cmd.ZRandMember(ctx, key, count)
-	}
-	// TODO fix goredis
-	result := r.cmd.ZRandMemberWithScores(ctx, key, count)
-	var val []string
-	for _, v := range result.Val() {
-		val = append(val, fmt.Sprintf("%v", v.Member))
-		val = append(val, fmt.Sprintf("%v", v.Score))
-	}
-	return goredis.NewStringSliceResult(val, result.Err())
+	return r.cmd.ZRandMember(ctx, key, count, withScores)
 }
 
 func (r *resp2) ZRange(ctx context.Context, key string, start, stop int64) StringSliceCmd {
@@ -1223,12 +1195,11 @@ func (r *resp2) XRevRangeN(ctx context.Context, stream string, start, stop strin
 }
 
 func (r *resp2) XTrim(ctx context.Context, key string, maxLen int64) IntCmd {
-	return r.cmd.XTrimMaxLen(ctx, key, maxLen)
+	return r.cmd.XTrim(ctx, key, maxLen)
 }
 
 func (r *resp2) XTrimApprox(ctx context.Context, key string, maxLen int64) IntCmd {
-	// TODO use limit
-	return r.cmd.XTrimMaxLenApprox(ctx, key, maxLen, 0)
+	return r.cmd.XTrimApprox(ctx, key, maxLen)
 }
 
 func (r *resp2) XTrimMaxLen(ctx context.Context, key string, maxLen int64) IntCmd {
@@ -1308,7 +1279,7 @@ func (r *resp2) Set(ctx context.Context, key string, value interface{}, expirati
 }
 
 func (r *resp2) SetEX(ctx context.Context, key string, value interface{}, expiration time.Duration) StatusCmd {
-	return r.cmd.SetEx(ctx, key, value, expiration)
+	return r.cmd.SetEX(ctx, key, value, expiration)
 }
 
 func (r *resp2) SetNX(ctx context.Context, key string, value interface{}, expiration time.Duration) BoolCmd {

@@ -4,8 +4,8 @@ go 1.18
 
 require (
 	github.com/coreos/go-semver v0.3.0
+	github.com/go-redis/redis/v8 v8.11.5
 	github.com/prometheus/client_golang v1.11.0
-	github.com/redis/go-redis/v9 v9.0.3
 	github.com/sandwich-go/rueidis v0.1.12
 	github.com/smartystreets/goconvey v1.7.2
 )

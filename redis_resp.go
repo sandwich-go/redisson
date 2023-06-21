@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/coreos/go-semver/semver"
-	goredis "github.com/redis/go-redis/v9"
+	goredis "github.com/go-redis/redis/v8"
 )
 
 type RESP = string

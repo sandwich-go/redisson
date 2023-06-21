@@ -1,7 +1,7 @@
 package redisson
 
 import (
-	goredis "github.com/redis/go-redis/v9"
+	goredis "github.com/go-redis/redis/v8"
 )
 
 const KeepTTL = goredis.KeepTTL
