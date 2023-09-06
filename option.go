@@ -1,6 +1,13 @@
 package redisson
 
-import "time"
+import (
+	"time"
+)
+
+type Tester interface {
+	Fatalf(string, ...interface{})
+	Cleanup(func())
+}
 
 //go:generate optiongen --new_func=NewConf --xconf=true --empty_composite_nil=true --usage_tag_name=usage
 func ConfOptionDeclareWithDefault() interface{} {
@@ -25,5 +32,6 @@ func ConfOptionDeclareWithDefault() interface{} {
 		"RingScaleEachConn": 0,                               // @MethodComment(单个连接ring buffer大小，默认2 ^ RingScaleEachConn, RingScaleEachConn默认情况下为10，RESP3时有效)
 		"Cluster":           false,                           // @MethodComment(是否为Redis集群，默认为false，集群需要设置为true)
 		"Development":       true,                            // @MethodComment(是否为开发模式，开发模式下，使用部分接口会有警告日志输出，会校验多key是否为同一hash槽，会校验部分接口是否满足版本要求)
+		"T":                 (Tester)(nil),                   // @MethodComment(如果设置该值，则启动mock)
 	}
 }

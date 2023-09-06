@@ -3,6 +3,7 @@ module github.com/sandwich-go/redisson
 go 1.18
 
 require (
+	github.com/alicebob/miniredis/v2 v2.30.5
 	github.com/coreos/go-semver v0.3.0
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/prometheus/client_golang v1.11.0
@@ -11,6 +12,7 @@ require (
 )
 
 require (
+	github.com/alicebob/gopher-json v0.0.0-20200520072559-a9ecdc9d1d3a // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
@@ -22,6 +24,7 @@ require (
 	github.com/prometheus/common v0.26.0 // indirect
 	github.com/prometheus/procfs v0.6.0 // indirect
 	github.com/smartystreets/assertions v1.2.0 // indirect
+	github.com/yuin/gopher-lua v1.1.0 // indirect
 	golang.org/x/net v0.0.0-20220722155237-a158d28d115b // indirect
 	golang.org/x/sys v0.0.0-20220731174439-a90be440212d // indirect
 	golang.org/x/xerrors v0.0.0-20220609144429-65e65417b02f // indirect

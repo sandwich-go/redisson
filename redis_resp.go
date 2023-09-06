@@ -103,21 +103,25 @@ func (c *client) initialize() error {
 
 func (c *client) connect() error {
 	var err error
-	switch strings.ToUpper(c.v.GetResp()) {
-	case RESP2:
-		c.cmdable, err = connectResp2(c.v, c.handler)
-	case RESP3:
-		c.cmdable, err = connectResp3(c.v, c.handler)
-	default:
-		err = fmt.Errorf("unknown RESP version, %s", c.v.GetResp())
-	}
-	if err != nil {
-		return err
-	}
-	// 初始化
-	if err = c.initialize(); err != nil {
-		_ = c.Close()
-		return err
+	if c.v.GetT() == nil {
+		switch strings.ToUpper(c.v.GetResp()) {
+		case RESP2:
+			c.cmdable, err = connectResp2(c.v, c.handler)
+		case RESP3:
+			c.cmdable, err = connectResp3(c.v, c.handler)
+		default:
+			err = fmt.Errorf("unknown RESP version, %s", c.v.GetResp())
+		}
+		if err != nil {
+			return err
+		}
+		// 初始化
+		if err = c.initialize(); err != nil {
+			_ = c.Close()
+			return err
+		}
+	} else {
+		c.cmdable, err = connectMock(c.v, c.handler)
 	}
 	return nil
 }

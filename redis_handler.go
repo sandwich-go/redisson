@@ -117,13 +117,13 @@ func (r *baseHandler) beforeWithKeys(ctx context.Context, command Command, getKe
 				panic(fmt.Errorf("[%s]: redis command are not allowed", command.String()))
 			}
 			// 需要检验版本是否支持该命令
-			if r.version.LessThan(mustNewSemVersion(command.RequireVersion())) {
+			if r.version != nil && r.version.LessThan(mustNewSemVersion(command.RequireVersion())) {
 				panic(fmt.Errorf("[%s]: redis command are not supported in version %q, available since %s", command, r.version, command.RequireVersion()))
 			}
 			// 需要检验所有的key是否均在同一槽位
 			panicIfUseMultipleKeySlots(command, getKeys)
 			// 该命令是否有警告日志输出
-			if len(command.WarnVersion()) > 0 && mustNewSemVersion(command.WarnVersion()).LessThan(*r.version) {
+			if r.version != nil && len(command.WarnVersion()) > 0 && mustNewSemVersion(command.WarnVersion()).LessThan(*r.version) {
 				warning(fmt.Sprintf("[%s]: %s", command.String(), command.Warning()))
 			}
 		}

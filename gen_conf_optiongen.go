@@ -31,6 +31,7 @@ type Conf struct {
 	RingScaleEachConn int           `xconf:"ring_scale_each_conn" usage:"单个连接ring buffer大小，默认2 ^ RingScaleEachConn, RingScaleEachConn默认情况下为10，RESP3时有效"`
 	Cluster           bool          `xconf:"cluster" usage:"是否为Redis集群，默认为false，集群需要设置为true"`
 	Development       bool          `xconf:"development" usage:"是否为开发模式，开发模式下，使用部分接口会有警告日志输出，会校验多key是否为同一hash槽，会校验部分接口是否满足版本要求"`
+	T                 Tester        `xconf:"t" usage:"如果设置该值，则启动mock"`
 }
 
 // NewConf new Conf
@@ -240,6 +241,15 @@ func WithDevelopment(v bool) ConfOption {
 	}
 }
 
+// WithT 如果设置该值，则启动mock
+func WithT(v Tester) ConfOption {
+	return func(cc *Conf) ConfOption {
+		previous := cc.T
+		cc.T = v
+		return WithT(previous)
+	}
+}
+
 // InstallConfWatchDog the installed func will called when NewConf  called
 func InstallConfWatchDog(dog func(cc *Conf)) { watchDogConf = dog }
 
@@ -271,6 +281,7 @@ func newDefaultConf() *Conf {
 		WithRingScaleEachConn(0),
 		WithCluster(false),
 		WithDevelopment(true),
+		WithT(nil),
 	} {
 		opt(cc)
 	}
@@ -336,6 +347,7 @@ func (cc *Conf) GetCacheSizeEachConn() int         { return cc.CacheSizeEachConn
 func (cc *Conf) GetRingScaleEachConn() int         { return cc.RingScaleEachConn }
 func (cc *Conf) GetCluster() bool                  { return cc.Cluster }
 func (cc *Conf) GetDevelopment() bool              { return cc.Development }
+func (cc *Conf) GetT() Tester                      { return cc.T }
 
 // ConfVisitor visitor interface for Conf
 type ConfVisitor interface {
@@ -359,6 +371,7 @@ type ConfVisitor interface {
 	GetRingScaleEachConn() int
 	GetCluster() bool
 	GetDevelopment() bool
+	GetT() Tester
 }
 
 // ConfInterface visitor + ApplyOption interface for Conf
