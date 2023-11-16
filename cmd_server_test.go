@@ -20,7 +20,7 @@ func testBgRewriteAOF(ctx context.Context, c Cmdable) []string {
 func testBgSave(ctx context.Context, c Cmdable) []string {
 	err := c.BgSave(ctx).Err()
 	So(err, ShouldNotBeNil)
-	So(err.Error(), ShouldContainSubstring, "ERR Another child process is active")
+	So(err.Error(), ShouldContainSubstring, "Another child process is active")
 
 	return nil
 }
@@ -45,9 +45,13 @@ func testConfigResetStat(ctx context.Context, c Cmdable) []string {
 
 func testConfigRewrite(ctx context.Context, c Cmdable) []string {
 	configRewrite := c.ConfigRewrite(ctx)
-	So(configRewrite.Err(), ShouldBeNil)
-	So(configRewrite.Val(), ShouldEqual, OK)
-
+	err := configRewrite.Err()
+	if err != nil {
+		So(err.Error(), ShouldContainSubstring, "The server is running without a config file")
+	} else {
+		So(configRewrite.Err(), ShouldBeNil)
+		So(configRewrite.Val(), ShouldEqual, OK)
+	}
 	return nil
 }
 

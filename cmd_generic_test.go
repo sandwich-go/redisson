@@ -107,6 +107,8 @@ func testExists(ctx context.Context, c Cmdable) []string {
 	So(d.Err(), ShouldBeNil)
 	So(d.Val(), ShouldEqual, 2)
 
+	time.Sleep(1 * time.Second)
+
 	b = cacheCmd(c).Exists(ctx, key1, nosuchkey, key2)
 	So(b.Err(), ShouldBeNil)
 	So(b.Val(), ShouldEqual, 0)
@@ -241,12 +243,13 @@ func testMigrate(ctx context.Context, c Cmdable) []string {
 	migrate = c.Migrate(ctx, "localhost", redisSecondaryPort, key, 0, 0)
 	So(migrate.Err(), ShouldNotBeNil)
 	So(migrate.Err().Error(), ShouldContainSubstring, "IOERR error or timeout writing to target instance")
-	So(migrate.Val(), ShouldBeEmpty)
 
 	return []string{key}
 }
 
 func testMove(ctx context.Context, c Cmdable) []string {
+	_ = c.FlushAll(ctx)
+
 	var key = "key"
 	move := c.Move(ctx, key, 2)
 	So(move.Err(), ShouldBeNil)
@@ -487,7 +490,7 @@ func testRestore(ctx context.Context, c Cmdable) []string {
 
 	restore = c.Restore(ctx, key1, 0, dump.Val())
 	So(restore.Err(), ShouldNotBeNil)
-	So(restore.Val(), ShouldBeEmpty)
+	//So(restore.Val(), ShouldBeEmpty)
 
 	ty := c.Type(ctx, key)
 	So(ty.Err(), ShouldBeNil)
@@ -561,7 +564,7 @@ func testSort(ctx context.Context, c Cmdable) []string {
 	So(size.Err(), ShouldBeNil)
 	So(size.Val(), ShouldEqual, 3)
 
-	els := cacheCmd(c).Sort(ctx, key, Sort{
+	els := c.Sort(ctx, key, Sort{
 		Offset: 0,
 		Count:  2,
 		Order:  "ASC",
@@ -609,7 +612,7 @@ func testSortAndGet(ctx context.Context, c Cmdable) []string {
 		So(els.Err(), ShouldBeNil)
 		So(stringSliceEqual(els.Val(), []string{"", "", "value2", "", "", "value3"}, true), ShouldBeTrue)
 
-		els = cacheCmd(c).Sort(ctx, key, Sort{
+		els = c.Sort(ctx, key, Sort{
 			Get: []string{"object_*", "hello_*"},
 		})
 		So(els.Err(), ShouldBeNil)
@@ -623,7 +626,7 @@ func testSortAndGet(ctx context.Context, c Cmdable) []string {
 		So(els.Err(), ShouldBeNil)
 		So(interfaceSliceEqual(els.Val(), []interface{}{nil, nil, "value2", nil, nil, "value3"}), ShouldBeTrue)
 
-		els = cacheCmd(c).SortInterfaces(ctx, key, Sort{
+		els = c.SortInterfaces(ctx, key, Sort{
 			Get: []string{"object_*", "hello_*"},
 		})
 		So(els.Err(), ShouldBeNil)

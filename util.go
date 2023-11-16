@@ -3,7 +3,7 @@ package redisson
 import (
 	"encoding"
 	"fmt"
-	"github.com/sandwich-go/rueidis"
+	"github.com/redis/rueidis"
 	"strconv"
 	"time"
 )

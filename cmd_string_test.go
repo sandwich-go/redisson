@@ -45,7 +45,7 @@ func testDecr(ctx context.Context, c Cmdable) []string {
 
 	decr = c.Decr(ctx, key)
 	So(decr.Err(), ShouldNotBeNil)
-	So(decr.Err().Error(), ShouldEqual, "ERR value is not an integer or out of range")
+	So(decr.Err().Error(), ShouldContainSubstring, "value is not an integer or out of range")
 
 	return []string{key}
 }

@@ -338,17 +338,6 @@ type GenericReader interface {
 	// Return:
 	// 	Integer reply: TTL in milliseconds, or a negative value in order to signal an error (see the description above).
 	PTTL(ctx context.Context, key string) DurationCmd
-}
-
-type GenericCacheCmdable interface {
-	// Type
-	// Available since: 1.0.0
-	// Time complexity: O(1)
-	// ACL categories: @keyspace @read @fast
-	// Returns the string representation of the type of the value stored at key. The different types that can be returned are: string, list, set, zset, hash and stream.
-	// Return:
-	// 	Simple string reply: type of key, or none when key does not exist.
-	Type(ctx context.Context, key string) StatusCmd
 
 	// Sort
 	// Available since: 1.0.0
@@ -363,6 +352,17 @@ type GenericCacheCmdable interface {
 	// ACL categories: @write @set @sortedset @list @slow @dangerous
 	// See https://redis.io/commands/sort/
 	SortInterfaces(ctx context.Context, key string, sort Sort) SliceCmd
+}
+
+type GenericCacheCmdable interface {
+	// Type
+	// Available since: 1.0.0
+	// Time complexity: O(1)
+	// ACL categories: @keyspace @read @fast
+	// Returns the string representation of the type of the value stored at key. The different types that can be returned are: string, list, set, zset, hash and stream.
+	// Return:
+	// 	Simple string reply: type of key, or none when key does not exist.
+	Type(ctx context.Context, key string) StatusCmd
 
 	// Exists
 	// Available since: 1.0.0
@@ -546,7 +546,7 @@ func (c *client) ScanType(ctx context.Context, cursor uint64, match string, coun
 
 func (c *client) Sort(ctx context.Context, key string, sort Sort) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandSort)
-	r := c.cacheCmdable.Sort(ctx, key, sort)
+	r := c.cmdable.Sort(ctx, key, sort)
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -560,7 +560,7 @@ func (c *client) SortStore(ctx context.Context, key, store string, sort Sort) In
 
 func (c *client) SortInterfaces(ctx context.Context, key string, sort Sort) SliceCmd {
 	ctx = c.handler.before(ctx, CommandSort)
-	r := c.cacheCmdable.SortInterfaces(ctx, key, sort)
+	r := c.cmdable.SortInterfaces(ctx, key, sort)
 	c.handler.after(ctx, r.Err())
 	return r
 }

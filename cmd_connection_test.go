@@ -38,7 +38,7 @@ func testClientID(ctx context.Context, c Cmdable) []string {
 func testClientKill(ctx context.Context, c Cmdable) []string {
 	r := c.ClientKill(ctx, "1.1.1.1:1111")
 	So(r.Err(), ShouldNotBeNil)
-	So(r.Err().Error(), ShouldEqual, "ERR No such client")
+	So(r.Err().Error(), ShouldContainSubstring, "No such client")
 
 	return nil
 }
@@ -46,7 +46,7 @@ func testClientKill(ctx context.Context, c Cmdable) []string {
 func testClientKillByFilter(ctx context.Context, c Cmdable) []string {
 	r := c.ClientKillByFilter(ctx, "TYPE", "test")
 	So(r.Err(), ShouldNotBeNil)
-	So(r.Err().Error(), ShouldEqual, "ERR Unknown client type 'test'")
+	So(r.Err().Error(), ShouldContainSubstring, "Unknown client type 'test'")
 
 	return nil
 }

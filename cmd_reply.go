@@ -7,8 +7,8 @@ import (
 	"time"
 
 	goredis "github.com/go-redis/redis/v8"
-	"github.com/sandwich-go/rueidis"
-	"github.com/sandwich-go/rueidis/rueidiscompat"
+	"github.com/redis/rueidis"
+	"github.com/redis/rueidis/rueidiscompat"
 )
 
 //------------------------------------------------------------------------------
@@ -53,12 +53,16 @@ func wrapError(err error) error {
 	return err
 }
 
-func newCmd(res rueidis.RedisResult, args ...interface{}) Cmd {
-	val, err := res.ToAny()
+func newCmd(val interface{}, err error, args ...interface{}) Cmd {
 	cmd := goredis.NewCmd(context.Background(), args...)
 	cmd.SetErr(wrapError(err))
 	cmd.SetVal(val)
 	return cmd
+}
+
+func newCmdFromResult(res rueidis.RedisResult, args ...interface{}) Cmd {
+	val, err := res.ToAny()
+	return newCmd(val, err, args...)
 }
 
 type SliceCmd interface {
@@ -68,37 +72,42 @@ type SliceCmd interface {
 	Scan(dst interface{}) error
 }
 
-// args hmget or other
-func newSliceCmd(res rueidis.RedisResult, args ...interface{}) SliceCmd {
-	val, err := res.ToArray()
+func newSliceCmdFromSlice(val []interface{}, err error, args ...interface{}) SliceCmd {
 	cmd := goredis.NewSliceCmd(context.Background(), args...)
-	if err != nil {
-		cmd.SetErr(wrapError(err))
-		return cmd
-	}
-	vals := make([]interface{}, len(val))
-	for i, v := range val {
-		if s, err := v.ToString(); err == nil {
-			vals[i] = s
-		}
-	}
-	cmd.SetVal(vals)
+	cmd.SetErr(wrapError(err))
+	cmd.SetVal(val)
 	return cmd
 }
 
-func newSliceCmdFromMap(res rueidis.RedisResult, args ...interface{}) SliceCmd {
-	val, err := res.AsStrMap()
-	cmd := goredis.NewSliceCmd(context.Background(), args...)
+func newSliceCmdFromSliceCmd(cmd *rueidiscompat.SliceCmd, args ...interface{}) SliceCmd {
+	return newSliceCmdFromSlice(cmd.Val(), cmd.Err(), args...)
+}
+
+// args hmget or other
+func newSliceCmdFromSliceResult(res rueidis.RedisResult, args ...interface{}) SliceCmd {
+	val, err := res.ToArray()
 	if err != nil {
-		cmd.SetErr(wrapError(err))
-		return cmd
+		return newSliceCmdFromSlice(nil, err, args...)
+	}
+	vals := make([]interface{}, len(val))
+	for i, v := range val {
+		if s, err0 := v.ToString(); err0 == nil {
+			vals[i] = s
+		}
+	}
+	return newSliceCmdFromSlice(vals, err, args...)
+}
+
+func newSliceCmdFromMapResult(res rueidis.RedisResult, args ...interface{}) SliceCmd {
+	val, err := res.AsStrMap()
+	if err != nil {
+		return newSliceCmdFromSlice(nil, err, args...)
 	}
 	vals := make([]interface{}, 0, len(val)*2)
 	for k, v := range val {
 		vals = append(vals, k, v)
 	}
-	cmd.SetVal(vals)
-	return cmd
+	return newSliceCmdFromSlice(vals, err, args...)
 }
 
 type StatusCmd interface {
@@ -107,24 +116,28 @@ type StatusCmd interface {
 	Result() (string, error)
 }
 
-func newOKStatusCmd(args ...interface{}) StatusCmd {
-	cmd := goredis.NewStatusCmd(context.Background(), args...)
-	cmd.SetVal(OK)
-	return cmd
-}
-
-func newStatusCmdWithError(err error, args ...interface{}) StatusCmd {
-	cmd := goredis.NewStatusCmd(context.Background(), args...)
-	cmd.SetErr(wrapError(err))
-	return cmd
-}
-
-func newStatusCmd(res rueidis.RedisResult, args ...interface{}) StatusCmd {
-	val, err := res.ToString()
+func newStatusCmd(val string, err error, args ...interface{}) StatusCmd {
 	cmd := goredis.NewStatusCmd(context.Background(), args...)
 	cmd.SetErr(wrapError(err))
 	cmd.SetVal(val)
 	return cmd
+}
+
+func newStatusCmdFromStatusCmd(res *rueidiscompat.StatusCmd, args ...interface{}) StatusCmd {
+	return newStatusCmd(res.Val(), res.Err(), args...)
+}
+
+func newOKStatusCmd(args ...interface{}) StatusCmd {
+	return newStatusCmd(OK, nil, args...)
+}
+
+func newStatusCmdWithError(err error, args ...interface{}) StatusCmd {
+	return newStatusCmd("", err, args...)
+}
+
+func newStatusCmdFromResult(res rueidis.RedisResult, args ...interface{}) StatusCmd {
+	val, err := res.ToString()
+	return newStatusCmd(val, err, args...)
 }
 
 type IntCmd interface {
@@ -134,18 +147,24 @@ type IntCmd interface {
 	Uint64() (uint64, error)
 }
 
-func newIntCmdWithError(err error, args ...interface{}) IntCmd {
-	cmd := goredis.NewIntCmd(context.Background(), args...)
-	cmd.SetErr(wrapError(err))
-	return cmd
-}
-
-func newIntCmd(res rueidis.RedisResult, args ...interface{}) IntCmd {
-	val, err := res.AsInt64()
+func newIntCmd(val int64, err error, args ...interface{}) IntCmd {
 	cmd := goredis.NewIntCmd(context.Background(), args...)
 	cmd.SetErr(wrapError(err))
 	cmd.SetVal(val)
 	return cmd
+}
+
+func newIntCmdFromIntCmd(res *rueidiscompat.IntCmd, args ...interface{}) IntCmd {
+	return newIntCmd(res.Val(), res.Err(), args...)
+}
+
+func newIntCmdWithError(err error, args ...interface{}) IntCmd {
+	return newIntCmd(0, err, args...)
+}
+
+func newIntCmdFromResult(res rueidis.RedisResult, args ...interface{}) IntCmd {
+	val, err := res.AsInt64()
+	return newIntCmd(val, err, args...)
 }
 
 type IntSliceCmd interface {
@@ -154,12 +173,16 @@ type IntSliceCmd interface {
 	Result() ([]int64, error)
 }
 
-func newIntSliceCmd(res rueidis.RedisResult, args ...interface{}) IntSliceCmd {
-	val, err := res.AsIntSlice()
+func newIntSliceCmd(val []int64, err error, args ...interface{}) IntSliceCmd {
 	cmd := goredis.NewIntSliceCmd(context.Background(), args...)
 	cmd.SetErr(wrapError(err))
 	cmd.SetVal(val)
 	return cmd
+}
+
+func newIntSliceCmdFromResult(res rueidis.RedisResult, args ...interface{}) IntSliceCmd {
+	val, err := res.AsIntSlice()
+	return newIntSliceCmd(val, err, args...)
 }
 
 type DurationCmd interface {
@@ -168,8 +191,7 @@ type DurationCmd interface {
 	Result() (time.Duration, error)
 }
 
-func newDurationCmd(res rueidis.RedisResult, precision time.Duration, args ...interface{}) DurationCmd {
-	val, err := res.AsInt64()
+func newDurationCmd(val int64, err error, precision time.Duration, args ...interface{}) DurationCmd {
 	cmd := goredis.NewDurationCmd(context.Background(), precision, args...)
 	if err != nil {
 		cmd.SetErr(wrapError(err))
@@ -183,13 +205,18 @@ func newDurationCmd(res rueidis.RedisResult, precision time.Duration, args ...in
 	return cmd
 }
 
+func newDurationCmdFromResult(res rueidis.RedisResult, precision time.Duration, args ...interface{}) DurationCmd {
+	val, err := res.AsInt64()
+	return newDurationCmd(val, err, precision, args...)
+}
+
 type TimeCmd interface {
 	BaseCmd
 	Val() time.Time
 	Result() (time.Time, error)
 }
 
-func newTimeCmd(res rueidis.RedisResult, args ...interface{}) TimeCmd {
+func newTimeCmdFromResult(res rueidis.RedisResult, args ...interface{}) TimeCmd {
 	arr, err := res.ToArray()
 	cmd := goredis.NewTimeCmd(context.Background(), args...)
 	if err != nil {
@@ -220,7 +247,18 @@ type BoolCmd interface {
 	Result() (bool, error)
 }
 
-func newBoolCmd(res rueidis.RedisResult, args ...interface{}) BoolCmd {
+func newBoolCmd(val bool, err error, args ...interface{}) BoolCmd {
+	cmd := goredis.NewBoolCmd(context.Background(), args...)
+	cmd.SetErr(wrapError(err))
+	cmd.SetVal(val)
+	return cmd
+}
+
+func newBoolCmdFromBoolCmd(res *rueidiscompat.BoolCmd, args ...interface{}) BoolCmd {
+	return newBoolCmd(res.Val(), res.Err(), args...)
+}
+
+func newBoolCmdFromResult(res rueidis.RedisResult, args ...interface{}) BoolCmd {
 	val, err := res.AsBool()
 	// `SET key value NX` returns nil when key already exists. But
 	// `SETNX key value` returns bool (0/1). So convert nil to bool.
@@ -228,10 +266,7 @@ func newBoolCmd(res rueidis.RedisResult, args ...interface{}) BoolCmd {
 		val = false
 		err = nil
 	}
-	cmd := goredis.NewBoolCmd(context.Background(), args...)
-	cmd.SetErr(wrapError(err))
-	cmd.SetVal(val)
-	return cmd
+	return newBoolCmd(val, err, args...)
 }
 
 type StringCmd interface {
@@ -249,19 +284,20 @@ type StringCmd interface {
 	Scan(val interface{}) error
 }
 
-func newStringCmdFromStringCmd(res *rueidiscompat.StringCmd, args ...interface{}) StringCmd {
-	cmd := goredis.NewStringCmd(context.Background(), args...)
-	cmd.SetErr(wrapError(res.Err()))
-	cmd.SetVal(res.Val())
-	return cmd
-}
-
-func newStringCmd(res rueidis.RedisResult, args ...interface{}) StringCmd {
-	val, err := res.ToString()
+func newStringCmd(val string, err error, args ...interface{}) StringCmd {
 	cmd := goredis.NewStringCmd(context.Background(), args...)
 	cmd.SetErr(wrapError(err))
 	cmd.SetVal(val)
 	return cmd
+}
+
+func newStringCmdFromStringCmd(res *rueidiscompat.StringCmd, args ...interface{}) StringCmd {
+	return newStringCmd(res.Val(), res.Err(), args...)
+}
+
+func newStringCmdFromResult(res rueidis.RedisResult, args ...interface{}) StringCmd {
+	val, err := res.ToString()
+	return newStringCmd(val, err, args...)
 }
 
 type FloatCmd interface {
@@ -270,12 +306,16 @@ type FloatCmd interface {
 	Result() (float64, error)
 }
 
-func newFloatCmd(res rueidis.RedisResult, args ...interface{}) FloatCmd {
-	val, err := res.AsFloat64()
+func newFloatCmd(val float64, err error, args ...interface{}) FloatCmd {
 	cmd := goredis.NewFloatCmd(context.Background(), args...)
 	cmd.SetErr(wrapError(err))
 	cmd.SetVal(val)
 	return cmd
+}
+
+func newFloatCmdFromResult(res rueidis.RedisResult, args ...interface{}) FloatCmd {
+	val, err := res.AsFloat64()
+	return newFloatCmd(val, err, args...)
 }
 
 type FloatSliceCmd interface {
@@ -284,12 +324,16 @@ type FloatSliceCmd interface {
 	Result() ([]float64, error)
 }
 
-func newFloatSliceCmd(res rueidis.RedisResult, args ...interface{}) FloatSliceCmd {
-	val, err := res.AsFloatSlice()
+func newFloatSliceCmd(val []float64, err error, args ...interface{}) FloatSliceCmd {
 	cmd := goredis.NewFloatSliceCmd(context.Background(), args...)
 	cmd.SetErr(wrapError(err))
 	cmd.SetVal(val)
 	return cmd
+}
+
+func newFloatSliceCmdFromResult(res rueidis.RedisResult, args ...interface{}) FloatSliceCmd {
+	val, err := res.AsFloatSlice()
+	return newFloatSliceCmd(val, err, args...)
 }
 
 type StringSliceCmd interface {
@@ -299,39 +343,36 @@ type StringSliceCmd interface {
 	ScanSlice(container interface{}) error
 }
 
-func newStringSliceCmdFromStringSliceCmd(res *rueidiscompat.StringSliceCmd, args ...interface{}) StringSliceCmd {
-	cmd := goredis.NewStringSliceCmd(context.Background(), args...)
-	cmd.SetErr(wrapError(res.Err()))
-	cmd.SetVal(res.Val())
-	return cmd
-}
-
-func newStringSliceCmd(res rueidis.RedisResult, args ...interface{}) StringSliceCmd {
-	val, err := res.AsStrSlice()
+func newStringSliceCmd(val []string, err error, args ...interface{}) StringSliceCmd {
 	cmd := goredis.NewStringSliceCmd(context.Background(), args...)
 	cmd.SetErr(wrapError(err))
 	cmd.SetVal(val)
 	return cmd
 }
 
+func newStringSliceCmdFromStringSliceCmd(res *rueidiscompat.StringSliceCmd, args ...interface{}) StringSliceCmd {
+	return newStringSliceCmd(res.Val(), res.Err(), args...)
+}
+
+func newStringSliceCmdFromResult(res rueidis.RedisResult, args ...interface{}) StringSliceCmd {
+	val, err := res.AsStrSlice()
+	return newStringSliceCmd(val, err, args...)
+}
+
 func flattenStringSliceCmd(res rueidis.RedisResult, args ...interface{}) StringSliceCmd {
 	arr, err := res.ToArray()
-	cmd := goredis.NewStringSliceCmd(context.Background(), args...)
 	if err != nil {
-		cmd.SetErr(wrapError(err))
-		return cmd
+		return newStringSliceCmd(nil, err, args...)
 	}
 	val := make([]string, 0, len(arr)*2)
 	for _, v := range arr {
 		s, err0 := v.AsStrSlice()
 		if err0 != nil {
-			cmd.SetErr(wrapError(err0))
-			return cmd
+			return newStringSliceCmd(nil, err0, args...)
 		}
 		val = append(val, s...)
 	}
-	cmd.SetVal(val)
-	return cmd
+	return newStringSliceCmd(val, err, args...)
 }
 
 type BoolSliceCmd interface {
@@ -340,19 +381,23 @@ type BoolSliceCmd interface {
 	Result() ([]bool, error)
 }
 
-func newBoolSliceCmd(res rueidis.RedisResult, args ...interface{}) BoolSliceCmd {
-	ints, err := res.AsIntSlice()
+func newBoolSliceCmd(val []bool, err error, args ...interface{}) BoolSliceCmd {
 	cmd := goredis.NewBoolSliceCmd(context.Background(), args...)
+	cmd.SetErr(wrapError(err))
+	cmd.SetVal(val)
+	return cmd
+}
+
+func newBoolSliceCmdFromResult(res rueidis.RedisResult, args ...interface{}) BoolSliceCmd {
+	ints, err := res.AsIntSlice()
 	if err != nil {
-		cmd.SetErr(wrapError(err))
-		return cmd
+		return newBoolSliceCmd(nil, err, args...)
 	}
 	val := make([]bool, 0, len(ints))
 	for _, i := range ints {
 		val = append(val, i == 1)
 	}
-	cmd.SetVal(val)
-	return cmd
+	return newBoolSliceCmd(val, err, args...)
 }
 
 type StringStringMapCmd interface {
@@ -362,12 +407,16 @@ type StringStringMapCmd interface {
 	Scan(dest interface{}) error
 }
 
-func newStringStringMapCmd(res rueidis.RedisResult, args ...interface{}) StringStringMapCmd {
-	val, err := res.AsStrMap()
+func newStringStringMapCmd(val map[string]string, err error, args ...interface{}) StringStringMapCmd {
 	cmd := goredis.NewStringStringMapCmd(context.Background(), args...)
 	cmd.SetErr(wrapError(err))
 	cmd.SetVal(val)
 	return cmd
+}
+
+func newStringStringMapCmdFromResult(res rueidis.RedisResult, args ...interface{}) StringStringMapCmd {
+	val, err := res.AsStrMap()
+	return newStringStringMapCmd(val, err, args...)
 }
 
 type StringIntMapCmd interface {
@@ -376,12 +425,16 @@ type StringIntMapCmd interface {
 	Result() (map[string]int64, error)
 }
 
-func newStringIntMapCmd(res rueidis.RedisResult, args ...interface{}) StringIntMapCmd {
-	val, err := res.AsIntMap()
+func newStringIntMapCmd(val map[string]int64, err error, args ...interface{}) StringIntMapCmd {
 	cmd := goredis.NewStringIntMapCmd(context.Background(), args...)
 	cmd.SetErr(wrapError(err))
 	cmd.SetVal(val)
 	return cmd
+}
+
+func newStringIntMapCmdFromResult(res rueidis.RedisResult, args ...interface{}) StringIntMapCmd {
+	val, err := res.AsIntMap()
+	return newStringIntMapCmd(val, err, args...)
 }
 
 type StringStructMapCmd interface {
@@ -390,19 +443,23 @@ type StringStructMapCmd interface {
 	Result() (map[string]struct{}, error)
 }
 
-func newStringStructMapCmd(res rueidis.RedisResult, args ...interface{}) StringStructMapCmd {
-	strSlice, err := res.AsStrSlice()
+func newStringStructMapCmd(val map[string]struct{}, err error, args ...interface{}) StringStructMapCmd {
 	cmd := goredis.NewStringStructMapCmd(context.Background(), args...)
+	cmd.SetErr(wrapError(err))
+	cmd.SetVal(val)
+	return cmd
+}
+
+func newStringStructMapCmdFromResult(res rueidis.RedisResult, args ...interface{}) StringStructMapCmd {
+	strSlice, err := res.AsStrSlice()
 	if err != nil {
-		cmd.SetErr(wrapError(err))
-		return cmd
+		return newStringStructMapCmd(nil, err, args...)
 	}
 	val := make(map[string]struct{}, len(strSlice))
 	for _, v := range strSlice {
 		val[v] = struct{}{}
 	}
-	cmd.SetVal(val)
-	return cmd
+	return newStringStructMapCmd(val, err, args...)
 }
 
 //------------------------------------------------------------------------------
@@ -415,22 +472,26 @@ type XMessageSliceCmd interface {
 	Result() ([]XMessage, error)
 }
 
-func newXMessageSliceCmd(res rueidis.RedisResult, args ...interface{}) XMessageSliceCmd {
-	val, err := res.AsXRange()
+func newXMessageSliceCmd(val []XMessage, err error, args ...interface{}) XMessageSliceCmd {
 	cmd := goredis.NewXMessageSliceCmd(context.Background(), args...)
-	if err != nil {
-		cmd.SetErr(wrapError(err))
-		return cmd
-	}
-	slice := make([]XMessage, len(val))
-	for i, r := range val {
-		slice[i] = newXMessage(r)
-	}
-	cmd.SetVal(slice)
+	cmd.SetErr(wrapError(err))
+	cmd.SetVal(val)
 	return cmd
 }
 
-func newXMessage(r rueidis.XRangeEntry) XMessage {
+func newXMessageSliceCmdFromResult(res rueidis.RedisResult, args ...interface{}) XMessageSliceCmd {
+	val, err := res.AsXRange()
+	if err != nil {
+		return newXMessageSliceCmd(nil, err, args...)
+	}
+	slice := make([]XMessage, len(val))
+	for i, r := range val {
+		slice[i] = newXMessageFromXRangeEntry(r)
+	}
+	return newXMessageSliceCmd(slice, err, args...)
+}
+
+func newXMessageFromXRangeEntry(r rueidis.XRangeEntry) XMessage {
 	if r.FieldValues == nil {
 		return XMessage{ID: r.ID, Values: nil}
 	}
@@ -439,6 +500,10 @@ func newXMessage(r rueidis.XRangeEntry) XMessage {
 		m.Values[k] = v
 	}
 	return m
+}
+
+func newXMessage(r rueidiscompat.XMessage) XMessage {
+	return XMessage{ID: r.ID, Values: r.Values}
 }
 
 //------------------------------------------------------------------------------
@@ -451,23 +516,43 @@ type XStreamSliceCmd interface {
 	Result() ([]XStream, error)
 }
 
-func newXStreamSliceCmd(res rueidis.RedisResult, args ...interface{}) XStreamSliceCmd {
-	streams, err := res.AsXRead()
+func newXStreamSliceCmd(val []XStream, err error, args ...interface{}) XStreamSliceCmd {
 	cmd := goredis.NewXStreamSliceCmd(context.Background(), args...)
+	cmd.SetErr(wrapError(err))
+	cmd.SetVal(val)
+	return cmd
+}
+
+func newXStreamSliceCmdFromCmd(cmd *rueidiscompat.XStreamSliceCmd, args ...interface{}) XStreamSliceCmd {
+	streams, err := cmd.Result()
 	if err != nil {
-		cmd.SetErr(wrapError(err))
-		return cmd
+		return newXStreamSliceCmd(nil, err, args...)
+	}
+	val := make([]XStream, 0, len(streams))
+	for _, stream := range streams {
+		msgs := make([]XMessage, 0, len(stream.Messages))
+		for _, r := range stream.Messages {
+			msgs = append(msgs, newXMessage(r))
+		}
+		val = append(val, XStream{Stream: stream.Stream, Messages: msgs})
+	}
+	return newXStreamSliceCmd(val, err, args...)
+}
+
+func newXStreamSliceCmdFromResult(res rueidis.RedisResult, args ...interface{}) XStreamSliceCmd {
+	streams, err := res.AsXRead()
+	if err != nil {
+		return newXStreamSliceCmd(nil, err, args...)
 	}
 	val := make([]XStream, 0, len(streams))
 	for name, messages := range streams {
 		msgs := make([]XMessage, 0, len(messages))
 		for _, r := range messages {
-			msgs = append(msgs, newXMessage(r))
+			msgs = append(msgs, newXMessageFromXRangeEntry(r))
 		}
 		val = append(val, XStream{Stream: name, Messages: msgs})
 	}
-	cmd.SetVal(val)
-	return cmd
+	return newXStreamSliceCmd(val, err, args...)
 }
 
 //------------------------------------------------------------------------------
@@ -480,7 +565,7 @@ type XPendingCmd interface {
 	Result() (*XPending, error)
 }
 
-func newXPendingCmd(res rueidis.RedisResult, args ...interface{}) XPendingCmd {
+func newXPendingCmdFromResult(res rueidis.RedisResult, args ...interface{}) XPendingCmd {
 	arr, err := res.ToArray()
 	cmd := goredis.NewXPendingCmd(context.Background(), args...)
 	if err != nil {
@@ -555,7 +640,7 @@ type XPendingExtCmd interface {
 	Result() ([]XPendingExt, error)
 }
 
-func newXPendingExtCmd(res rueidis.RedisResult, args ...interface{}) XPendingExtCmd {
+func newXPendingExtCmdFromResult(res rueidis.RedisResult, args ...interface{}) XPendingExtCmd {
 	arrs, err := res.ToArray()
 	cmd := goredis.NewXPendingExtCmd(context.Background(), args...)
 	if err != nil {
@@ -612,7 +697,7 @@ type XAutoClaimCmd interface {
 	Result() (messages []XMessage, start string, err error)
 }
 
-func newXAutoClaimCmd(res rueidis.RedisResult, args ...interface{}) XAutoClaimCmd {
+func newXAutoClaimCmdFromResult(res rueidis.RedisResult, args ...interface{}) XAutoClaimCmd {
 	arr, err := res.ToArray()
 	cmd := goredis.NewXAutoClaimCmd(context.Background(), args...)
 	if err != nil {
@@ -635,7 +720,7 @@ func newXAutoClaimCmd(res rueidis.RedisResult, args ...interface{}) XAutoClaimCm
 	}
 	val := make([]XMessage, 0, len(ranges))
 	for _, r := range ranges {
-		val = append(val, newXMessage(r))
+		val = append(val, newXMessageFromXRangeEntry(r))
 	}
 	cmd.SetVal(val, start)
 	return cmd
@@ -649,7 +734,7 @@ type XAutoClaimJustIDCmd interface {
 	Result() (ids []string, start string, err error)
 }
 
-func newXAutoClaimJustIDCmd(res rueidis.RedisResult, args ...interface{}) XAutoClaimJustIDCmd {
+func newXAutoClaimJustIDCmdFromResult(res rueidis.RedisResult, args ...interface{}) XAutoClaimJustIDCmd {
 	arr, err := res.ToArray()
 	cmd := goredis.NewXAutoClaimJustIDCmd(context.Background(), args...)
 	if err != nil {
@@ -684,7 +769,7 @@ type XInfoConsumersCmd interface {
 	Result() ([]XInfoConsumer, error)
 }
 
-func newXInfoConsumersCmd(res rueidis.RedisResult, stream string, group string) XInfoConsumersCmd {
+func newXInfoConsumersCmdFromResult(res rueidis.RedisResult, stream string, group string) XInfoConsumersCmd {
 	arr, err := res.ToArray()
 	cmd := goredis.NewXInfoConsumersCmd(context.Background(), stream, group)
 	if err != nil {
@@ -725,7 +810,7 @@ type XInfoGroupsCmd interface {
 	Result() ([]XInfoGroup, error)
 }
 
-func newXInfoGroupsCmd(res rueidis.RedisResult, stream string) XInfoGroupsCmd {
+func newXInfoGroupsCmdFromResult(res rueidis.RedisResult, stream string) XInfoGroupsCmd {
 	arr, err := res.ToArray()
 	cmd := goredis.NewXInfoGroupsCmd(context.Background(), stream)
 	if err != nil {
@@ -774,7 +859,7 @@ type XInfoStreamCmd interface {
 	Result() (*XInfoStream, error)
 }
 
-func newXInfoStreamCmd(res rueidis.RedisResult, stream string) XInfoStreamCmd {
+func newXInfoStreamCmdFromResult(res rueidis.RedisResult, stream string) XInfoStreamCmd {
 	kv, err := res.AsMap()
 	cmd := goredis.NewXInfoStreamCmd(context.Background(), stream)
 	if err != nil {
@@ -808,12 +893,12 @@ func newXInfoStreamCmd(res rueidis.RedisResult, stream string) XInfoStreamCmd {
 	//}
 	if v, ok := kv["first-entry"]; ok {
 		if r, err := v.AsXRangeEntry(); err == nil {
-			val.FirstEntry = newXMessage(r)
+			val.FirstEntry = newXMessageFromXRangeEntry(r)
 		}
 	}
 	if v, ok := kv["last-entry"]; ok {
 		if r, err := v.AsXRangeEntry(); err == nil {
-			val.LastEntry = newXMessage(r)
+			val.LastEntry = newXMessageFromXRangeEntry(r)
 		}
 	}
 	cmd.SetVal(val)
@@ -836,7 +921,7 @@ type XInfoStreamFullCmd interface {
 	Result() (*XInfoStreamFull, error)
 }
 
-func newXInfoStreamFullCmd(res rueidis.RedisResult, args ...interface{}) XInfoStreamFullCmd {
+func newXInfoStreamFullCmdFromResult(res rueidis.RedisResult, args ...interface{}) XInfoStreamFullCmd {
 	kv, err := res.AsMap()
 	cmd := goredis.NewXInfoStreamFullCmd(context.Background(), args...)
 	if err != nil {
@@ -880,7 +965,7 @@ func newXInfoStreamFullCmd(res rueidis.RedisResult, args ...interface{}) XInfoSt
 		}
 		val.Entries = make([]XMessage, 0, len(ranges))
 		for _, r := range ranges {
-			val.Entries = append(val.Entries, newXMessage(r))
+			val.Entries = append(val.Entries, newXMessageFromXRangeEntry(r))
 		}
 	}
 	cmd.SetVal(val)
@@ -1036,33 +1121,46 @@ type ZSliceCmd interface {
 	Result() ([]Z, error)
 }
 
-func newZSliceCmd(res rueidis.RedisResult, args ...interface{}) ZSliceCmd {
-	scores, err := res.AsZScores()
+func newZSliceCmd(val []Z, err error, args ...interface{}) ZSliceCmd {
 	cmd := goredis.NewZSliceCmd(context.Background(), args...)
+	cmd.SetErr(wrapError(err))
+	cmd.SetVal(val)
+	return cmd
+}
+
+func newZSliceCmdFromCmd(res *rueidiscompat.ZSliceCmd, args ...interface{}) ZSliceCmd {
+	scores, err := res.Result()
 	if err != nil {
-		cmd.SetErr(wrapError(err))
-		return cmd
+		return newZSliceCmd(nil, err, args...)
 	}
 	val := make([]Z, 0, len(scores))
 	for _, s := range scores {
 		val = append(val, Z{Member: s.Member, Score: s.Score})
 	}
-	cmd.SetVal(val)
-	return cmd
+	return newZSliceCmd(val, err, args...)
 }
 
-func newZSliceSingleCmd(res rueidis.RedisResult, args ...interface{}) ZSliceCmd {
-	s, err := res.AsZScore()
-	cmd := goredis.NewZSliceCmd(context.Background(), args...)
+func newZSliceCmdFromResult(res rueidis.RedisResult, args ...interface{}) ZSliceCmd {
+	scores, err := res.AsZScores()
 	if err != nil {
-		cmd.SetErr(wrapError(err))
-		return cmd
+		return newZSliceCmd(nil, err, args...)
 	}
-	cmd.SetVal([]Z{{
+	val := make([]Z, 0, len(scores))
+	for _, s := range scores {
+		val = append(val, Z{Member: s.Member, Score: s.Score})
+	}
+	return newZSliceCmd(val, err, args...)
+}
+
+func newZSliceSingleCmdFromResult(res rueidis.RedisResult, args ...interface{}) ZSliceCmd {
+	s, err := res.AsZScore()
+	if err != nil {
+		return newZSliceCmd(nil, err, args...)
+	}
+	return newZSliceCmd([]Z{{
 		Member: s.Member,
 		Score:  s.Score,
-	}})
-	return cmd
+	}}, err, args...)
 }
 
 //------------------------------------------------------------------------------
@@ -1075,7 +1173,7 @@ type ZWithKeyCmd interface {
 	Result() (*ZWithKey, error)
 }
 
-func newZWithKeyCmd(res rueidis.RedisResult, args ...interface{}) ZWithKeyCmd {
+func newZWithKeyCmdFromResult(res rueidis.RedisResult, args ...interface{}) ZWithKeyCmd {
 	arr, err := res.ToArray()
 	cmd := goredis.NewZWithKeyCmd(context.Background(), args...)
 	if err != nil {
@@ -1114,7 +1212,7 @@ type ScanCmd interface {
 	Result() (keys []string, cursor uint64, err error)
 }
 
-func newScanCmd(res rueidis.RedisResult, args ...interface{}) ScanCmd {
+func newScanCmdFromResult(res rueidis.RedisResult, args ...interface{}) ScanCmd {
 	ret, err := res.ToArray()
 	// todo for ScanIterator
 	cmd := goredis.NewScanCmd(context.Background(), nil, args...)
@@ -1149,7 +1247,7 @@ type ClusterSlotsCmd interface {
 	Result() ([]ClusterSlot, error)
 }
 
-func newClusterSlotsCmd(res rueidis.RedisResult, args ...interface{}) ClusterSlotsCmd {
+func newClusterSlotsCmdFromResult(res rueidis.RedisResult, args ...interface{}) ClusterSlotsCmd {
 	arr, err := res.ToArray()
 	cmd := goredis.NewClusterSlotsCmd(context.Background(), args...)
 	if err != nil {
@@ -1394,7 +1492,7 @@ type CommandsInfoCmd interface {
 	Result() (map[string]*CommandInfo, error)
 }
 
-func newCommandsInfoCmd(res rueidis.RedisResult, args ...interface{}) CommandsInfoCmd {
+func newCommandsInfoCmdFromResult(res rueidis.RedisResult, args ...interface{}) CommandsInfoCmd {
 	arr, err := res.ToArray()
 	cmd := goredis.NewCommandsInfoCmd(context.Background(), args...)
 	if err != nil {

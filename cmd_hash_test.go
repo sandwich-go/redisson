@@ -5,6 +5,7 @@ import (
 	"fmt"
 	. "github.com/smartystreets/goconvey/convey"
 	"testing"
+	"time"
 )
 
 func testHDel(ctx context.Context, c Cmdable) []string {
@@ -56,6 +57,7 @@ func testHExists(ctx context.Context, c Cmdable) []string {
 	So(del.Err(), ShouldBeNil)
 	So(del.Val(), ShouldEqual, 1)
 
+	time.Sleep(1 * time.Second)
 	hExists = cacheCmd(c).HExists(ctx, key, field1)
 	So(hExists.Err(), ShouldBeNil)
 	So(hExists.Val(), ShouldBeFalse)
@@ -89,6 +91,8 @@ func testHGet(ctx context.Context, c Cmdable) []string {
 	del := c.Del(ctx, key)
 	So(del.Err(), ShouldBeNil)
 	So(del.Val(), ShouldEqual, 1)
+
+	time.Sleep(1 * time.Second)
 
 	hget = cacheCmd(c).HGet(ctx, key, field1)
 	So(hget.Err(), ShouldNotBeNil)

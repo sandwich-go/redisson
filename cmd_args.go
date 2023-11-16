@@ -2,6 +2,7 @@ package redisson
 
 import (
 	goredis "github.com/go-redis/redis/v8"
+	"github.com/redis/rueidis/rueidiscompat"
 )
 
 const KeepTTL = goredis.KeepTTL
@@ -13,6 +14,17 @@ type SetArgs = goredis.SetArgs
 //------------------------------------------------------------------------------
 
 type Sort = goredis.Sort
+
+func toSort(s Sort) rueidiscompat.Sort {
+	return rueidiscompat.Sort{
+		By:     s.By,
+		Order:  s.Order,
+		Get:    s.Get,
+		Offset: s.Offset,
+		Count:  s.Count,
+		Alpha:  s.Alpha,
+	}
+}
 
 //------------------------------------------------------------------------------
 
@@ -27,6 +39,31 @@ type (
 	ZRangeArgs = goredis.ZRangeArgs
 )
 
+func toZStore(z ZStore) rueidiscompat.ZStore {
+	var weights = make([]int64, 0, len(z.Weights))
+	for _, w := range z.Weights {
+		weights = append(weights, int64(w))
+	}
+	return rueidiscompat.ZStore{
+		Aggregate: z.Aggregate,
+		Keys:      z.Keys,
+		Weights:   weights,
+	}
+}
+
+func toZRangeArgs(z ZRangeArgs) rueidiscompat.ZRangeArgs {
+	return rueidiscompat.ZRangeArgs{
+		Start:   z.Start,
+		Stop:    z.Stop,
+		Key:     z.Key,
+		Offset:  z.Offset,
+		Count:   z.Count,
+		ByScore: z.ByScore,
+		ByLex:   z.ByLex,
+		Rev:     z.Rev,
+	}
+}
+
 //------------------------------------------------------------------------------
 
 type (
@@ -37,6 +74,25 @@ type (
 	XReadArgs       = goredis.XReadArgs
 	XReadGroupArgs  = goredis.XReadGroupArgs
 )
+
+func toXReadArgs(x XReadArgs) rueidiscompat.XReadArgs {
+	return rueidiscompat.XReadArgs{
+		Streams: x.Streams,
+		Block:   x.Block,
+		Count:   x.Count,
+	}
+}
+
+func toXReadGroupArgs(x XReadGroupArgs) rueidiscompat.XReadGroupArgs {
+	return rueidiscompat.XReadGroupArgs{
+		Group:    x.Group,
+		Consumer: x.Consumer,
+		Streams:  x.Streams,
+		Count:    x.Count,
+		Block:    x.Block,
+		NoAck:    x.NoAck,
+	}
+}
 
 //------------------------------------------------------------------------------
 

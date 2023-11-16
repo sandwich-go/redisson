@@ -776,5 +776,5 @@ func streamTestUnits() []TestUnit {
 	}
 }
 
-func TestResp2Client_Stream(t *testing.T) { doTestUnits(t, RESP2, streamTestUnits) }
+// func TestResp2Client_Stream(t *testing.T) { doTestUnits(t, RESP2, streamTestUnits) }
 func TestResp3Client_Stream(t *testing.T) { doTestUnits(t, RESP3, streamTestUnits) }

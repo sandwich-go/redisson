@@ -243,6 +243,7 @@ func doTestUnitClean(ctx context.Context, c Cmdable, keys []string) {
 	if len(keys) > 0 {
 		So(c.Del(ctx, keys...).Err(), ShouldBeNil)
 	}
+	c.FlushAll(context.Background())
 }
 
 type TestUnitName interface {
@@ -270,6 +271,7 @@ func bitMapTestUnits() []TestUnit {
 
 func doTestUnits(t *testing.T, r RESP, unitsFunc func() []TestUnit) {
 	c := MustNewClient(NewConf(WithResp(r), WithDevelopment(false)))
+	c.FlushAll(context.Background())
 	t.Cleanup(func() {
 		_ = c.Close()
 	})

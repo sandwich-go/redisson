@@ -3,8 +3,9 @@ package redisson
 import (
 	"context"
 	"fmt"
-	"github.com/sandwich-go/rueidis"
-	"github.com/sandwich-go/rueidis/rueidiscompat"
+	"github.com/redis/rueidis"
+	"github.com/redis/rueidis/rueidiscompat"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -55,6 +56,7 @@ func (r *resp3) Cache(ttl time.Duration) CacheCmdable {
 	}
 	return r
 }
+
 func (r *resp3Cache) Do(ctx context.Context, completed rueidis.Completed) rueidis.RedisResult {
 	rsp := r.resp.cmd.DoCache(ctx, rueidis.Cacheable(completed), r.ttl)
 	r.resp.handler.cache(ctx, rsp.IsCacheHit())
@@ -70,35 +72,31 @@ func (r *resp3) getBitCountCompleted(key string, bitCount *BitCount) rueidis.Com
 }
 
 func (r *resp3) BitCount(ctx context.Context, key string, bitCount *BitCount) IntCmd {
-	return newIntCmd(r.cmd.Do(ctx, r.getBitCountCompleted(key, bitCount)))
+	return newIntCmdFromResult(r.cmd.Do(ctx, r.getBitCountCompleted(key, bitCount)))
 }
 
 func (r *resp3Cache) BitCount(ctx context.Context, key string, bitCount *BitCount) IntCmd {
-	return newIntCmd(r.Do(ctx, r.resp.getBitCountCompleted(key, bitCount)))
+	return newIntCmdFromResult(r.Do(ctx, r.resp.getBitCountCompleted(key, bitCount)))
 }
 
 func (r *resp3) BitField(ctx context.Context, key string, args ...interface{}) IntSliceCmd {
-	return newIntSliceCmd(r.cmd.Do(ctx, r.cmd.B().Arbitrary(BITFIELD).Keys(key).Args(argsToSlice(args)...).Build()))
-}
-
-func (r *resp3) bitOp(ctx context.Context, token, destKey string, keys ...string) IntCmd {
-	return newIntCmd(r.cmd.Do(ctx, r.cmd.B().Bitop().Operation(token).Destkey(destKey).Key(keys...).Build()))
+	return newIntSliceCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Arbitrary(BITFIELD).Keys(key).Args(argsToSlice(args)...).Build()))
 }
 
 func (r *resp3) BitOpAnd(ctx context.Context, destKey string, keys ...string) IntCmd {
-	return r.bitOp(ctx, AND, destKey, keys...)
+	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Bitop().And().Destkey(destKey).Key(keys...).Build()))
 }
 
 func (r *resp3) BitOpOr(ctx context.Context, destKey string, keys ...string) IntCmd {
-	return r.bitOp(ctx, OR, destKey, keys...)
+	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Bitop().Or().Destkey(destKey).Key(keys...).Build()))
 }
 
 func (r *resp3) BitOpXor(ctx context.Context, destKey string, keys ...string) IntCmd {
-	return r.bitOp(ctx, XOR, destKey, keys...)
+	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Bitop().Xor().Destkey(destKey).Key(keys...).Build()))
 }
 
 func (r *resp3) BitOpNot(ctx context.Context, destKey string, key string) IntCmd {
-	return r.bitOp(ctx, NOT, destKey, key)
+	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Bitop().Not().Destkey(destKey).Key(key).Build()))
 }
 
 func (r *resp3) getBitPosCompleted(key string, bit int64, pos ...int64) rueidis.Completed {
@@ -118,11 +116,11 @@ func (r *resp3) getBitPosCompleted(key string, bit int64, pos ...int64) rueidis.
 }
 
 func (r *resp3) BitPos(ctx context.Context, key string, bit int64, pos ...int64) IntCmd {
-	return newIntCmd(r.cmd.Do(ctx, r.getBitPosCompleted(key, bit, pos...)))
+	return newIntCmdFromResult(r.cmd.Do(ctx, r.getBitPosCompleted(key, bit, pos...)))
 }
 
 func (r *resp3Cache) BitPos(ctx context.Context, key string, bit int64, pos ...int64) IntCmd {
-	return newIntCmd(r.Do(ctx, r.resp.getBitPosCompleted(key, bit, pos...)))
+	return newIntCmdFromResult(r.Do(ctx, r.resp.getBitPosCompleted(key, bit, pos...)))
 }
 
 func (r *resp3) getBitCompleted(key string, offset int64) rueidis.Completed {
@@ -130,59 +128,59 @@ func (r *resp3) getBitCompleted(key string, offset int64) rueidis.Completed {
 }
 
 func (r *resp3) GetBit(ctx context.Context, key string, offset int64) IntCmd {
-	return newIntCmd(r.cmd.Do(ctx, r.getBitCompleted(key, offset)))
+	return newIntCmdFromResult(r.cmd.Do(ctx, r.getBitCompleted(key, offset)))
 }
 
 func (r *resp3Cache) GetBit(ctx context.Context, key string, offset int64) IntCmd {
-	return newIntCmd(r.Do(ctx, r.resp.getBitCompleted(key, offset)))
+	return newIntCmdFromResult(r.Do(ctx, r.resp.getBitCompleted(key, offset)))
 }
 
 func (r *resp3) SetBit(ctx context.Context, key string, offset int64, value int) IntCmd {
-	return newIntCmd(r.cmd.Do(ctx, r.cmd.B().Setbit().Key(key).Offset(offset).Value(int64(value)).Build()))
+	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Setbit().Key(key).Offset(offset).Value(int64(value)).Build()))
 }
 
 func (r *resp3) ClusterAddSlots(ctx context.Context, slots ...int) StatusCmd {
-	return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().ClusterAddslots().Slot(intSliceToInt64ToSlice(slots)...).Build()))
+	return newStatusCmdFromResult(r.cmd.Do(ctx, r.cmd.B().ClusterAddslots().Slot(intSliceToInt64ToSlice(slots)...).Build()))
 }
 
 func (r *resp3) ClusterAddSlotsRange(ctx context.Context, min, max int) StatusCmd {
-	return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().ClusterAddslotsrange().StartSlotEndSlot().StartSlotEndSlot(int64(min), int64(max)).Build()))
+	return newStatusCmdFromResult(r.cmd.Do(ctx, r.cmd.B().ClusterAddslotsrange().StartSlotEndSlot().StartSlotEndSlot(int64(min), int64(max)).Build()))
 }
 
 func (r *resp3) ClusterCountFailureReports(ctx context.Context, nodeID string) IntCmd {
-	return newIntCmd(r.cmd.Do(ctx, r.cmd.B().ClusterCountFailureReports().NodeId(nodeID).Build()))
+	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().ClusterCountFailureReports().NodeId(nodeID).Build()))
 }
 
 func (r *resp3) ClusterCountKeysInSlot(ctx context.Context, slot int) IntCmd {
-	return newIntCmd(r.cmd.Do(ctx, r.cmd.B().ClusterCountkeysinslot().Slot(int64(slot)).Build()))
+	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().ClusterCountkeysinslot().Slot(int64(slot)).Build()))
 }
 
 func (r *resp3) ClusterDelSlots(ctx context.Context, slots ...int) StatusCmd {
-	return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().ClusterDelslots().Slot(intSliceToInt64ToSlice(slots)...).Build()))
+	return newStatusCmdFromResult(r.cmd.Do(ctx, r.cmd.B().ClusterDelslots().Slot(intSliceToInt64ToSlice(slots)...).Build()))
 }
 
 func (r *resp3) ClusterDelSlotsRange(ctx context.Context, min, max int) StatusCmd {
-	return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().ClusterDelslotsrange().StartSlotEndSlot().StartSlotEndSlot(int64(min), int64(max)).Build()))
+	return newStatusCmdFromResult(r.cmd.Do(ctx, r.cmd.B().ClusterDelslotsrange().StartSlotEndSlot().StartSlotEndSlot(int64(min), int64(max)).Build()))
 }
 
 func (r *resp3) ClusterFailover(ctx context.Context) StatusCmd {
-	return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().ClusterFailover().Build()))
+	return newStatusCmdFromResult(r.cmd.Do(ctx, r.cmd.B().ClusterFailover().Build()))
 }
 
 func (r *resp3) ClusterForget(ctx context.Context, nodeID string) StatusCmd {
-	return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().ClusterForget().NodeId(nodeID).Build()))
+	return newStatusCmdFromResult(r.cmd.Do(ctx, r.cmd.B().ClusterForget().NodeId(nodeID).Build()))
 }
 
 func (r *resp3) ClusterGetKeysInSlot(ctx context.Context, slot int, count int) StringSliceCmd {
-	return newStringSliceCmd(r.cmd.Do(ctx, r.cmd.B().ClusterGetkeysinslot().Slot(int64(slot)).Count(int64(count)).Build()))
+	return newStringSliceCmdFromResult(r.cmd.Do(ctx, r.cmd.B().ClusterGetkeysinslot().Slot(int64(slot)).Count(int64(count)).Build()))
 }
 
 func (r *resp3) ClusterInfo(ctx context.Context) StringCmd {
-	return newStringCmd(r.cmd.Do(ctx, r.cmd.B().ClusterInfo().Build()))
+	return newStringCmdFromResult(r.cmd.Do(ctx, r.cmd.B().ClusterInfo().Build()))
 }
 
 func (r *resp3) ClusterKeySlot(ctx context.Context, key string) IntCmd {
-	return newIntCmd(r.cmd.Do(ctx, r.cmd.B().ClusterKeyslot().Key(key).Build()))
+	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().ClusterKeyslot().Key(key).Build()))
 }
 
 func (r *resp3) ClusterMeet(ctx context.Context, host, port string) StatusCmd {
@@ -190,89 +188,83 @@ func (r *resp3) ClusterMeet(ctx context.Context, host, port string) StatusCmd {
 	if err != nil {
 		return newStatusCmdWithError(err)
 	}
-	return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().ClusterMeet().Ip(host).Port(iport).Build()))
+	return newStatusCmdFromResult(r.cmd.Do(ctx, r.cmd.B().ClusterMeet().Ip(host).Port(iport).Build()))
 }
 
 func (r *resp3) ClusterNodes(ctx context.Context) StringCmd {
-	return newStringCmd(r.cmd.Do(ctx, r.cmd.B().ClusterNodes().Build()))
+	return newStringCmdFromResult(r.cmd.Do(ctx, r.cmd.B().ClusterNodes().Build()))
 }
 
 func (r *resp3) ClusterReplicate(ctx context.Context, nodeID string) StatusCmd {
-	return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().ClusterReplicate().NodeId(nodeID).Build()))
+	return newStatusCmdFromResult(r.cmd.Do(ctx, r.cmd.B().ClusterReplicate().NodeId(nodeID).Build()))
 }
 
 func (r *resp3) ClusterResetSoft(ctx context.Context) StatusCmd {
-	//return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().ClusterReset().Soft().Build()))
-	return r.adapter.ClusterResetSoft(ctx)
+	return newStatusCmdFromStatusCmd(r.adapter.ClusterResetSoft(ctx))
 }
 
 func (r *resp3) ClusterResetHard(ctx context.Context) StatusCmd {
-	//return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().ClusterReset().Hard().Build()))
-	return r.adapter.ClusterResetHard(ctx)
+	return newStatusCmdFromStatusCmd(r.adapter.ClusterResetHard(ctx))
 }
 
 func (r *resp3) ClusterSaveConfig(ctx context.Context) StatusCmd {
-	//return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().ClusterSaveconfig().Build()))
-	return r.adapter.ClusterSaveConfig(ctx)
+	return newStatusCmdFromStatusCmd(r.adapter.ClusterSaveConfig(ctx))
 }
 
 func (r *resp3) ClusterSlaves(ctx context.Context, nodeID string) StringSliceCmd {
-	return newStringSliceCmd(r.cmd.Do(ctx, r.cmd.B().ClusterSlaves().NodeId(nodeID).Build()))
+	return newStringSliceCmdFromResult(r.cmd.Do(ctx, r.cmd.B().ClusterSlaves().NodeId(nodeID).Build()))
 }
 
 func (r *resp3) ClusterSlots(ctx context.Context) ClusterSlotsCmd {
-	return newClusterSlotsCmd(r.cmd.Do(ctx, r.cmd.B().ClusterSlots().Build()))
+	return newClusterSlotsCmdFromResult(r.cmd.Do(ctx, r.cmd.B().ClusterSlots().Build()))
 }
 
 func (r *resp3) ReadOnly(ctx context.Context) StatusCmd {
-	return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().Readonly().Build()))
+	return newStatusCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Readonly().Build()))
 }
 
 func (r *resp3) ReadWrite(ctx context.Context) StatusCmd {
-	return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().Readwrite().Build()))
+	return newStatusCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Readwrite().Build()))
 }
 
 func (r *resp3) Select(ctx context.Context, index int) StatusCmd {
-	return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().Select().Index(int64(index)).Build()))
+	return newStatusCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Select().Index(int64(index)).Build()))
 }
 
 func (r *resp3) ClientGetName(ctx context.Context) StringCmd {
-	return newStringCmd(r.cmd.Do(ctx, r.cmd.B().ClientGetname().Build()))
+	return newStringCmdFromResult(r.cmd.Do(ctx, r.cmd.B().ClientGetname().Build()))
 }
 
 func (r *resp3) ClientID(ctx context.Context) IntCmd {
-	return newIntCmd(r.cmd.Do(ctx, r.cmd.B().ClientId().Build()))
+	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().ClientId().Build()))
 }
 
 func (r *resp3) ClientKill(ctx context.Context, ipPort string) StatusCmd {
-	//return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().Arbitrary(CLIENT).Args(KILL).Args(ipPort).Build()))
-	return r.adapter.ClientKill(ctx, ipPort)
+	return newStatusCmdFromStatusCmd(r.adapter.ClientKill(ctx, ipPort))
 }
 
 func (r *resp3) ClientKillByFilter(ctx context.Context, keys ...string) IntCmd {
-	//return newIntCmd(r.cmd.Do(ctx, r.cmd.B().Arbitrary(CLIENT).Args(KILL).Args(keys...).Build()))
-	return r.adapter.ClientKillByFilter(ctx, keys...)
+	return newIntCmdFromIntCmd(r.adapter.ClientKillByFilter(ctx, keys...))
 }
 
 func (r *resp3) ClientList(ctx context.Context) StringCmd {
-	return newStringCmd(r.cmd.Do(ctx, r.cmd.B().ClientList().Build()))
+	return newStringCmdFromResult(r.cmd.Do(ctx, r.cmd.B().ClientList().Build()))
 }
 
 func (r *resp3) ClientPause(ctx context.Context, dur time.Duration) BoolCmd {
-	//return newBoolCmd(r.cmd.Do(ctx, r.cmd.B().ClientPause().Timeout(formatSec(dur)).Build()))
-	return r.adapter.ClientPause(ctx, dur)
+	return newBoolCmdFromBoolCmd(r.adapter.ClientPause(ctx, dur))
 }
 
 func (r *resp3) Echo(ctx context.Context, message interface{}) StringCmd {
-	return newStringCmd(r.cmd.Do(ctx, r.cmd.B().Echo().Message(str(message)).Build()))
+	return newStringCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Echo().Message(str(message)).Build()))
 }
 
 func (r *resp3) Ping(ctx context.Context) StatusCmd {
-	return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().Ping().Build()))
+	return newStatusCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Ping().Build()))
 }
 
 func (r *resp3) Quit(ctx context.Context) StatusCmd {
-	return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().Quit().Build()))
+	return newStatusCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Quit().Build()))
 }
 
 func (r *resp3) Copy(ctx context.Context, sourceKey string, destKey string, db int, replace bool) IntCmd {
@@ -283,15 +275,15 @@ func (r *resp3) Copy(ctx context.Context, sourceKey string, destKey string, db i
 	} else {
 		completed = cmd.Build()
 	}
-	return newIntCmd(r.cmd.Do(ctx, completed))
+	return newIntCmdFromResult(r.cmd.Do(ctx, completed))
 }
 
 func (r *resp3) Del(ctx context.Context, keys ...string) IntCmd {
-	return newIntCmd(r.cmd.Do(ctx, r.cmd.B().Del().Key(keys...).Build()))
+	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Del().Key(keys...).Build()))
 }
 
 func (r *resp3) Dump(ctx context.Context, key string) StringCmd {
-	return newStringCmd(r.cmd.Do(ctx, r.cmd.B().Dump().Key(key).Build()))
+	return newStringCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Dump().Key(key).Build()))
 }
 
 func (r *resp3) getExistsCompleted(keys ...string) rueidis.Completed {
@@ -299,23 +291,22 @@ func (r *resp3) getExistsCompleted(keys ...string) rueidis.Completed {
 }
 
 func (r *resp3) Exists(ctx context.Context, keys ...string) IntCmd {
-	return newIntCmd(r.cmd.Do(ctx, r.getExistsCompleted(keys...)))
+	return newIntCmdFromResult(r.cmd.Do(ctx, r.getExistsCompleted(keys...)))
 }
 
 func (r *resp3Cache) Exists(ctx context.Context, keys ...string) IntCmd {
-	return newIntCmd(r.Do(ctx, r.resp.getExistsCompleted(keys...)))
+	return newIntCmdFromResult(r.Do(ctx, r.resp.getExistsCompleted(keys...)))
 }
 
 func (r *resp3) Expire(ctx context.Context, key string, expiration time.Duration) BoolCmd {
-	return newBoolCmd(r.cmd.Do(ctx, r.cmd.B().Expire().Key(key).Seconds(formatSec(expiration)).Build()))
+	return newBoolCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Expire().Key(key).Seconds(formatSec(expiration)).Build()))
 }
 
 func (r *resp3) ExpireAt(ctx context.Context, key string, tm time.Time) BoolCmd {
-	return newBoolCmd(r.cmd.Do(ctx, r.cmd.B().Expireat().Key(key).Timestamp(tm.Unix()).Build()))
+	return newBoolCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Expireat().Key(key).Timestamp(tm.Unix()).Build()))
 }
 
 func (r *resp3) Keys(ctx context.Context, pattern string) StringSliceCmd {
-	//return newStringSliceCmd(r.cmd.Do(ctx, r.cmd.B().Keys().Pattern(pattern).Build()))
 	return newStringSliceCmdFromStringSliceCmd(r.adapter.Keys(ctx, pattern))
 }
 
@@ -325,35 +316,35 @@ func (r *resp3) Migrate(ctx context.Context, host, port, key string, db int, tim
 		return newStatusCmdWithError(err)
 	}
 	var migratePort = r.cmd.B().Migrate().Host(host).Port(iport)
-	return newStatusCmd(r.cmd.Do(ctx, migratePort.Key(key).DestinationDb(int64(db)).Timeout(formatSec(timeout)).Build()))
+	return newStatusCmdFromResult(r.cmd.Do(ctx, migratePort.Key(key).DestinationDb(int64(db)).Timeout(formatSec(timeout)).Build()))
 }
 
 func (r *resp3) Move(ctx context.Context, key string, db int) BoolCmd {
-	return newBoolCmd(r.cmd.Do(ctx, r.cmd.B().Move().Key(key).Db(int64(db)).Build()))
+	return newBoolCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Move().Key(key).Db(int64(db)).Build()))
 }
 
 func (r *resp3) ObjectRefCount(ctx context.Context, key string) IntCmd {
-	return newIntCmd(r.cmd.Do(ctx, r.cmd.B().ObjectRefcount().Key(key).Build()))
+	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().ObjectRefcount().Key(key).Build()))
 }
 
 func (r *resp3) ObjectEncoding(ctx context.Context, key string) StringCmd {
-	return newStringCmd(r.cmd.Do(ctx, r.cmd.B().ObjectEncoding().Key(key).Build()))
+	return newStringCmdFromResult(r.cmd.Do(ctx, r.cmd.B().ObjectEncoding().Key(key).Build()))
 }
 
 func (r *resp3) ObjectIdleTime(ctx context.Context, key string) DurationCmd {
-	return newDurationCmd(r.cmd.Do(ctx, r.cmd.B().ObjectIdletime().Key(key).Build()), time.Second)
+	return newDurationCmdFromResult(r.cmd.Do(ctx, r.cmd.B().ObjectIdletime().Key(key).Build()), time.Second)
 }
 
 func (r *resp3) Persist(ctx context.Context, key string) BoolCmd {
-	return newBoolCmd(r.cmd.Do(ctx, r.cmd.B().Persist().Key(key).Build()))
+	return newBoolCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Persist().Key(key).Build()))
 }
 
 func (r *resp3) PExpire(ctx context.Context, key string, expiration time.Duration) BoolCmd {
-	return newBoolCmd(r.cmd.Do(ctx, r.cmd.B().Pexpire().Key(key).Milliseconds(formatMs(expiration)).Build()))
+	return newBoolCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Pexpire().Key(key).Milliseconds(formatMs(expiration)).Build()))
 }
 
 func (r *resp3) PExpireAt(ctx context.Context, key string, tm time.Time) BoolCmd {
-	return newBoolCmd(r.cmd.Do(ctx, r.cmd.B().Pexpireat().Key(key).MillisecondsTimestamp(tm.UnixNano()/int64(time.Millisecond)).Build()))
+	return newBoolCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Pexpireat().Key(key).MillisecondsTimestamp(tm.UnixNano()/int64(time.Millisecond)).Build()))
 }
 
 func (r *resp3) getPTTLCompleted(key string) rueidis.Completed {
@@ -361,11 +352,11 @@ func (r *resp3) getPTTLCompleted(key string) rueidis.Completed {
 }
 
 func (r *resp3) PTTL(ctx context.Context, key string) DurationCmd {
-	return newDurationCmd(r.cmd.Do(ctx, r.getPTTLCompleted(key)), time.Millisecond)
+	return newDurationCmdFromResult(r.cmd.Do(ctx, r.getPTTLCompleted(key)), time.Millisecond)
 }
 
 func (r *resp3Cache) PTTL(ctx context.Context, key string) DurationCmd {
-	return newDurationCmd(r.Do(ctx, r.resp.getPTTLCompleted(key)), time.Millisecond)
+	return newDurationCmdFromResult(r.Do(ctx, r.resp.getPTTLCompleted(key)), time.Millisecond)
 }
 
 func (r *resp3) RandomKey(ctx context.Context) StringCmd {
@@ -374,86 +365,67 @@ func (r *resp3) RandomKey(ctx context.Context) StringCmd {
 }
 
 func (r *resp3) Rename(ctx context.Context, key, newkey string) StatusCmd {
-	return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().Rename().Key(key).Newkey(newkey).Build()))
+	return newStatusCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Rename().Key(key).Newkey(newkey).Build()))
 }
 
 func (r *resp3) RenameNX(ctx context.Context, key, newkey string) BoolCmd {
-	return newBoolCmd(r.cmd.Do(ctx, r.cmd.B().Renamenx().Key(key).Newkey(newkey).Build()))
+	return newBoolCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Renamenx().Key(key).Newkey(newkey).Build()))
 }
 
 func (r *resp3) Restore(ctx context.Context, key string, ttl time.Duration, value string) StatusCmd {
-	return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().Restore().Key(key).Ttl(formatMs(ttl)).SerializedValue(value).Build()))
+	return newStatusCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Restore().Key(key).Ttl(formatMs(ttl)).SerializedValue(value).Build()))
 }
 
 func (r *resp3) RestoreReplace(ctx context.Context, key string, ttl time.Duration, value string) StatusCmd {
-	return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().Restore().Key(key).Ttl(formatMs(ttl)).SerializedValue(value).Replace().Build()))
-}
-
-func (r *resp3) getScanArgs(cursor uint64, match string, count int64) rueidis.Arbitrary {
-	cmd := r.cmd.B().Arbitrary(SCAN, str(cursor))
-	if len(match) > 0 {
-		cmd = cmd.Args(MATCH, match)
-	}
-	if count > 0 {
-		cmd = cmd.Args(COUNT, str(count))
-	}
-	return cmd
+	return newStatusCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Restore().Key(key).Ttl(formatMs(ttl)).SerializedValue(value).Replace().Build()))
 }
 
 func (r *resp3) Scan(ctx context.Context, cursor uint64, match string, count int64) ScanCmd {
-	return newScanCmd(r.cmd.Do(ctx, r.getScanArgs(cursor, match, count).ReadOnly()))
+	return r.adapter.Scan(ctx, cursor, match, count)
 }
 
 func (r *resp3) ScanType(ctx context.Context, cursor uint64, match string, count int64, keyType string) ScanCmd {
-	args := r.getScanArgs(cursor, match, count)
-	if len(keyType) > 0 {
-		args = args.Args(TYPE, keyType)
-	}
-	return newScanCmd(r.cmd.Do(ctx, args.ReadOnly()))
+	return r.adapter.ScanType(ctx, cursor, match, count, keyType)
 }
 
-func (r *resp3) getSortArgs(key string, sort Sort) rueidis.Arbitrary {
-	arbitrary := r.cmd.B().Arbitrary(SORT).Keys(key)
-	if len(sort.By) > 0 {
-		arbitrary = arbitrary.Args(BY, sort.By)
+func (r *resp3) sort(command, key string, sort Sort) rueidis.Completed {
+	cmd := r.cmd.B().Arbitrary(command).Keys(key)
+	if sort.By != "" {
+		cmd = cmd.Args("BY", sort.By)
 	}
 	if sort.Offset != 0 || sort.Count != 0 {
-		arbitrary = arbitrary.Args(LIMIT, str(sort.Offset), str(sort.Count))
+		cmd = cmd.Args("LIMIT", strconv.FormatInt(sort.Offset, 10), strconv.FormatInt(sort.Count, 10))
 	}
-	for _, g := range sort.Get {
-		arbitrary = arbitrary.Args(GET, g)
+	for _, get := range sort.Get {
+		cmd = cmd.Args("GET").Args(get)
 	}
-	if len(sort.Order) > 0 {
-		arbitrary = arbitrary.Args(sort.Order)
+	switch order := strings.ToUpper(sort.Order); order {
+	case "ASC", "DESC":
+		cmd = cmd.Args(order)
+	case "":
+	default:
+		panic(fmt.Sprintf("invalid sort order %s", sort.Order))
 	}
 	if sort.Alpha {
-		arbitrary = arbitrary.Args(ALPHA)
+		cmd = cmd.Args("ALPHA")
 	}
-	return arbitrary
+	return cmd.Build()
 }
 
 func (r *resp3) Sort(ctx context.Context, key string, sort Sort) StringSliceCmd {
-	return newStringSliceCmd(r.cmd.Do(ctx, r.getSortArgs(key, sort).Build()))
-}
-
-func (r *resp3Cache) Sort(ctx context.Context, key string, sort Sort) StringSliceCmd {
-	return newStringSliceCmd(r.Do(ctx, r.resp.getSortArgs(key, sort).Build()))
+	return newStringSliceCmdFromResult(r.cmd.Do(ctx, r.sort("SORT", key, sort)))
 }
 
 func (r *resp3) SortStore(ctx context.Context, key, store string, sort Sort) IntCmd {
-	return newIntCmd(r.cmd.Do(ctx, r.getSortArgs(key, sort).Args(STORE, store).Build()))
+	return newIntCmdFromIntCmd(r.adapter.SortStore(ctx, key, store, toSort(sort)))
 }
 
 func (r *resp3) SortInterfaces(ctx context.Context, key string, sort Sort) SliceCmd {
-	return newSliceCmd(r.cmd.Do(ctx, r.getSortArgs(key, sort).Build()))
-}
-
-func (r *resp3Cache) SortInterfaces(ctx context.Context, key string, sort Sort) SliceCmd {
-	return newSliceCmd(r.Do(ctx, r.resp.getSortArgs(key, sort).Build()))
+	return newSliceCmdFromSliceResult(r.cmd.Do(ctx, r.sort("SORT", key, sort)))
 }
 
 func (r *resp3) Touch(ctx context.Context, keys ...string) IntCmd {
-	return newIntCmd(r.cmd.Do(ctx, r.cmd.B().Touch().Key(keys...).Build()))
+	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Touch().Key(keys...).Build()))
 }
 
 func (r *resp3) getTTLCompleted(key string) rueidis.Completed {
@@ -461,11 +433,11 @@ func (r *resp3) getTTLCompleted(key string) rueidis.Completed {
 }
 
 func (r *resp3) TTL(ctx context.Context, key string) DurationCmd {
-	return newDurationCmd(r.cmd.Do(ctx, r.getTTLCompleted(key)), time.Second)
+	return newDurationCmdFromResult(r.cmd.Do(ctx, r.getTTLCompleted(key)), time.Second)
 }
 
 func (r *resp3Cache) TTL(ctx context.Context, key string) DurationCmd {
-	return newDurationCmd(r.Do(ctx, r.resp.getTTLCompleted(key)), time.Second)
+	return newDurationCmdFromResult(r.Do(ctx, r.resp.getTTLCompleted(key)), time.Second)
 }
 
 func (r *resp3) getTypeCompleted(key string) rueidis.Completed {
@@ -473,15 +445,15 @@ func (r *resp3) getTypeCompleted(key string) rueidis.Completed {
 }
 
 func (r *resp3) Type(ctx context.Context, key string) StatusCmd {
-	return newStatusCmd(r.cmd.Do(ctx, r.getTypeCompleted(key)))
+	return newStatusCmdFromResult(r.cmd.Do(ctx, r.getTypeCompleted(key)))
 }
 
 func (r *resp3Cache) Type(ctx context.Context, key string) StatusCmd {
-	return newStatusCmd(r.Do(ctx, r.resp.getTypeCompleted(key)))
+	return newStatusCmdFromResult(r.Do(ctx, r.resp.getTypeCompleted(key)))
 }
 
 func (r *resp3) Unlink(ctx context.Context, keys ...string) IntCmd {
-	return newIntCmd(r.cmd.Do(ctx, r.cmd.B().Unlink().Key(keys...).Build()))
+	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Unlink().Key(keys...).Build()))
 }
 
 func (r *resp3) GeoAdd(ctx context.Context, key string, geoLocation ...GeoLocation) IntCmd {
@@ -489,7 +461,7 @@ func (r *resp3) GeoAdd(ctx context.Context, key string, geoLocation ...GeoLocati
 	for _, loc := range geoLocation {
 		cmd = cmd.LongitudeLatitudeMember(loc.Longitude, loc.Latitude, loc.Name)
 	}
-	return newIntCmd(r.cmd.Do(ctx, cmd.Build()))
+	return newIntCmdFromResult(r.cmd.Do(ctx, cmd.Build()))
 }
 
 func (r *resp3) getGeoDistCompleted(key string, member1, member2, unit string) rueidis.Completed {
@@ -511,11 +483,11 @@ func (r *resp3) getGeoDistCompleted(key string, member1, member2, unit string) r
 }
 
 func (r *resp3) GeoDist(ctx context.Context, key string, member1, member2, unit string) FloatCmd {
-	return newFloatCmd(r.cmd.Do(ctx, r.getGeoDistCompleted(key, member1, member2, unit)))
+	return newFloatCmdFromResult(r.cmd.Do(ctx, r.getGeoDistCompleted(key, member1, member2, unit)))
 }
 
 func (r *resp3Cache) GeoDist(ctx context.Context, key string, member1, member2, unit string) FloatCmd {
-	return newFloatCmd(r.Do(ctx, r.resp.getGeoDistCompleted(key, member1, member2, unit)))
+	return newFloatCmdFromResult(r.Do(ctx, r.resp.getGeoDistCompleted(key, member1, member2, unit)))
 }
 
 func (r *resp3) getGeoHashCompleted(key string, members ...string) rueidis.Completed {
@@ -523,11 +495,11 @@ func (r *resp3) getGeoHashCompleted(key string, members ...string) rueidis.Compl
 }
 
 func (r *resp3) GeoHash(ctx context.Context, key string, members ...string) StringSliceCmd {
-	return newStringSliceCmd(r.cmd.Do(ctx, r.getGeoHashCompleted(key, members...)))
+	return newStringSliceCmdFromResult(r.cmd.Do(ctx, r.getGeoHashCompleted(key, members...)))
 }
 
 func (r *resp3Cache) GeoHash(ctx context.Context, key string, members ...string) StringSliceCmd {
-	return newStringSliceCmd(r.Do(ctx, r.resp.getGeoHashCompleted(key, members...)))
+	return newStringSliceCmdFromResult(r.Do(ctx, r.resp.getGeoHashCompleted(key, members...)))
 }
 
 func (r *resp3) getGeoPosCompleted(key string, members ...string) rueidis.Completed {
@@ -565,7 +537,7 @@ func (r *resp3) GeoRadiusStore(ctx context.Context, key string, longitude, latit
 	if len(q.Store) == 0 && len(q.StoreDist) == 0 {
 		return newIntCmdWithError(errGeoRadiusStoreRequiresStore)
 	}
-	return newIntCmd(r.cmd.Do(ctx, cmd.Args(getGeoRadiusQueryArgs(q)...).Build()))
+	return newIntCmdFromResult(r.cmd.Do(ctx, cmd.Args(getGeoRadiusQueryArgs(q)...).Build()))
 }
 
 func (r *resp3) getGeoRadiusByMemberCompleted(key, member string, q GeoRadiusQuery) rueidis.Completed {
@@ -591,7 +563,7 @@ func (r *resp3) GeoRadiusByMemberStore(ctx context.Context, key, member string, 
 	if len(q.Store) == 0 && len(q.StoreDist) == 0 {
 		return newIntCmdWithError(errGeoRadiusByMemberStoreRequiresStore)
 	}
-	return newIntCmd(r.cmd.Do(ctx, cmd.Args(getGeoRadiusQueryArgs(q)...).Build()))
+	return newIntCmdFromResult(r.cmd.Do(ctx, cmd.Args(getGeoRadiusQueryArgs(q)...).Build()))
 }
 
 func (r *resp3) getGeoSearchCompleted(key string, q GeoSearchQuery) rueidis.Completed {
@@ -599,11 +571,11 @@ func (r *resp3) getGeoSearchCompleted(key string, q GeoSearchQuery) rueidis.Comp
 }
 
 func (r *resp3) GeoSearch(ctx context.Context, key string, q GeoSearchQuery) StringSliceCmd {
-	return newStringSliceCmd(r.cmd.Do(ctx, r.getGeoSearchCompleted(key, q)))
+	return newStringSliceCmdFromResult(r.cmd.Do(ctx, r.getGeoSearchCompleted(key, q)))
 }
 
 func (r *resp3Cache) GeoSearch(ctx context.Context, key string, q GeoSearchQuery) StringSliceCmd {
-	return newStringSliceCmd(r.Do(ctx, r.resp.getGeoSearchCompleted(key, q)))
+	return newStringSliceCmdFromResult(r.Do(ctx, r.resp.getGeoSearchCompleted(key, q)))
 }
 
 func (r *resp3) getGeoSearchLocationCompleted(key string, q GeoSearchLocationQuery) rueidis.Completed {
@@ -623,11 +595,11 @@ func (r *resp3) GeoSearchStore(ctx context.Context, src, dest string, q GeoSearc
 	if q.StoreDist {
 		cmd = cmd.Args(STOREDIST)
 	}
-	return newIntCmd(r.cmd.Do(ctx, cmd.Build()))
+	return newIntCmdFromResult(r.cmd.Do(ctx, cmd.Build()))
 }
 
 func (r *resp3) HDel(ctx context.Context, key string, fields ...string) IntCmd {
-	return newIntCmd(r.cmd.Do(ctx, r.cmd.B().Hdel().Key(key).Field(fields...).Build()))
+	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Hdel().Key(key).Field(fields...).Build()))
 }
 
 func (r *resp3) getHExistsCompleted(key, field string) rueidis.Completed {
@@ -635,11 +607,11 @@ func (r *resp3) getHExistsCompleted(key, field string) rueidis.Completed {
 }
 
 func (r *resp3) HExists(ctx context.Context, key, field string) BoolCmd {
-	return newBoolCmd(r.cmd.Do(ctx, r.getHExistsCompleted(key, field)))
+	return newBoolCmdFromResult(r.cmd.Do(ctx, r.getHExistsCompleted(key, field)))
 }
 
 func (r *resp3Cache) HExists(ctx context.Context, key, field string) BoolCmd {
-	return newBoolCmd(r.Do(ctx, r.resp.getHExistsCompleted(key, field)))
+	return newBoolCmdFromResult(r.Do(ctx, r.resp.getHExistsCompleted(key, field)))
 }
 
 func (r *resp3) getHGetCompleted(key, field string) rueidis.Completed {
@@ -647,11 +619,11 @@ func (r *resp3) getHGetCompleted(key, field string) rueidis.Completed {
 }
 
 func (r *resp3) HGet(ctx context.Context, key, field string) StringCmd {
-	return newStringCmd(r.cmd.Do(ctx, r.getHGetCompleted(key, field)))
+	return newStringCmdFromResult(r.cmd.Do(ctx, r.getHGetCompleted(key, field)))
 }
 
 func (r *resp3Cache) HGet(ctx context.Context, key, field string) StringCmd {
-	return newStringCmd(r.Do(ctx, r.resp.getHGetCompleted(key, field)))
+	return newStringCmdFromResult(r.Do(ctx, r.resp.getHGetCompleted(key, field)))
 }
 
 func (r *resp3) getHGetAllCompleted(key string) rueidis.Completed {
@@ -659,19 +631,19 @@ func (r *resp3) getHGetAllCompleted(key string) rueidis.Completed {
 }
 
 func (r *resp3) HGetAll(ctx context.Context, key string) StringStringMapCmd {
-	return newStringStringMapCmd(r.cmd.Do(ctx, r.getHGetAllCompleted(key)))
+	return newStringStringMapCmdFromResult(r.cmd.Do(ctx, r.getHGetAllCompleted(key)))
 }
 
 func (r *resp3Cache) HGetAll(ctx context.Context, key string) StringStringMapCmd {
-	return newStringStringMapCmd(r.Do(ctx, r.resp.getHGetAllCompleted(key)))
+	return newStringStringMapCmdFromResult(r.Do(ctx, r.resp.getHGetAllCompleted(key)))
 }
 
 func (r *resp3) HIncrBy(ctx context.Context, key, field string, incr int64) IntCmd {
-	return newIntCmd(r.cmd.Do(ctx, r.cmd.B().Hincrby().Key(key).Field(field).Increment(incr).Build()))
+	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Hincrby().Key(key).Field(field).Increment(incr).Build()))
 }
 
 func (r *resp3) HIncrByFloat(ctx context.Context, key, field string, incr float64) FloatCmd {
-	return newFloatCmd(r.cmd.Do(ctx, r.cmd.B().Hincrbyfloat().Key(key).Field(field).Increment(incr).Build()))
+	return newFloatCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Hincrbyfloat().Key(key).Field(field).Increment(incr).Build()))
 }
 
 func (r *resp3) getHKeysCompleted(key string) rueidis.Completed {
@@ -679,11 +651,11 @@ func (r *resp3) getHKeysCompleted(key string) rueidis.Completed {
 }
 
 func (r *resp3) HKeys(ctx context.Context, key string) StringSliceCmd {
-	return newStringSliceCmd(r.cmd.Do(ctx, r.getHKeysCompleted(key)))
+	return newStringSliceCmdFromResult(r.cmd.Do(ctx, r.getHKeysCompleted(key)))
 }
 
 func (r *resp3Cache) HKeys(ctx context.Context, key string) StringSliceCmd {
-	return newStringSliceCmd(r.Do(ctx, r.resp.getHKeysCompleted(key)))
+	return newStringSliceCmdFromResult(r.Do(ctx, r.resp.getHKeysCompleted(key)))
 }
 
 func (r *resp3) getHLenCompleted(key string) rueidis.Completed {
@@ -691,11 +663,11 @@ func (r *resp3) getHLenCompleted(key string) rueidis.Completed {
 }
 
 func (r *resp3) HLen(ctx context.Context, key string) IntCmd {
-	return newIntCmd(r.cmd.Do(ctx, r.getHLenCompleted(key)))
+	return newIntCmdFromResult(r.cmd.Do(ctx, r.getHLenCompleted(key)))
 }
 
 func (r *resp3Cache) HLen(ctx context.Context, key string) IntCmd {
-	return newIntCmd(r.Do(ctx, r.resp.getHLenCompleted(key)))
+	return newIntCmdFromResult(r.Do(ctx, r.resp.getHLenCompleted(key)))
 }
 
 func (r *resp3) getHMGetCompleted(key string, fields ...string) rueidis.Completed {
@@ -703,11 +675,11 @@ func (r *resp3) getHMGetCompleted(key string, fields ...string) rueidis.Complete
 }
 
 func (r *resp3) HMGet(ctx context.Context, key string, fields ...string) SliceCmd {
-	return newSliceCmd(r.cmd.Do(ctx, r.getHMGetCompleted(key, fields...)), HMGET)
+	return newSliceCmdFromSliceResult(r.cmd.Do(ctx, r.getHMGetCompleted(key, fields...)), HMGET)
 }
 
 func (r *resp3Cache) HMGet(ctx context.Context, key string, fields ...string) SliceCmd {
-	return newSliceCmd(r.Do(ctx, r.resp.getHMGetCompleted(key, fields...)), HMGET)
+	return newSliceCmdFromSliceResult(r.Do(ctx, r.resp.getHMGetCompleted(key, fields...)), HMGET)
 }
 
 func (r *resp3) HMSet(ctx context.Context, key string, values ...interface{}) BoolCmd {
@@ -716,7 +688,7 @@ func (r *resp3) HMSet(ctx context.Context, key string, values ...interface{}) Bo
 	for i := 0; i < len(args); i += 2 {
 		fv = fv.FieldValue(args[i], args[i+1])
 	}
-	return newBoolCmd(r.cmd.Do(ctx, fv.Build()))
+	return newBoolCmdFromResult(r.cmd.Do(ctx, fv.Build()))
 }
 
 func (r *resp3) HRandField(ctx context.Context, key string, count int, withValues bool) StringSliceCmd {
@@ -724,7 +696,7 @@ func (r *resp3) HRandField(ctx context.Context, key string, count int, withValue
 	if withValues {
 		return flattenStringSliceCmd(r.cmd.Do(ctx, h.Withvalues().Build()))
 	}
-	return newStringSliceCmd(r.cmd.Do(ctx, h.Build()))
+	return newStringSliceCmdFromResult(r.cmd.Do(ctx, h.Build()))
 }
 
 func (r *resp3) HScan(ctx context.Context, key string, cursor uint64, match string, count int64) ScanCmd {
@@ -735,7 +707,7 @@ func (r *resp3) HScan(ctx context.Context, key string, cursor uint64, match stri
 	if count > 0 {
 		cmd = cmd.Args(COUNT, str(count))
 	}
-	return newScanCmd(r.cmd.Do(ctx, cmd.ReadOnly()))
+	return newScanCmdFromResult(r.cmd.Do(ctx, cmd.ReadOnly()))
 }
 
 func (r *resp3) HSet(ctx context.Context, key string, values ...interface{}) IntCmd {
@@ -744,11 +716,11 @@ func (r *resp3) HSet(ctx context.Context, key string, values ...interface{}) Int
 	for i := 0; i < len(args); i += 2 {
 		fv = fv.FieldValue(args[i], args[i+1])
 	}
-	return newIntCmd(r.cmd.Do(ctx, fv.Build()))
+	return newIntCmdFromResult(r.cmd.Do(ctx, fv.Build()))
 }
 
 func (r *resp3) HSetNX(ctx context.Context, key, field string, value interface{}) BoolCmd {
-	return newBoolCmd(r.cmd.Do(ctx, r.cmd.B().Hsetnx().Key(key).Field(field).Value(str(value)).Build()))
+	return newBoolCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Hsetnx().Key(key).Field(field).Value(str(value)).Build()))
 }
 
 func (r *resp3) getHValsCompleted(key string) rueidis.Completed {
@@ -756,40 +728,40 @@ func (r *resp3) getHValsCompleted(key string) rueidis.Completed {
 }
 
 func (r *resp3) HVals(ctx context.Context, key string) StringSliceCmd {
-	return newStringSliceCmd(r.cmd.Do(ctx, r.getHValsCompleted(key)))
+	return newStringSliceCmdFromResult(r.cmd.Do(ctx, r.getHValsCompleted(key)))
 }
 
 func (r *resp3Cache) HVals(ctx context.Context, key string) StringSliceCmd {
-	return newStringSliceCmd(r.Do(ctx, r.resp.getHValsCompleted(key)))
+	return newStringSliceCmdFromResult(r.Do(ctx, r.resp.getHValsCompleted(key)))
 }
 
 func (r *resp3) PFAdd(ctx context.Context, key string, els ...interface{}) IntCmd {
-	return newIntCmd(r.cmd.Do(ctx, r.cmd.B().Pfadd().Key(key).Element(argsToSlice(els)...).Build()))
+	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Pfadd().Key(key).Element(argsToSlice(els)...).Build()))
 }
 
 func (r *resp3) PFCount(ctx context.Context, keys ...string) IntCmd {
-	return newIntCmd(r.cmd.Do(ctx, r.cmd.B().Pfcount().Key(keys...).Build()))
+	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Pfcount().Key(keys...).Build()))
 }
 
 func (r *resp3) PFMerge(ctx context.Context, dest string, keys ...string) StatusCmd {
-	return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().Pfmerge().Destkey(dest).Sourcekey(keys...).Build()))
+	return newStatusCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Pfmerge().Destkey(dest).Sourcekey(keys...).Build()))
 }
 
 func (r *resp3) BLMove(ctx context.Context, source, destination, srcpos, destpos string, timeout time.Duration) StringCmd {
-	return newStringCmd(r.cmd.Do(ctx, r.cmd.B().Arbitrary(BLMOVE).Keys(source, destination).
+	return newStringCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Arbitrary(BLMOVE).Keys(source, destination).
 		Args(srcpos, destpos, str(float64(formatSec(timeout)))).Blocking()))
 }
 
 func (r *resp3) BLPop(ctx context.Context, timeout time.Duration, keys ...string) StringSliceCmd {
-	return newStringSliceCmd(r.cmd.Do(ctx, r.cmd.B().Blpop().Key(keys...).Timeout(float64(formatSec(timeout))).Build()))
+	return newStringSliceCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Blpop().Key(keys...).Timeout(float64(formatSec(timeout))).Build()))
 }
 
 func (r *resp3) BRPop(ctx context.Context, timeout time.Duration, keys ...string) StringSliceCmd {
-	return newStringSliceCmd(r.cmd.Do(ctx, r.cmd.B().Brpop().Key(keys...).Timeout(float64(formatSec(timeout))).Build()))
+	return newStringSliceCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Brpop().Key(keys...).Timeout(float64(formatSec(timeout))).Build()))
 }
 
 func (r *resp3) BRPopLPush(ctx context.Context, source, destination string, timeout time.Duration) StringCmd {
-	return newStringCmd(r.cmd.Do(ctx, r.cmd.B().Brpoplpush().Source(source).Destination(destination).Timeout(float64(formatSec(timeout))).Build()))
+	return newStringCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Brpoplpush().Source(source).Destination(destination).Timeout(float64(formatSec(timeout))).Build()))
 }
 
 func (r *resp3) getLIndexCompleted(key string, index int64) rueidis.Completed {
@@ -797,31 +769,31 @@ func (r *resp3) getLIndexCompleted(key string, index int64) rueidis.Completed {
 }
 
 func (r *resp3) LIndex(ctx context.Context, key string, index int64) StringCmd {
-	return newStringCmd(r.cmd.Do(ctx, r.getLIndexCompleted(key, index)))
+	return newStringCmdFromResult(r.cmd.Do(ctx, r.getLIndexCompleted(key, index)))
 }
 
 func (r *resp3Cache) LIndex(ctx context.Context, key string, index int64) StringCmd {
-	return newStringCmd(r.Do(ctx, r.resp.getLIndexCompleted(key, index)))
+	return newStringCmdFromResult(r.Do(ctx, r.resp.getLIndexCompleted(key, index)))
 }
 
 func (r *resp3) LInsert(ctx context.Context, key, op string, pivot, value interface{}) IntCmd {
 	var linsertKey = r.cmd.B().Linsert().Key(key)
 	switch strings.ToUpper(op) {
 	case BEFORE:
-		return newIntCmd(r.cmd.Do(ctx, linsertKey.Before().Pivot(str(pivot)).Element(str(value)).Build()))
+		return newIntCmdFromResult(r.cmd.Do(ctx, linsertKey.Before().Pivot(str(pivot)).Element(str(value)).Build()))
 	case AFTER:
-		return newIntCmd(r.cmd.Do(ctx, linsertKey.After().Pivot(str(pivot)).Element(str(value)).Build()))
+		return newIntCmdFromResult(r.cmd.Do(ctx, linsertKey.After().Pivot(str(pivot)).Element(str(value)).Build()))
 	default:
 		panic(fmt.Sprintf("Invalid op argument value: %s", op))
 	}
 }
 
 func (r *resp3) LInsertBefore(ctx context.Context, key string, pivot, value interface{}) IntCmd {
-	return newIntCmd(r.cmd.Do(ctx, r.cmd.B().Linsert().Key(key).Before().Pivot(str(pivot)).Element(str(value)).Build()))
+	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Linsert().Key(key).Before().Pivot(str(pivot)).Element(str(value)).Build()))
 }
 
 func (r *resp3) LInsertAfter(ctx context.Context, key string, pivot, value interface{}) IntCmd {
-	return newIntCmd(r.cmd.Do(ctx, r.cmd.B().Linsert().Key(key).After().Pivot(str(pivot)).Element(str(value)).Build()))
+	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Linsert().Key(key).After().Pivot(str(pivot)).Element(str(value)).Build()))
 }
 
 func (r *resp3) getLLenCompleted(key string) rueidis.Completed {
@@ -829,23 +801,23 @@ func (r *resp3) getLLenCompleted(key string) rueidis.Completed {
 }
 
 func (r *resp3) LLen(ctx context.Context, key string) IntCmd {
-	return newIntCmd(r.cmd.Do(ctx, r.getLLenCompleted(key)))
+	return newIntCmdFromResult(r.cmd.Do(ctx, r.getLLenCompleted(key)))
 }
 
 func (r *resp3Cache) LLen(ctx context.Context, key string) IntCmd {
-	return newIntCmd(r.Do(ctx, r.resp.getLLenCompleted(key)))
+	return newIntCmdFromResult(r.Do(ctx, r.resp.getLLenCompleted(key)))
 }
 
 func (r *resp3) LMove(ctx context.Context, source, destination, srcpos, destpos string) StringCmd {
-	return newStringCmd(r.cmd.Do(ctx, r.cmd.B().Arbitrary(LMOVE).Keys(source, destination).Args(srcpos, destpos).Build()))
+	return newStringCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Arbitrary(LMOVE).Keys(source, destination).Args(srcpos, destpos).Build()))
 }
 
 func (r *resp3) LPop(ctx context.Context, key string) StringCmd {
-	return newStringCmd(r.cmd.Do(ctx, r.cmd.B().Lpop().Key(key).Build()))
+	return newStringCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Lpop().Key(key).Build()))
 }
 
 func (r *resp3) LPopCount(ctx context.Context, key string, count int) StringSliceCmd {
-	return newStringSliceCmd(r.cmd.Do(ctx, r.cmd.B().Lpop().Key(key).Count(int64(count)).Build()))
+	return newStringSliceCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Lpop().Key(key).Count(int64(count)).Build()))
 }
 
 func (r *resp3) getLPosCompleted(key string, value string, count int64, args LPosArgs) rueidis.Completed {
@@ -863,27 +835,27 @@ func (r *resp3) getLPosCompleted(key string, value string, count int64, args LPo
 }
 
 func (r *resp3) LPos(ctx context.Context, key string, value string, args LPosArgs) IntCmd {
-	return newIntCmd(r.cmd.Do(ctx, r.getLPosCompleted(key, value, -1, args)))
+	return newIntCmdFromResult(r.cmd.Do(ctx, r.getLPosCompleted(key, value, -1, args)))
 }
 
 func (r *resp3Cache) LPos(ctx context.Context, key string, value string, args LPosArgs) IntCmd {
-	return newIntCmd(r.Do(ctx, r.resp.getLPosCompleted(key, value, -1, args)))
+	return newIntCmdFromResult(r.Do(ctx, r.resp.getLPosCompleted(key, value, -1, args)))
 }
 
 func (r *resp3) LPosCount(ctx context.Context, key string, value string, count int64, args LPosArgs) IntSliceCmd {
-	return newIntSliceCmd(r.cmd.Do(ctx, r.getLPosCompleted(key, value, count, args)))
+	return newIntSliceCmdFromResult(r.cmd.Do(ctx, r.getLPosCompleted(key, value, count, args)))
 }
 
 func (r *resp3Cache) LPosCount(ctx context.Context, key string, value string, count int64, args LPosArgs) IntSliceCmd {
-	return newIntSliceCmd(r.Do(ctx, r.resp.getLPosCompleted(key, value, count, args)))
+	return newIntSliceCmdFromResult(r.Do(ctx, r.resp.getLPosCompleted(key, value, count, args)))
 }
 
 func (r *resp3) LPush(ctx context.Context, key string, values ...interface{}) IntCmd {
-	return newIntCmd(r.cmd.Do(ctx, r.cmd.B().Lpush().Key(key).Element(argsToSlice(values)...).Build()))
+	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Lpush().Key(key).Element(argsToSlice(values)...).Build()))
 }
 
 func (r *resp3) LPushX(ctx context.Context, key string, values ...interface{}) IntCmd {
-	return newIntCmd(r.cmd.Do(ctx, r.cmd.B().Lpushx().Key(key).Element(argsToSlice(values)...).Build()))
+	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Lpushx().Key(key).Element(argsToSlice(values)...).Build()))
 }
 
 func (r *resp3) getLRangeCompleted(key string, start, stop int64) rueidis.Completed {
@@ -891,43 +863,43 @@ func (r *resp3) getLRangeCompleted(key string, start, stop int64) rueidis.Comple
 }
 
 func (r *resp3) LRange(ctx context.Context, key string, start, stop int64) StringSliceCmd {
-	return newStringSliceCmd(r.cmd.Do(ctx, r.getLRangeCompleted(key, start, stop)))
+	return newStringSliceCmdFromResult(r.cmd.Do(ctx, r.getLRangeCompleted(key, start, stop)))
 }
 
 func (r *resp3Cache) LRange(ctx context.Context, key string, start, stop int64) StringSliceCmd {
-	return newStringSliceCmd(r.Do(ctx, r.resp.getLRangeCompleted(key, start, stop)))
+	return newStringSliceCmdFromResult(r.Do(ctx, r.resp.getLRangeCompleted(key, start, stop)))
 }
 
 func (r *resp3) LRem(ctx context.Context, key string, count int64, value interface{}) IntCmd {
-	return newIntCmd(r.cmd.Do(ctx, r.cmd.B().Lrem().Key(key).Count(count).Element(str(value)).Build()))
+	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Lrem().Key(key).Count(count).Element(str(value)).Build()))
 }
 
 func (r *resp3) LSet(ctx context.Context, key string, index int64, value interface{}) StatusCmd {
-	return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().Lset().Key(key).Index(index).Element(str(value)).Build()))
+	return newStatusCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Lset().Key(key).Index(index).Element(str(value)).Build()))
 }
 
 func (r *resp3) LTrim(ctx context.Context, key string, start, stop int64) StatusCmd {
-	return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().Ltrim().Key(key).Start(start).Stop(stop).Build()))
+	return newStatusCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Ltrim().Key(key).Start(start).Stop(stop).Build()))
 }
 
 func (r *resp3) RPop(ctx context.Context, key string) StringCmd {
-	return newStringCmd(r.cmd.Do(ctx, r.cmd.B().Rpop().Key(key).Build()))
+	return newStringCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Rpop().Key(key).Build()))
 }
 
 func (r *resp3) RPopCount(ctx context.Context, key string, count int) StringSliceCmd {
-	return newStringSliceCmd(r.cmd.Do(ctx, r.cmd.B().Rpop().Key(key).Count(int64(count)).Build()))
+	return newStringSliceCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Rpop().Key(key).Count(int64(count)).Build()))
 }
 
 func (r *resp3) RPopLPush(ctx context.Context, source, destination string) StringCmd {
-	return newStringCmd(r.cmd.Do(ctx, r.cmd.B().Rpoplpush().Source(source).Destination(destination).Build()))
+	return newStringCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Rpoplpush().Source(source).Destination(destination).Build()))
 }
 
 func (r *resp3) RPush(ctx context.Context, key string, values ...interface{}) IntCmd {
-	return newIntCmd(r.cmd.Do(ctx, r.cmd.B().Rpush().Key(key).Element(argsToSlice(values)...).Build()))
+	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Rpush().Key(key).Element(argsToSlice(values)...).Build()))
 }
 
 func (r *resp3) RPushX(ctx context.Context, key string, values ...interface{}) IntCmd {
-	return newIntCmd(r.cmd.Do(ctx, r.cmd.B().Rpushx().Key(key).Element(argsToSlice(values)...).Build()))
+	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Rpushx().Key(key).Element(argsToSlice(values)...).Build()))
 }
 
 type pipelineResp3 struct {
@@ -971,19 +943,19 @@ func (p *pipelineResp3) Exec(ctx context.Context) ([]interface{}, error) {
 func (r *resp3) RawCmdable() interface{} { return r.adapter }
 
 func (r *resp3) Publish(ctx context.Context, channel string, message interface{}) IntCmd {
-	return newIntCmd(r.cmd.Do(ctx, r.cmd.B().Publish().Channel(channel).Message(str(message)).Build()))
+	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Publish().Channel(channel).Message(str(message)).Build()))
 }
 
 func (r *resp3) PubSubChannels(ctx context.Context, pattern string) StringSliceCmd {
-	return newStringSliceCmd(r.cmd.Do(ctx, r.cmd.B().PubsubChannels().Pattern(pattern).Build()))
+	return newStringSliceCmdFromResult(r.cmd.Do(ctx, r.cmd.B().PubsubChannels().Pattern(pattern).Build()))
 }
 
 func (r *resp3) PubSubNumPat(ctx context.Context) IntCmd {
-	return newIntCmd(r.cmd.Do(ctx, r.cmd.B().PubsubNumpat().Build()))
+	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().PubsubNumpat().Build()))
 }
 
 func (r *resp3) PubSubNumSub(ctx context.Context, channels ...string) StringIntMapCmd {
-	return newStringIntMapCmd(r.cmd.Do(ctx, r.cmd.B().PubsubNumsub().Channel(channels...).Build()))
+	return newStringIntMapCmdFromResult(r.cmd.Do(ctx, r.cmd.B().PubsubNumsub().Channel(channels...).Build()))
 }
 
 func (r *resp3) Subscribe(ctx context.Context, channels ...string) PubSub {
@@ -1057,11 +1029,11 @@ func (p *pubSubResp3) Channel() <-chan *Message {
 func (r *resp3) CreateScript(string) Scripter { return nil }
 
 func (r *resp3) Eval(ctx context.Context, script string, keys []string, args ...interface{}) Cmd {
-	return newCmd(r.cmd.Do(ctx, r.cmd.B().Eval().Script(script).Numkeys(int64(len(keys))).Key(keys...).Arg(argsToSlice(args)...).Build()))
+	return newCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Eval().Script(script).Numkeys(int64(len(keys))).Key(keys...).Arg(argsToSlice(args)...).Build()))
 }
 
 func (r *resp3) EvalSha(ctx context.Context, sha1 string, keys []string, args ...interface{}) Cmd {
-	return newCmd(r.cmd.Do(ctx, r.cmd.B().Evalsha().Sha1(sha1).Numkeys(int64(len(keys))).Key(keys...).Arg(argsToSlice(args)...).Build()))
+	return newCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Evalsha().Sha1(sha1).Numkeys(int64(len(keys))).Key(keys...).Arg(argsToSlice(args)...).Build()))
 }
 
 func (r *resp3) ScriptExists(ctx context.Context, hashes ...string) BoolSliceCmd {
@@ -1095,11 +1067,11 @@ func (r *resp3) BgSave(ctx context.Context) StatusCmd {
 }
 
 func (r *resp3) Command(ctx context.Context) CommandsInfoCmd {
-	return newCommandsInfoCmd(r.cmd.Do(ctx, r.cmd.B().Command().Build()))
+	return newCommandsInfoCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Command().Build()))
 }
 
 func (r *resp3) ConfigGet(ctx context.Context, parameter string) SliceCmd {
-	return newSliceCmdFromMap(r.cmd.Do(ctx, r.cmd.B().ConfigGet().Parameter(parameter).Build()))
+	return newSliceCmdFromMapResult(r.cmd.Do(ctx, r.cmd.B().ConfigGet().Parameter(parameter).Build()))
 }
 
 func (r *resp3) ConfigResetStat(ctx context.Context) StatusCmd {
@@ -1143,20 +1115,20 @@ func (r *resp3) FlushDBAsync(ctx context.Context) StatusCmd {
 }
 
 func (r *resp3) Info(ctx context.Context, section ...string) StringCmd {
-	return newStringCmd(r.cmd.Do(ctx, r.cmd.B().Info().Section(section...).Build()))
+	return newStringCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Info().Section(section...).Build()))
 }
 
 func (r *resp3) LastSave(ctx context.Context) IntCmd {
-	return newIntCmd(r.cmd.Do(ctx, r.cmd.B().Lastsave().Build()))
+	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Lastsave().Build()))
 }
 
 func (r *resp3) MemoryUsage(ctx context.Context, key string, samples ...int) IntCmd {
 	var memoryUsageKey = r.cmd.B().MemoryUsage().Key(key)
 	switch len(samples) {
 	case 0:
-		return newIntCmd(r.cmd.Do(ctx, memoryUsageKey.Build()))
+		return newIntCmdFromResult(r.cmd.Do(ctx, memoryUsageKey.Build()))
 	case 1:
-		return newIntCmd(r.cmd.Do(ctx, memoryUsageKey.Samples(int64(samples[0])).Build()))
+		return newIntCmdFromResult(r.cmd.Do(ctx, memoryUsageKey.Samples(int64(samples[0])).Build()))
 	default:
 		panic(errMemoryUsageArgsCount)
 	}
@@ -1184,15 +1156,15 @@ func (r *resp3) ShutdownNoSave(ctx context.Context) StatusCmd {
 }
 
 func (r *resp3) SlaveOf(ctx context.Context, host, port string) StatusCmd {
-	return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().Arbitrary(SLAVEOF).Args(host, port).Build()))
+	return newStatusCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Arbitrary(SLAVEOF).Args(host, port).Build()))
 }
 
 func (r *resp3) Time(ctx context.Context) TimeCmd {
-	return newTimeCmd(r.cmd.Do(ctx, r.cmd.B().Time().Build()))
+	return newTimeCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Time().Build()))
 }
 
 func (r *resp3) DebugObject(ctx context.Context, key string) StringCmd {
-	return newStringCmd(r.cmd.Do(ctx, r.cmd.B().DebugObject().Key(key).Build()))
+	return newStringCmdFromResult(r.cmd.Do(ctx, r.cmd.B().DebugObject().Key(key).Build()))
 }
 
 func (r *resp3) SAdd(ctx context.Context, key string, members ...interface{}) IntCmd {
@@ -1200,7 +1172,7 @@ func (r *resp3) SAdd(ctx context.Context, key string, members ...interface{}) In
 	for _, m := range argsToSlice(members) {
 		cmd = cmd.Member(str(m))
 	}
-	return newIntCmd(r.cmd.Do(ctx, cmd.Build()))
+	return newIntCmdFromResult(r.cmd.Do(ctx, cmd.Build()))
 }
 
 func (r *resp3) getSCardCompleted(key string) rueidis.Completed {
@@ -1208,27 +1180,27 @@ func (r *resp3) getSCardCompleted(key string) rueidis.Completed {
 }
 
 func (r *resp3) SCard(ctx context.Context, key string) IntCmd {
-	return newIntCmd(r.cmd.Do(ctx, r.getSCardCompleted(key)))
+	return newIntCmdFromResult(r.cmd.Do(ctx, r.getSCardCompleted(key)))
 }
 
 func (r *resp3Cache) SCard(ctx context.Context, key string) IntCmd {
-	return newIntCmd(r.Do(ctx, r.resp.getSCardCompleted(key)))
+	return newIntCmdFromResult(r.Do(ctx, r.resp.getSCardCompleted(key)))
 }
 
 func (r *resp3) SDiff(ctx context.Context, keys ...string) StringSliceCmd {
-	return newStringSliceCmd(r.cmd.Do(ctx, r.cmd.B().Sdiff().Key(keys...).Build()))
+	return newStringSliceCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Sdiff().Key(keys...).Build()))
 }
 
 func (r *resp3) SDiffStore(ctx context.Context, destination string, keys ...string) IntCmd {
-	return newIntCmd(r.cmd.Do(ctx, r.cmd.B().Sdiffstore().Destination(destination).Key(keys...).Build()))
+	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Sdiffstore().Destination(destination).Key(keys...).Build()))
 }
 
 func (r *resp3) SInter(ctx context.Context, keys ...string) StringSliceCmd {
-	return newStringSliceCmd(r.cmd.Do(ctx, r.cmd.B().Sinter().Key(keys...).Build()))
+	return newStringSliceCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Sinter().Key(keys...).Build()))
 }
 
 func (r *resp3) SInterStore(ctx context.Context, destination string, keys ...string) IntCmd {
-	return newIntCmd(r.cmd.Do(ctx, r.cmd.B().Sinterstore().Destination(destination).Key(keys...).Build()))
+	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Sinterstore().Destination(destination).Key(keys...).Build()))
 }
 
 func (r *resp3) getSIsMemberCompleted(key string, member interface{}) rueidis.Completed {
@@ -1236,11 +1208,11 @@ func (r *resp3) getSIsMemberCompleted(key string, member interface{}) rueidis.Co
 }
 
 func (r *resp3) SIsMember(ctx context.Context, key string, member interface{}) BoolCmd {
-	return newBoolCmd(r.cmd.Do(ctx, r.getSIsMemberCompleted(key, member)))
+	return newBoolCmdFromResult(r.cmd.Do(ctx, r.getSIsMemberCompleted(key, member)))
 }
 
 func (r *resp3Cache) SIsMember(ctx context.Context, key string, member interface{}) BoolCmd {
-	return newBoolCmd(r.Do(ctx, r.resp.getSIsMemberCompleted(key, member)))
+	return newBoolCmdFromResult(r.Do(ctx, r.resp.getSIsMemberCompleted(key, member)))
 }
 
 func (r *resp3) getSMIsMemberCompleted(key string, members ...interface{}) rueidis.Completed {
@@ -1248,11 +1220,11 @@ func (r *resp3) getSMIsMemberCompleted(key string, members ...interface{}) rueid
 }
 
 func (r *resp3) SMIsMember(ctx context.Context, key string, members ...interface{}) BoolSliceCmd {
-	return newBoolSliceCmd(r.cmd.Do(ctx, r.getSMIsMemberCompleted(key, members...)))
+	return newBoolSliceCmdFromResult(r.cmd.Do(ctx, r.getSMIsMemberCompleted(key, members...)))
 }
 
 func (r *resp3Cache) SMIsMember(ctx context.Context, key string, members ...interface{}) BoolSliceCmd {
-	return newBoolSliceCmd(r.Do(ctx, r.resp.getSMIsMemberCompleted(key, members...)))
+	return newBoolSliceCmdFromResult(r.Do(ctx, r.resp.getSMIsMemberCompleted(key, members...)))
 }
 
 func (r *resp3) getSMembersCompleted(key string) rueidis.Completed {
@@ -1260,43 +1232,43 @@ func (r *resp3) getSMembersCompleted(key string) rueidis.Completed {
 }
 
 func (r *resp3) SMembers(ctx context.Context, key string) StringSliceCmd {
-	return newStringSliceCmd(r.cmd.Do(ctx, r.getSMembersCompleted(key)))
+	return newStringSliceCmdFromResult(r.cmd.Do(ctx, r.getSMembersCompleted(key)))
 }
 
 func (r *resp3Cache) SMembers(ctx context.Context, key string) StringSliceCmd {
-	return newStringSliceCmd(r.Do(ctx, r.resp.getSMembersCompleted(key)))
+	return newStringSliceCmdFromResult(r.Do(ctx, r.resp.getSMembersCompleted(key)))
 }
 
 func (r *resp3) SMembersMap(ctx context.Context, key string) StringStructMapCmd {
-	return newStringStructMapCmd(r.cmd.Do(ctx, r.getSMembersCompleted(key)))
+	return newStringStructMapCmdFromResult(r.cmd.Do(ctx, r.getSMembersCompleted(key)))
 }
 
 func (r *resp3Cache) SMembersMap(ctx context.Context, key string) StringStructMapCmd {
-	return newStringStructMapCmd(r.Do(ctx, r.resp.getSMembersCompleted(key)))
+	return newStringStructMapCmdFromResult(r.Do(ctx, r.resp.getSMembersCompleted(key)))
 }
 
 func (r *resp3) SMove(ctx context.Context, source, destination string, member interface{}) BoolCmd {
-	return newBoolCmd(r.cmd.Do(ctx, r.cmd.B().Smove().Source(source).Destination(destination).Member(str(member)).Build()))
+	return newBoolCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Smove().Source(source).Destination(destination).Member(str(member)).Build()))
 }
 
 func (r *resp3) SPop(ctx context.Context, key string) StringCmd {
-	return newStringCmd(r.cmd.Do(ctx, r.cmd.B().Spop().Key(key).Build()))
+	return newStringCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Spop().Key(key).Build()))
 }
 
 func (r *resp3) SPopN(ctx context.Context, key string, count int64) StringSliceCmd {
-	return newStringSliceCmd(r.cmd.Do(ctx, r.cmd.B().Spop().Key(key).Count(count).Build()))
+	return newStringSliceCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Spop().Key(key).Count(count).Build()))
 }
 
 func (r *resp3) SRandMember(ctx context.Context, key string) StringCmd {
-	return newStringCmd(r.cmd.Do(ctx, r.cmd.B().Srandmember().Key(key).Build()))
+	return newStringCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Srandmember().Key(key).Build()))
 }
 
 func (r *resp3) SRandMemberN(ctx context.Context, key string, count int64) StringSliceCmd {
-	return newStringSliceCmd(r.cmd.Do(ctx, r.cmd.B().Srandmember().Key(key).Count(count).Build()))
+	return newStringSliceCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Srandmember().Key(key).Count(count).Build()))
 }
 
 func (r *resp3) SRem(ctx context.Context, key string, members ...interface{}) IntCmd {
-	return newIntCmd(r.cmd.Do(ctx, r.cmd.B().Srem().Key(key).Member(argsToSlice(members)...).Build()))
+	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Srem().Key(key).Member(argsToSlice(members)...).Build()))
 }
 
 func (r *resp3) SScan(ctx context.Context, key string, cursor uint64, match string, count int64) ScanCmd {
@@ -1307,23 +1279,23 @@ func (r *resp3) SScan(ctx context.Context, key string, cursor uint64, match stri
 	if count > 0 {
 		cmd = cmd.Args(COUNT, str(count))
 	}
-	return newScanCmd(r.cmd.Do(ctx, cmd.ReadOnly()))
+	return newScanCmdFromResult(r.cmd.Do(ctx, cmd.ReadOnly()))
 }
 
 func (r *resp3) SUnion(ctx context.Context, keys ...string) StringSliceCmd {
-	return newStringSliceCmd(r.cmd.Do(ctx, r.cmd.B().Sunion().Key(keys...).Build()))
+	return newStringSliceCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Sunion().Key(keys...).Build()))
 }
 
 func (r *resp3) SUnionStore(ctx context.Context, destination string, keys ...string) IntCmd {
-	return newIntCmd(r.cmd.Do(ctx, r.cmd.B().Sunionstore().Destination(destination).Key(keys...).Build()))
+	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Sunionstore().Destination(destination).Key(keys...).Build()))
 }
 
 func (r *resp3) BZPopMax(ctx context.Context, timeout time.Duration, keys ...string) ZWithKeyCmd {
-	return newZWithKeyCmd(r.cmd.Do(ctx, r.cmd.B().Bzpopmax().Key(keys...).Timeout(float64(formatSec(timeout))).Build()))
+	return newZWithKeyCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Bzpopmax().Key(keys...).Timeout(float64(formatSec(timeout))).Build()))
 }
 
 func (r *resp3) BZPopMin(ctx context.Context, timeout time.Duration, keys ...string) ZWithKeyCmd {
-	return newZWithKeyCmd(r.cmd.Do(ctx, r.cmd.B().Bzpopmin().Key(keys...).Timeout(float64(formatSec(timeout))).Build()))
+	return newZWithKeyCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Bzpopmin().Key(keys...).Timeout(float64(formatSec(timeout))).Build()))
 }
 
 func (r *resp3) ZAdd(ctx context.Context, key string, members ...Z) IntCmd {
@@ -1331,7 +1303,7 @@ func (r *resp3) ZAdd(ctx context.Context, key string, members ...Z) IntCmd {
 	for _, v := range members {
 		cmd = cmd.ScoreMember(v.Score, str(v.Member))
 	}
-	return newIntCmd(r.cmd.Do(ctx, cmd.Build()))
+	return newIntCmdFromResult(r.cmd.Do(ctx, cmd.Build()))
 }
 
 func (r *resp3) ZAddNX(ctx context.Context, key string, members ...Z) IntCmd {
@@ -1339,7 +1311,7 @@ func (r *resp3) ZAddNX(ctx context.Context, key string, members ...Z) IntCmd {
 	for _, v := range members {
 		cmd = cmd.ScoreMember(v.Score, str(v.Member))
 	}
-	return newIntCmd(r.cmd.Do(ctx, cmd.Build()))
+	return newIntCmdFromResult(r.cmd.Do(ctx, cmd.Build()))
 }
 
 func (r *resp3) ZAddXX(ctx context.Context, key string, members ...Z) IntCmd {
@@ -1347,7 +1319,7 @@ func (r *resp3) ZAddXX(ctx context.Context, key string, members ...Z) IntCmd {
 	for _, v := range members {
 		cmd = cmd.ScoreMember(v.Score, str(v.Member))
 	}
-	return newIntCmd(r.cmd.Do(ctx, cmd.Build()))
+	return newIntCmdFromResult(r.cmd.Do(ctx, cmd.Build()))
 }
 
 func (r *resp3) zAddArgs(ctx context.Context, key string, incr bool, args ZAddArgs, members ...Z) rueidis.RedisResult {
@@ -1377,23 +1349,23 @@ func (r *resp3) zAddArgs(ctx context.Context, key string, incr bool, args ZAddAr
 }
 
 func (r *resp3) ZAddCh(ctx context.Context, key string, members ...Z) IntCmd {
-	return newIntCmd(r.zAddArgs(ctx, key, false, ZAddArgs{Ch: true}, members...))
+	return newIntCmdFromResult(r.zAddArgs(ctx, key, false, ZAddArgs{Ch: true}, members...))
 }
 
 func (r *resp3) ZAddNXCh(ctx context.Context, key string, members ...Z) IntCmd {
-	return newIntCmd(r.zAddArgs(ctx, key, false, ZAddArgs{NX: true, Ch: true}, members...))
+	return newIntCmdFromResult(r.zAddArgs(ctx, key, false, ZAddArgs{NX: true, Ch: true}, members...))
 }
 
 func (r *resp3) ZAddXXCh(ctx context.Context, key string, members ...Z) IntCmd {
-	return newIntCmd(r.zAddArgs(ctx, key, false, ZAddArgs{XX: true, Ch: true}, members...))
+	return newIntCmdFromResult(r.zAddArgs(ctx, key, false, ZAddArgs{XX: true, Ch: true}, members...))
 }
 
 func (r *resp3) ZAddArgs(ctx context.Context, key string, args ZAddArgs) IntCmd {
-	return newIntCmd(r.zAddArgs(ctx, key, false, args, args.Members...))
+	return newIntCmdFromResult(r.zAddArgs(ctx, key, false, args, args.Members...))
 }
 
 func (r *resp3) ZAddArgsIncr(ctx context.Context, key string, args ZAddArgs) FloatCmd {
-	return newFloatCmd(r.zAddArgs(ctx, key, true, args, args.Members...))
+	return newFloatCmdFromResult(r.zAddArgs(ctx, key, true, args, args.Members...))
 }
 
 func (r *resp3) getZCardCompleted(key string) rueidis.Completed {
@@ -1401,11 +1373,11 @@ func (r *resp3) getZCardCompleted(key string) rueidis.Completed {
 }
 
 func (r *resp3) ZCard(ctx context.Context, key string) IntCmd {
-	return newIntCmd(r.cmd.Do(ctx, r.getZCardCompleted(key)))
+	return newIntCmdFromResult(r.cmd.Do(ctx, r.getZCardCompleted(key)))
 }
 
 func (r *resp3Cache) ZCard(ctx context.Context, key string) IntCmd {
-	return newIntCmd(r.Do(ctx, r.resp.getZCardCompleted(key)))
+	return newIntCmdFromResult(r.Do(ctx, r.resp.getZCardCompleted(key)))
 }
 
 func (r *resp3) getZCount(key, min, max string) rueidis.Completed {
@@ -1413,65 +1385,51 @@ func (r *resp3) getZCount(key, min, max string) rueidis.Completed {
 }
 
 func (r *resp3) ZCount(ctx context.Context, key, min, max string) IntCmd {
-	return newIntCmd(r.cmd.Do(ctx, r.getZCount(key, min, max)))
+	return newIntCmdFromResult(r.cmd.Do(ctx, r.getZCount(key, min, max)))
 }
 
 func (r *resp3Cache) ZCount(ctx context.Context, key, min, max string) IntCmd {
-	return newIntCmd(r.Do(ctx, r.resp.getZCount(key, min, max)))
+	return newIntCmdFromResult(r.Do(ctx, r.resp.getZCount(key, min, max)))
 }
 
 func (r *resp3) ZDiff(ctx context.Context, keys ...string) StringSliceCmd {
-	return newStringSliceCmd(r.cmd.Do(ctx, r.cmd.B().Zdiff().Numkeys(int64(len(keys))).Key(keys...).Build()))
+	return newStringSliceCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Zdiff().Numkeys(int64(len(keys))).Key(keys...).Build()))
 }
 
 func (r *resp3) ZDiffWithScores(ctx context.Context, keys ...string) ZSliceCmd {
-	return newZSliceCmd(r.cmd.Do(ctx, r.cmd.B().Zdiff().Numkeys(int64(len(keys))).Key(keys...).Withscores().Build()))
+	return newZSliceCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Zdiff().Numkeys(int64(len(keys))).Key(keys...).Withscores().Build()))
 }
 
 func (r *resp3) ZDiffStore(ctx context.Context, destination string, keys ...string) IntCmd {
-	return newIntCmd(r.cmd.Do(ctx, r.cmd.B().Zdiffstore().Destination(destination).Numkeys(int64(len(keys))).Key(keys...).Build()))
+	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Zdiffstore().Destination(destination).Numkeys(int64(len(keys))).Key(keys...).Build()))
 }
 
 func (r *resp3) ZIncr(ctx context.Context, key string, member Z) FloatCmd {
-	return newFloatCmd(r.zAddArgs(ctx, key, true, ZAddArgs{}, member))
+	return newFloatCmdFromResult(r.zAddArgs(ctx, key, true, ZAddArgs{}, member))
 }
 
 func (r *resp3) ZIncrNX(ctx context.Context, key string, member Z) FloatCmd {
-	return newFloatCmd(r.zAddArgs(ctx, key, true, ZAddArgs{NX: true}, member))
+	return newFloatCmdFromResult(r.zAddArgs(ctx, key, true, ZAddArgs{NX: true}, member))
 }
 
 func (r *resp3) ZIncrXX(ctx context.Context, key string, member Z) FloatCmd {
-	return newFloatCmd(r.zAddArgs(ctx, key, true, ZAddArgs{XX: true}, member))
+	return newFloatCmdFromResult(r.zAddArgs(ctx, key, true, ZAddArgs{XX: true}, member))
 }
 
 func (r *resp3) ZIncrBy(ctx context.Context, key string, increment float64, member string) FloatCmd {
-	return newFloatCmd(r.cmd.Do(ctx, r.cmd.B().Zincrby().Key(key).Increment(increment).Member(member).Build()))
-}
-
-func (r *resp3) fillZInterArbitrary(arbitrary rueidis.Arbitrary, store ZStore) rueidis.Arbitrary {
-	arbitrary = arbitrary.Args(str(len(store.Keys))).Keys(store.Keys...)
-	if len(store.Weights) > 0 {
-		arbitrary = arbitrary.Args(WEIGHTS)
-		for _, w := range store.Weights {
-			arbitrary = arbitrary.Args(str(w))
-		}
-	}
-	if len(store.Aggregate) > 0 {
-		arbitrary = arbitrary.Args(AGGREGATE, store.Aggregate)
-	}
-	return arbitrary
+	return newFloatCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Zincrby().Key(key).Increment(increment).Member(member).Build()))
 }
 
 func (r *resp3) ZInter(ctx context.Context, store ZStore) StringSliceCmd {
-	return newStringSliceCmd(r.cmd.Do(ctx, r.fillZInterArbitrary(r.cmd.B().Arbitrary(ZINTER), store).ReadOnly()))
+	return newStringSliceCmdFromStringSliceCmd(r.adapter.ZInter(ctx, toZStore(store)))
 }
 
 func (r *resp3) ZInterWithScores(ctx context.Context, store ZStore) ZSliceCmd {
-	return newZSliceCmd(r.cmd.Do(ctx, r.fillZInterArbitrary(r.cmd.B().Arbitrary(ZINTER), store).Args(WITHSCORES).ReadOnly()))
+	return newZSliceCmdFromCmd(r.adapter.ZInterWithScores(ctx, toZStore(store)))
 }
 
 func (r *resp3) ZInterStore(ctx context.Context, destination string, store ZStore) IntCmd {
-	return newIntCmd(r.cmd.Do(ctx, r.fillZInterArbitrary(r.cmd.B().Arbitrary(ZINTERSTORE).Keys(destination), store).Build()))
+	return newIntCmdFromIntCmd(r.adapter.ZInterStore(ctx, destination, toZStore(store)))
 }
 
 func (r *resp3) getZLexCountCompleted(key, min, max string) rueidis.Completed {
@@ -1479,11 +1437,11 @@ func (r *resp3) getZLexCountCompleted(key, min, max string) rueidis.Completed {
 }
 
 func (r *resp3) ZLexCount(ctx context.Context, key, min, max string) IntCmd {
-	return newIntCmd(r.cmd.Do(ctx, r.getZLexCountCompleted(key, min, max)))
+	return newIntCmdFromResult(r.cmd.Do(ctx, r.getZLexCountCompleted(key, min, max)))
 }
 
 func (r *resp3Cache) ZLexCount(ctx context.Context, key, min, max string) IntCmd {
-	return newIntCmd(r.Do(ctx, r.resp.getZLexCountCompleted(key, min, max)))
+	return newIntCmdFromResult(r.Do(ctx, r.resp.getZLexCountCompleted(key, min, max)))
 }
 
 func (r *resp3) getZMScoreCompleted(key string, members ...string) rueidis.Completed {
@@ -1491,11 +1449,11 @@ func (r *resp3) getZMScoreCompleted(key string, members ...string) rueidis.Compl
 }
 
 func (r *resp3) ZMScore(ctx context.Context, key string, members ...string) FloatSliceCmd {
-	return newFloatSliceCmd(r.cmd.Do(ctx, r.getZMScoreCompleted(key, members...)))
+	return newFloatSliceCmdFromResult(r.cmd.Do(ctx, r.getZMScoreCompleted(key, members...)))
 }
 
 func (r *resp3Cache) ZMScore(ctx context.Context, key string, members ...string) FloatSliceCmd {
-	return newFloatSliceCmd(r.Do(ctx, r.resp.getZMScoreCompleted(key, members...)))
+	return newFloatSliceCmdFromResult(r.Do(ctx, r.resp.getZMScoreCompleted(key, members...)))
 }
 
 func (r *resp3) ZPopMax(ctx context.Context, key string, count ...int64) ZSliceCmd {
@@ -1507,12 +1465,12 @@ func (r *resp3) ZPopMax(ctx context.Context, key string, count ...int64) ZSliceC
 	case 1:
 		resp = r.cmd.Do(ctx, zpopmaxKey.Count(count[0]).Build())
 		if count[0] > 1 {
-			return newZSliceCmd(resp)
+			return newZSliceCmdFromResult(resp)
 		}
 	default:
 		panic(errTooManyArguments)
 	}
-	return newZSliceSingleCmd(resp)
+	return newZSliceSingleCmdFromResult(resp)
 }
 
 func (r *resp3) ZPopMin(ctx context.Context, key string, count ...int64) ZSliceCmd {
@@ -1524,12 +1482,12 @@ func (r *resp3) ZPopMin(ctx context.Context, key string, count ...int64) ZSliceC
 	case 1:
 		resp = r.cmd.Do(ctx, zpopminKey.Count(count[0]).Build())
 		if count[0] > 1 {
-			return newZSliceCmd(resp)
+			return newZSliceCmdFromResult(resp)
 		}
 	default:
 		panic(errTooManyArguments)
 	}
-	return newZSliceSingleCmd(resp)
+	return newZSliceSingleCmdFromResult(resp)
 }
 
 func (r *resp3) ZRandMember(ctx context.Context, key string, count int, withScores bool) StringSliceCmd {
@@ -1537,7 +1495,7 @@ func (r *resp3) ZRandMember(ctx context.Context, key string, count int, withScor
 	if withScores {
 		return flattenStringSliceCmd(r.cmd.Do(ctx, zrandmemberOptionsCount.Withscores().Build()))
 	}
-	return newStringSliceCmd(r.cmd.Do(ctx, zrandmemberOptionsCount.Build()))
+	return newStringSliceCmdFromResult(r.cmd.Do(ctx, zrandmemberOptionsCount.Build()))
 }
 
 func (r *resp3) getZRangeCompleted(key string, start, stop int64) rueidis.Completed {
@@ -1545,11 +1503,11 @@ func (r *resp3) getZRangeCompleted(key string, start, stop int64) rueidis.Comple
 }
 
 func (r *resp3) ZRange(ctx context.Context, key string, start, stop int64) StringSliceCmd {
-	return newStringSliceCmd(r.cmd.Do(ctx, r.getZRangeCompleted(key, start, stop)))
+	return newStringSliceCmdFromResult(r.cmd.Do(ctx, r.getZRangeCompleted(key, start, stop)))
 }
 
 func (r *resp3Cache) ZRange(ctx context.Context, key string, start, stop int64) StringSliceCmd {
-	return newStringSliceCmd(r.Do(ctx, r.resp.getZRangeCompleted(key, start, stop)))
+	return newStringSliceCmdFromResult(r.Do(ctx, r.resp.getZRangeCompleted(key, start, stop)))
 }
 
 func (r *resp3) getZRangeWithScoresCompleted(key string, start, stop int64) rueidis.Completed {
@@ -1557,11 +1515,11 @@ func (r *resp3) getZRangeWithScoresCompleted(key string, start, stop int64) ruei
 }
 
 func (r *resp3) ZRangeWithScores(ctx context.Context, key string, start, stop int64) ZSliceCmd {
-	return newZSliceCmd(r.cmd.Do(ctx, r.getZRangeWithScoresCompleted(key, start, stop)))
+	return newZSliceCmdFromResult(r.cmd.Do(ctx, r.getZRangeWithScoresCompleted(key, start, stop)))
 }
 
 func (r *resp3Cache) ZRangeWithScores(ctx context.Context, key string, start, stop int64) ZSliceCmd {
-	return newZSliceCmd(r.Do(ctx, r.resp.getZRangeWithScoresCompleted(key, start, stop)))
+	return newZSliceCmdFromResult(r.Do(ctx, r.resp.getZRangeWithScoresCompleted(key, start, stop)))
 }
 
 func (r *resp3) getZRangeByLexCompleted(key string, opt ZRangeBy) rueidis.Completed {
@@ -1576,11 +1534,11 @@ func (r *resp3) getZRangeByLexCompleted(key string, opt ZRangeBy) rueidis.Comple
 }
 
 func (r *resp3) ZRangeByLex(ctx context.Context, key string, opt ZRangeBy) StringSliceCmd {
-	return newStringSliceCmd(r.cmd.Do(ctx, r.getZRangeByLexCompleted(key, opt)))
+	return newStringSliceCmdFromResult(r.cmd.Do(ctx, r.getZRangeByLexCompleted(key, opt)))
 }
 
 func (r *resp3Cache) ZRangeByLex(ctx context.Context, key string, opt ZRangeBy) StringSliceCmd {
-	return newStringSliceCmd(r.Do(ctx, r.resp.getZRangeByLexCompleted(key, opt)))
+	return newStringSliceCmdFromResult(r.Do(ctx, r.resp.getZRangeByLexCompleted(key, opt)))
 }
 
 func (r *resp3) getZRangeByScoreCompleted(key string, withScore bool, opt ZRangeBy) rueidis.Completed {
@@ -1603,66 +1561,63 @@ func (r *resp3) getZRangeByScoreCompleted(key string, withScore bool, opt ZRange
 }
 
 func (r *resp3) ZRangeByScore(ctx context.Context, key string, opt ZRangeBy) StringSliceCmd {
-	return newStringSliceCmd(r.cmd.Do(ctx, r.getZRangeByScoreCompleted(key, false, opt)))
+	return newStringSliceCmdFromResult(r.cmd.Do(ctx, r.getZRangeByScoreCompleted(key, false, opt)))
 }
 
 func (r *resp3Cache) ZRangeByScore(ctx context.Context, key string, opt ZRangeBy) StringSliceCmd {
-	return newStringSliceCmd(r.Do(ctx, r.resp.getZRangeByScoreCompleted(key, false, opt)))
+	return newStringSliceCmdFromResult(r.Do(ctx, r.resp.getZRangeByScoreCompleted(key, false, opt)))
 }
 
 func (r *resp3) ZRangeByScoreWithScores(ctx context.Context, key string, opt ZRangeBy) ZSliceCmd {
-	return newZSliceCmd(r.cmd.Do(ctx, r.getZRangeByScoreCompleted(key, true, opt)))
+	return newZSliceCmdFromResult(r.cmd.Do(ctx, r.getZRangeByScoreCompleted(key, true, opt)))
 }
 
 func (r *resp3Cache) ZRangeByScoreWithScores(ctx context.Context, key string, opt ZRangeBy) ZSliceCmd {
-	return newZSliceCmd(r.Do(ctx, r.resp.getZRangeByScoreCompleted(key, true, opt)))
-}
-
-func (r *resp3) getZRangeArgsArbitrary(arbitrary rueidis.Arbitrary, withScores bool, z ZRangeArgs) rueidis.Arbitrary {
-	if z.Rev && (z.ByScore || z.ByLex) {
-		arbitrary = arbitrary.Args(str(z.Stop), str(z.Start))
-	} else {
-		arbitrary = arbitrary.Args(str(z.Start), str(z.Stop))
-	}
-	if z.ByScore {
-		arbitrary = arbitrary.Args(BYSCORE)
-	} else if z.ByLex {
-		arbitrary = arbitrary.Args(BYLEX)
-	}
-	if z.Rev {
-		arbitrary = arbitrary.Args(REV)
-	}
-	if z.Offset != 0 || z.Count != 0 {
-		arbitrary = arbitrary.Args(LIMIT, str(z.Offset), str(z.Count))
-	}
-	if withScores {
-		arbitrary = arbitrary.Args(WITHSCORES)
-	}
-	return arbitrary
-}
-
-func (r *resp3) getZRangeArgsCompleted(withScores bool, z ZRangeArgs) rueidis.Completed {
-	return r.getZRangeArgsArbitrary(r.cmd.B().Arbitrary(ZRANGE).Keys(z.Key), withScores, z).Build()
+	return newZSliceCmdFromResult(r.Do(ctx, r.resp.getZRangeByScoreCompleted(key, true, opt)))
 }
 
 func (r *resp3) ZRangeArgs(ctx context.Context, z ZRangeArgs) StringSliceCmd {
-	return newStringSliceCmd(r.cmd.Do(ctx, r.getZRangeArgsCompleted(false, z)))
+	return newStringSliceCmdFromStringSliceCmd(r.adapter.ZRangeArgs(ctx, toZRangeArgs(z)))
+}
+
+func (r *resp3) zRangeArgs(withScores bool, z ZRangeArgs) rueidis.Completed {
+	cmd := r.cmd.B().Arbitrary("ZRANGE").Keys(z.Key)
+	if z.Rev && (z.ByScore || z.ByLex) {
+		cmd = cmd.Args(str(z.Stop), str(z.Start))
+	} else {
+		cmd = cmd.Args(str(z.Start), str(z.Stop))
+	}
+	if z.ByScore {
+		cmd = cmd.Args("BYSCORE")
+	} else if z.ByLex {
+		cmd = cmd.Args("BYLEX")
+	}
+	if z.Rev {
+		cmd = cmd.Args("REV")
+	}
+	if z.Offset != 0 || z.Count != 0 {
+		cmd = cmd.Args("LIMIT", strconv.FormatInt(z.Offset, 10), strconv.FormatInt(z.Count, 10))
+	}
+	if withScores {
+		cmd = cmd.Args("WITHSCORES")
+	}
+	return cmd.Build()
 }
 
 func (r *resp3Cache) ZRangeArgs(ctx context.Context, z ZRangeArgs) StringSliceCmd {
-	return newStringSliceCmd(r.Do(ctx, r.resp.getZRangeArgsCompleted(false, z)))
+	return newStringSliceCmdFromResult(r.Do(ctx, r.resp.zRangeArgs(false, z)))
 }
 
 func (r *resp3) ZRangeArgsWithScores(ctx context.Context, z ZRangeArgs) ZSliceCmd {
-	return newZSliceCmd(r.cmd.Do(ctx, r.getZRangeArgsCompleted(true, z)))
+	return newZSliceCmdFromCmd(r.adapter.ZRangeArgsWithScores(ctx, toZRangeArgs(z)))
 }
 
 func (r *resp3Cache) ZRangeArgsWithScores(ctx context.Context, z ZRangeArgs) ZSliceCmd {
-	return newZSliceCmd(r.Do(ctx, r.resp.getZRangeArgsCompleted(true, z)))
+	return newZSliceCmdFromResult(r.Do(ctx, r.resp.zRangeArgs(true, z)))
 }
 
 func (r *resp3) ZRangeStore(ctx context.Context, dst string, z ZRangeArgs) IntCmd {
-	return newIntCmd(r.cmd.Do(ctx, r.getZRangeArgsArbitrary(r.cmd.B().Arbitrary(ZRANGESTORE).Keys(dst, z.Key), false, z).Build()))
+	return newIntCmdFromIntCmd(r.adapter.ZRangeStore(ctx, dst, toZRangeArgs(z)))
 }
 
 func (r *resp3) getZRankCompleted(key, member string) rueidis.Completed {
@@ -1670,27 +1625,27 @@ func (r *resp3) getZRankCompleted(key, member string) rueidis.Completed {
 }
 
 func (r *resp3) ZRank(ctx context.Context, key, member string) IntCmd {
-	return newIntCmd(r.cmd.Do(ctx, r.getZRankCompleted(key, member)))
+	return newIntCmdFromResult(r.cmd.Do(ctx, r.getZRankCompleted(key, member)))
 }
 
 func (r *resp3Cache) ZRank(ctx context.Context, key, member string) IntCmd {
-	return newIntCmd(r.Do(ctx, r.resp.getZRankCompleted(key, member)))
+	return newIntCmdFromResult(r.Do(ctx, r.resp.getZRankCompleted(key, member)))
 }
 
 func (r *resp3) ZRem(ctx context.Context, key string, members ...interface{}) IntCmd {
-	return newIntCmd(r.cmd.Do(ctx, r.cmd.B().Zrem().Key(key).Member(argsToSlice(members)...).Build()))
+	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Zrem().Key(key).Member(argsToSlice(members)...).Build()))
 }
 
 func (r *resp3) ZRemRangeByLex(ctx context.Context, key, min, max string) IntCmd {
-	return newIntCmd(r.cmd.Do(ctx, r.cmd.B().Zremrangebylex().Key(key).Min(min).Max(max).Build()))
+	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Zremrangebylex().Key(key).Min(min).Max(max).Build()))
 }
 
 func (r *resp3) ZRemRangeByRank(ctx context.Context, key string, start, stop int64) IntCmd {
-	return newIntCmd(r.cmd.Do(ctx, r.cmd.B().Zremrangebyrank().Key(key).Start(start).Stop(stop).Build()))
+	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Zremrangebyrank().Key(key).Start(start).Stop(stop).Build()))
 }
 
 func (r *resp3) ZRemRangeByScore(ctx context.Context, key, min, max string) IntCmd {
-	return newIntCmd(r.cmd.Do(ctx, r.cmd.B().Zremrangebyscore().Key(key).Min(min).Max(max).Build()))
+	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Zremrangebyscore().Key(key).Min(min).Max(max).Build()))
 }
 
 func (r *resp3) getZRevRangeCompleted(key string, start, stop int64, withScore bool) rueidis.Completed {
@@ -1702,19 +1657,19 @@ func (r *resp3) getZRevRangeCompleted(key string, start, stop int64, withScore b
 }
 
 func (r *resp3) ZRevRange(ctx context.Context, key string, start, stop int64) StringSliceCmd {
-	return newStringSliceCmd(r.cmd.Do(ctx, r.getZRevRangeCompleted(key, start, stop, false)))
+	return newStringSliceCmdFromResult(r.cmd.Do(ctx, r.getZRevRangeCompleted(key, start, stop, false)))
 }
 
 func (r *resp3Cache) ZRevRange(ctx context.Context, key string, start, stop int64) StringSliceCmd {
-	return newStringSliceCmd(r.Do(ctx, r.resp.getZRevRangeCompleted(key, start, stop, false)))
+	return newStringSliceCmdFromResult(r.Do(ctx, r.resp.getZRevRangeCompleted(key, start, stop, false)))
 }
 
 func (r *resp3) ZRevRangeWithScores(ctx context.Context, key string, start, stop int64) ZSliceCmd {
-	return newZSliceCmd(r.cmd.Do(ctx, r.getZRevRangeCompleted(key, start, stop, true)))
+	return newZSliceCmdFromResult(r.cmd.Do(ctx, r.getZRevRangeCompleted(key, start, stop, true)))
 }
 
 func (r *resp3Cache) ZRevRangeWithScores(ctx context.Context, key string, start, stop int64) ZSliceCmd {
-	return newZSliceCmd(r.Do(ctx, r.resp.getZRevRangeCompleted(key, start, stop, true)))
+	return newZSliceCmdFromResult(r.Do(ctx, r.resp.getZRevRangeCompleted(key, start, stop, true)))
 }
 
 func (r *resp3) getZRevRangeByLexCompleted(key string, opt ZRangeBy) rueidis.Completed {
@@ -1729,11 +1684,11 @@ func (r *resp3) getZRevRangeByLexCompleted(key string, opt ZRangeBy) rueidis.Com
 }
 
 func (r *resp3) ZRevRangeByLex(ctx context.Context, key string, opt ZRangeBy) StringSliceCmd {
-	return newStringSliceCmd(r.cmd.Do(ctx, r.getZRevRangeByLexCompleted(key, opt)))
+	return newStringSliceCmdFromResult(r.cmd.Do(ctx, r.getZRevRangeByLexCompleted(key, opt)))
 }
 
 func (r *resp3Cache) ZRevRangeByLex(ctx context.Context, key string, opt ZRangeBy) StringSliceCmd {
-	return newStringSliceCmd(r.Do(ctx, r.resp.getZRevRangeByLexCompleted(key, opt)))
+	return newStringSliceCmdFromResult(r.Do(ctx, r.resp.getZRevRangeByLexCompleted(key, opt)))
 }
 
 func (r *resp3) getZRevRangeByScoreCompleted(key string, withScore bool, opt ZRangeBy) rueidis.Completed {
@@ -1756,19 +1711,19 @@ func (r *resp3) getZRevRangeByScoreCompleted(key string, withScore bool, opt ZRa
 }
 
 func (r *resp3) ZRevRangeByScore(ctx context.Context, key string, opt ZRangeBy) StringSliceCmd {
-	return newStringSliceCmd(r.cmd.Do(ctx, r.getZRevRangeByScoreCompleted(key, false, opt)))
+	return newStringSliceCmdFromResult(r.cmd.Do(ctx, r.getZRevRangeByScoreCompleted(key, false, opt)))
 }
 
 func (r *resp3Cache) ZRevRangeByScore(ctx context.Context, key string, opt ZRangeBy) StringSliceCmd {
-	return newStringSliceCmd(r.Do(ctx, r.resp.getZRevRangeByScoreCompleted(key, false, opt)))
+	return newStringSliceCmdFromResult(r.Do(ctx, r.resp.getZRevRangeByScoreCompleted(key, false, opt)))
 }
 
 func (r *resp3) ZRevRangeByScoreWithScores(ctx context.Context, key string, opt ZRangeBy) ZSliceCmd {
-	return newZSliceCmd(r.cmd.Do(ctx, r.getZRevRangeByScoreCompleted(key, true, opt)))
+	return newZSliceCmdFromResult(r.cmd.Do(ctx, r.getZRevRangeByScoreCompleted(key, true, opt)))
 }
 
 func (r *resp3Cache) ZRevRangeByScoreWithScores(ctx context.Context, key string, opt ZRangeBy) ZSliceCmd {
-	return newZSliceCmd(r.Do(ctx, r.resp.getZRevRangeByScoreCompleted(key, true, opt)))
+	return newZSliceCmdFromResult(r.Do(ctx, r.resp.getZRevRangeByScoreCompleted(key, true, opt)))
 }
 
 func (r *resp3) getZRevRankCompleted(key, member string) rueidis.Completed {
@@ -1776,11 +1731,11 @@ func (r *resp3) getZRevRankCompleted(key, member string) rueidis.Completed {
 }
 
 func (r *resp3) ZRevRank(ctx context.Context, key, member string) IntCmd {
-	return newIntCmd(r.cmd.Do(ctx, r.getZRevRankCompleted(key, member)))
+	return newIntCmdFromResult(r.cmd.Do(ctx, r.getZRevRankCompleted(key, member)))
 }
 
 func (r *resp3Cache) ZRevRank(ctx context.Context, key, member string) IntCmd {
-	return newIntCmd(r.Do(ctx, r.resp.getZRevRankCompleted(key, member)))
+	return newIntCmdFromResult(r.Do(ctx, r.resp.getZRevRankCompleted(key, member)))
 }
 
 func (r *resp3) ZScan(ctx context.Context, key string, cursor uint64, match string, count int64) ScanCmd {
@@ -1791,7 +1746,7 @@ func (r *resp3) ZScan(ctx context.Context, key string, cursor uint64, match stri
 	if count > 0 {
 		cmd = cmd.Args(COUNT, str(count))
 	}
-	return newScanCmd(r.cmd.Do(ctx, cmd.ReadOnly()))
+	return newScanCmdFromResult(r.cmd.Do(ctx, cmd.ReadOnly()))
 }
 
 func (r *resp3) getZScoreCompleted(key, member string) rueidis.Completed {
@@ -1799,44 +1754,27 @@ func (r *resp3) getZScoreCompleted(key, member string) rueidis.Completed {
 }
 
 func (r *resp3) ZScore(ctx context.Context, key, member string) FloatCmd {
-	return newFloatCmd(r.cmd.Do(ctx, r.getZScoreCompleted(key, member)))
+	return newFloatCmdFromResult(r.cmd.Do(ctx, r.getZScoreCompleted(key, member)))
 }
 
 func (r *resp3Cache) ZScore(ctx context.Context, key, member string) FloatCmd {
-	return newFloatCmd(r.Do(ctx, r.resp.getZScoreCompleted(key, member)))
-}
-
-func (r *resp3) fillZUnionArbitrary(arbitrary rueidis.Arbitrary, withScore bool, store ZStore) rueidis.Arbitrary {
-	arbitrary = arbitrary.Args(str(len(store.Keys))).Keys(store.Keys...)
-	if len(store.Weights) > 0 {
-		arbitrary = arbitrary.Args(WEIGHTS)
-		for _, w := range store.Weights {
-			arbitrary = arbitrary.Args(str(w))
-		}
-	}
-	if len(store.Aggregate) > 0 {
-		arbitrary = arbitrary.Args(AGGREGATE, store.Aggregate)
-	}
-	if withScore {
-		arbitrary = arbitrary.Args(WITHSCORES)
-	}
-	return arbitrary
+	return newFloatCmdFromResult(r.Do(ctx, r.resp.getZScoreCompleted(key, member)))
 }
 
 func (r *resp3) ZUnion(ctx context.Context, store ZStore) StringSliceCmd {
-	return newStringSliceCmd(r.cmd.Do(ctx, r.fillZUnionArbitrary(r.cmd.B().Arbitrary(ZUNION), false, store).ReadOnly()))
+	return newStringSliceCmdFromStringSliceCmd(r.adapter.ZUnion(ctx, toZStore(store)))
 }
 
 func (r *resp3) ZUnionWithScores(ctx context.Context, store ZStore) ZSliceCmd {
-	return newZSliceCmd(r.cmd.Do(ctx, r.fillZUnionArbitrary(r.cmd.B().Arbitrary(ZUNION), true, store).ReadOnly()))
+	return newZSliceCmdFromCmd(r.adapter.ZUnionWithScores(ctx, toZStore(store)))
 }
 
 func (r *resp3) ZUnionStore(ctx context.Context, dest string, store ZStore) IntCmd {
-	return newIntCmd(r.cmd.Do(ctx, r.fillZUnionArbitrary(r.cmd.B().Arbitrary(ZUNIONSTORE).Keys(dest), false, store).ReadOnly()))
+	return newIntCmdFromIntCmd(r.adapter.ZUnionStore(ctx, dest, toZStore(store)))
 }
 
 func (r *resp3) XAck(ctx context.Context, stream, group string, ids ...string) IntCmd {
-	return newIntCmd(r.cmd.Do(ctx, r.cmd.B().Xack().Key(stream).Group(group).Id(ids...).Build()))
+	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Xack().Key(stream).Group(group).Id(ids...).Build()))
 }
 
 func (r *resp3) XAdd(ctx context.Context, a XAddArgs) StringCmd {
@@ -1866,7 +1804,7 @@ func (r *resp3) XAdd(ctx context.Context, a XAddArgs) StringCmd {
 	} else {
 		cmd = cmd.Args("*")
 	}
-	return newStringCmd(r.cmd.Do(ctx, cmd.Args(argToSlice(a.Values)...).Build()))
+	return newStringCmdFromResult(r.cmd.Do(ctx, cmd.Args(argToSlice(a.Values)...).Build()))
 }
 
 func (r *resp3) getXAutoClaimCompleted(a XAutoClaimArgs, justId bool) rueidis.Completed {
@@ -1889,11 +1827,11 @@ func (r *resp3) getXAutoClaimCompleted(a XAutoClaimArgs, justId bool) rueidis.Co
 }
 
 func (r *resp3) XAutoClaim(ctx context.Context, a XAutoClaimArgs) XAutoClaimCmd {
-	return newXAutoClaimCmd(r.cmd.Do(ctx, r.getXAutoClaimCompleted(a, false)))
+	return newXAutoClaimCmdFromResult(r.cmd.Do(ctx, r.getXAutoClaimCompleted(a, false)))
 }
 
 func (r *resp3) XAutoClaimJustID(ctx context.Context, a XAutoClaimArgs) XAutoClaimJustIDCmd {
-	return newXAutoClaimJustIDCmd(r.cmd.Do(ctx, r.getXAutoClaimCompleted(a, true)))
+	return newXAutoClaimJustIDCmdFromResult(r.cmd.Do(ctx, r.getXAutoClaimCompleted(a, true)))
 }
 
 func (r *resp3) getXClaimCompleted(a XClaimArgs, justId bool) rueidis.Completed {
@@ -1905,63 +1843,63 @@ func (r *resp3) getXClaimCompleted(a XClaimArgs, justId bool) rueidis.Completed 
 }
 
 func (r *resp3) XClaim(ctx context.Context, a XClaimArgs) XMessageSliceCmd {
-	return newXMessageSliceCmd(r.cmd.Do(ctx, r.getXClaimCompleted(a, false)))
+	return newXMessageSliceCmdFromResult(r.cmd.Do(ctx, r.getXClaimCompleted(a, false)))
 }
 
 func (r *resp3) XClaimJustID(ctx context.Context, a XClaimArgs) StringSliceCmd {
-	return newStringSliceCmd(r.cmd.Do(ctx, r.getXClaimCompleted(a, true)))
+	return newStringSliceCmdFromResult(r.cmd.Do(ctx, r.getXClaimCompleted(a, true)))
 }
 
 func (r *resp3) XDel(ctx context.Context, stream string, ids ...string) IntCmd {
-	return newIntCmd(r.cmd.Do(ctx, r.cmd.B().Xdel().Key(stream).Id(ids...).Build()))
+	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Xdel().Key(stream).Id(ids...).Build()))
 }
 
 func (r *resp3) XGroupCreate(ctx context.Context, stream, group, start string) StatusCmd {
-	return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().XgroupCreate().Key(stream).Groupname(group).Id(start).Build()))
+	return newStatusCmdFromResult(r.cmd.Do(ctx, r.cmd.B().XgroupCreate().Key(stream).Group(group).Id(start).Build()))
 }
 
 func (r *resp3) XGroupCreateMkStream(ctx context.Context, stream, group, start string) StatusCmd {
-	return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().XgroupCreate().Key(stream).Groupname(group).Id(start).Mkstream().Build()))
+	return newStatusCmdFromResult(r.cmd.Do(ctx, r.cmd.B().XgroupCreate().Key(stream).Group(group).Id(start).Mkstream().Build()))
 }
 
 func (r *resp3) XGroupCreateConsumer(ctx context.Context, stream, group, consumer string) IntCmd {
-	return newIntCmd(r.cmd.Do(ctx, r.cmd.B().XgroupCreateconsumer().Key(stream).Groupname(group).Consumername(consumer).Build()))
+	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().XgroupCreateconsumer().Key(stream).Group(group).Consumer(consumer).Build()))
 }
 
 func (r *resp3) XGroupDelConsumer(ctx context.Context, stream, group, consumer string) IntCmd {
-	return newIntCmd(r.cmd.Do(ctx, r.cmd.B().XgroupDelconsumer().Key(stream).Groupname(group).Consumername(consumer).Build()))
+	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().XgroupDelconsumer().Key(stream).Group(group).Consumername(consumer).Build()))
 }
 
 func (r *resp3) XGroupDestroy(ctx context.Context, stream, group string) IntCmd {
-	return newIntCmd(r.cmd.Do(ctx, r.cmd.B().XgroupDestroy().Key(stream).Groupname(group).Build()))
+	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().XgroupDestroy().Key(stream).Group(group).Build()))
 }
 
 func (r *resp3) XGroupSetID(ctx context.Context, stream, group, start string) StatusCmd {
-	return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().XgroupSetid().Key(stream).Groupname(group).Id(start).Build()))
+	return newStatusCmdFromResult(r.cmd.Do(ctx, r.cmd.B().XgroupSetid().Key(stream).Group(group).Id(start).Build()))
 }
 
 func (r *resp3) XInfoConsumers(ctx context.Context, key string, group string) XInfoConsumersCmd {
-	return newXInfoConsumersCmd(r.cmd.Do(ctx, r.cmd.B().XinfoConsumers().Key(key).Groupname(group).Build()), EMPTY, group)
+	return newXInfoConsumersCmdFromResult(r.cmd.Do(ctx, r.cmd.B().XinfoConsumers().Key(key).Group(group).Build()), EMPTY, group)
 }
 
 func (r *resp3) XInfoGroups(ctx context.Context, key string) XInfoGroupsCmd {
-	return newXInfoGroupsCmd(r.cmd.Do(ctx, r.cmd.B().XinfoGroups().Key(key).Build()), key)
+	return newXInfoGroupsCmdFromResult(r.cmd.Do(ctx, r.cmd.B().XinfoGroups().Key(key).Build()), key)
 }
 
 func (r *resp3) XInfoStream(ctx context.Context, key string) XInfoStreamCmd {
-	return newXInfoStreamCmd(r.cmd.Do(ctx, r.cmd.B().XinfoStream().Key(key).Build()), key)
+	return newXInfoStreamCmdFromResult(r.cmd.Do(ctx, r.cmd.B().XinfoStream().Key(key).Build()), key)
 }
 
 func (r *resp3) XInfoStreamFull(ctx context.Context, key string, count int) XInfoStreamFullCmd {
-	return newXInfoStreamFullCmd(r.cmd.Do(ctx, r.cmd.B().XinfoStream().Key(key).Full().Count(int64(count)).Build()))
+	return newXInfoStreamFullCmdFromResult(r.cmd.Do(ctx, r.cmd.B().XinfoStream().Key(key).Full().Count(int64(count)).Build()))
 }
 
 func (r *resp3) XLen(ctx context.Context, stream string) IntCmd {
-	return newIntCmd(r.cmd.Do(ctx, r.cmd.B().Xlen().Key(stream).Build()))
+	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Xlen().Key(stream).Build()))
 }
 
 func (r *resp3) XPending(ctx context.Context, stream, group string) XPendingCmd {
-	return newXPendingCmd(r.cmd.Do(ctx, r.cmd.B().Xpending().Key(stream).Group(group).Build()))
+	return newXPendingCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Xpending().Key(stream).Group(group).Build()))
 }
 
 func (r *resp3) XPendingExt(ctx context.Context, a XPendingExtArgs) XPendingExtCmd {
@@ -1973,39 +1911,19 @@ func (r *resp3) XPendingExt(ctx context.Context, a XPendingExtArgs) XPendingExtC
 	if len(a.Consumer) > 0 {
 		cmd = cmd.Args(a.Consumer)
 	}
-	return newXPendingExtCmd(r.cmd.Do(ctx, cmd.Build()))
+	return newXPendingExtCmdFromResult(r.cmd.Do(ctx, cmd.Build()))
 }
 
 func (r *resp3) XRange(ctx context.Context, stream, start, stop string) XMessageSliceCmd {
-	return newXMessageSliceCmd(r.cmd.Do(ctx, r.cmd.B().Xrange().Key(stream).Start(start).End(stop).Build()))
+	return newXMessageSliceCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Xrange().Key(stream).Start(start).End(stop).Build()))
 }
 
 func (r *resp3) XRangeN(ctx context.Context, stream, start, stop string, count int64) XMessageSliceCmd {
-	return newXMessageSliceCmd(r.cmd.Do(ctx, r.cmd.B().Xrange().Key(stream).Start(start).End(stop).Count(count).Build()))
-}
-
-func (r *resp3) xRead(ctx context.Context, arbitrary rueidis.Arbitrary, a XReadGroupArgs) XStreamSliceCmd {
-	if a.Count > 0 {
-		arbitrary = arbitrary.Args(COUNT, str(a.Count))
-	}
-	if a.Block >= 0 {
-		arbitrary = arbitrary.Args(BLOCK, str(formatMs(a.Block)))
-	}
-	if a.NoAck {
-		arbitrary = arbitrary.Args(NOACK)
-	}
-	arbitrary = arbitrary.Args(STREAMS).Keys(a.Streams[:len(a.Streams)/2]...).Args(a.Streams[len(a.Streams)/2:]...)
-	var com rueidis.Completed
-	if a.Block >= 0 {
-		com = arbitrary.Blocking()
-	} else {
-		com = arbitrary.Build()
-	}
-	return newXStreamSliceCmd(r.cmd.Do(ctx, com))
+	return newXMessageSliceCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Xrange().Key(stream).Start(start).End(stop).Count(count).Build()))
 }
 
 func (r *resp3) XRead(ctx context.Context, a XReadArgs) XStreamSliceCmd {
-	return r.xRead(ctx, r.cmd.B().Arbitrary(XREAD), XReadGroupArgs{Count: a.Count, Block: a.Block, Streams: a.Streams})
+	return newXStreamSliceCmdFromCmd(r.adapter.XRead(ctx, toXReadArgs(a)))
 }
 
 func (r *resp3) XReadStreams(ctx context.Context, streams ...string) XStreamSliceCmd {
@@ -2013,15 +1931,15 @@ func (r *resp3) XReadStreams(ctx context.Context, streams ...string) XStreamSlic
 }
 
 func (r *resp3) XReadGroup(ctx context.Context, a XReadGroupArgs) XStreamSliceCmd {
-	return r.xRead(ctx, r.cmd.B().Arbitrary(XREADGROUP).Args(GROUP, a.Group, a.Consumer), a)
+	return newXStreamSliceCmdFromCmd(r.adapter.XReadGroup(ctx, toXReadGroupArgs(a)))
 }
 
 func (r *resp3) XRevRange(ctx context.Context, stream string, start, stop string) XMessageSliceCmd {
-	return newXMessageSliceCmd(r.cmd.Do(ctx, r.cmd.B().Xrevrange().Key(stream).End(start).Start(stop).Build()))
+	return newXMessageSliceCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Xrevrange().Key(stream).End(start).Start(stop).Build()))
 }
 
 func (r *resp3) XRevRangeN(ctx context.Context, stream string, start, stop string, count int64) XMessageSliceCmd {
-	return newXMessageSliceCmd(r.cmd.Do(ctx, r.cmd.B().Xrevrange().Key(stream).End(start).Start(stop).Count(count).Build()))
+	return newXMessageSliceCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Xrevrange().Key(stream).End(start).Start(stop).Count(count).Build()))
 }
 
 func (r *resp3) xTrim(ctx context.Context, key, strategy string,
@@ -2034,7 +1952,7 @@ func (r *resp3) xTrim(ctx context.Context, key, strategy string,
 	if limit > 0 {
 		cmd = cmd.Args(LIMIT, str(limit))
 	}
-	return newIntCmd(r.cmd.Do(ctx, cmd.Build()))
+	return newIntCmdFromResult(r.cmd.Do(ctx, cmd.Build()))
 }
 
 func (r *resp3) XTrim(ctx context.Context, key string, maxLen int64) IntCmd {
@@ -2062,15 +1980,15 @@ func (r *resp3) XTrimMinIDApprox(ctx context.Context, key string, minID string, 
 }
 
 func (r *resp3) Append(ctx context.Context, key, value string) IntCmd {
-	return newIntCmd(r.cmd.Do(ctx, r.cmd.B().Append().Key(key).Value(value).Build()))
+	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Append().Key(key).Value(value).Build()))
 }
 
 func (r *resp3) Decr(ctx context.Context, key string) IntCmd {
-	return newIntCmd(r.cmd.Do(ctx, r.cmd.B().Decr().Key(key).Build()))
+	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Decr().Key(key).Build()))
 }
 
 func (r *resp3) DecrBy(ctx context.Context, key string, decrement int64) IntCmd {
-	return newIntCmd(r.cmd.Do(ctx, r.cmd.B().Decrby().Key(key).Decrement(decrement).Build()))
+	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Decrby().Key(key).Decrement(decrement).Build()))
 }
 
 func (r *resp3) getGetCompleted(key string) rueidis.Completed {
@@ -2078,15 +1996,15 @@ func (r *resp3) getGetCompleted(key string) rueidis.Completed {
 }
 
 func (r *resp3) Get(ctx context.Context, key string) StringCmd {
-	return newStringCmd(r.cmd.Do(ctx, r.getGetCompleted(key)))
+	return newStringCmdFromResult(r.cmd.Do(ctx, r.getGetCompleted(key)))
 }
 
 func (r *resp3Cache) Get(ctx context.Context, key string) StringCmd {
-	return newStringCmd(r.Do(ctx, r.resp.getGetCompleted(key)))
+	return newStringCmdFromResult(r.Do(ctx, r.resp.getGetCompleted(key)))
 }
 
 func (r *resp3) GetDel(ctx context.Context, key string) StringCmd {
-	return newStringCmd(r.cmd.Do(ctx, r.cmd.B().Getdel().Key(key).Build()))
+	return newStringCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Getdel().Key(key).Build()))
 }
 
 func (r *resp3) GetEx(ctx context.Context, key string, expiration time.Duration) StringCmd {
@@ -2103,7 +2021,7 @@ func (r *resp3) GetEx(ctx context.Context, key string, expiration time.Duration)
 	} else {
 		completed = getexKey.Build()
 	}
-	return newStringCmd(r.cmd.Do(ctx, completed))
+	return newStringCmdFromResult(r.cmd.Do(ctx, completed))
 }
 
 func (r *resp3) getGetRangeCompleted(key string, start, end int64) rueidis.Completed {
@@ -2111,27 +2029,27 @@ func (r *resp3) getGetRangeCompleted(key string, start, end int64) rueidis.Compl
 }
 
 func (r *resp3) GetRange(ctx context.Context, key string, start, end int64) StringCmd {
-	return newStringCmd(r.cmd.Do(ctx, r.getGetRangeCompleted(key, start, end)))
+	return newStringCmdFromResult(r.cmd.Do(ctx, r.getGetRangeCompleted(key, start, end)))
 }
 
 func (r *resp3Cache) GetRange(ctx context.Context, key string, start, end int64) StringCmd {
-	return newStringCmd(r.Do(ctx, r.resp.getGetRangeCompleted(key, start, end)))
+	return newStringCmdFromResult(r.Do(ctx, r.resp.getGetRangeCompleted(key, start, end)))
 }
 
 func (r *resp3) GetSet(ctx context.Context, key string, value interface{}) StringCmd {
-	return newStringCmd(r.cmd.Do(ctx, r.cmd.B().Getset().Key(key).Value(str(value)).Build()))
+	return newStringCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Getset().Key(key).Value(str(value)).Build()))
 }
 
 func (r *resp3) Incr(ctx context.Context, key string) IntCmd {
-	return newIntCmd(r.cmd.Do(ctx, r.cmd.B().Incr().Key(key).Build()))
+	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Incr().Key(key).Build()))
 }
 
 func (r *resp3) IncrBy(ctx context.Context, key string, value int64) IntCmd {
-	return newIntCmd(r.cmd.Do(ctx, r.cmd.B().Incrby().Key(key).Increment(value).Build()))
+	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Incrby().Key(key).Increment(value).Build()))
 }
 
 func (r *resp3) IncrByFloat(ctx context.Context, key string, value float64) FloatCmd {
-	return newFloatCmd(r.cmd.Do(ctx, r.cmd.B().Incrbyfloat().Key(key).Increment(value).Build()))
+	return newFloatCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Incrbyfloat().Key(key).Increment(value).Build()))
 }
 
 func (r *resp3) getMGetCompleted(keys ...string) rueidis.Completed {
@@ -2139,11 +2057,11 @@ func (r *resp3) getMGetCompleted(keys ...string) rueidis.Completed {
 }
 
 func (r *resp3) MGet(ctx context.Context, keys ...string) SliceCmd {
-	return newSliceCmd(r.cmd.Do(ctx, r.getMGetCompleted(keys...)))
+	return newSliceCmdFromSliceResult(r.cmd.Do(ctx, r.getMGetCompleted(keys...)))
 }
 
 func (r *resp3Cache) MGet(ctx context.Context, keys ...string) SliceCmd {
-	return newSliceCmd(r.Do(ctx, r.resp.getMGetCompleted(keys...)))
+	return newSliceCmdFromSliceResult(r.Do(ctx, r.resp.getMGetCompleted(keys...)))
 }
 
 func (r *resp3) MSet(ctx context.Context, values ...interface{}) StatusCmd {
@@ -2152,7 +2070,7 @@ func (r *resp3) MSet(ctx context.Context, values ...interface{}) StatusCmd {
 	for i := 0; i < len(args); i += 2 {
 		kv = kv.KeyValue(args[i], args[i+1])
 	}
-	return newStatusCmd(r.cmd.Do(ctx, kv.Build()))
+	return newStatusCmdFromResult(r.cmd.Do(ctx, kv.Build()))
 }
 
 func (r *resp3) MSetNX(ctx context.Context, values ...interface{}) BoolCmd {
@@ -2161,7 +2079,7 @@ func (r *resp3) MSetNX(ctx context.Context, values ...interface{}) BoolCmd {
 	for i := 0; i < len(args); i += 2 {
 		kv = kv.KeyValue(args[i], args[i+1])
 	}
-	return newBoolCmd(r.cmd.Do(ctx, kv.Build()))
+	return newBoolCmdFromResult(r.cmd.Do(ctx, kv.Build()))
 }
 
 func (r *resp3) Set(ctx context.Context, key string, value interface{}, expiration time.Duration) StatusCmd {
@@ -2178,11 +2096,11 @@ func (r *resp3) Set(ctx context.Context, key string, value interface{}, expirati
 	} else {
 		completed = setValue.Build()
 	}
-	return newStatusCmd(r.cmd.Do(ctx, completed))
+	return newStatusCmdFromResult(r.cmd.Do(ctx, completed))
 }
 
 func (r *resp3) SetEX(ctx context.Context, key string, value interface{}, expiration time.Duration) StatusCmd {
-	return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().Setex().Key(key).Seconds(formatSec(expiration)).Value(str(value)).Build()))
+	return newStatusCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Setex().Key(key).Seconds(formatSec(expiration)).Value(str(value)).Build()))
 }
 
 func (r *resp3) SetNX(ctx context.Context, key string, value interface{}, expiration time.Duration) BoolCmd {
@@ -2199,7 +2117,7 @@ func (r *resp3) SetNX(ctx context.Context, key string, value interface{}, expira
 			resp = r.cmd.Do(ctx, r.cmd.B().Set().Key(key).Value(str(value)).Nx().ExSeconds(formatSec(expiration)).Build())
 		}
 	}
-	return newBoolCmd(resp)
+	return newBoolCmdFromResult(resp)
 }
 
 func (r *resp3) SetXX(ctx context.Context, key string, value interface{}, expiration time.Duration) BoolCmd {
@@ -2216,7 +2134,7 @@ func (r *resp3) SetXX(ctx context.Context, key string, value interface{}, expira
 			resp = r.cmd.Do(ctx, r.cmd.B().Set().Key(key).Value(str(value)).Xx().ExSeconds(formatSec(expiration)).Build())
 		}
 	}
-	return newBoolCmd(resp)
+	return newBoolCmdFromResult(resp)
 }
 
 func (r *resp3) SetArgs(ctx context.Context, key string, value interface{}, a SetArgs) StatusCmd {
@@ -2240,11 +2158,11 @@ func (r *resp3) SetArgs(ctx context.Context, key string, value interface{}, a Se
 	if a.Get {
 		cmd = cmd.Args(GET)
 	}
-	return newStatusCmd(r.cmd.Do(ctx, cmd.Build()))
+	return newStatusCmdFromResult(r.cmd.Do(ctx, cmd.Build()))
 }
 
 func (r *resp3) SetRange(ctx context.Context, key string, offset int64, value string) IntCmd {
-	return newIntCmd(r.cmd.Do(ctx, r.cmd.B().Setrange().Key(key).Offset(offset).Value(value).Build()))
+	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Setrange().Key(key).Offset(offset).Value(value).Build()))
 }
 
 func (r *resp3) getStrLenCompleted(key string) rueidis.Completed {
@@ -2252,9 +2170,9 @@ func (r *resp3) getStrLenCompleted(key string) rueidis.Completed {
 }
 
 func (r *resp3) StrLen(ctx context.Context, key string) IntCmd {
-	return newIntCmd(r.cmd.Do(ctx, r.getStrLenCompleted(key)))
+	return newIntCmdFromResult(r.cmd.Do(ctx, r.getStrLenCompleted(key)))
 }
 
 func (r *resp3Cache) StrLen(ctx context.Context, key string) IntCmd {
-	return newIntCmd(r.Do(ctx, r.resp.getStrLenCompleted(key)))
+	return newIntCmdFromResult(r.Do(ctx, r.resp.getStrLenCompleted(key)))
 }
