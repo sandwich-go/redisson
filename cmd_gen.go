@@ -2503,10 +2503,10 @@ var CommandZrangebyscore = new(commandZrangebyscore)
 type commandZrangebyscore string
 
 func (commandZrangebyscore) String() string         { return "ZRANGEBYSCORE" }
-func (commandZrangebyscore) Class() string          { return "1.0.5" }
-func (commandZrangebyscore) RequireVersion() string { return "6.2.0" }
+func (commandZrangebyscore) Class() string          { return "SortedSet" }
+func (commandZrangebyscore) RequireVersion() string { return "1.0.5" }
 func (commandZrangebyscore) Forbid() bool           { return false }
-func (commandZrangebyscore) WarnVersion() string    { return "" }
+func (commandZrangebyscore) WarnVersion() string    { return "6.2.0" }
 func (commandZrangebyscore) Warning() string        { return commandZrangebyscoreWarning }
 func (commandZrangebyscore) Cmd() []string          { return []string{"SortedSet"} }
 
