@@ -13,6 +13,7 @@ import (
 
 type resp3 struct {
 	v       ConfVisitor
+	opts    rueidis.ClientOption
 	cmd     rueidis.Client
 	adapter rueidiscompat.Cmdable
 	handler handler
@@ -24,7 +25,7 @@ type resp3Cache struct {
 }
 
 func connectResp3(v ConfVisitor, h handler) (*resp3, error) {
-	cmd, err := rueidis.NewClient(rueidis.ClientOption{
+	opts := rueidis.ClientOption{
 		Username:          v.GetUsername(),
 		Password:          v.GetPassword(),
 		InitAddress:       v.GetAddrs(),
@@ -40,11 +41,12 @@ func connectResp3(v ConfVisitor, h handler) (*resp3, error) {
 			ClientName: v.GetName(),
 			MasterSet:  v.GetMasterName(),
 		},
-	})
+	}
+	cmd, err := rueidis.NewClient(opts)
 	if err != nil {
 		return nil, err
 	}
-	return &resp3{cmd: cmd, v: v, handler: h, adapter: rueidiscompat.NewAdapter(cmd)}, nil
+	return &resp3{cmd: cmd, v: v, opts: opts, handler: h, adapter: rueidiscompat.NewAdapter(cmd)}, nil
 }
 
 func (r *resp3) PoolStats() PoolStats                    { return PoolStats{} }
