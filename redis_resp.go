@@ -168,5 +168,6 @@ func (c *client) Cache(ttl time.Duration) CacheCmdable {
 	cp.cacheCmdable = c.cmdable.Cache(ttl)
 	return cp
 }
-func (c *client) PoolStats() PoolStats { return c.cmdable.PoolStats() }
-func (c *client) Close() error         { return c.cmdable.Close() }
+func (c *client) PoolStats() PoolStats                           { return c.cmdable.PoolStats() }
+func (c *client) Close() error                                   { return c.cmdable.Close() }
+func (c *client) NewLocker(opts ...LockerOption) (Locker, error) { return c.cmdable.NewLocker(opts...) }
