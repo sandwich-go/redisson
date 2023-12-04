@@ -9,6 +9,7 @@ import (
 )
 
 type resp2 struct {
+	v       ConfVisitor
 	cmd     goredis.UniversalClient
 	handler handler
 }
@@ -34,7 +35,7 @@ func connectResp2(v ConfVisitor, h handler) (*resp2, error) {
 	} else {
 		cmd = goredis.NewUniversalClient(opts)
 	}
-	return &resp2{cmd: cmd, handler: h}, nil
+	return &resp2{cmd: cmd, v: v, handler: h}, nil
 }
 func (r *resp2) PoolStats() PoolStats                    { return *r.cmd.PoolStats() }
 func (r *resp2) Close() error                            { return r.cmd.Close() }

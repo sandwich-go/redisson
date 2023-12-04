@@ -13,7 +13,6 @@ import (
 
 type resp3 struct {
 	v       ConfVisitor
-	opts    rueidis.ClientOption
 	cmd     rueidis.Client
 	adapter rueidiscompat.Cmdable
 	handler handler
@@ -24,8 +23,8 @@ type resp3Cache struct {
 	resp *resp3
 }
 
-func connectResp3(v ConfVisitor, h handler) (*resp3, error) {
-	opts := rueidis.ClientOption{
+func confVisitor2ClientOption(v ConfVisitor) rueidis.ClientOption {
+	return rueidis.ClientOption{
 		Username:          v.GetUsername(),
 		Password:          v.GetPassword(),
 		InitAddress:       v.GetAddrs(),
@@ -34,6 +33,7 @@ func connectResp3(v ConfVisitor, h handler) (*resp3, error) {
 		RingScaleEachConn: v.GetRingScaleEachConn(),
 		BlockingPoolSize:  v.GetConnPoolSize(),
 		ConnWriteTimeout:  v.GetWriteTimeout(),
+		DisableCache:      !v.GetEnableCache(),
 		ShuffleInit:       true,
 		Sentinel: rueidis.SentinelOption{
 			Username:   v.GetUsername(),
@@ -42,11 +42,15 @@ func connectResp3(v ConfVisitor, h handler) (*resp3, error) {
 			MasterSet:  v.GetMasterName(),
 		},
 	}
+}
+
+func connectResp3(v ConfVisitor, h handler) (*resp3, error) {
+	opts := confVisitor2ClientOption(v)
 	cmd, err := rueidis.NewClient(opts)
 	if err != nil {
 		return nil, err
 	}
-	return &resp3{cmd: cmd, v: v, opts: opts, handler: h, adapter: rueidiscompat.NewAdapter(cmd)}, nil
+	return &resp3{cmd: cmd, v: v, handler: h, adapter: rueidiscompat.NewAdapter(cmd)}, nil
 }
 
 func (r *resp3) PoolStats() PoolStats                    { return PoolStats{} }

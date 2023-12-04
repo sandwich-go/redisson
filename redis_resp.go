@@ -163,6 +163,7 @@ func (c *client) copy() *client {
 		version:      c.version,
 	}
 }
+
 func (c *client) Cache(ttl time.Duration) CacheCmdable {
 	cp := c.copy()
 	cp.cacheCmdable = c.cmdable.Cache(ttl)

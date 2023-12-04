@@ -15,8 +15,9 @@ type Locker interface {
 	Close()
 }
 
-// NewLocker 新键一个 locker
-func (r *resp3) NewLocker(opts ...LockerOption) (Locker, error) {
+// newLocker 新键一个 locker
+func newLocker(v ConfVisitor, opts ...LockerOption) (Locker, error) {
+	clientOption := confVisitor2ClientOption(v)
 	cc := newLockerOptions(opts...)
 	return rueidislock.NewLocker(rueidislock.LockerOption{
 		KeyPrefix:      cc.GetKeyPrefix(),
@@ -25,10 +26,15 @@ func (r *resp3) NewLocker(opts ...LockerOption) (Locker, error) {
 		KeyMajority:    cc.GetKeyMajority(),
 		NoLoopTracking: cc.GetNoLoopTracking(),
 		FallbackSETPX:  cc.GetFallbackSETPX(),
-		ClientOption:   r.opts,
+		ClientOption:   clientOption,
 	})
 }
 
-func (r *resp2) NewLocker(...LockerOption) (Locker, error) {
-	panic("not implemented")
+// NewLocker 新键一个 locker
+func (r *resp3) NewLocker(opts ...LockerOption) (Locker, error) {
+	return newLocker(r.v, opts...)
+}
+
+func (r *resp2) NewLocker(opts ...LockerOption) (Locker, error) {
+	return newLocker(r.v, opts...)
 }
