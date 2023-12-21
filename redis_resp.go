@@ -59,6 +59,7 @@ func (c *client) clusterEnable() error {
 	} else {
 		c.isCluster = true
 	}
+	c.handler.setIsCluster(c.isCluster)
 	return nil
 
 }

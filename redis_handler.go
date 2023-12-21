@@ -19,6 +19,7 @@ type isSilentError func(error) bool
 
 type handler interface {
 	setVersion(*semver.Version)
+	setIsCluster(bool)
 	setSilentErrCallback(isSilentError)
 	setRegisterCollector(RegisterCollectorFunc)
 
@@ -52,6 +53,7 @@ type baseHandler struct {
 	silentErrCallback                 isSilentError
 	v                                 ConfVisitor
 	version                           *semver.Version
+	isCluster                         bool
 }
 
 func newBaseHandler(v ConfVisitor) handler {
@@ -98,6 +100,7 @@ func WithSkipCheck(ctx context.Context) context.Context {
 	return context.WithValue(ctx, skipCheckContextKey, true)
 }
 
+func (r *baseHandler) setIsCluster(b bool)                  { r.isCluster = b }
 func (r *baseHandler) setVersion(v *semver.Version)         { r.version = v }
 func (r *baseHandler) setSilentErrCallback(b isSilentError) { r.silentErrCallback = b }
 func (r *baseHandler) setRegisterCollector(rc RegisterCollectorFunc) {
@@ -120,8 +123,10 @@ func (r *baseHandler) beforeWithKeys(ctx context.Context, command Command, getKe
 			if r.version != nil && r.version.LessThan(mustNewSemVersion(command.RequireVersion())) {
 				panic(fmt.Errorf("[%s]: redis command are not supported in version %q, available since %s", command, r.version, command.RequireVersion()))
 			}
-			// 需要检验所有的key是否均在同一槽位
-			panicIfUseMultipleKeySlots(command, getKeys)
+			if r.isCluster {
+				// 需要检验所有的key是否均在同一槽位
+				panicIfUseMultipleKeySlots(command, getKeys)
+			}
 			// 该命令是否有警告日志输出
 			if r.version != nil && len(command.WarnVersion()) > 0 && mustNewSemVersion(command.WarnVersion()).LessThan(*r.version) {
 				warning(fmt.Sprintf("[%s]: %s", command.String(), command.Warning()))
