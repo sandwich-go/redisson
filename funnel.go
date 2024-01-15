@@ -2,12 +2,9 @@ package redisson
 
 import (
 	"context"
-	"errors"
 	"strconv"
 	"time"
 )
-
-var ErrLeakyBucketOverflow = errors.New("leak bucket Overflow")
 
 const luaFunnel = `
 redis.replicate_commands()
@@ -83,7 +80,7 @@ if cache[1] ~= false then
     end
     leaking_ts = cache[2]
 else
-    left_quota = 0
+    left_quota = capacity
     leaking_ts = now()
 end
 
