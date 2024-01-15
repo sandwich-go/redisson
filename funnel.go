@@ -148,13 +148,8 @@ func (f funnel) Watering(ctx context.Context, quota int64) (LeakyBucketState, er
 	return state, err
 }
 
+func (r *resp3) NewFunnel(string, int64, int64, time.Duration) Funnel { return nil }
+func (r *resp2) NewFunnel(string, int64, int64, time.Duration) Funnel { return nil }
 func (c *client) NewFunnel(key string, capacity, operations int64, seconds time.Duration) Funnel {
-	return c.cmdable.NewFunnel(key, capacity, operations, seconds)
-}
-
-func (r *resp3) NewFunnel(key string, capacity, operations int64, seconds time.Duration) Funnel {
-	return newFunnel(r, key, capacity, operations, seconds)
-}
-func (r *resp2) NewFunnel(key string, capacity, operations int64, seconds time.Duration) Funnel {
-	return newFunnel(r, key, capacity, operations, seconds)
+	return newFunnel(c, key, capacity, operations, seconds)
 }
