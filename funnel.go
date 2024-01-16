@@ -94,7 +94,6 @@ redis.call('HMSET', key,
     'operations', funnel.operations,
     'seconds', funnel.seconds
 )
-redis.call('SADD', 'funnel:keys', key)
 
 return {ready, capacity, left_quota, interval, empty_time}`
 
