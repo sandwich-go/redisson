@@ -8,6 +8,7 @@ require (
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/prometheus/client_golang v1.11.0
 	github.com/redis/rueidis v1.0.22-go1.18
+	github.com/sandwich-go/funnel v0.0.1
 	github.com/smartystreets/goconvey v1.7.2
 )
 

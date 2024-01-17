@@ -110,6 +110,8 @@ github.com/prometheus/procfs v0.6.0 h1:mxy4L2jP6qMonqmq+aTtOx1ifVWUgG/TAmntgbh3x
 github.com/prometheus/procfs v0.6.0/go.mod h1:cz+aTbrPOrUb4q7XlbU9ygM+/jj0fzG6c1xBZuNvfVA=
 github.com/redis/rueidis v1.0.22-go1.18 h1:3ZJtXt6YoLNfAZtBWLZJoyj66dPXOHhUIeH7djkX1do=
 github.com/redis/rueidis v1.0.22-go1.18/go.mod h1:kcC5rV2gEyF+w1th4J1Hp1OZoVyaFNNi4iRVVOIXq7k=
+github.com/sandwich-go/funnel v0.0.1 h1:iAQQv2NhsqK6pmb+k81h14qSrE1VazR3DZ8BqxUyP/8=
+github.com/sandwich-go/funnel v0.0.1/go.mod h1:i+Ic0l78rwAqFV2CxdrK9FZNk2JU73jamUFfk/wogGM=
 github.com/sirupsen/logrus v1.2.0/go.mod h1:LxeOpSwHxABJmUn/MG1IvRgCAasNZTLOkJPxbbu5VWo=
 github.com/sirupsen/logrus v1.4.2/go.mod h1:tLMulIdttU9McNUspp0xgXVQah82FyeX6MwdIuYE2rE=
 github.com/sirupsen/logrus v1.6.0/go.mod h1:7uNnSEd1DgxDLC74fIahvMZmmYsHGZGEOFrfsX/uA88=
