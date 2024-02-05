@@ -1,13 +1,13 @@
 module github.com/sandwich-go/redisson
 
-go 1.18
+go 1.20
 
 require (
 	github.com/alicebob/miniredis/v2 v2.30.5
 	github.com/coreos/go-semver v0.3.0
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/prometheus/client_golang v1.11.0
-	github.com/redis/rueidis v1.0.22-go1.18
+	github.com/redis/rueidis v1.0.28
 	github.com/sandwich-go/funnel v0.0.1
 	github.com/smartystreets/goconvey v1.7.2
 )
@@ -26,7 +26,7 @@ require (
 	github.com/prometheus/procfs v0.6.0 // indirect
 	github.com/smartystreets/assertions v1.2.0 // indirect
 	github.com/yuin/gopher-lua v1.1.0 // indirect
-	golang.org/x/sys v0.13.0 // indirect
+	golang.org/x/sys v0.14.0 // indirect
 	google.golang.org/protobuf v1.28.0 // indirect
 )
 
