@@ -13,6 +13,7 @@ type Cmdable interface {
 	RegisterCollector(RegisterCollectorFunc)
 	Close() error
 	RawCmdable() interface{}
+	IsCluster() bool
 
 	CacheCmdable
 	BitmapCmdable

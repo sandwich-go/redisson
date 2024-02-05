@@ -41,6 +41,7 @@ func (r *resp2) PoolStats() PoolStats                    { return *r.cmd.PoolSta
 func (r *resp2) Close() error                            { return r.cmd.Close() }
 func (r *resp2) RegisterCollector(RegisterCollectorFunc) {}
 func (r *resp2) Cache(_ time.Duration) CacheCmdable      { return r }
+func (r *resp2) IsCluster() bool                         { return r.handler.isCluster() }
 func (r *resp2) BitCount(ctx context.Context, key string, bitCount *BitCount) IntCmd {
 	return r.cmd.BitCount(ctx, key, bitCount)
 }

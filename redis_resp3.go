@@ -55,6 +55,7 @@ func connectResp3(v ConfVisitor, h handler) (*resp3, error) {
 
 func (r *resp3) PoolStats() PoolStats                    { return PoolStats{} }
 func (r *resp3) Close() error                            { r.cmd.Close(); return nil }
+func (r *resp3) IsCluster() bool                         { return r.handler.isCluster() }
 func (r *resp3) RegisterCollector(RegisterCollectorFunc) {}
 func (r *resp3) Cache(ttl time.Duration) CacheCmdable {
 	if r.v.GetEnableCache() {

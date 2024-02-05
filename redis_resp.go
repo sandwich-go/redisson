@@ -64,6 +64,8 @@ func (c *client) clusterEnable() error {
 
 }
 
+func (c *client) IsCluster() bool { return c.isCluster }
+
 func (c *client) initVersion() (err error) {
 	var res string
 	res, err = c.cmdable.Info(context.Background(), SERVER).Result()

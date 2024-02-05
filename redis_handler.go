@@ -27,6 +27,7 @@ type handler interface {
 	beforeWithKeys(ctx context.Context, command Command, getKeys func() []string) context.Context
 	after(ctx context.Context, err error)
 	cache(ctx context.Context, hit bool)
+	isCluster() bool
 }
 
 func newSemVersion(version string) (semver.Version, error) {
@@ -53,7 +54,7 @@ type baseHandler struct {
 	silentErrCallback                 isSilentError
 	v                                 ConfVisitor
 	version                           *semver.Version
-	isCluster                         bool
+	cluster                           bool
 }
 
 func newBaseHandler(v ConfVisitor) handler {
@@ -100,7 +101,8 @@ func WithSkipCheck(ctx context.Context) context.Context {
 	return context.WithValue(ctx, skipCheckContextKey, true)
 }
 
-func (r *baseHandler) setIsCluster(b bool)                  { r.isCluster = b }
+func (r *baseHandler) isCluster() bool                      { return r.cluster }
+func (r *baseHandler) setIsCluster(b bool)                  { r.cluster = b }
 func (r *baseHandler) setVersion(v *semver.Version)         { r.version = v }
 func (r *baseHandler) setSilentErrCallback(b isSilentError) { r.silentErrCallback = b }
 func (r *baseHandler) setRegisterCollector(rc RegisterCollectorFunc) {
@@ -123,7 +125,7 @@ func (r *baseHandler) beforeWithKeys(ctx context.Context, command Command, getKe
 			if r.version != nil && r.version.LessThan(mustNewSemVersion(command.RequireVersion())) {
 				panic(fmt.Errorf("[%s]: redis command are not supported in version %q, available since %s", command, r.version, command.RequireVersion()))
 			}
-			if r.isCluster {
+			if r.cluster {
 				// 需要检验所有的key是否均在同一槽位
 				panicIfUseMultipleKeySlots(command, getKeys)
 			}
