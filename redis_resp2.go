@@ -44,7 +44,7 @@ func (r *resp2) RegisterCollector(RegisterCollectorFunc) {}
 func (r *resp2) Cache(_ time.Duration) CacheCmdable      { return r }
 func (r *resp2) IsCluster() bool                         { return r.handler.isCluster() }
 func (r *resp2) ForEachNodes(ctx context.Context, f func(context.Context, Cmdable) error) error {
-	return r.cmd.(*goredis.ClusterClient).ForEachShard(ctx, func(ctx context.Context, client *goredis.Client) error {
+	return r.cmd.(*goredis.ClusterClient).ForEachMaster(ctx, func(ctx context.Context, client *goredis.Client) error {
 		return f(ctx, &resp2{cmd: client, v: r.v, handler: r.handler})
 	})
 }
