@@ -53,9 +53,19 @@ func connectResp3(v ConfVisitor, h handler) (*resp3, error) {
 	return &resp3{cmd: cmd, v: v, handler: h, adapter: rueidiscompat.NewAdapter(cmd)}, nil
 }
 
-func (r *resp3) PoolStats() PoolStats                    { return PoolStats{} }
-func (r *resp3) Close() error                            { r.cmd.Close(); return nil }
-func (r *resp3) IsCluster() bool                         { return r.handler.isCluster() }
+func (r *resp3) PoolStats() PoolStats { return PoolStats{} }
+func (r *resp3) Close() error         { r.cmd.Close(); return nil }
+func (r *resp3) IsCluster() bool      { return r.handler.isCluster() }
+func (r *resp3) ForEachNodes(ctx context.Context, f func(context.Context, Cmdable) error) error {
+	var errs Errors
+	for _, v := range r.cmd.Nodes() {
+		err := f(ctx, &resp3{cmd: v, v: r.v, handler: r.handler, adapter: rueidiscompat.NewAdapter(v)})
+		if err != nil {
+			errs.Push(err)
+		}
+	}
+	return errs.Err()
+}
 func (r *resp3) RegisterCollector(RegisterCollectorFunc) {}
 func (r *resp3) Cache(ttl time.Duration) CacheCmdable {
 	if r.v.GetEnableCache() {

@@ -1,6 +1,7 @@
 package redisson
 
 import (
+	"context"
 	"github.com/sandwich-go/funnel"
 	"time"
 )
@@ -14,6 +15,7 @@ type Cmdable interface {
 	Close() error
 	RawCmdable() interface{}
 	IsCluster() bool
+	ForEachNodes(context.Context, func(context.Context, Cmdable) error) error
 
 	CacheCmdable
 	BitmapCmdable

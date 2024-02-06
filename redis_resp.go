@@ -65,6 +65,12 @@ func (c *client) clusterEnable() error {
 }
 
 func (c *client) IsCluster() bool { return c.isCluster }
+func (c *client) ForEachNodes(ctx context.Context, f func(context.Context, Cmdable) error) error {
+	if !c.isCluster {
+		return f(ctx, c.cmdable)
+	}
+	return c.cmdable.ForEachNodes(ctx, f)
+}
 
 func (c *client) initVersion() (err error) {
 	var res string
