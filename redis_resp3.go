@@ -44,9 +44,22 @@ func confVisitor2ClientOption(v ConfVisitor) rueidis.ClientOption {
 	}
 }
 
+func newResp3Client(opts rueidis.ClientOption) (rueidis.Client, error) {
+	cmd, err := rueidis.NewClient(opts)
+	if err == nil {
+		return cmd, nil
+	}
+	if strings.Contains(err.Error(), rueidis.ErrNoCache.Error()) {
+		opts.DisableCache = true
+		warning(fmt.Sprintf("%v, ClientOption.DisableCache=true, reconnect...", rueidis.ErrNoCache))
+		return newResp3Client(opts)
+	}
+	return nil, err
+}
+
 func connectResp3(v ConfVisitor, h handler) (*resp3, error) {
 	opts := confVisitor2ClientOption(v)
-	cmd, err := rueidis.NewClient(opts)
+	cmd, err := newResp3Client(opts)
 	if err != nil {
 		return nil, err
 	}
