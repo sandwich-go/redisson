@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/redis/rueidis"
 	"regexp"
 	"strings"
 	"sync"
@@ -122,6 +123,11 @@ func (c *client) connect() error {
 			err = fmt.Errorf("unknown RESP version, %s", c.v.GetResp())
 		}
 		if err != nil {
+			if strings.Contains(err.Error(), rueidis.ErrNoCache.Error()) {
+				warning(fmt.Sprintf("%v, resp2, reconnect...", err))
+				c.v.ApplyOption(WithResp(RESP2))
+				return c.connect()
+			}
 			return err
 		}
 		// 初始化
