@@ -15,6 +15,7 @@ type Cmdable interface {
 	Close() error
 	RawCmdable() interface{}
 	IsCluster() bool
+	Options() ConfVisitor
 	ForEachNodes(context.Context, func(context.Context, Cmdable) error) error
 
 	CacheCmdable

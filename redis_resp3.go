@@ -56,6 +56,7 @@ func connectResp3(v ConfVisitor, h handler) (*resp3, error) {
 func (r *resp3) PoolStats() PoolStats { return PoolStats{} }
 func (r *resp3) Close() error         { r.cmd.Close(); return nil }
 func (r *resp3) IsCluster() bool      { return r.handler.isCluster() }
+func (r *resp3) Options() ConfVisitor { return r.v }
 func (r *resp3) ForEachNodes(ctx context.Context, f func(context.Context, Cmdable) error) error {
 	var errs Errors
 	for _, v := range r.cmd.Nodes() {

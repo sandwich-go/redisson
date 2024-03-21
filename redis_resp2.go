@@ -42,6 +42,7 @@ func (r *resp2) PoolStats() PoolStats                    { return *r.cmd.PoolSta
 func (r *resp2) Close() error                            { return r.cmd.Close() }
 func (r *resp2) RegisterCollector(RegisterCollectorFunc) {}
 func (r *resp2) Cache(_ time.Duration) CacheCmdable      { return r }
+func (r *resp2) Options() ConfVisitor                    { return r.v }
 func (r *resp2) IsCluster() bool                         { return r.handler.isCluster() }
 func (r *resp2) ForEachNodes(ctx context.Context, f func(context.Context, Cmdable) error) error {
 	return r.cmd.(*goredis.ClusterClient).ForEachMaster(ctx, func(ctx context.Context, client *goredis.Client) error {
