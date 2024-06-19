@@ -35,6 +35,8 @@ func confVisitor2ClientOption(v ConfVisitor) rueidis.ClientOption {
 		ConnWriteTimeout:  v.GetWriteTimeout(),
 		DisableCache:      !v.GetEnableCache(),
 		ShuffleInit:       true,
+		AlwaysRESP2:       v.GetAlwaysRESP2(),
+		ForceSingleClient: v.GetForceSingleClient(),
 		Sentinel: rueidis.SentinelOption{
 			Username:   v.GetUsername(),
 			Password:   v.GetPassword(),

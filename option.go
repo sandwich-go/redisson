@@ -13,6 +13,7 @@ type Tester interface {
 func ConfOptionDeclareWithDefault() interface{} {
 	return map[string]interface{}{
 		"Resp":              RESP(RESP3),                     // @MethodComment(RESP版本)
+		"AlwaysRESP2":       bool(false),                     // @MethodComment(always uses RESP2, otherwise it will try using RESP3 first)
 		"Name":              "",                              // @MethodComment(Redis客户端名字)
 		"MasterName":        "",                              // @MethodComment(Redis Sentinel模式下，master名字)
 		"EnableMonitor":     true,                            // @MethodComment(是否开启监控)
@@ -33,5 +34,6 @@ func ConfOptionDeclareWithDefault() interface{} {
 		"Cluster":           false,                           // @MethodComment(是否为Redis集群，默认为false，集群需要设置为true)
 		"Development":       true,                            // @MethodComment(是否为开发模式，开发模式下，使用部分接口会有警告日志输出，会校验多key是否为同一hash槽，会校验部分接口是否满足版本要求)
 		"T":                 (Tester)(nil),                   // @MethodComment(如果设置该值，则启动mock)
+		"ForceSingleClient": false,                           // @MethodComment(ForceSingleClient force the usage of a single client connection, without letting the lib guessing)
 	}
 }

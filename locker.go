@@ -34,7 +34,4 @@ func newLocker(v ConfVisitor, opts ...LockerOption) (Locker, error) {
 func (r *resp3) NewLocker(opts ...LockerOption) (Locker, error) {
 	return newLocker(r.v, opts...)
 }
-
-func (r *resp2) NewLocker(opts ...LockerOption) (Locker, error) {
-	return newLocker(r.v, opts...)
-}
+func (r *resp2) NewLocker(...LockerOption) (Locker, error) { panic("not implemented") }

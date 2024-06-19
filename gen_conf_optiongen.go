@@ -12,6 +12,7 @@ import (
 // Conf should use NewConf to initialize it
 type Conf struct {
 	Resp              RESP          `xconf:"resp" usage:"RESP版本"`
+	AlwaysRESP2       bool          `xconf:"always_resp2" usage:"always uses RESP2, otherwise it will try using RESP3 first"`
 	Name              string        `xconf:"name" usage:"Redis客户端名字"`
 	MasterName        string        `xconf:"master_name" usage:"Redis Sentinel模式下，master名字"`
 	EnableMonitor     bool          `xconf:"enable_monitor" usage:"是否开启监控"`
@@ -32,6 +33,7 @@ type Conf struct {
 	Cluster           bool          `xconf:"cluster" usage:"是否为Redis集群，默认为false，集群需要设置为true"`
 	Development       bool          `xconf:"development" usage:"是否为开发模式，开发模式下，使用部分接口会有警告日志输出，会校验多key是否为同一hash槽，会校验部分接口是否满足版本要求"`
 	T                 Tester        `xconf:"t" usage:"如果设置该值，则启动mock"`
+	ForceSingleClient bool          `xconf:"force_single_client" usage:"ForceSingleClient force the usage of a single client connection, without letting the lib guessing"`
 }
 
 // NewConf new Conf
@@ -70,6 +72,15 @@ func WithResp(v RESP) ConfOption {
 	}
 }
 
+// WithAlwaysRESP2 always uses RESP2, otherwise it will try using RESP3 first
+func WithAlwaysRESP2(v bool) ConfOption {
+	return func(cc *Conf) ConfOption {
+		previous := cc.AlwaysRESP2
+		cc.AlwaysRESP2 = v
+		return WithAlwaysRESP2(previous)
+	}
+}
+
 // WithName Redis客户端名字
 func WithName(v string) ConfOption {
 	return func(cc *Conf) ConfOption {
@@ -102,6 +113,15 @@ func WithAddrs(v ...string) ConfOption {
 	return func(cc *Conf) ConfOption {
 		previous := cc.Addrs
 		cc.Addrs = v
+		return WithAddrs(previous...)
+	}
+}
+
+// AppendAddrs Redis地址列表
+func AppendAddrs(v ...string) ConfOption {
+	return func(cc *Conf) ConfOption {
+		previous := cc.Addrs
+		cc.Addrs = append(cc.Addrs, v...)
 		return WithAddrs(previous...)
 	}
 }
@@ -250,18 +270,26 @@ func WithT(v Tester) ConfOption {
 	}
 }
 
+// WithForceSingleClient ForceSingleClient force the usage of a single client connection, without letting the lib guessing
+func WithForceSingleClient(v bool) ConfOption {
+	return func(cc *Conf) ConfOption {
+		previous := cc.ForceSingleClient
+		cc.ForceSingleClient = v
+		return WithForceSingleClient(previous)
+	}
+}
+
 // InstallConfWatchDog the installed func will called when NewConf  called
 func InstallConfWatchDog(dog func(cc *Conf)) { watchDogConf = dog }
 
 // watchDogConf global watch dog
 var watchDogConf func(cc *Conf)
 
-// newDefaultConf new default Conf
-func newDefaultConf() *Conf {
-	cc := &Conf{}
-
+// setConfDefaultValue default Conf value
+func setConfDefaultValue(cc *Conf) {
 	for _, opt := range [...]ConfOption{
 		WithResp(RESP3),
+		WithAlwaysRESP2(false),
 		WithName(""),
 		WithMasterName(""),
 		WithEnableMonitor(true),
@@ -282,10 +310,16 @@ func newDefaultConf() *Conf {
 		WithCluster(false),
 		WithDevelopment(true),
 		WithT(nil),
+		WithForceSingleClient(false),
 	} {
 		opt(cc)
 	}
+}
 
+// newDefaultConf new default Conf
+func newDefaultConf() *Conf {
+	cc := &Conf{}
+	setConfDefaultValue(cc)
 	return cc
 }
 
@@ -328,6 +362,7 @@ func AtomicConf() ConfVisitor {
 
 // all getter func
 func (cc *Conf) GetResp() RESP                     { return cc.Resp }
+func (cc *Conf) GetAlwaysRESP2() bool              { return cc.AlwaysRESP2 }
 func (cc *Conf) GetName() string                   { return cc.Name }
 func (cc *Conf) GetMasterName() string             { return cc.MasterName }
 func (cc *Conf) GetEnableMonitor() bool            { return cc.EnableMonitor }
@@ -348,10 +383,12 @@ func (cc *Conf) GetRingScaleEachConn() int         { return cc.RingScaleEachConn
 func (cc *Conf) GetCluster() bool                  { return cc.Cluster }
 func (cc *Conf) GetDevelopment() bool              { return cc.Development }
 func (cc *Conf) GetT() Tester                      { return cc.T }
+func (cc *Conf) GetForceSingleClient() bool        { return cc.ForceSingleClient }
 
 // ConfVisitor visitor interface for Conf
 type ConfVisitor interface {
 	GetResp() RESP
+	GetAlwaysRESP2() bool
 	GetName() string
 	GetMasterName() string
 	GetEnableMonitor() bool
@@ -372,6 +409,7 @@ type ConfVisitor interface {
 	GetCluster() bool
 	GetDevelopment() bool
 	GetT() Tester
+	GetForceSingleClient() bool
 }
 
 // ConfInterface visitor + ApplyOption interface for Conf

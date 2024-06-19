@@ -117,7 +117,11 @@ func (c *client) connect() error {
 	if c.v.GetT() == nil {
 		switch strings.ToUpper(c.v.GetResp()) {
 		case RESP2:
-			c.cmdable, err = connectResp2(c.v, c.handler)
+			if c.v.GetAlwaysRESP2() {
+				c.cmdable, err = connectResp3(c.v, c.handler)
+			} else {
+				c.cmdable, err = connectResp2(c.v, c.handler)
+			}
 		case RESP3:
 			c.cmdable, err = connectResp3(c.v, c.handler)
 		default:
@@ -125,8 +129,8 @@ func (c *client) connect() error {
 		}
 		if err != nil {
 			if strings.Contains(err.Error(), rueidis.ErrNoCache.Error()) {
-				warning(fmt.Sprintf("%v, resp2, reconnect...", err))
-				c.v.ApplyOption(WithResp(RESP2))
+				warning(fmt.Sprintf("%v, reconnect...", err))
+				c.v.ApplyOption(WithEnableCache(false))
 				return c.connect()
 			}
 			return err
@@ -146,14 +150,26 @@ func (c *client) reconnectWhenError(err error) error {
 	if err == nil {
 		return nil
 	}
-	if errString := err.Error(); strings.Contains(errString, "ERR This instance has cluster support disabled") ||
-		strings.Contains(errString, "ERR Cluster setting conflict") {
+	errString := err.Error()
+	if strings.Contains(errString, "ERR This instance has cluster support disabled") || strings.Contains(errString, "ERR Cluster setting conflict") {
 		warning(fmt.Sprintf("%s, reconnect...", errString))
 		c.v.ApplyOption(WithCluster(!c.v.GetCluster()))
 		return c.connect()
 	}
+	if !c.v.GetAlwaysRESP2() && strings.Contains(errString, "elements in cluster info address, expected 2 or 3") {
+		warning(fmt.Sprintf("%s, using always resp2, reconnect...", errString))
+		c.v.ApplyOption(WithAlwaysRESP2(true))
+		return c.connect()
+	}
+	if !c.v.GetForceSingleClient() && strings.Contains(errString, "the slot has no redis node") {
+		warning(fmt.Sprintf("%s, using force single model, reconnect...", errString))
+		c.v.ApplyOption(WithForceSingleClient(true))
+		return c.connect()
+	}
 	return err
 }
+
+var retryTimes = 3
 
 func Connect(v ConfInterface) (Cmdable, error) {
 	c := &client{v: v, handler: newBaseHandler(v)}
@@ -161,7 +177,13 @@ func Connect(v ConfInterface) (Cmdable, error) {
 	if err == nil && c.isCluster != c.v.GetCluster() {
 		err = fmt.Errorf("ERR Cluster setting conflict, server's cluster_enabled is %t, but client's cluster_enabled is %t", c.isCluster, c.v.GetCluster())
 	}
-	err = c.reconnectWhenError(err)
+
+	for i := 0; i < retryTimes; i++ {
+		err = c.reconnectWhenError(err)
+		if err == nil {
+			break
+		}
+	}
 	if err != nil {
 		return nil, err
 	}
