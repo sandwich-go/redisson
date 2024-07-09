@@ -18,6 +18,7 @@ type Cmdable interface {
 	Options() ConfVisitor
 	ForEachNodes(context.Context, func(context.Context, Cmdable) error) error
 	Receive(ctx context.Context, cb func(Message), channels ...string) error
+	PReceive(ctx context.Context, cb func(Message), patterns ...string) error
 
 	CacheCmdable
 	BitmapCmdable

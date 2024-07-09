@@ -1314,3 +1314,6 @@ func (r *resp2) StrLen(ctx context.Context, key string) IntCmd {
 func (r *resp2) Receive(context.Context, func(Message), ...string) error {
 	panic("not implemented")
 }
+func (r *resp2) PReceive(context.Context, func(Message), ...string) error {
+	panic("not implemented")
+}

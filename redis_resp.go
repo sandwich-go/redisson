@@ -213,3 +213,6 @@ func (c *client) NewLocker(opts ...LockerOption) (Locker, error) { return c.cmda
 func (c *client) Receive(ctx context.Context, cb func(Message), channels ...string) error {
 	return c.cmdable.Receive(ctx, cb, channels...)
 }
+func (c *client) PReceive(ctx context.Context, cb func(Message), patterns ...string) error {
+	return c.cmdable.PReceive(ctx, cb, patterns...)
+}

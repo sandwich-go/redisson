@@ -2206,3 +2206,13 @@ func (r *resp3) Receive(ctx context.Context, cb func(Message), channels ...strin
 		})
 	})
 }
+
+func (r *resp3) PReceive(ctx context.Context, cb func(Message), patterns ...string) error {
+	return r.cmd.Receive(ctx, r.cmd.B().Psubscribe().Pattern(patterns...).Build(), func(msg rueidis.PubSubMessage) {
+		cb(Message{
+			Channel: msg.Channel,
+			Pattern: msg.Pattern,
+			Payload: msg.Message,
+		})
+	})
+}
