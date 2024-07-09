@@ -26,7 +26,7 @@ func TestRedisson(t *testing.T) {
 }
 
 func TestPubSubReceive(t *testing.T) {
-	testAddr := "127.0.0.1:55000"
+	testAddr := ""
 	opts := []ConfOption{WithResp(RESP3), WithDevelopment(false)}
 	opts = append(opts, WithAddrs(testAddr))
 	c := MustNewClient(NewConf(opts...))
