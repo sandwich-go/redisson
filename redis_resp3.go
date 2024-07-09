@@ -1025,13 +1025,6 @@ func (p *pubSubResp3) PSubscribe(ctx context.Context, patterns ...string) error 
 
 func (p *pubSubResp3) Subscribe(ctx context.Context, channels ...string) error {
 	ctx = p.handler.before(ctx, CommandSubscribe)
-	err := p.cmd.Do(ctx, p.cmd.B().Subscribe().Channel(channels...).Build()).Error()
-	p.handler.after(ctx, err)
-	return err
-}
-
-func (p *pubSubResp3) Unsubscribe(ctx context.Context, channels ...string) error {
-	ctx = p.handler.before(ctx, CommandUnsubscribe)
 	var err error
 	go func() {
 		err = p.cmd.Receive(p.ctx, p.cmd.B().Unsubscribe().Channel(channels...).Build(), func(m rueidis.PubSubMessage) {
@@ -1042,6 +1035,13 @@ func (p *pubSubResp3) Unsubscribe(ctx context.Context, channels ...string) error
 			}
 		})
 	}()
+	p.handler.after(ctx, err)
+	return err
+}
+
+func (p *pubSubResp3) Unsubscribe(ctx context.Context, channels ...string) error {
+	ctx = p.handler.before(ctx, CommandUnsubscribe)
+	err := p.cmd.Do(ctx, p.cmd.B().Unsubscribe().Channel(channels...).Build()).Error()
 	p.handler.after(ctx, err)
 	return err
 }
