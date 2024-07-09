@@ -983,25 +983,18 @@ func (r *resp3) Subscribe(ctx context.Context, channels ...string) PubSub {
 }
 
 type pubSubResp3 struct {
-	cmd     rueidis.DedicatedClient
+	cmd     rueidis.Client
 	msgCh   chan *Message
 	handler handler
-	cancel  context.CancelFunc
+
+	ctx    context.Context
+	cancel context.CancelFunc
 }
 
 func newPubSubResp3(ctx context.Context, cmd rueidis.Client, handler handler, channels ...string) PubSub {
 	// chan size todo, use goredis.ChannelOption?
-	p := &pubSubResp3{msgCh: make(chan *Message, 100), handler: handler}
-	p.cmd, p.cancel = cmd.Dedicate()
-	p.cmd.SetPubSubHooks(rueidis.PubSubHooks{
-		OnMessage: func(m rueidis.PubSubMessage) {
-			p.msgCh <- &Message{
-				Channel: m.Channel,
-				Pattern: m.Pattern,
-				Payload: m.Message,
-			}
-		},
-	})
+	p := &pubSubResp3{cmd: cmd, msgCh: make(chan *Message, 100), handler: handler}
+	p.ctx, p.cancel = context.WithCancel(ctx)
 	if len(channels) > 0 {
 		_ = p.Subscribe(ctx, channels...)
 	}
@@ -1016,7 +1009,16 @@ func (p *pubSubResp3) Close() error {
 
 func (p *pubSubResp3) PSubscribe(ctx context.Context, patterns ...string) error {
 	ctx = p.handler.before(ctx, CommandPSubscribe)
-	err := p.cmd.Do(ctx, p.cmd.B().Psubscribe().Pattern(patterns...).Build()).Error()
+	var err error
+	go func() {
+		err = p.cmd.Receive(p.ctx, p.cmd.B().Psubscribe().Pattern(patterns...).Build(), func(m rueidis.PubSubMessage) {
+			p.msgCh <- &Message{
+				Channel: m.Channel,
+				Pattern: m.Pattern,
+				Payload: m.Message,
+			}
+		})
+	}()
 	p.handler.after(ctx, err)
 	return err
 }
@@ -1030,7 +1032,16 @@ func (p *pubSubResp3) Subscribe(ctx context.Context, channels ...string) error {
 
 func (p *pubSubResp3) Unsubscribe(ctx context.Context, channels ...string) error {
 	ctx = p.handler.before(ctx, CommandUnsubscribe)
-	err := p.cmd.Do(ctx, p.cmd.B().Unsubscribe().Channel(channels...).Build()).Error()
+	var err error
+	go func() {
+		err = p.cmd.Receive(p.ctx, p.cmd.B().Unsubscribe().Channel(channels...).Build(), func(m rueidis.PubSubMessage) {
+			p.msgCh <- &Message{
+				Channel: m.Channel,
+				Pattern: m.Pattern,
+				Payload: m.Message,
+			}
+		})
+	}()
 	p.handler.after(ctx, err)
 	return err
 }
