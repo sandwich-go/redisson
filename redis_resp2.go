@@ -1310,3 +1310,7 @@ func (r *resp2) SetRange(ctx context.Context, key string, offset int64, value st
 func (r *resp2) StrLen(ctx context.Context, key string) IntCmd {
 	return r.cmd.StrLen(ctx, key)
 }
+
+func (r *resp2) Receive(context.Context, func(Message), ...string) error {
+	panic("not implemented")
+}

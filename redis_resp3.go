@@ -2196,3 +2196,13 @@ func (r *resp3) StrLen(ctx context.Context, key string) IntCmd {
 func (r *resp3Cache) StrLen(ctx context.Context, key string) IntCmd {
 	return newIntCmdFromResult(r.Do(ctx, r.resp.getStrLenCompleted(key)))
 }
+
+func (r *resp3) Receive(ctx context.Context, cb func(Message), channels ...string) error {
+	return r.cmd.Receive(ctx, r.cmd.B().Subscribe().Channel(channels...).Build(), func(msg rueidis.PubSubMessage) {
+		cb(Message{
+			Channel: msg.Channel,
+			Pattern: msg.Pattern,
+			Payload: msg.Message,
+		})
+	})
+}

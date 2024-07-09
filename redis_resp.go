@@ -210,3 +210,6 @@ func (c *client) Cache(ttl time.Duration) CacheCmdable {
 func (c *client) PoolStats() PoolStats                           { return c.cmdable.PoolStats() }
 func (c *client) Close() error                                   { return c.cmdable.Close() }
 func (c *client) NewLocker(opts ...LockerOption) (Locker, error) { return c.cmdable.NewLocker(opts...) }
+func (c *client) Receive(ctx context.Context, cb func(Message), channels ...string) error {
+	return c.cmdable.Receive(ctx, cb, channels...)
+}

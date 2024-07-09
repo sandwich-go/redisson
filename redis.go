@@ -17,6 +17,7 @@ type Cmdable interface {
 	IsCluster() bool
 	Options() ConfVisitor
 	ForEachNodes(context.Context, func(context.Context, Cmdable) error) error
+	Receive(ctx context.Context, cb func(Message), channels ...string) error
 
 	CacheCmdable
 	BitmapCmdable

@@ -2,8 +2,10 @@ package redisson
 
 import (
 	"context"
+	"errors"
 	. "github.com/smartystreets/goconvey/convey"
 	"testing"
+	"time"
 )
 
 func TestRedisson(t *testing.T) {
@@ -21,4 +23,19 @@ func TestRedisson(t *testing.T) {
 			So(c.Close(), ShouldBeNil)
 		}
 	})
+}
+
+func TestPubSubReceive(t *testing.T) {
+	testAddr := "127.0.0.1:55000"
+	opts := []ConfOption{WithResp(RESP3), WithDevelopment(false)}
+	opts = append(opts, WithAddrs(testAddr))
+	c := MustNewClient(NewConf(opts...))
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	err := c.Receive(ctx, func(message Message) {
+		t.Log(message)
+	}, "redisson", "redisson1")
+	if err != nil && !errors.Is(err, context.DeadlineExceeded) {
+		t.Error(err)
+	}
+	cancel()
 }
