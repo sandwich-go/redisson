@@ -1027,7 +1027,7 @@ func (p *pubSubResp3) Subscribe(ctx context.Context, channels ...string) error {
 	ctx = p.handler.before(ctx, CommandSubscribe)
 	var err error
 	go func() {
-		err = p.cmd.Receive(p.ctx, p.cmd.B().Unsubscribe().Channel(channels...).Build(), func(m rueidis.PubSubMessage) {
+		err = p.cmd.Receive(p.ctx, p.cmd.B().Subscribe().Channel(channels...).Build(), func(m rueidis.PubSubMessage) {
 			p.msgCh <- &Message{
 				Channel: m.Channel,
 				Pattern: m.Pattern,
