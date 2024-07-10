@@ -24,9 +24,9 @@ commit_with_author_at_date: true # commit信息中是否包含作者、日期
 short_hash_len: 7 # commit id长度
 issue_prefix: # issue前缀 #71
   - "#"
-sem_initial_version: v0.0.1 #初始版本号
+sem_initial_version: v1.3.1 #初始版本号
 sem_master_branch_name: master # 主分支名称
-sem_initial_branch: 0.1 #初始的分支版本，只需major和minor
+sem_initial_branch: 1.3 #初始的分支版本，只需major和minor
 
 commit_replace: # commit信息替换，替换一些关键的但是书写错误的commit message
 release_docker_hub:
