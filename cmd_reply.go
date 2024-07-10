@@ -127,10 +127,6 @@ func newStatusCmdFromStatusCmd(res *rueidiscompat.StatusCmd, args ...interface{}
 	return newStatusCmd(res.Val(), res.Err(), args...)
 }
 
-func newOKStatusCmd(args ...interface{}) StatusCmd {
-	return newStatusCmd(OK, nil, args...)
-}
-
 func newStatusCmdWithError(err error, args ...interface{}) StatusCmd {
 	return newStatusCmd("", err, args...)
 }

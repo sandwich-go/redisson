@@ -119,7 +119,12 @@ type BitmapCacheCmdable interface {
 
 func (c *client) BitCount(ctx context.Context, key string, bc *BitCount) IntCmd {
 	ctx = c.handler.before(ctx, CommandBitCount)
-	r := newIntCmdFromResult(c.Do(ctx, c.getBitCountCompleted(key, bc)))
+	var r IntCmd
+	if bc != nil {
+		r = newIntCmdFromResult(c.Do(ctx, c.cmd.B().Bitcount().Key(key).Start(bc.Start).End(bc.End).Build()))
+	} else {
+		r = newIntCmdFromResult(c.Do(ctx, c.cmd.B().Bitcount().Key(key).Build()))
+	}
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -161,14 +166,24 @@ func (c *client) BitOpNot(ctx context.Context, destKey string, key string) IntCm
 
 func (c *client) BitPos(ctx context.Context, key string, bit int64, pos ...int64) IntCmd {
 	ctx = c.handler.before(ctx, CommandBitPos)
-	r := newIntCmdFromResult(c.Do(ctx, c.getBitPosCompleted(key, bit, pos...)))
+	var r IntCmd
+	switch len(pos) {
+	case 0:
+		r = newIntCmdFromResult(c.Do(ctx, c.cmd.B().Bitpos().Key(key).Bit(bit).Build()))
+	case 1:
+		r = newIntCmdFromResult(c.Do(ctx, c.cmd.B().Bitpos().Key(key).Bit(bit).Start(pos[0]).Build()))
+	case 2:
+		r = newIntCmdFromResult(c.Do(ctx, c.cmd.B().Bitpos().Key(key).Bit(bit).Start(pos[0]).End(pos[1]).Build()))
+	default:
+		panic(errTooManyArguments)
+	}
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) GetBit(ctx context.Context, key string, offset int64) IntCmd {
 	ctx = c.handler.before(ctx, CommandGetBit)
-	r := newIntCmdFromResult(c.Do(ctx, c.getBitCompleted(key, offset)))
+	r := newIntCmdFromResult(c.Do(ctx, c.cmd.B().Getbit().Key(key).Offset(offset).Build()))
 	c.handler.after(ctx, r.Err())
 	return r
 }

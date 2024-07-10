@@ -2,6 +2,8 @@ package redisson
 
 import (
 	"context"
+	"fmt"
+	"strings"
 	"time"
 )
 
@@ -307,14 +309,22 @@ func (c *client) BRPopLPush(ctx context.Context, source, destination string, tim
 
 func (c *client) LIndex(ctx context.Context, key string, index int64) StringCmd {
 	ctx = c.handler.before(ctx, CommandLIndex)
-	r := newStringCmdFromResult(c.Do(ctx, c.getLIndexCompleted(key, index)))
+	r := newStringCmdFromResult(c.Do(ctx, c.cmd.B().Lindex().Key(key).Index(index).Build()))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) LInsert(ctx context.Context, key, op string, pivot, value interface{}) IntCmd {
 	ctx = c.handler.before(ctx, CommandLInsert)
-	r := c.linsert(ctx, key, op, pivot, value)
+	var r IntCmd
+	switch strings.ToUpper(op) {
+	case BEFORE:
+		r = newIntCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Linsert().Key(key).Before().Pivot(str(pivot)).Element(str(value)).Build()))
+	case AFTER:
+		r = newIntCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Linsert().Key(key).After().Pivot(str(pivot)).Element(str(value)).Build()))
+	default:
+		panic(fmt.Sprintf("Invalid op argument value: %s", op))
+	}
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -335,7 +345,7 @@ func (c *client) LInsertAfter(ctx context.Context, key string, pivot, value inte
 
 func (c *client) LLen(ctx context.Context, key string) IntCmd {
 	ctx = c.handler.before(ctx, CommandLLen)
-	r := newIntCmdFromResult(c.Do(ctx, c.getLLenCompleted(key)))
+	r := newIntCmdFromResult(c.Do(ctx, c.cmd.B().Llen().Key(key).Build()))
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -399,7 +409,7 @@ func (c *client) LPushX(ctx context.Context, key string, values ...interface{}) 
 
 func (c *client) LRange(ctx context.Context, key string, start, stop int64) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandLRange)
-	r := newStringSliceCmdFromResult(c.Do(ctx, c.getLRangeCompleted(key, start, stop)))
+	r := newStringSliceCmdFromResult(c.Do(ctx, c.cmd.B().Lrange().Key(key).Start(start).Stop(stop).Build()))
 	c.handler.after(ctx, r.Err())
 	return r
 }

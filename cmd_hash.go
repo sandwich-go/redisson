@@ -176,21 +176,21 @@ func (c *client) HDel(ctx context.Context, key string, fields ...string) IntCmd 
 
 func (c *client) HExists(ctx context.Context, key, field string) BoolCmd {
 	ctx = c.handler.before(ctx, CommandHExists)
-	r := newBoolCmdFromResult(c.Do(ctx, c.getHExistsCompleted(key, field)))
+	r := newBoolCmdFromResult(c.Do(ctx, c.cmd.B().Hexists().Key(key).Field(field).Build()))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) HGet(ctx context.Context, key, field string) StringCmd {
 	ctx = c.handler.before(ctx, CommandHGet)
-	r := newStringCmdFromResult(c.Do(ctx, c.getHGetCompleted(key, field)))
+	r := newStringCmdFromResult(c.Do(ctx, c.cmd.B().Hget().Key(key).Field(field).Build()))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) HGetAll(ctx context.Context, key string) StringStringMapCmd {
 	ctx = c.handler.before(ctx, CommandHGetAll)
-	r := newStringStringMapCmdFromResult(c.Do(ctx, c.getHGetAllCompleted(key)))
+	r := newStringStringMapCmdFromResult(c.Do(ctx, c.cmd.B().Hgetall().Key(key).Build()))
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -211,42 +211,59 @@ func (c *client) HIncrByFloat(ctx context.Context, key, field string, incr float
 
 func (c *client) HKeys(ctx context.Context, key string) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandHKeys)
-	r := newStringSliceCmdFromResult(c.Do(ctx, c.getHKeysCompleted(key)))
+	r := newStringSliceCmdFromResult(c.Do(ctx, c.cmd.B().Hkeys().Key(key).Build()))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) HLen(ctx context.Context, key string) IntCmd {
 	ctx = c.handler.before(ctx, CommandHLen)
-	r := newIntCmdFromResult(c.Do(ctx, c.getHLenCompleted(key)))
+	r := newIntCmdFromResult(c.Do(ctx, c.cmd.B().Hlen().Key(key).Build()))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) HMGet(ctx context.Context, key string, fields ...string) SliceCmd {
 	ctx = c.handler.before(ctx, CommandHMGet)
-	r := newSliceCmdFromSliceResult(c.Do(ctx, c.getHMGetCompleted(key, fields...)), HMGET)
+	r := newSliceCmdFromSliceResult(c.Do(ctx, c.cmd.B().Hmget().Key(key).Field(fields...).Build()), HMGET)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) HMSet(ctx context.Context, key string, values ...interface{}) BoolCmd {
 	ctx = c.handler.before(ctx, CommandHMSet)
-	r := c.hmset(ctx, key, values...)
+	fv := c.cmd.B().Hset().Key(key).FieldValue()
+	args := argsToSlice(values)
+	for i := 0; i < len(args); i += 2 {
+		fv = fv.FieldValue(args[i], args[i+1])
+	}
+	r := newBoolCmdFromResult(c.cmd.Do(ctx, fv.Build()))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) HRandField(ctx context.Context, key string, count int, withValues bool) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandHRandField)
-	r := c.hrandField(ctx, key, count, withValues)
+	var r StringSliceCmd
+	if withValues {
+		r = flattenStringSliceCmd(c.cmd.Do(ctx, c.cmd.B().Hrandfield().Key(key).Count(int64(count)).Withvalues().Build()))
+	} else {
+		r = newStringSliceCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Hrandfield().Key(key).Count(int64(count)).Build()))
+	}
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) HScan(ctx context.Context, key string, cursor uint64, match string, count int64) ScanCmd {
 	ctx = c.handler.before(ctx, CommandHScan)
-	r := c.hscan(ctx, key, cursor, match, count)
+	cmd := c.cmd.B().Arbitrary(HSCAN).Keys(key).Args(str(int64(cursor)))
+	if match != "" {
+		cmd = cmd.Args(MATCH, match)
+	}
+	if count > 0 {
+		cmd = cmd.Args(COUNT, str(count))
+	}
+	r := newScanCmdFromResult(c.cmd.Do(ctx, cmd.ReadOnly()))
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -257,7 +274,12 @@ func (c *client) HSet(ctx context.Context, key string, values ...interface{}) In
 	} else {
 		ctx = c.handler.before(ctx, CommandHSet)
 	}
-	r := c.hset(ctx, key, values...)
+	fv := c.cmd.B().Hset().Key(key).FieldValue()
+	args := argsToSlice(values)
+	for i := 0; i < len(args); i += 2 {
+		fv = fv.FieldValue(args[i], args[i+1])
+	}
+	r := newIntCmdFromResult(c.cmd.Do(ctx, fv.Build()))
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -271,7 +293,7 @@ func (c *client) HSetNX(ctx context.Context, key, field string, value interface{
 
 func (c *client) HVals(ctx context.Context, key string) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandHVals)
-	r := newStringSliceCmdFromResult(c.Do(ctx, c.getHValsCompleted(key)))
+	r := newStringSliceCmdFromResult(c.Do(ctx, c.cmd.B().Hvals().Key(key).Build()))
 	c.handler.after(ctx, r.Err())
 	return r
 }

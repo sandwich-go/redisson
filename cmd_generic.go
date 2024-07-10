@@ -377,7 +377,12 @@ type GenericCacheCmdable interface {
 
 func (c *client) Copy(ctx context.Context, sourceKey string, destKey string, db int, replace bool) IntCmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandCopy, func() []string { return appendString(sourceKey, destKey) })
-	r := c.copy(ctx, sourceKey, destKey, db, replace)
+	var r IntCmd
+	if replace {
+		r = newIntCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Copy().Source(sourceKey).Destination(destKey).Db(int64(db)).Replace().Build()))
+	} else {
+		r = newIntCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Copy().Source(sourceKey).Destination(destKey).Db(int64(db)).Build()))
+	}
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -402,7 +407,7 @@ func (c *client) Exists(ctx context.Context, keys ...string) IntCmd {
 	} else {
 		ctx = c.handler.before(ctx, CommandExists)
 	}
-	r := newIntCmdFromResult(c.Do(ctx, c.getExistsCompleted(keys...)))
+	r := newIntCmdFromResult(c.Do(ctx, c.cmd.B().Exists().Key(keys...).Build()))
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -430,7 +435,12 @@ func (c *client) Keys(ctx context.Context, pattern string) StringSliceCmd {
 
 func (c *client) Migrate(ctx context.Context, host, port, key string, db int, timeout time.Duration) StatusCmd {
 	ctx = c.handler.before(ctx, CommandMigrate)
-	r := c.migrate(ctx, host, port, key, db, timeout)
+	var r StatusCmd
+	if p, err := parseInt(port); err != nil {
+		r = newStatusCmdWithError(err)
+	} else {
+		r = newStatusCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Migrate().Host(host).Port(p).Key(key).DestinationDb(int64(db)).Timeout(formatSec(timeout)).Build()))
+	}
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -486,7 +496,7 @@ func (c *client) PExpireAt(ctx context.Context, key string, tm time.Time) BoolCm
 
 func (c *client) PTTL(ctx context.Context, key string) DurationCmd {
 	ctx = c.handler.before(ctx, CommandPTTL)
-	r := newDurationCmdFromResult(c.cmd.Do(ctx, c.getPTTLCompleted(key)), time.Millisecond)
+	r := newDurationCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Pttl().Key(key).Build()), time.Millisecond)
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -574,14 +584,14 @@ func (c *client) Touch(ctx context.Context, keys ...string) IntCmd {
 
 func (c *client) TTL(ctx context.Context, key string) DurationCmd {
 	ctx = c.handler.before(ctx, CommandTTL)
-	r := newDurationCmdFromResult(c.cmd.Do(ctx, c.getTTLCompleted(key)), time.Second)
+	r := newDurationCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Ttl().Key(key).Build()), time.Second)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) Type(ctx context.Context, key string) StatusCmd {
 	ctx = c.handler.before(ctx, CommandType)
-	r := newStatusCmdFromResult(c.Do(ctx, c.getTypeCompleted(key)))
+	r := newStatusCmdFromResult(c.Do(ctx, c.cmd.B().Type().Key(key).Build()))
 	c.handler.after(ctx, r.Err())
 	return r
 }

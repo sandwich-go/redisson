@@ -346,7 +346,33 @@ func (c *client) XAdd(ctx context.Context, a XAddArgs) StringCmd {
 	} else {
 		ctx = c.handler.before(ctx, CommandXAdd)
 	}
-	r := c.xadd(ctx, a)
+	cmd := c.cmd.B().Arbitrary(XADD).Keys(a.Stream)
+	if a.NoMkStream {
+		cmd = cmd.Args(NOMKSTREAM)
+	}
+	switch {
+	case a.MaxLen > 0:
+		if a.Approx {
+			cmd = cmd.Args(MAXLEN, "~", str(a.MaxLen))
+		} else {
+			cmd = cmd.Args(MAXLEN, str(a.MaxLen))
+		}
+	case len(a.MinID) > 0:
+		if a.Approx {
+			cmd = cmd.Args(MINID, "~", a.MinID)
+		} else {
+			cmd = cmd.Args(MINID, a.MinID)
+		}
+	}
+	if a.Limit > 0 {
+		cmd = cmd.Args(LIMIT, str(a.Limit))
+	}
+	if len(a.ID) > 0 {
+		cmd = cmd.Args(a.ID)
+	} else {
+		cmd = cmd.Args("*")
+	}
+	r := newStringCmdFromResult(c.cmd.Do(ctx, cmd.Args(argToSlice(a.Values)...).Build()))
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -476,7 +502,15 @@ func (c *client) XPendingExt(ctx context.Context, a XPendingExtArgs) XPendingExt
 	} else {
 		ctx = c.handler.before(ctx, CommandXPending)
 	}
-	r := c.xpendingExt(ctx, a)
+	cmd := c.cmd.B().Arbitrary(XPENDING).Keys(a.Stream).Args(a.Group)
+	if a.Idle != 0 {
+		cmd = cmd.Args(IDLE, str(formatMs(a.Idle)))
+	}
+	cmd = cmd.Args(a.Start, a.End, str(a.Count))
+	if len(a.Consumer) > 0 {
+		cmd = cmd.Args(a.Consumer)
+	}
+	r := newXPendingExtCmdFromResult(c.cmd.Do(ctx, cmd.Build()))
 	c.handler.after(ctx, r.Err())
 	return r
 }

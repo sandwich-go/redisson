@@ -276,7 +276,7 @@ func (c *client) DecrBy(ctx context.Context, key string, decrement int64) IntCmd
 
 func (c *client) Get(ctx context.Context, key string) StringCmd {
 	ctx = c.handler.before(ctx, CommandGet)
-	r := newStringCmdFromResult(c.Do(ctx, c.getGetCompleted(key)))
+	r := newStringCmdFromResult(c.Do(ctx, c.cmd.B().Get().Key(key).Build()))
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -290,14 +290,25 @@ func (c *client) GetDel(ctx context.Context, key string) StringCmd {
 
 func (c *client) GetEx(ctx context.Context, key string, expiration time.Duration) StringCmd {
 	ctx = c.handler.before(ctx, CommandGetEX)
-	r := c.getEx(ctx, key, expiration)
+	var r StringCmd
+	if expiration > 0 {
+		if usePrecise(expiration) {
+			r = newStringCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Getex().Key(key).PxMilliseconds(formatMs(expiration)).Build()))
+		} else {
+			r = newStringCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Getex().Key(key).ExSeconds(formatSec(expiration)).Build()))
+		}
+	} else if expiration == 0 {
+		r = newStringCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Getex().Key(key).Persist().Build()))
+	} else {
+		r = newStringCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Getex().Key(key).Build()))
+	}
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) GetRange(ctx context.Context, key string, start, end int64) StringCmd {
 	ctx = c.handler.before(ctx, CommandGetRange)
-	r := newStringCmdFromResult(c.Do(ctx, c.getGetRangeCompleted(key, start, end)))
+	r := newStringCmdFromResult(c.Do(ctx, c.cmd.B().Getrange().Key(key).Start(start).End(end).Build()))
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -332,21 +343,31 @@ func (c *client) IncrByFloat(ctx context.Context, key string, value float64) Flo
 
 func (c *client) MGet(ctx context.Context, keys ...string) SliceCmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandMGet, func() []string { return keys })
-	r := newSliceCmdFromSliceResult(c.Do(ctx, c.getMGetCompleted(keys...)))
+	r := newSliceCmdFromSliceResult(c.Do(ctx, c.cmd.B().Mget().Key(keys...).Build()))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) MSet(ctx context.Context, values ...interface{}) StatusCmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandMSet, func() []string { return argsToSliceWithValues(values) })
-	r := c.mset(ctx, values...)
+	kv := c.cmd.B().Mset().KeyValue()
+	args := argsToSlice(values)
+	for i := 0; i < len(args); i += 2 {
+		kv = kv.KeyValue(args[i], args[i+1])
+	}
+	r := newStatusCmdFromResult(c.cmd.Do(ctx, kv.Build()))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) MSetNX(ctx context.Context, values ...interface{}) BoolCmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandMSetNX, func() []string { return argsToSliceWithValues(values) })
-	r := c.msetNX(ctx, values...)
+	kv := c.cmd.B().Msetnx().KeyValue()
+	args := argsToSlice(values)
+	for i := 0; i < len(args); i += 2 {
+		kv = kv.KeyValue(args[i], args[i+1])
+	}
+	r := newBoolCmdFromResult(c.cmd.Do(ctx, kv.Build()))
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -357,7 +378,18 @@ func (c *client) Set(ctx context.Context, key string, value interface{}, expirat
 	} else {
 		ctx = c.handler.before(ctx, CommandSet)
 	}
-	r := c.set(ctx, key, value, expiration)
+	var r StatusCmd
+	if expiration > 0 {
+		if usePrecise(expiration) {
+			r = newStatusCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Set().Key(key).Value(str(value)).PxMilliseconds(formatMs(expiration)).Build()))
+		} else {
+			r = newStatusCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Set().Key(key).Value(str(value)).ExSeconds(formatSec(expiration)).Build()))
+		}
+	} else if expiration == KeepTTL {
+		r = newStatusCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Set().Key(key).Value(str(value)).Keepttl().Build()))
+	} else {
+		r = newStatusCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Set().Key(key).Value(str(value)).Build()))
+	}
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -375,7 +407,19 @@ func (c *client) SetNX(ctx context.Context, key string, value interface{}, expir
 	} else {
 		ctx = c.handler.before(ctx, CommandSetnx)
 	}
-	r := c.setNX(ctx, key, value, expiration)
+	var r BoolCmd
+	switch expiration {
+	case 0:
+		r = newBoolCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Setnx().Key(key).Value(str(value)).Build()))
+	case KeepTTL:
+		r = newBoolCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Set().Key(key).Value(str(value)).Nx().Keepttl().Build()))
+	default:
+		if usePrecise(expiration) {
+			r = newBoolCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Set().Key(key).Value(str(value)).Nx().PxMilliseconds(formatMs(expiration)).Build()))
+		} else {
+			r = newBoolCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Set().Key(key).Value(str(value)).Nx().ExSeconds(formatSec(expiration)).Build()))
+		}
+	}
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -386,7 +430,19 @@ func (c *client) SetXX(ctx context.Context, key string, value interface{}, expir
 	} else {
 		ctx = c.handler.before(ctx, CommandSetXX)
 	}
-	r := c.setXX(ctx, key, value, expiration)
+	var r BoolCmd
+	switch expiration {
+	case 0:
+		r = newBoolCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Set().Key(key).Value(str(value)).Xx().Build()))
+	case KeepTTL:
+		r = newBoolCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Set().Key(key).Value(str(value)).Xx().Keepttl().Build()))
+	default:
+		if usePrecise(expiration) {
+			r = newBoolCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Set().Key(key).Value(str(value)).Xx().PxMilliseconds(formatMs(expiration)).Build()))
+		} else {
+			r = newBoolCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Set().Key(key).Value(str(value)).Xx().ExSeconds(formatSec(expiration)).Build()))
+		}
+	}
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -407,7 +463,27 @@ func (c *client) SetArgs(ctx context.Context, key string, value interface{}, a S
 	} else {
 		ctx = c.handler.before(ctx, CommandSet)
 	}
-	r := c.setArgs(ctx, key, value, a)
+	cmd := c.cmd.B().Arbitrary(SET).Keys(key).Args(str(value))
+	if a.KeepTTL {
+		cmd = cmd.Args(KEEPTTL)
+	}
+	if !a.ExpireAt.IsZero() {
+		cmd = cmd.Args(EXAT, str(a.ExpireAt.Unix()))
+	}
+	if a.TTL > 0 {
+		if usePrecise(a.TTL) {
+			cmd = cmd.Args(PX, str(formatMs(a.TTL)))
+		} else {
+			cmd = cmd.Args(EX, str(formatSec(a.TTL)))
+		}
+	}
+	if len(a.Mode) > 0 {
+		cmd = cmd.Args(a.Mode)
+	}
+	if a.Get {
+		cmd = cmd.Args(GET)
+	}
+	r := newStatusCmdFromResult(c.cmd.Do(ctx, cmd.Build()))
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -421,7 +497,7 @@ func (c *client) SetRange(ctx context.Context, key string, offset int64, value s
 
 func (c *client) StrLen(ctx context.Context, key string) IntCmd {
 	ctx = c.handler.before(ctx, CommandStrLen)
-	r := newIntCmdFromResult(c.Do(ctx, c.getStrLenCompleted(key)))
+	r := newIntCmdFromResult(c.Do(ctx, c.cmd.B().Strlen().Key(key).Build()))
 	c.handler.after(ctx, r.Err())
 	return r
 }

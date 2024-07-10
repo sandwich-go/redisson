@@ -226,14 +226,18 @@ func (c *client) SAdd(ctx context.Context, key string, members ...interface{}) I
 	} else {
 		ctx = c.handler.before(ctx, CommandSAdd)
 	}
-	r := c.sadd(ctx, key, members...)
+	cmd := c.cmd.B().Sadd().Key(key).Member()
+	for _, m := range argsToSlice(members) {
+		cmd = cmd.Member(str(m))
+	}
+	r := newIntCmdFromResult(c.cmd.Do(ctx, cmd.Build()))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) SCard(ctx context.Context, key string) IntCmd {
 	ctx = c.handler.before(ctx, CommandSCard)
-	r := newIntCmdFromResult(c.Do(ctx, c.getSCardCompleted(key)))
+	r := newIntCmdFromResult(c.Do(ctx, c.cmd.B().Scard().Key(key).Build()))
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -268,28 +272,28 @@ func (c *client) SInterStore(ctx context.Context, destination string, keys ...st
 
 func (c *client) SIsMember(ctx context.Context, key string, member interface{}) BoolCmd {
 	ctx = c.handler.before(ctx, CommandSIsMember)
-	r := newBoolCmdFromResult(c.Do(ctx, c.getSIsMemberCompleted(key, member)))
+	r := newBoolCmdFromResult(c.Do(ctx, c.cmd.B().Sismember().Key(key).Member(str(member)).Build()))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) SMIsMember(ctx context.Context, key string, members ...interface{}) BoolSliceCmd {
 	ctx = c.handler.before(ctx, CommandSMIsMember)
-	r := newBoolSliceCmdFromResult(c.Do(ctx, c.getSMIsMemberCompleted(key, members...)))
+	r := newBoolSliceCmdFromResult(c.Do(ctx, c.cmd.B().Smismember().Key(key).Member(argsToSlice(members)...).Build()))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) SMembers(ctx context.Context, key string) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandSMembers)
-	r := newStringSliceCmdFromResult(c.Do(ctx, c.getSMembersCompleted(key)))
+	r := newStringSliceCmdFromResult(c.Do(ctx, c.cmd.B().Smembers().Key(key).Build()))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) SMembersMap(ctx context.Context, key string) StringStructMapCmd {
 	ctx = c.handler.before(ctx, CommandSMembers)
-	r := newStringStructMapCmdFromResult(c.Do(ctx, c.getSMembersCompleted(key)))
+	r := newStringStructMapCmdFromResult(c.Do(ctx, c.cmd.B().Smembers().Key(key).Build()))
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -342,7 +346,14 @@ func (c *client) SRem(ctx context.Context, key string, members ...interface{}) I
 
 func (c *client) SScan(ctx context.Context, key string, cursor uint64, match string, count int64) ScanCmd {
 	ctx = c.handler.before(ctx, CommandSScan)
-	r := c.sscan(ctx, key, cursor, match, count)
+	cmd := c.cmd.B().Arbitrary(SSCAN).Keys(key).Args(str(int64(cursor)))
+	if match != "" {
+		cmd = cmd.Args(MATCH, match)
+	}
+	if count > 0 {
+		cmd = cmd.Args(COUNT, str(count))
+	}
+	r := newScanCmdFromResult(c.cmd.Do(ctx, cmd.ReadOnly()))
 	c.handler.after(ctx, r.Err())
 	return r
 }

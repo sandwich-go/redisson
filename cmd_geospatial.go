@@ -2,6 +2,8 @@ package redisson
 
 import (
 	"context"
+	"fmt"
+	"strings"
 )
 
 type GeospatialCmdable interface {
@@ -177,28 +179,45 @@ type GeospatialCacheCmdable interface {
 
 func (c *client) GeoAdd(ctx context.Context, key string, geoLocation ...GeoLocation) IntCmd {
 	ctx = c.handler.before(ctx, CommandGeoAdd)
-	r := c.geoAdd(ctx, key, geoLocation...)
+	var r IntCmd
+	cmd := c.cmd.B().Geoadd().Key(key).LongitudeLatitudeMember()
+	for _, loc := range geoLocation {
+		cmd = cmd.LongitudeLatitudeMember(loc.Longitude, loc.Latitude, loc.Name)
+	}
+	r = newIntCmdFromResult(c.cmd.Do(ctx, cmd.Build()))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) GeoDist(ctx context.Context, key string, member1, member2, unit string) FloatCmd {
 	ctx = c.handler.before(ctx, CommandGeoDist)
-	r := newFloatCmdFromResult(c.Do(ctx, c.getGeoDistCompleted(key, member1, member2, unit)))
+	var r FloatCmd
+	switch strings.ToUpper(unit) {
+	case M:
+		r = newFloatCmdFromResult(c.Do(ctx, c.cmd.B().Geodist().Key(key).Member1(member1).Member2(member2).M().Build()))
+	case MI:
+		r = newFloatCmdFromResult(c.Do(ctx, c.cmd.B().Geodist().Key(key).Member1(member1).Member2(member2).Mi().Build()))
+	case FT:
+		r = newFloatCmdFromResult(c.Do(ctx, c.cmd.B().Geodist().Key(key).Member1(member1).Member2(member2).Ft().Build()))
+	case KM, EMPTY:
+		r = newFloatCmdFromResult(c.Do(ctx, c.cmd.B().Geodist().Key(key).Member1(member1).Member2(member2).Km().Build()))
+	default:
+		panic(fmt.Sprintf("invalid unit %s", unit))
+	}
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) GeoHash(ctx context.Context, key string, members ...string) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandGeoHash)
-	r := newStringSliceCmdFromResult(c.Do(ctx, c.getGeoHashCompleted(key, members...)))
+	r := newStringSliceCmdFromResult(c.Do(ctx, c.cmd.B().Geohash().Key(key).Member(members...).Build()))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) GeoPos(ctx context.Context, key string, members ...string) GeoPosCmd {
 	ctx = c.handler.before(ctx, CommandGeoPos)
-	r := newGeoPosCmd(c.Do(ctx, c.getGeoPosCompleted(key, members...)))
+	r := newGeoPosCmd(c.Do(ctx, c.cmd.B().Geopos().Key(key).Member(members...).Build()))
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -209,7 +228,12 @@ func (c *client) GeoRadius(ctx context.Context, key string, longitude, latitude 
 	} else {
 		ctx = c.handler.before(ctx, CommandGeoRadiusRO)
 	}
-	r := c.geoRadius(ctx, key, longitude, latitude, query)
+	var r GeoLocationCmd
+	if len(query.Store) > 0 || len(query.StoreDist) > 0 {
+		r = newGeoLocationCmdWithError(errGeoRadiusNotSupportStore)
+	} else {
+		r = newGeoLocationCmd(c.Do(ctx, c.cmd.B().Arbitrary(GEORADIUS_RO).Keys(key).Args(str(longitude), str(latitude)).Args(getGeoRadiusQueryArgs(query)...).Build()), query)
+	}
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -230,42 +254,61 @@ func (c *client) GeoRadiusStore(ctx context.Context, key string, longitude, lati
 	} else {
 		ctx = c.handler.beforeWithKeys(ctx, CommandGeoRadiusStore, f)
 	}
-	r := c.geoRadiusStore(ctx, key, longitude, latitude, query)
+	var r IntCmd
+	if len(query.Store) == 0 && len(query.StoreDist) == 0 {
+		r = newIntCmdWithError(errGeoRadiusStoreRequiresStore)
+	} else {
+		r = newIntCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Arbitrary(GEORADIUS).Keys(key).Args(str(longitude), str(latitude)).Args(getGeoRadiusQueryArgs(query)...).Build()))
+	}
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) GeoRadiusByMember(ctx context.Context, key, member string, query GeoRadiusQuery) GeoLocationCmd {
 	ctx = c.handler.before(ctx, CommandGeoRadiusByMemberRO)
-	r := c.geoRadiusByMember(ctx, key, member, query)
+	var r GeoLocationCmd
+	if len(query.Store) > 0 || len(query.StoreDist) > 0 {
+		r = newGeoLocationCmdWithError(errGeoRadiusByMemberNotSupportStore)
+	} else {
+		r = newGeoLocationCmd(c.Do(ctx, c.cmd.B().Arbitrary(GEORADIUSBYMEMBER_RO).Keys(key).Args(member).Args(getGeoRadiusQueryArgs(query)...).Build()), query)
+	}
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) GeoRadiusByMemberStore(ctx context.Context, key, member string, query GeoRadiusQuery) IntCmd {
 	ctx = c.handler.before(ctx, CommandGeoRadiusByMemberStore)
-	r := c.geoRadiusByMemberStore(ctx, key, member, query)
+	var r IntCmd
+	if len(query.Store) == 0 && len(query.StoreDist) == 0 {
+		r = newIntCmdWithError(errGeoRadiusByMemberStoreRequiresStore)
+	} else {
+		r = newIntCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Arbitrary(GEORADIUSBYMEMBER).Keys(key).Args(member).Args(getGeoRadiusQueryArgs(query)...).Build()))
+	}
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) GeoSearch(ctx context.Context, key string, q GeoSearchQuery) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandGeoSearch)
-	r := newStringSliceCmdFromResult(c.Do(ctx, c.getGeoSearchCompleted(key, q)))
+	r := newStringSliceCmdFromResult(c.Do(ctx, c.cmd.B().Arbitrary(GEOSEARCH).Keys(key).Args(getGeoSearchQueryArgs(q)...).Build()))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) GeoSearchLocation(ctx context.Context, key string, q GeoSearchLocationQuery) GeoSearchLocationCmd {
 	ctx = c.handler.before(ctx, CommandGeoSearch)
-	r := newGeoSearchLocationCmd(c.Do(ctx, c.getGeoSearchLocationCompleted(key, q)), q)
+	r := newGeoSearchLocationCmd(c.Do(ctx, c.cmd.B().Arbitrary(GEOSEARCH).Keys(key).Args(getGeoSearchLocationQueryArgs(q)...).Build()), q)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) GeoSearchStore(ctx context.Context, key, store string, q GeoSearchStoreQuery) IntCmd {
 	ctx = c.handler.before(ctx, CommandGeoSearchStore)
-	r := c.geoSearchStore(ctx, key, store, q)
+	cmd := c.cmd.B().Arbitrary(GEOSEARCHSTORE).Keys(store, key).Args(getGeoSearchQueryArgs(q.GeoSearchQuery)...)
+	if q.StoreDist {
+		cmd = cmd.Args(STOREDIST)
+	}
+	r := newIntCmdFromResult(c.cmd.Do(ctx, cmd.Build()))
 	c.handler.after(ctx, r.Err())
 	return r
 }

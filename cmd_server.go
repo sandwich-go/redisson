@@ -409,7 +409,15 @@ func (c *client) LastSave(ctx context.Context) IntCmd {
 
 func (c *client) MemoryUsage(ctx context.Context, key string, samples ...int) IntCmd {
 	ctx = c.handler.before(ctx, CommandMemoryUsage)
-	r := c.memoryUsage(ctx, key, samples...)
+	var r IntCmd
+	switch len(samples) {
+	case 0:
+		r = newIntCmdFromResult(c.cmd.Do(ctx, c.cmd.B().MemoryUsage().Key(key).Build()))
+	case 1:
+		r = newIntCmdFromResult(c.cmd.Do(ctx, c.cmd.B().MemoryUsage().Key(key).Samples(int64(samples[0])).Build()))
+	default:
+		panic(errMemoryUsageArgsCount)
+	}
 	c.handler.after(ctx, r.Err())
 	return r
 }
