@@ -48,7 +48,7 @@ var (
 	clusterEnabled = regexp.MustCompile(`cluster_enabled:(.+)`)
 )
 
-func (c *client) clusterEnable() error {
+func (c *client) reviseCluster() error {
 	res, err := c.cmdable.Info(context.Background(), CLUSTER).Result()
 	if err != nil {
 		return err
@@ -61,7 +61,35 @@ func (c *client) clusterEnable() error {
 	}
 	c.handler.setIsCluster(c.isCluster)
 	return nil
+}
 
+func (c *client) reviseVersion() (err error) {
+	var res string
+	res, err = c.cmdable.Info(context.Background(), SERVER).Result()
+	if err != nil {
+		return
+	}
+	match := versionRE.FindAllStringSubmatch(res, -1)
+	if len(match) < 1 {
+		err = fmt.Errorf("could not extract redis server version")
+		return
+	}
+	c.version, err = newSemVersion(strings.TrimSpace(match[0][1]))
+	if err != nil {
+		return
+	}
+	c.handler.setVersion(&c.version)
+	return err
+}
+
+func (c *client) revise() error {
+	if err := c.reviseVersion(); err != nil {
+		return err
+	}
+	if err := c.reviseCluster(); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (c *client) Options() ConfVisitor { return c.v }
@@ -73,25 +101,6 @@ func (c *client) ForEachNodes(ctx context.Context, f func(context.Context, Cmdab
 	return c.cmdable.ForEachNodes(ctx, f)
 }
 
-func (c *client) initVersion() (err error) {
-	var res string
-	res, err = c.cmdable.Info(context.Background(), SERVER).Result()
-	if err != nil {
-		return
-	}
-	match := versionRE.FindAllStringSubmatch(res, -1)
-	if len(match) < 1 {
-		err = fmt.Errorf("could not extract redis version")
-		return
-	}
-	c.version, err = newSemVersion(strings.TrimSpace(match[0][1]))
-	if err != nil {
-		return
-	}
-	c.handler.setVersion(&c.version)
-	return err
-}
-
 func MustNewClient(v ConfInterface) Cmdable {
 	cmd, err := Connect(v)
 	if err != nil {
@@ -100,38 +109,26 @@ func MustNewClient(v ConfInterface) Cmdable {
 	return cmd
 }
 
-func (c *client) initialize() error {
-	// 初始化版本号
-	if err := c.initVersion(); err != nil {
-		return err
-	}
-	if err := c.clusterEnable(); err != nil {
-		return err
-	}
-	return nil
-}
-
 func (c *client) connect() error {
 	var err error
 	if c.v.GetT() == nil {
 		c.cmdable, err = connectResp3(c.v, c.handler)
-		if err != nil {
-			if strings.Contains(err.Error(), rueidis.ErrNoCache.Error()) {
-				warning(fmt.Sprintf("%v, reconnect...", err))
-				c.v.ApplyOption(WithEnableCache(false))
-				return c.connect()
-			}
-			return err
-		}
-		// 初始化
-		if err = c.initialize(); err != nil {
-			_ = c.Close()
-			return err
-		}
 	} else {
 		c.cmdable, err = connectMock(c.v, c.handler)
 	}
-	return nil
+	if err != nil {
+		if strings.Contains(err.Error(), rueidis.ErrNoCache.Error()) {
+			warning(fmt.Sprintf("%v, reconnect...", err))
+			c.v.ApplyOption(WithEnableCache(false))
+			return c.connect()
+		}
+		return err
+	}
+	if err = c.revise(); err != nil {
+		_ = c.Close()
+		return err
+	}
+	return err
 }
 
 func (c *client) reconnectWhenError(err error) error {
@@ -165,7 +162,6 @@ func Connect(v ConfInterface) (Cmdable, error) {
 	if err == nil && c.isCluster != c.v.GetCluster() {
 		err = fmt.Errorf("ERR Cluster setting conflict, server's cluster_enabled is %t, but client's cluster_enabled is %t", c.isCluster, c.v.GetCluster())
 	}
-
 	for i := 0; i < retryTimes; i++ {
 		err = c.reconnectWhenError(err)
 		if err == nil {
@@ -176,7 +172,7 @@ func Connect(v ConfInterface) (Cmdable, error) {
 		return nil, err
 	}
 	c.cacheCmdable = c.cmdable
-	c.handler.setSilentErrCallback(func(err error) bool { return err == Nil })
+	c.handler.setSilentErrCallback(func(err error) bool { return errors.Is(err, Nil) })
 	return c, nil
 }
 
