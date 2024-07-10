@@ -1317,3 +1317,4 @@ func (r *resp2) Receive(context.Context, func(Message), ...string) error {
 func (r *resp2) PReceive(context.Context, func(Message), ...string) error {
 	panic("not implemented")
 }
+func (r *resp2) XMGet(context.Context, ...string) SliceCmd { return nil }
