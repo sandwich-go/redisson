@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/coreos/go-semver/semver"
-	goredis "github.com/go-redis/redis/v8"
 )
 
 type RESP = string
@@ -30,9 +29,9 @@ var (
 	errMemoryUsageArgsCount                = errors.New("MemoryUsage expects single sample count")
 )
 
-const Nil = goredis.Nil
+var Nil = rueidis.Nil
 
-func IsNil(err error) bool { return err == Nil }
+func IsNil(err error) bool { return errors.Is(err, Nil) }
 
 type client struct {
 	v            ConfInterface
@@ -115,18 +114,7 @@ func (c *client) initialize() error {
 func (c *client) connect() error {
 	var err error
 	if c.v.GetT() == nil {
-		switch strings.ToUpper(c.v.GetResp()) {
-		case RESP2:
-			if c.v.GetAlwaysRESP2() {
-				c.cmdable, err = connectResp3(c.v, c.handler)
-			} else {
-				c.cmdable, err = connectResp2(c.v, c.handler)
-			}
-		case RESP3:
-			c.cmdable, err = connectResp3(c.v, c.handler)
-		default:
-			err = fmt.Errorf("unknown RESP version, %s", c.v.GetResp())
-		}
+		c.cmdable, err = connectResp3(c.v, c.handler)
 		if err != nil {
 			if strings.Contains(err.Error(), rueidis.ErrNoCache.Error()) {
 				warning(fmt.Sprintf("%v, reconnect...", err))
@@ -207,7 +195,6 @@ func (c *client) Cache(ttl time.Duration) CacheCmdable {
 	cp.cacheCmdable = c.cmdable.Cache(ttl)
 	return cp
 }
-func (c *client) PoolStats() PoolStats                           { return c.cmdable.PoolStats() }
 func (c *client) Close() error                                   { return c.cmdable.Close() }
 func (c *client) NewLocker(opts ...LockerOption) (Locker, error) { return c.cmdable.NewLocker(opts...) }
 func (c *client) Receive(ctx context.Context, cb func(Message), channels ...string) error {

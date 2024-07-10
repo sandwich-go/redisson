@@ -3,14 +3,14 @@ package redisson
 import "github.com/alicebob/miniredis/v2"
 
 type mock struct {
-	*resp2
+	*resp3
 }
 
 func connectMock(v ConfInterface, h handler) (*mock, error) {
 	_ = v.ApplyOption(WithAddrs(miniredis.RunT(v.GetT()).Addr()))
-	c, err := connectResp2(v, h)
+	c, err := connectResp3(v, h)
 	if err != nil {
 		return nil, err
 	}
-	return &mock{resp2: c}, nil
+	return &mock{resp3: c}, nil
 }

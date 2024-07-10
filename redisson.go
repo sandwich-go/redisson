@@ -55,7 +55,6 @@ func connectResp3(v ConfVisitor, h handler) (*resp3, error) {
 	return &resp3{cmd: cmd, v: v, handler: h, adapter: rueidiscompat.NewAdapter(cmd)}, nil
 }
 
-func (r *resp3) PoolStats() PoolStats { return PoolStats{} }
 func (r *resp3) Close() error         { r.cmd.Close(); return nil }
 func (r *resp3) IsCluster() bool      { return r.handler.isCluster() }
 func (r *resp3) Options() ConfVisitor { return r.v }
@@ -920,6 +919,24 @@ func (r *resp3) RPush(ctx context.Context, key string, values ...interface{}) In
 
 func (r *resp3) RPushX(ctx context.Context, key string, values ...interface{}) IntCmd {
 	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Rpushx().Key(key).Element(argsToSlice(values)...).Build()))
+}
+
+type pipelineCommand struct{}
+
+func (pipelineCommand) String() string         { return "PIPELINE" }
+func (pipelineCommand) Class() string          { return "Pipeline" }
+func (pipelineCommand) RequireVersion() string { return "0.0.0" }
+func (pipelineCommand) Forbid() bool           { return false }
+func (pipelineCommand) WarnVersion() string    { return "" }
+func (pipelineCommand) Warning() string        { return "" }
+func (pipelineCommand) Cmd() []string          { return nil }
+
+var pipelineCmd = &pipelineCommand{}
+
+type pipeCommand struct {
+	cmd  []string
+	keys []string
+	args []interface{}
 }
 
 type pipelineResp3 struct {
