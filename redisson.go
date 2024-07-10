@@ -2244,3 +2244,4 @@ func (r *resp3) PReceive(ctx context.Context, cb func(Message), patterns ...stri
 		})
 	})
 }
+func (r *resp3) XMGet(context.Context, ...string) SliceCmd { return nil }

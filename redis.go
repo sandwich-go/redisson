@@ -18,6 +18,8 @@ type Cmdable interface {
 	Receive(ctx context.Context, cb func(Message), channels ...string) error
 	PReceive(ctx context.Context, cb func(Message), patterns ...string) error
 
+	XMGet(ctx context.Context, keys ...string) SliceCmd
+
 	CacheCmdable
 	BitmapCmdable
 	ClusterCmdable
