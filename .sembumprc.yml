@@ -1,0 +1,73 @@
+name: redisson #bitbucket里的repo名
+short_name:  # productName,默认是name
+
+make_step: #定制make操作步骤,选项有以下几种，默认bump+clog,多选项按顺序执行
+  #clog     [print tags]
+  #bump     [git tag]
+  #docker   [build docker file,must docker_build.sh]
+  - bump
+
+lifestyle_step: #自定义执行脚本,参数为curr_version,命令规范：before/after_step
+#after_upload: update_install.sh # 在upload之后执行
+#before_build: make.sh test
+#after_build: makelink.sh
+
+latest_version_name: Unreleased # 最新未发布的版本名称
+commit_filters: # commit过滤器
+  - all
+version_name_with_date: true # version名称是否包含日期
+version_name_with_author: true # version名称是否包含创建者
+#issue_uri_format: https://bitbucket.org/funplus/devcenter-issues/issues/%s # issue地址
+#commit_uri_format: https://bitbucket.org/funplus/%s/commits/%s # commit地址,name,commit_id
+merge_duplicate_commit: true # 是否合并commit相同的提交
+commit_with_author_at_date: true # commit信息中是否包含作者、日期
+short_hash_len: 7 # commit id长度
+issue_prefix: # issue前缀 #71
+  - "#"
+sem_initial_version: v0.0.1 #初始版本号
+sem_master_branch_name: master # 主分支名称
+sem_initial_branch: 0.1 #初始的分支版本，只需major和minor
+
+commit_replace: # commit信息替换，替换一些关键的但是书写错误的commit message
+release_docker_hub:
+
+release_binary_system_arch:
+#  - linux/amd64
+#  - darwin/amd64
+#  - windows/amd64
+release_binary_remote_dir: software/%s # remote_dir: 二进制文件文件存放的相对路径,short_name
+release_binary_zip_file_name_format: "{name}_{os}_{version_off_v}.zip" # zip_file_name: 二进制文件文件名
+
+
+build:
+  build_repo_root: . #当前目录为repo根目录，不指定时默认为当前执行工具的目录
+  build_cmd_dir: cmd # app main文件所在目录，如cmd/lobby/main.go，cmd下支持多个app,默认cmd
+  build_by_short_name: true # 是否使用short_name作为可执行文件的名称，仅当cmd下只有一个app时时生效,默认false，以cmd下的目录名作为app名称
+  build_remove_dest_if_exist: true # 编译目标目录存在时是否直接删除，默认会弹出询问，默认true
+  build_system_arch: linux/amd64,darwin/amd64,windows/amd64 # 目标编译的os/arch，默认空，不编译
+  build_app: #编译的app名称，如不指定，则会便于cmd下所有app，默认空
+  build_extra: #编译命令，ldflags之类的信息，默认空
+  build_mod: #mod信息，支持vendor方式，但vendor应该提前下载好，工具目前不会自动下载vendor，默认空
+  build_production: true #是否生成模式，生成模式会激活-s -w gcflags  asmflags trimpath，默认true
+  build_enable_cgo: false #是否激活cgo，默认false
+  build_silent: false #是否静默编译，不打印日志信息，默认false
+  build_local_system_arch: false #是否只编译当前系统架构，默认false
+  build_version: tag # tag则会自动根据sembump规则获取当前分支最新tag，git则会获取当前分支最新的git提交版本号，留空则目录不包含版本号信息,默认空
+
+pack:
+  pack_os_mapping: #pack的目录或者文件名中含有{OS}时会根据实际的os名称做一层映射，protokitgo遗留问题
+#    darwin: osx
+#    linux: linux
+#    windows: win
+  pack_prefix: # pack目标文件的prefix，只有一级文件或者目录添加该前缀
+  pack_dst: # pack目标根路径
+  pack_src_root: #源文件根目录，不指定时默认为当前执行工具的目录
+  pack_src: # pack 映射，源文件 ：目标文件(可以为绝对路径，如为相对路径，则会拼接pack_src_root)，目前文件地址是相对于pack_dst的地址
+  #sdk: sdk
+  #bin/{os}: bin/{os}
+  #example: example
+
+chglog:
+  change_log_ssh_url:  # push到其他site，管理changelog版本的所在git地址，默认不同步
+  change_log_path:  # release文件存放路径
+
