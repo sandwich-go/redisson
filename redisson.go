@@ -899,3 +899,9 @@ func (c *client) setArgs(ctx context.Context, key string, value interface{}, a S
 func (c *client) getStrLenCompleted(key string) rueidis.Completed {
 	return c.cmd.B().Strlen().Key(key).Build()
 }
+func (r *client) getHValsCompleted(key string) rueidis.Completed {
+	return r.cmd.B().Hvals().Key(key).Build()
+}
+func (r *client) getLRangeCompleted(key string, start, stop int64) rueidis.Completed {
+	return r.cmd.B().Lrange().Key(key).Start(start).Stop(stop).Build()
+}

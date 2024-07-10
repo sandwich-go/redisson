@@ -6,9 +6,9 @@ import (
 	"testing"
 )
 
-type pipeline string
+type _pipeline string
 
-func (pipeline) String() string { return "Pipeline" }
+func (_pipeline) String() string { return "Pipeline" }
 
 func testPipeline(ctx context.Context, c Cmdable) []string {
 	var key1, key2, value1, value2 = "key1", "key2", "value1", "value2"
@@ -40,7 +40,7 @@ func testPipeline(ctx context.Context, c Cmdable) []string {
 
 func pipelineTestUnits() []TestUnit {
 	return []TestUnit{
-		{new(pipeline), testPipeline},
+		{new(_pipeline), testPipeline},
 	}
 }
 

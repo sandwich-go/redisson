@@ -25,7 +25,6 @@ func newFunnel(c Cmdable, key string, capacity, operations int64, seconds time.D
 	return funnel.NewRedisFunnel(funnelScriptBuilder{c}, key, capacity, operations, seconds)
 }
 
-func (r *resp3) NewFunnel(string, int64, int64, time.Duration) funnel.Funnel { return nil }
 func (c *client) NewFunnel(key string, capacity, operations int64, seconds time.Duration) funnel.Funnel {
 	return newFunnel(c, key, capacity, operations, seconds)
 }
