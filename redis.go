@@ -6,6 +6,11 @@ import (
 	"time"
 )
 
+type XCmdable interface {
+	// XMGet 类似 MGet 函数，内部会自动按相同 slot 执行 MGet 命令
+	XMGet(ctx context.Context, keys ...string) SliceCmd
+}
+
 type Cmdable interface {
 	Cache(ttl time.Duration) CacheCmdable
 	NewLocker(opts ...LockerOption) (Locker, error)
@@ -20,8 +25,7 @@ type Cmdable interface {
 	Receive(ctx context.Context, cb func(Message), channels ...string) error
 	PReceive(ctx context.Context, cb func(Message), patterns ...string) error
 
-	// XMGet 类似 MGet 函数，内部会自动按相同 slot 执行 MGet 命令
-	XMGet(ctx context.Context, keys ...string) SliceCmd
+	XCmdable
 
 	CacheCmdable
 	BitmapCmdable
