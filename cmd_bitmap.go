@@ -119,63 +119,63 @@ type BitmapCacheCmdable interface {
 
 func (c *client) BitCount(ctx context.Context, key string, bc *BitCount) IntCmd {
 	ctx = c.handler.before(ctx, CommandBitCount)
-	r := c.cacheCmdable.BitCount(ctx, key, bc)
+	r := newIntCmdFromResult(c.Do(ctx, c.getBitCountCompleted(key, bc)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) BitField(ctx context.Context, key string, args ...interface{}) IntSliceCmd {
 	ctx = c.handler.before(ctx, CommandBitField)
-	r := c.cmdable.BitField(ctx, key, args...)
+	r := newIntSliceCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Arbitrary(BITFIELD).Keys(key).Args(argsToSlice(args)...).Build()))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) BitOpAnd(ctx context.Context, destKey string, keys ...string) IntCmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandBitOpAnd, func() []string { return appendString(destKey, keys...) })
-	r := c.cmdable.BitOpAnd(ctx, destKey, keys...)
+	r := newIntCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Bitop().And().Destkey(destKey).Key(keys...).Build()))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) BitOpOr(ctx context.Context, destKey string, keys ...string) IntCmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandBitOpOr, func() []string { return appendString(destKey, keys...) })
-	r := c.cmdable.BitOpOr(ctx, destKey, keys...)
+	r := newIntCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Bitop().Or().Destkey(destKey).Key(keys...).Build()))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) BitOpXor(ctx context.Context, destKey string, keys ...string) IntCmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandBitOpXor, func() []string { return appendString(destKey, keys...) })
-	r := c.cmdable.BitOpXor(ctx, destKey, keys...)
+	r := newIntCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Bitop().Xor().Destkey(destKey).Key(keys...).Build()))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) BitOpNot(ctx context.Context, destKey string, key string) IntCmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandBitOpNot, func() []string { return appendString(destKey, key) })
-	r := c.cmdable.BitOpNot(ctx, destKey, key)
+	r := newIntCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Bitop().Not().Destkey(destKey).Key(key).Build()))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) BitPos(ctx context.Context, key string, bit int64, pos ...int64) IntCmd {
 	ctx = c.handler.before(ctx, CommandBitPos)
-	r := c.cacheCmdable.BitPos(ctx, key, bit, pos...)
+	r := newIntCmdFromResult(c.Do(ctx, c.getBitPosCompleted(key, bit, pos...)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) GetBit(ctx context.Context, key string, offset int64) IntCmd {
 	ctx = c.handler.before(ctx, CommandGetBit)
-	r := c.cacheCmdable.GetBit(ctx, key, offset)
+	r := newIntCmdFromResult(c.Do(ctx, c.getBitCompleted(key, offset)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) SetBit(ctx context.Context, key string, offset int64, value int) IntCmd {
 	ctx = c.handler.before(ctx, CommandSetBit)
-	r := c.cmdable.SetBit(ctx, key, offset, value)
+	r := newIntCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Setbit().Key(key).Offset(offset).Value(int64(value)).Build()))
 	c.handler.after(ctx, r.Err())
 	return r
 }

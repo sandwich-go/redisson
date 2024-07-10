@@ -138,42 +138,42 @@ func (c *client) CreateScript(src string) Scripter { return newScript(c, src) }
 
 func (c *client) Eval(ctx context.Context, script string, keys []string, args ...interface{}) Cmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandEval, func() []string { return keys })
-	r := c.cmdable.Eval(ctx, script, keys, args...)
+	r := newCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Eval().Script(script).Numkeys(int64(len(keys))).Key(keys...).Arg(argsToSlice(args)...).Build()))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) EvalSha(ctx context.Context, sha1 string, keys []string, args ...interface{}) Cmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandEvalSha, func() []string { return keys })
-	r := c.cmdable.EvalSha(ctx, sha1, keys, args...)
+	r := newCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Evalsha().Sha1(sha1).Numkeys(int64(len(keys))).Key(keys...).Arg(argsToSlice(args)...).Build()))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ScriptExists(ctx context.Context, hashes ...string) BoolSliceCmd {
 	ctx = c.handler.before(ctx, CommandScriptExists)
-	r := c.cmdable.ScriptExists(ctx, hashes...)
+	r := c.adapter.ScriptExists(ctx, hashes...)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ScriptFlush(ctx context.Context) StatusCmd {
 	ctx = c.handler.before(ctx, CommandScriptFlush)
-	r := c.cmdable.ScriptFlush(ctx)
+	r := c.adapter.ScriptFlush(ctx)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ScriptKill(ctx context.Context) StatusCmd {
 	ctx = c.handler.before(ctx, CommandScriptKill)
-	r := c.cmdable.ScriptKill(ctx)
+	r := c.adapter.ScriptKill(ctx)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ScriptLoad(ctx context.Context, script string) StringCmd {
 	ctx = c.handler.before(ctx, CommandScriptLoad)
-	r := c.cmdable.ScriptLoad(ctx, script)
+	r := newStringCmdFromStringCmd(c.adapter.ScriptLoad(ctx, script))
 	c.handler.after(ctx, r.Err())
 	return r
 }

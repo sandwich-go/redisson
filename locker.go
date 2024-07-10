@@ -31,6 +31,6 @@ func newLocker(v ConfVisitor, opts ...LockerOption) (Locker, error) {
 }
 
 // NewLocker 新键一个 locker
-func (r *resp3) NewLocker(opts ...LockerOption) (Locker, error) {
-	return newLocker(r.v, opts...)
+func (c *client) NewLocker(opts ...LockerOption) (Locker, error) {
+	return newLocker(c.v, opts...)
 }

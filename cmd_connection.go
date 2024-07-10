@@ -108,28 +108,28 @@ type ConnectionCmdable interface {
 
 func (c *client) Select(ctx context.Context, index int) StatusCmd {
 	ctx = c.handler.before(ctx, CommandSelect)
-	r := c.cmdable.Select(ctx, index)
+	r := newStatusCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Select().Index(int64(index)).Build()))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ClientGetName(ctx context.Context) StringCmd {
 	ctx = c.handler.before(ctx, CommandClientGetName)
-	r := c.cmdable.ClientGetName(ctx)
+	r := newStringCmdFromResult(c.cmd.Do(ctx, c.cmd.B().ClientGetname().Build()))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ClientID(ctx context.Context) IntCmd {
 	ctx = c.handler.before(ctx, CommandClientID)
-	r := c.cmdable.ClientID(ctx)
+	r := newIntCmdFromResult(c.cmd.Do(ctx, c.cmd.B().ClientId().Build()))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ClientKill(ctx context.Context, ipPort string) StatusCmd {
 	ctx = c.handler.before(ctx, CommandClientKill)
-	r := c.cmdable.ClientKill(ctx, ipPort)
+	r := newStatusCmdFromStatusCmd(c.adapter.ClientKill(ctx, ipPort))
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -144,42 +144,42 @@ func (c *client) ClientKillByFilter(ctx context.Context, keys ...string) IntCmd 
 	} else {
 		ctx = c.handler.before(ctx, CommandClientKillByFilter)
 	}
-	r := c.cmdable.ClientKillByFilter(ctx, keys...)
+	r := newIntCmdFromIntCmd(c.adapter.ClientKillByFilter(ctx, keys...))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ClientList(ctx context.Context) StringCmd {
 	ctx = c.handler.before(ctx, CommandClientList)
-	r := c.cmdable.ClientList(ctx)
+	r := newStringCmdFromResult(c.cmd.Do(ctx, c.cmd.B().ClientList().Build()))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ClientPause(ctx context.Context, dur time.Duration) BoolCmd {
 	ctx = c.handler.before(ctx, CommandClientPause)
-	r := c.cmdable.ClientPause(ctx, dur)
+	r := newBoolCmdFromBoolCmd(c.adapter.ClientPause(ctx, dur))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) Echo(ctx context.Context, message interface{}) StringCmd {
 	ctx = c.handler.before(ctx, CommandEcho)
-	r := c.cmdable.Echo(ctx, message)
+	r := newStringCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Echo().Message(str(message)).Build()))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) Ping(ctx context.Context) StatusCmd {
 	ctx = c.handler.before(ctx, CommandPing)
-	r := c.cmdable.Ping(ctx)
+	r := newStatusCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Ping().Build()))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) Quit(ctx context.Context) StatusCmd {
 	ctx = c.handler.before(ctx, CommandQuit)
-	r := c.cmdable.Quit(ctx)
+	r := newStatusCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Quit().Build()))
 	c.handler.after(ctx, r.Err())
 	return r
 }

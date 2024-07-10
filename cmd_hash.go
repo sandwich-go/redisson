@@ -169,84 +169,84 @@ func (c *client) HDel(ctx context.Context, key string, fields ...string) IntCmd 
 	} else {
 		ctx = c.handler.before(ctx, CommandHDel)
 	}
-	r := c.cmdable.HDel(ctx, key, fields...)
+	r := newIntCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Hdel().Key(key).Field(fields...).Build()))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) HExists(ctx context.Context, key, field string) BoolCmd {
 	ctx = c.handler.before(ctx, CommandHExists)
-	r := c.cacheCmdable.HExists(ctx, key, field)
+	r := newBoolCmdFromResult(c.Do(ctx, c.getHExistsCompleted(key, field)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) HGet(ctx context.Context, key, field string) StringCmd {
 	ctx = c.handler.before(ctx, CommandHGet)
-	r := c.cacheCmdable.HGet(ctx, key, field)
+	r := newStringCmdFromResult(c.Do(ctx, c.getHGetCompleted(key, field)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) HGetAll(ctx context.Context, key string) StringStringMapCmd {
 	ctx = c.handler.before(ctx, CommandHGetAll)
-	r := c.cacheCmdable.HGetAll(ctx, key)
+	r := newStringStringMapCmdFromResult(c.Do(ctx, c.getHGetAllCompleted(key)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) HIncrBy(ctx context.Context, key, field string, incr int64) IntCmd {
 	ctx = c.handler.before(ctx, CommandHIncrBy)
-	r := c.cmdable.HIncrBy(ctx, key, field, incr)
+	r := newIntCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Hincrby().Key(key).Field(field).Increment(incr).Build()))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) HIncrByFloat(ctx context.Context, key, field string, incr float64) FloatCmd {
 	ctx = c.handler.before(ctx, CommandHIncrByFloat)
-	r := c.cmdable.HIncrByFloat(ctx, key, field, incr)
+	r := newFloatCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Hincrbyfloat().Key(key).Field(field).Increment(incr).Build()))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) HKeys(ctx context.Context, key string) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandHKeys)
-	r := c.cacheCmdable.HKeys(ctx, key)
+	r := newStringSliceCmdFromResult(c.Do(ctx, c.getHKeysCompleted(key)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) HLen(ctx context.Context, key string) IntCmd {
 	ctx = c.handler.before(ctx, CommandHLen)
-	r := c.cacheCmdable.HLen(ctx, key)
+	r := newIntCmdFromResult(c.Do(ctx, c.getHLenCompleted(key)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) HMGet(ctx context.Context, key string, fields ...string) SliceCmd {
 	ctx = c.handler.before(ctx, CommandHMGet)
-	r := c.cacheCmdable.HMGet(ctx, key, fields...)
+	r := newSliceCmdFromSliceResult(c.Do(ctx, c.getHMGetCompleted(key, fields...)), HMGET)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) HMSet(ctx context.Context, key string, values ...interface{}) BoolCmd {
 	ctx = c.handler.before(ctx, CommandHMSet)
-	r := c.cmdable.HMSet(ctx, key, values...)
+	r := c.hmset(ctx, key, values...)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) HRandField(ctx context.Context, key string, count int, withValues bool) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandHRandField)
-	r := c.cmdable.HRandField(ctx, key, count, withValues)
+	r := c.hrandField(ctx, key, count, withValues)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) HScan(ctx context.Context, key string, cursor uint64, match string, count int64) ScanCmd {
 	ctx = c.handler.before(ctx, CommandHScan)
-	r := c.cmdable.HScan(ctx, key, cursor, match, count)
+	r := c.hscan(ctx, key, cursor, match, count)
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -257,21 +257,21 @@ func (c *client) HSet(ctx context.Context, key string, values ...interface{}) In
 	} else {
 		ctx = c.handler.before(ctx, CommandHSet)
 	}
-	r := c.cmdable.HSet(ctx, key, values...)
+	r := c.hset(ctx, key, values...)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) HSetNX(ctx context.Context, key, field string, value interface{}) BoolCmd {
 	ctx = c.handler.before(ctx, CommandHSetNX)
-	r := c.cmdable.HSetNX(ctx, key, field, value)
+	r := newBoolCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Hsetnx().Key(key).Field(field).Value(str(value)).Build()))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) HVals(ctx context.Context, key string) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandHVals)
-	r := c.cacheCmdable.HVals(ctx, key)
+	r := newStringSliceCmdFromResult(c.Do(ctx, c.getHValsCompleted(key)))
 	c.handler.after(ctx, r.Err())
 	return r
 }

@@ -2,7 +2,9 @@ package redisson
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"github.com/coreos/go-semver/semver"
 	"github.com/redis/rueidis"
 	"github.com/redis/rueidis/rueidiscompat"
 	"strconv"
@@ -11,116 +13,147 @@ import (
 	"time"
 )
 
-type resp3 struct {
-	v       ConfVisitor
-	cmd     rueidis.Client
-	adapter rueidiscompat.Cmdable
-	handler handler
+type RESP = string
+
+const (
+	RESP2 RESP = "RESP2"
+	RESP3 RESP = "RESP3"
+)
+
+var (
+	errTooManyArguments                    = errors.New("too many arguments")
+	errGeoRadiusByMemberNotSupportStore    = errors.New("GeoRadiusByMember does not support Store or StoreDist")
+	errGeoRadiusNotSupportStore            = errors.New("GeoRadius does not support Store or StoreDist")
+	errGeoRadiusStoreRequiresStore         = errors.New("GeoRadiusStore requires Store or StoreDist")
+	errGeoRadiusByMemberStoreRequiresStore = errors.New("GeoRadiusByMemberStore requires Store or StoreDist")
+	errMemoryUsageArgsCount                = errors.New("MemoryUsage expects single sample count")
+)
+
+var Nil = rueidis.Nil
+
+func IsNil(err error) bool { return errors.Is(err, Nil) }
+
+type client struct {
+	v         ConfInterface
+	version   semver.Version
+	handler   handler
+	isCluster bool
+	cmd       rueidis.Client
+	adapter   rueidiscompat.Cmdable
+	ttl       time.Duration
+
+	once sync.Once
 }
 
-type resp3Cache struct {
-	ttl  time.Duration
-	resp *resp3
-}
-
-func confVisitor2ClientOption(v ConfVisitor) rueidis.ClientOption {
-	return rueidis.ClientOption{
-		Username:          v.GetUsername(),
-		Password:          v.GetPassword(),
-		InitAddress:       v.GetAddrs(),
-		SelectDB:          v.GetDB(),
-		CacheSizeEachConn: v.GetCacheSizeEachConn(),
-		RingScaleEachConn: v.GetRingScaleEachConn(),
-		BlockingPoolSize:  v.GetConnPoolSize(),
-		ConnWriteTimeout:  v.GetWriteTimeout(),
-		DisableCache:      !v.GetEnableCache(),
-		ShuffleInit:       true,
-		AlwaysRESP2:       v.GetAlwaysRESP2(),
-		ForceSingleClient: v.GetForceSingleClient(),
-		Sentinel: rueidis.SentinelOption{
-			Username:   v.GetUsername(),
-			Password:   v.GetPassword(),
-			ClientName: v.GetName(),
-			MasterSet:  v.GetMasterName(),
-		},
-	}
-}
-
-func connectResp3(v ConfVisitor, h handler) (*resp3, error) {
-	opts := confVisitor2ClientOption(v)
-	cmd, err := rueidis.NewClient(opts)
+func MustNewClient(v ConfInterface) Cmdable {
+	cmd, err := Connect(v)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
-	return &resp3{cmd: cmd, v: v, handler: h, adapter: rueidiscompat.NewAdapter(cmd)}, nil
+	return cmd
 }
 
-func (r *resp3) Close() error         { r.cmd.Close(); return nil }
-func (r *resp3) IsCluster() bool      { return r.handler.isCluster() }
-func (r *resp3) Options() ConfVisitor { return r.v }
-func (r *resp3) ForEachNodes(ctx context.Context, f func(context.Context, Cmdable) error) error {
+func (c *client) Options() ConfVisitor { return c.v }
+func (c *client) IsCluster() bool      { return c.isCluster }
+func (c *client) ForEachNodes(ctx context.Context, f func(context.Context, Cmdable) error) error {
+	if !c.isCluster {
+		return f(ctx, c)
+	}
 	var errs Errors
-	for _, v := range r.cmd.Nodes() {
-		err := f(ctx, &resp3{cmd: v, v: r.v, handler: r.handler, adapter: rueidiscompat.NewAdapter(v)})
+	for _, v := range c.cmd.Nodes() {
+		err := f(ctx, &client{
+			v:         c.v,
+			version:   c.version,
+			handler:   c.handler,
+			isCluster: c.isCluster,
+			cmd:       v,
+			adapter:   rueidiscompat.NewAdapter(v),
+		})
 		if err != nil {
 			errs.Push(err)
 		}
 	}
 	return errs.Err()
 }
-func (r *resp3) RegisterCollector(RegisterCollectorFunc) {}
-func (r *resp3) Cache(ttl time.Duration) CacheCmdable {
-	if r.v.GetEnableCache() {
-		return &resp3Cache{resp: r, ttl: ttl}
+
+func (c *client) Cache(ttl time.Duration) CacheCmdable {
+	if !c.v.GetEnableCache() || c.ttl == ttl {
+		return c
 	}
-	return r
+	cp := &client{
+		v:         c.v,
+		version:   c.version,
+		handler:   c.handler,
+		isCluster: c.isCluster,
+		cmd:       c.cmd,
+		adapter:   c.adapter,
+	}
+	cp.ttl = ttl
+	return cp
 }
 
-func (r *resp3Cache) Do(ctx context.Context, completed rueidis.Completed) rueidis.RedisResult {
-	rsp := r.resp.cmd.DoCache(ctx, rueidis.Cacheable(completed), r.ttl)
-	r.resp.handler.cache(ctx, rsp.IsCacheHit())
+func (c *client) XMGet(ctx context.Context, keys ...string) SliceCmd {
+	if len(keys) <= 1 {
+		return c.MGet(ctx, keys...)
+	}
+	var slot2Keys = make(map[uint16][]string)
+	var keyIndexes = make(map[string]int)
+	for i, key := range keys {
+		keySlot := slot(key)
+		slot2Keys[keySlot] = append(slot2Keys[keySlot], key)
+		keyIndexes[key] = i
+	}
+	if len(slot2Keys) == 1 {
+		return c.MGet(ctx, keys...)
+	}
+	var wg sync.WaitGroup
+	var mx sync.Mutex
+	var scs = make(map[uint16]SliceCmd)
+	wg.Add(len(slot2Keys))
+	for i, sameSlotKeys := range slot2Keys {
+		go func(_i uint16, _keys []string) {
+			ret := c.MGet(context.Background(), _keys...)
+			mx.Lock()
+			scs[_i] = ret
+			mx.Unlock()
+			wg.Done()
+		}(i, sameSlotKeys)
+	}
+	wg.Wait()
+
+	var res = make([]interface{}, len(keys))
+	for i, ret := range scs {
+		if err := ret.Err(); err != nil {
+			return newSliceCmdFromSlice(nil, err)
+		}
+		_values := ret.Val()
+		for _i, _key := range slot2Keys[i] {
+			res[keyIndexes[_key]] = _values[_i]
+		}
+	}
+	return newSliceCmdFromSlice(res, nil)
+}
+
+func (c *client) Do(ctx context.Context, completed rueidis.Completed) rueidis.RedisResult {
+	if c.ttl == 0 {
+		return c.cmd.Do(ctx, completed)
+	}
+	rsp := c.cmd.DoCache(ctx, rueidis.Cacheable(completed), c.ttl)
+	c.handler.cache(ctx, rsp.IsCacheHit())
 	return rsp
 }
 
-func (r *resp3) getBitCountCompleted(key string, bitCount *BitCount) rueidis.Completed {
-	var bitCountKey = r.cmd.B().Bitcount().Key(key)
+func (c *client) getBitCountCompleted(key string, bitCount *BitCount) rueidis.Completed {
+	var bitCountKey = c.cmd.B().Bitcount().Key(key)
 	if bitCount != nil {
 		return bitCountKey.Start(bitCount.Start).End(bitCount.End).Build()
 	}
 	return bitCountKey.Build()
 }
 
-func (r *resp3) BitCount(ctx context.Context, key string, bitCount *BitCount) IntCmd {
-	return newIntCmdFromResult(r.cmd.Do(ctx, r.getBitCountCompleted(key, bitCount)))
-}
-
-func (r *resp3Cache) BitCount(ctx context.Context, key string, bitCount *BitCount) IntCmd {
-	return newIntCmdFromResult(r.Do(ctx, r.resp.getBitCountCompleted(key, bitCount)))
-}
-
-func (r *resp3) BitField(ctx context.Context, key string, args ...interface{}) IntSliceCmd {
-	return newIntSliceCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Arbitrary(BITFIELD).Keys(key).Args(argsToSlice(args)...).Build()))
-}
-
-func (r *resp3) BitOpAnd(ctx context.Context, destKey string, keys ...string) IntCmd {
-	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Bitop().And().Destkey(destKey).Key(keys...).Build()))
-}
-
-func (r *resp3) BitOpOr(ctx context.Context, destKey string, keys ...string) IntCmd {
-	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Bitop().Or().Destkey(destKey).Key(keys...).Build()))
-}
-
-func (r *resp3) BitOpXor(ctx context.Context, destKey string, keys ...string) IntCmd {
-	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Bitop().Xor().Destkey(destKey).Key(keys...).Build()))
-}
-
-func (r *resp3) BitOpNot(ctx context.Context, destKey string, key string) IntCmd {
-	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Bitop().Not().Destkey(destKey).Key(key).Build()))
-}
-
-func (r *resp3) getBitPosCompleted(key string, bit int64, pos ...int64) rueidis.Completed {
+func (c *client) getBitPosCompleted(key string, bit int64, pos ...int64) rueidis.Completed {
 	var completed rueidis.Completed
-	var bitposBit = r.cmd.B().Bitpos().Key(key).Bit(bit)
+	var bitposBit = c.cmd.B().Bitpos().Key(key).Bit(bit)
 	switch len(pos) {
 	case 0:
 		completed = bitposBit.Build()
@@ -134,281 +167,40 @@ func (r *resp3) getBitPosCompleted(key string, bit int64, pos ...int64) rueidis.
 	return completed
 }
 
-func (r *resp3) BitPos(ctx context.Context, key string, bit int64, pos ...int64) IntCmd {
-	return newIntCmdFromResult(r.cmd.Do(ctx, r.getBitPosCompleted(key, bit, pos...)))
+func (c *client) getBitCompleted(key string, offset int64) rueidis.Completed {
+	return c.cmd.B().Getbit().Key(key).Offset(offset).Build()
 }
 
-func (r *resp3Cache) BitPos(ctx context.Context, key string, bit int64, pos ...int64) IntCmd {
-	return newIntCmdFromResult(r.Do(ctx, r.resp.getBitPosCompleted(key, bit, pos...)))
-}
-
-func (r *resp3) getBitCompleted(key string, offset int64) rueidis.Completed {
-	return r.cmd.B().Getbit().Key(key).Offset(offset).Build()
-}
-
-func (r *resp3) GetBit(ctx context.Context, key string, offset int64) IntCmd {
-	return newIntCmdFromResult(r.cmd.Do(ctx, r.getBitCompleted(key, offset)))
-}
-
-func (r *resp3Cache) GetBit(ctx context.Context, key string, offset int64) IntCmd {
-	return newIntCmdFromResult(r.Do(ctx, r.resp.getBitCompleted(key, offset)))
-}
-
-func (r *resp3) SetBit(ctx context.Context, key string, offset int64, value int) IntCmd {
-	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Setbit().Key(key).Offset(offset).Value(int64(value)).Build()))
-}
-
-func (r *resp3) ClusterAddSlots(ctx context.Context, slots ...int) StatusCmd {
-	return newStatusCmdFromResult(r.cmd.Do(ctx, r.cmd.B().ClusterAddslots().Slot(intSliceToInt64ToSlice(slots)...).Build()))
-}
-
-func (r *resp3) ClusterAddSlotsRange(ctx context.Context, min, max int) StatusCmd {
-	return newStatusCmdFromResult(r.cmd.Do(ctx, r.cmd.B().ClusterAddslotsrange().StartSlotEndSlot().StartSlotEndSlot(int64(min), int64(max)).Build()))
-}
-
-func (r *resp3) ClusterCountFailureReports(ctx context.Context, nodeID string) IntCmd {
-	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().ClusterCountFailureReports().NodeId(nodeID).Build()))
-}
-
-func (r *resp3) ClusterCountKeysInSlot(ctx context.Context, slot int) IntCmd {
-	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().ClusterCountkeysinslot().Slot(int64(slot)).Build()))
-}
-
-func (r *resp3) ClusterDelSlots(ctx context.Context, slots ...int) StatusCmd {
-	return newStatusCmdFromResult(r.cmd.Do(ctx, r.cmd.B().ClusterDelslots().Slot(intSliceToInt64ToSlice(slots)...).Build()))
-}
-
-func (r *resp3) ClusterDelSlotsRange(ctx context.Context, min, max int) StatusCmd {
-	return newStatusCmdFromResult(r.cmd.Do(ctx, r.cmd.B().ClusterDelslotsrange().StartSlotEndSlot().StartSlotEndSlot(int64(min), int64(max)).Build()))
-}
-
-func (r *resp3) ClusterFailover(ctx context.Context) StatusCmd {
-	return newStatusCmdFromResult(r.cmd.Do(ctx, r.cmd.B().ClusterFailover().Build()))
-}
-
-func (r *resp3) ClusterForget(ctx context.Context, nodeID string) StatusCmd {
-	return newStatusCmdFromResult(r.cmd.Do(ctx, r.cmd.B().ClusterForget().NodeId(nodeID).Build()))
-}
-
-func (r *resp3) ClusterGetKeysInSlot(ctx context.Context, slot int, count int) StringSliceCmd {
-	return newStringSliceCmdFromResult(r.cmd.Do(ctx, r.cmd.B().ClusterGetkeysinslot().Slot(int64(slot)).Count(int64(count)).Build()))
-}
-
-func (r *resp3) ClusterInfo(ctx context.Context) StringCmd {
-	return newStringCmdFromResult(r.cmd.Do(ctx, r.cmd.B().ClusterInfo().Build()))
-}
-
-func (r *resp3) ClusterKeySlot(ctx context.Context, key string) IntCmd {
-	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().ClusterKeyslot().Key(key).Build()))
-}
-
-func (r *resp3) ClusterMeet(ctx context.Context, host, port string) StatusCmd {
-	iport, err := parseInt(port)
-	if err != nil {
-		return newStatusCmdWithError(err)
-	}
-	return newStatusCmdFromResult(r.cmd.Do(ctx, r.cmd.B().ClusterMeet().Ip(host).Port(iport).Build()))
-}
-
-func (r *resp3) ClusterNodes(ctx context.Context) StringCmd {
-	return newStringCmdFromResult(r.cmd.Do(ctx, r.cmd.B().ClusterNodes().Build()))
-}
-
-func (r *resp3) ClusterReplicate(ctx context.Context, nodeID string) StatusCmd {
-	return newStatusCmdFromResult(r.cmd.Do(ctx, r.cmd.B().ClusterReplicate().NodeId(nodeID).Build()))
-}
-
-func (r *resp3) ClusterResetSoft(ctx context.Context) StatusCmd {
-	return newStatusCmdFromStatusCmd(r.adapter.ClusterResetSoft(ctx))
-}
-
-func (r *resp3) ClusterResetHard(ctx context.Context) StatusCmd {
-	return newStatusCmdFromStatusCmd(r.adapter.ClusterResetHard(ctx))
-}
-
-func (r *resp3) ClusterSaveConfig(ctx context.Context) StatusCmd {
-	return newStatusCmdFromStatusCmd(r.adapter.ClusterSaveConfig(ctx))
-}
-
-func (r *resp3) ClusterSlaves(ctx context.Context, nodeID string) StringSliceCmd {
-	return newStringSliceCmdFromResult(r.cmd.Do(ctx, r.cmd.B().ClusterSlaves().NodeId(nodeID).Build()))
-}
-
-func (r *resp3) ClusterSlots(ctx context.Context) ClusterSlotsCmd {
-	return newClusterSlotsCmdFromResult(r.cmd.Do(ctx, r.cmd.B().ClusterSlots().Build()))
-}
-
-func (r *resp3) ReadOnly(ctx context.Context) StatusCmd {
-	return newStatusCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Readonly().Build()))
-}
-
-func (r *resp3) ReadWrite(ctx context.Context) StatusCmd {
-	return newStatusCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Readwrite().Build()))
-}
-
-func (r *resp3) Select(ctx context.Context, index int) StatusCmd {
-	return newStatusCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Select().Index(int64(index)).Build()))
-}
-
-func (r *resp3) ClientGetName(ctx context.Context) StringCmd {
-	return newStringCmdFromResult(r.cmd.Do(ctx, r.cmd.B().ClientGetname().Build()))
-}
-
-func (r *resp3) ClientID(ctx context.Context) IntCmd {
-	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().ClientId().Build()))
-}
-
-func (r *resp3) ClientKill(ctx context.Context, ipPort string) StatusCmd {
-	return newStatusCmdFromStatusCmd(r.adapter.ClientKill(ctx, ipPort))
-}
-
-func (r *resp3) ClientKillByFilter(ctx context.Context, keys ...string) IntCmd {
-	return newIntCmdFromIntCmd(r.adapter.ClientKillByFilter(ctx, keys...))
-}
-
-func (r *resp3) ClientList(ctx context.Context) StringCmd {
-	return newStringCmdFromResult(r.cmd.Do(ctx, r.cmd.B().ClientList().Build()))
-}
-
-func (r *resp3) ClientPause(ctx context.Context, dur time.Duration) BoolCmd {
-	return newBoolCmdFromBoolCmd(r.adapter.ClientPause(ctx, dur))
-}
-
-func (r *resp3) Echo(ctx context.Context, message interface{}) StringCmd {
-	return newStringCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Echo().Message(str(message)).Build()))
-}
-
-func (r *resp3) Ping(ctx context.Context) StatusCmd {
-	return newStatusCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Ping().Build()))
-}
-
-func (r *resp3) Quit(ctx context.Context) StatusCmd {
-	return newStatusCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Quit().Build()))
-}
-
-func (r *resp3) Copy(ctx context.Context, sourceKey string, destKey string, db int, replace bool) IntCmd {
+func (c *client) copy(ctx context.Context, sourceKey string, destKey string, db int, replace bool) IntCmd {
 	var completed rueidis.Completed
-	var cmd = r.cmd.B().Copy().Source(sourceKey).Destination(destKey).Db(int64(db))
+	var cmd = c.cmd.B().Copy().Source(sourceKey).Destination(destKey).Db(int64(db))
 	if replace {
 		completed = cmd.Replace().Build()
 	} else {
 		completed = cmd.Build()
 	}
-	return newIntCmdFromResult(r.cmd.Do(ctx, completed))
+	return newIntCmdFromResult(c.cmd.Do(ctx, completed))
 }
 
-func (r *resp3) Del(ctx context.Context, keys ...string) IntCmd {
-	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Del().Key(keys...).Build()))
+func (c *client) getExistsCompleted(keys ...string) rueidis.Completed {
+	return c.cmd.B().Exists().Key(keys...).Build()
 }
 
-func (r *resp3) Dump(ctx context.Context, key string) StringCmd {
-	return newStringCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Dump().Key(key).Build()))
-}
-
-func (r *resp3) getExistsCompleted(keys ...string) rueidis.Completed {
-	return r.cmd.B().Exists().Key(keys...).Build()
-}
-
-func (r *resp3) Exists(ctx context.Context, keys ...string) IntCmd {
-	return newIntCmdFromResult(r.cmd.Do(ctx, r.getExistsCompleted(keys...)))
-}
-
-func (r *resp3Cache) Exists(ctx context.Context, keys ...string) IntCmd {
-	return newIntCmdFromResult(r.Do(ctx, r.resp.getExistsCompleted(keys...)))
-}
-
-func (r *resp3) Expire(ctx context.Context, key string, expiration time.Duration) BoolCmd {
-	return newBoolCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Expire().Key(key).Seconds(formatSec(expiration)).Build()))
-}
-
-func (r *resp3) ExpireAt(ctx context.Context, key string, tm time.Time) BoolCmd {
-	return newBoolCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Expireat().Key(key).Timestamp(tm.Unix()).Build()))
-}
-
-func (r *resp3) Keys(ctx context.Context, pattern string) StringSliceCmd {
-	return newStringSliceCmdFromStringSliceCmd(r.adapter.Keys(ctx, pattern))
-}
-
-func (r *resp3) Migrate(ctx context.Context, host, port, key string, db int, timeout time.Duration) StatusCmd {
+func (c *client) migrate(ctx context.Context, host, port, key string, db int, timeout time.Duration) StatusCmd {
 	iport, err := parseInt(port)
 	if err != nil {
 		return newStatusCmdWithError(err)
 	}
-	var migratePort = r.cmd.B().Migrate().Host(host).Port(iport)
-	return newStatusCmdFromResult(r.cmd.Do(ctx, migratePort.Key(key).DestinationDb(int64(db)).Timeout(formatSec(timeout)).Build()))
+	var migratePort = c.cmd.B().Migrate().Host(host).Port(iport)
+	return newStatusCmdFromResult(c.cmd.Do(ctx, migratePort.Key(key).DestinationDb(int64(db)).Timeout(formatSec(timeout)).Build()))
 }
 
-func (r *resp3) Move(ctx context.Context, key string, db int) BoolCmd {
-	return newBoolCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Move().Key(key).Db(int64(db)).Build()))
+func (c *client) getPTTLCompleted(key string) rueidis.Completed {
+	return c.cmd.B().Pttl().Key(key).Build()
 }
 
-func (r *resp3) ObjectRefCount(ctx context.Context, key string) IntCmd {
-	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().ObjectRefcount().Key(key).Build()))
-}
-
-func (r *resp3) ObjectEncoding(ctx context.Context, key string) StringCmd {
-	return newStringCmdFromResult(r.cmd.Do(ctx, r.cmd.B().ObjectEncoding().Key(key).Build()))
-}
-
-func (r *resp3) ObjectIdleTime(ctx context.Context, key string) DurationCmd {
-	return newDurationCmdFromResult(r.cmd.Do(ctx, r.cmd.B().ObjectIdletime().Key(key).Build()), time.Second)
-}
-
-func (r *resp3) Persist(ctx context.Context, key string) BoolCmd {
-	return newBoolCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Persist().Key(key).Build()))
-}
-
-func (r *resp3) PExpire(ctx context.Context, key string, expiration time.Duration) BoolCmd {
-	return newBoolCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Pexpire().Key(key).Milliseconds(formatMs(expiration)).Build()))
-}
-
-func (r *resp3) PExpireAt(ctx context.Context, key string, tm time.Time) BoolCmd {
-	return newBoolCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Pexpireat().Key(key).MillisecondsTimestamp(tm.UnixNano()/int64(time.Millisecond)).Build()))
-}
-
-func (r *resp3) getPTTLCompleted(key string) rueidis.Completed {
-	return r.cmd.B().Pttl().Key(key).Build()
-}
-
-func (r *resp3) PTTL(ctx context.Context, key string) DurationCmd {
-	return newDurationCmdFromResult(r.cmd.Do(ctx, r.getPTTLCompleted(key)), time.Millisecond)
-}
-
-func (r *resp3Cache) PTTL(ctx context.Context, key string) DurationCmd {
-	return newDurationCmdFromResult(r.Do(ctx, r.resp.getPTTLCompleted(key)), time.Millisecond)
-}
-
-func (r *resp3) RandomKey(ctx context.Context) StringCmd {
-	//	return newStringCmd(r.cmd.Do(ctx, r.cmd.B().Randomkey().Build()))
-	return newStringCmdFromStringCmd(r.adapter.RandomKey(ctx))
-}
-
-func (r *resp3) Rename(ctx context.Context, key, newkey string) StatusCmd {
-	return newStatusCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Rename().Key(key).Newkey(newkey).Build()))
-}
-
-func (r *resp3) RenameNX(ctx context.Context, key, newkey string) BoolCmd {
-	return newBoolCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Renamenx().Key(key).Newkey(newkey).Build()))
-}
-
-func (r *resp3) Restore(ctx context.Context, key string, ttl time.Duration, value string) StatusCmd {
-	return newStatusCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Restore().Key(key).Ttl(formatMs(ttl)).SerializedValue(value).Build()))
-}
-
-func (r *resp3) RestoreReplace(ctx context.Context, key string, ttl time.Duration, value string) StatusCmd {
-	return newStatusCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Restore().Key(key).Ttl(formatMs(ttl)).SerializedValue(value).Replace().Build()))
-}
-
-func (r *resp3) Scan(ctx context.Context, cursor uint64, match string, count int64) ScanCmd {
-	return r.adapter.Scan(ctx, cursor, match, count)
-}
-
-func (r *resp3) ScanType(ctx context.Context, cursor uint64, match string, count int64, keyType string) ScanCmd {
-	return r.adapter.ScanType(ctx, cursor, match, count, keyType)
-}
-
-func (r *resp3) sort(command, key string, sort Sort) rueidis.Completed {
-	cmd := r.cmd.B().Arbitrary(command).Keys(key)
+func (c *client) sort(command, key string, sort Sort) rueidis.Completed {
+	cmd := c.cmd.B().Arbitrary(command).Keys(key)
 	if sort.By != "" {
 		cmd = cmd.Args("BY", sort.By)
 	}
@@ -431,61 +223,25 @@ func (r *resp3) sort(command, key string, sort Sort) rueidis.Completed {
 	return cmd.Build()
 }
 
-func (r *resp3) Sort(ctx context.Context, key string, sort Sort) StringSliceCmd {
-	return newStringSliceCmdFromResult(r.cmd.Do(ctx, r.sort("SORT", key, sort)))
+func (c *client) getTTLCompleted(key string) rueidis.Completed {
+	return c.cmd.B().Ttl().Key(key).Build()
 }
 
-func (r *resp3) SortStore(ctx context.Context, key, store string, sort Sort) IntCmd {
-	return newIntCmdFromIntCmd(r.adapter.SortStore(ctx, key, store, toSort(sort)))
+func (c *client) getTypeCompleted(key string) rueidis.Completed {
+	return c.cmd.B().Type().Key(key).Build()
 }
 
-func (r *resp3) SortInterfaces(ctx context.Context, key string, sort Sort) SliceCmd {
-	return newSliceCmdFromSliceResult(r.cmd.Do(ctx, r.sort("SORT", key, sort)))
-}
-
-func (r *resp3) Touch(ctx context.Context, keys ...string) IntCmd {
-	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Touch().Key(keys...).Build()))
-}
-
-func (r *resp3) getTTLCompleted(key string) rueidis.Completed {
-	return r.cmd.B().Ttl().Key(key).Build()
-}
-
-func (r *resp3) TTL(ctx context.Context, key string) DurationCmd {
-	return newDurationCmdFromResult(r.cmd.Do(ctx, r.getTTLCompleted(key)), time.Second)
-}
-
-func (r *resp3Cache) TTL(ctx context.Context, key string) DurationCmd {
-	return newDurationCmdFromResult(r.Do(ctx, r.resp.getTTLCompleted(key)), time.Second)
-}
-
-func (r *resp3) getTypeCompleted(key string) rueidis.Completed {
-	return r.cmd.B().Type().Key(key).Build()
-}
-
-func (r *resp3) Type(ctx context.Context, key string) StatusCmd {
-	return newStatusCmdFromResult(r.cmd.Do(ctx, r.getTypeCompleted(key)))
-}
-
-func (r *resp3Cache) Type(ctx context.Context, key string) StatusCmd {
-	return newStatusCmdFromResult(r.Do(ctx, r.resp.getTypeCompleted(key)))
-}
-
-func (r *resp3) Unlink(ctx context.Context, keys ...string) IntCmd {
-	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Unlink().Key(keys...).Build()))
-}
-
-func (r *resp3) GeoAdd(ctx context.Context, key string, geoLocation ...GeoLocation) IntCmd {
-	cmd := r.cmd.B().Geoadd().Key(key).LongitudeLatitudeMember()
+func (c *client) geoAdd(ctx context.Context, key string, geoLocation ...GeoLocation) IntCmd {
+	cmd := c.cmd.B().Geoadd().Key(key).LongitudeLatitudeMember()
 	for _, loc := range geoLocation {
 		cmd = cmd.LongitudeLatitudeMember(loc.Longitude, loc.Latitude, loc.Name)
 	}
-	return newIntCmdFromResult(r.cmd.Do(ctx, cmd.Build()))
+	return newIntCmdFromResult(c.cmd.Do(ctx, cmd.Build()))
 }
 
-func (r *resp3) getGeoDistCompleted(key string, member1, member2, unit string) rueidis.Completed {
+func (c *client) getGeoDistCompleted(key string, member1, member2, unit string) rueidis.Completed {
 	var completed rueidis.Completed
-	var geodistMember2 = r.cmd.B().Geodist().Key(key).Member1(member1).Member2(member2)
+	var geodistMember2 = c.cmd.B().Geodist().Key(key).Member1(member1).Member2(member2)
 	switch strings.ToUpper(unit) {
 	case M:
 		completed = geodistMember2.M().Build()
@@ -501,346 +257,151 @@ func (r *resp3) getGeoDistCompleted(key string, member1, member2, unit string) r
 	return completed
 }
 
-func (r *resp3) GeoDist(ctx context.Context, key string, member1, member2, unit string) FloatCmd {
-	return newFloatCmdFromResult(r.cmd.Do(ctx, r.getGeoDistCompleted(key, member1, member2, unit)))
+func (c *client) getGeoHashCompleted(key string, members ...string) rueidis.Completed {
+	return c.cmd.B().Geohash().Key(key).Member(members...).Build()
 }
 
-func (r *resp3Cache) GeoDist(ctx context.Context, key string, member1, member2, unit string) FloatCmd {
-	return newFloatCmdFromResult(r.Do(ctx, r.resp.getGeoDistCompleted(key, member1, member2, unit)))
+func (c *client) getGeoPosCompleted(key string, members ...string) rueidis.Completed {
+	return c.cmd.B().Geopos().Key(key).Member(members...).Build()
 }
 
-func (r *resp3) getGeoHashCompleted(key string, members ...string) rueidis.Completed {
-	return r.cmd.B().Geohash().Key(key).Member(members...).Build()
+func (c *client) getGeoRadiusCompleted(key string, longitude, latitude float64, q GeoRadiusQuery) rueidis.Completed {
+	return c.cmd.B().Arbitrary(GEORADIUS_RO).Keys(key).Args(str(longitude), str(latitude)).Args(getGeoRadiusQueryArgs(q)...).Build()
 }
 
-func (r *resp3) GeoHash(ctx context.Context, key string, members ...string) StringSliceCmd {
-	return newStringSliceCmdFromResult(r.cmd.Do(ctx, r.getGeoHashCompleted(key, members...)))
-}
-
-func (r *resp3Cache) GeoHash(ctx context.Context, key string, members ...string) StringSliceCmd {
-	return newStringSliceCmdFromResult(r.Do(ctx, r.resp.getGeoHashCompleted(key, members...)))
-}
-
-func (r *resp3) getGeoPosCompleted(key string, members ...string) rueidis.Completed {
-	return r.cmd.B().Geopos().Key(key).Member(members...).Build()
-}
-
-func (r *resp3) GeoPos(ctx context.Context, key string, members ...string) GeoPosCmd {
-	return newGeoPosCmd(r.cmd.Do(ctx, r.getGeoPosCompleted(key, members...)))
-}
-
-func (r *resp3Cache) GeoPos(ctx context.Context, key string, members ...string) GeoPosCmd {
-	return newGeoPosCmd(r.Do(ctx, r.resp.getGeoPosCompleted(key, members...)))
-}
-
-func (r *resp3) getGeoRadiusCompleted(key string, longitude, latitude float64, q GeoRadiusQuery) rueidis.Completed {
-	return r.cmd.B().Arbitrary(GEORADIUS_RO).Keys(key).Args(str(longitude), str(latitude)).Args(getGeoRadiusQueryArgs(q)...).Build()
-}
-
-func (r *resp3) GeoRadius(ctx context.Context, key string, longitude, latitude float64, q GeoRadiusQuery) GeoLocationCmd {
+func (c *client) geoRadius(ctx context.Context, key string, longitude, latitude float64, q GeoRadiusQuery) GeoLocationCmd {
 	if len(q.Store) > 0 || len(q.StoreDist) > 0 {
 		return newGeoLocationCmdWithError(errGeoRadiusNotSupportStore)
 	}
-	return newGeoLocationCmd(r.cmd.Do(ctx, r.getGeoRadiusCompleted(key, longitude, latitude, q)), q)
+	return newGeoLocationCmd(c.Do(ctx, c.getGeoRadiusCompleted(key, longitude, latitude, q)), q)
 }
 
-func (r *resp3Cache) GeoRadius(ctx context.Context, key string, longitude, latitude float64, q GeoRadiusQuery) GeoLocationCmd {
-	if len(q.Store) > 0 || len(q.StoreDist) > 0 {
-		return newGeoLocationCmdWithError(errGeoRadiusNotSupportStore)
-	}
-	return newGeoLocationCmd(r.Do(ctx, r.resp.getGeoRadiusCompleted(key, longitude, latitude, q)), q)
-}
-
-func (r *resp3) GeoRadiusStore(ctx context.Context, key string, longitude, latitude float64, q GeoRadiusQuery) IntCmd {
-	cmd := r.cmd.B().Arbitrary(GEORADIUS).Keys(key).Args(str(longitude), str(latitude))
+func (c *client) geoRadiusStore(ctx context.Context, key string, longitude, latitude float64, q GeoRadiusQuery) IntCmd {
+	cmd := c.cmd.B().Arbitrary(GEORADIUS).Keys(key).Args(str(longitude), str(latitude))
 	if len(q.Store) == 0 && len(q.StoreDist) == 0 {
 		return newIntCmdWithError(errGeoRadiusStoreRequiresStore)
 	}
-	return newIntCmdFromResult(r.cmd.Do(ctx, cmd.Args(getGeoRadiusQueryArgs(q)...).Build()))
+	return newIntCmdFromResult(c.cmd.Do(ctx, cmd.Args(getGeoRadiusQueryArgs(q)...).Build()))
 }
 
-func (r *resp3) getGeoRadiusByMemberCompleted(key, member string, q GeoRadiusQuery) rueidis.Completed {
-	return r.cmd.B().Arbitrary(GEORADIUSBYMEMBER_RO).Keys(key).Args(member).Args(getGeoRadiusQueryArgs(q)...).Build()
+func (c *client) getGeoRadiusByMemberCompleted(key, member string, q GeoRadiusQuery) rueidis.Completed {
+	return c.cmd.B().Arbitrary(GEORADIUSBYMEMBER_RO).Keys(key).Args(member).Args(getGeoRadiusQueryArgs(q)...).Build()
 }
 
-func (r *resp3) GeoRadiusByMember(ctx context.Context, key, member string, q GeoRadiusQuery) GeoLocationCmd {
+func (c *client) geoRadiusByMember(ctx context.Context, key, member string, q GeoRadiusQuery) GeoLocationCmd {
 	if len(q.Store) > 0 || len(q.StoreDist) > 0 {
 		return newGeoLocationCmdWithError(errGeoRadiusByMemberNotSupportStore)
 	}
-	return newGeoLocationCmd(r.cmd.Do(ctx, r.getGeoRadiusByMemberCompleted(key, member, q)), q)
+	return newGeoLocationCmd(c.Do(ctx, c.getGeoRadiusByMemberCompleted(key, member, q)), q)
 }
 
-func (r *resp3Cache) GeoRadiusByMember(ctx context.Context, key, member string, q GeoRadiusQuery) GeoLocationCmd {
-	if len(q.Store) > 0 || len(q.StoreDist) > 0 {
-		return newGeoLocationCmdWithError(errGeoRadiusByMemberNotSupportStore)
-	}
-	return newGeoLocationCmd(r.Do(ctx, r.resp.getGeoRadiusByMemberCompleted(key, member, q)), q)
-}
-
-func (r *resp3) GeoRadiusByMemberStore(ctx context.Context, key, member string, q GeoRadiusQuery) IntCmd {
-	cmd := r.cmd.B().Arbitrary(GEORADIUSBYMEMBER).Keys(key).Args(member)
+func (c *client) geoRadiusByMemberStore(ctx context.Context, key, member string, q GeoRadiusQuery) IntCmd {
+	cmd := c.cmd.B().Arbitrary(GEORADIUSBYMEMBER).Keys(key).Args(member)
 	if len(q.Store) == 0 && len(q.StoreDist) == 0 {
 		return newIntCmdWithError(errGeoRadiusByMemberStoreRequiresStore)
 	}
-	return newIntCmdFromResult(r.cmd.Do(ctx, cmd.Args(getGeoRadiusQueryArgs(q)...).Build()))
+	return newIntCmdFromResult(c.cmd.Do(ctx, cmd.Args(getGeoRadiusQueryArgs(q)...).Build()))
 }
 
-func (r *resp3) getGeoSearchCompleted(key string, q GeoSearchQuery) rueidis.Completed {
-	return r.cmd.B().Arbitrary(GEOSEARCH).Keys(key).Args(getGeoSearchQueryArgs(q)...).Build()
+func (c *client) getGeoSearchCompleted(key string, q GeoSearchQuery) rueidis.Completed {
+	return c.cmd.B().Arbitrary(GEOSEARCH).Keys(key).Args(getGeoSearchQueryArgs(q)...).Build()
 }
 
-func (r *resp3) GeoSearch(ctx context.Context, key string, q GeoSearchQuery) StringSliceCmd {
-	return newStringSliceCmdFromResult(r.cmd.Do(ctx, r.getGeoSearchCompleted(key, q)))
+func (c *client) getGeoSearchLocationCompleted(key string, q GeoSearchLocationQuery) rueidis.Completed {
+	return c.cmd.B().Arbitrary(GEOSEARCH).Keys(key).Args(getGeoSearchLocationQueryArgs(q)...).Build()
 }
 
-func (r *resp3Cache) GeoSearch(ctx context.Context, key string, q GeoSearchQuery) StringSliceCmd {
-	return newStringSliceCmdFromResult(r.Do(ctx, r.resp.getGeoSearchCompleted(key, q)))
-}
-
-func (r *resp3) getGeoSearchLocationCompleted(key string, q GeoSearchLocationQuery) rueidis.Completed {
-	return r.cmd.B().Arbitrary(GEOSEARCH).Keys(key).Args(getGeoSearchLocationQueryArgs(q)...).Build()
-}
-
-func (r *resp3) GeoSearchLocation(ctx context.Context, key string, q GeoSearchLocationQuery) GeoSearchLocationCmd {
-	return newGeoSearchLocationCmd(r.cmd.Do(ctx, r.getGeoSearchLocationCompleted(key, q)), q)
-}
-
-func (r *resp3Cache) GeoSearchLocation(ctx context.Context, key string, q GeoSearchLocationQuery) GeoSearchLocationCmd {
-	return newGeoSearchLocationCmd(r.Do(ctx, r.resp.getGeoSearchLocationCompleted(key, q)), q)
-}
-
-func (r *resp3) GeoSearchStore(ctx context.Context, src, dest string, q GeoSearchStoreQuery) IntCmd {
-	cmd := r.cmd.B().Arbitrary(GEOSEARCHSTORE).Keys(dest, src).Args(getGeoSearchQueryArgs(q.GeoSearchQuery)...)
+func (c *client) geoSearchStore(ctx context.Context, src, dest string, q GeoSearchStoreQuery) IntCmd {
+	cmd := c.cmd.B().Arbitrary(GEOSEARCHSTORE).Keys(dest, src).Args(getGeoSearchQueryArgs(q.GeoSearchQuery)...)
 	if q.StoreDist {
 		cmd = cmd.Args(STOREDIST)
 	}
-	return newIntCmdFromResult(r.cmd.Do(ctx, cmd.Build()))
+	return newIntCmdFromResult(c.cmd.Do(ctx, cmd.Build()))
 }
 
-func (r *resp3) HDel(ctx context.Context, key string, fields ...string) IntCmd {
-	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Hdel().Key(key).Field(fields...).Build()))
+func (c *client) getHExistsCompleted(key, field string) rueidis.Completed {
+	return c.cmd.B().Hexists().Key(key).Field(field).Build()
 }
 
-func (r *resp3) getHExistsCompleted(key, field string) rueidis.Completed {
-	return r.cmd.B().Hexists().Key(key).Field(field).Build()
+func (c *client) getHGetCompleted(key, field string) rueidis.Completed {
+	return c.cmd.B().Hget().Key(key).Field(field).Build()
 }
 
-func (r *resp3) HExists(ctx context.Context, key, field string) BoolCmd {
-	return newBoolCmdFromResult(r.cmd.Do(ctx, r.getHExistsCompleted(key, field)))
+func (c *client) getHGetAllCompleted(key string) rueidis.Completed {
+	return c.cmd.B().Hgetall().Key(key).Build()
 }
 
-func (r *resp3Cache) HExists(ctx context.Context, key, field string) BoolCmd {
-	return newBoolCmdFromResult(r.Do(ctx, r.resp.getHExistsCompleted(key, field)))
+func (c *client) getHKeysCompleted(key string) rueidis.Completed {
+	return c.cmd.B().Hkeys().Key(key).Build()
 }
 
-func (r *resp3) getHGetCompleted(key, field string) rueidis.Completed {
-	return r.cmd.B().Hget().Key(key).Field(field).Build()
+func (c *client) getHLenCompleted(key string) rueidis.Completed {
+	return c.cmd.B().Hlen().Key(key).Build()
 }
 
-func (r *resp3) HGet(ctx context.Context, key, field string) StringCmd {
-	return newStringCmdFromResult(r.cmd.Do(ctx, r.getHGetCompleted(key, field)))
+func (c *client) getHMGetCompleted(key string, fields ...string) rueidis.Completed {
+	return c.cmd.B().Hmget().Key(key).Field(fields...).Build()
 }
 
-func (r *resp3Cache) HGet(ctx context.Context, key, field string) StringCmd {
-	return newStringCmdFromResult(r.Do(ctx, r.resp.getHGetCompleted(key, field)))
-}
-
-func (r *resp3) getHGetAllCompleted(key string) rueidis.Completed {
-	return r.cmd.B().Hgetall().Key(key).Build()
-}
-
-func (r *resp3) HGetAll(ctx context.Context, key string) StringStringMapCmd {
-	return newStringStringMapCmdFromResult(r.cmd.Do(ctx, r.getHGetAllCompleted(key)))
-}
-
-func (r *resp3Cache) HGetAll(ctx context.Context, key string) StringStringMapCmd {
-	return newStringStringMapCmdFromResult(r.Do(ctx, r.resp.getHGetAllCompleted(key)))
-}
-
-func (r *resp3) HIncrBy(ctx context.Context, key, field string, incr int64) IntCmd {
-	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Hincrby().Key(key).Field(field).Increment(incr).Build()))
-}
-
-func (r *resp3) HIncrByFloat(ctx context.Context, key, field string, incr float64) FloatCmd {
-	return newFloatCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Hincrbyfloat().Key(key).Field(field).Increment(incr).Build()))
-}
-
-func (r *resp3) getHKeysCompleted(key string) rueidis.Completed {
-	return r.cmd.B().Hkeys().Key(key).Build()
-}
-
-func (r *resp3) HKeys(ctx context.Context, key string) StringSliceCmd {
-	return newStringSliceCmdFromResult(r.cmd.Do(ctx, r.getHKeysCompleted(key)))
-}
-
-func (r *resp3Cache) HKeys(ctx context.Context, key string) StringSliceCmd {
-	return newStringSliceCmdFromResult(r.Do(ctx, r.resp.getHKeysCompleted(key)))
-}
-
-func (r *resp3) getHLenCompleted(key string) rueidis.Completed {
-	return r.cmd.B().Hlen().Key(key).Build()
-}
-
-func (r *resp3) HLen(ctx context.Context, key string) IntCmd {
-	return newIntCmdFromResult(r.cmd.Do(ctx, r.getHLenCompleted(key)))
-}
-
-func (r *resp3Cache) HLen(ctx context.Context, key string) IntCmd {
-	return newIntCmdFromResult(r.Do(ctx, r.resp.getHLenCompleted(key)))
-}
-
-func (r *resp3) getHMGetCompleted(key string, fields ...string) rueidis.Completed {
-	return r.cmd.B().Hmget().Key(key).Field(fields...).Build()
-}
-
-func (r *resp3) HMGet(ctx context.Context, key string, fields ...string) SliceCmd {
-	return newSliceCmdFromSliceResult(r.cmd.Do(ctx, r.getHMGetCompleted(key, fields...)), HMGET)
-}
-
-func (r *resp3Cache) HMGet(ctx context.Context, key string, fields ...string) SliceCmd {
-	return newSliceCmdFromSliceResult(r.Do(ctx, r.resp.getHMGetCompleted(key, fields...)), HMGET)
-}
-
-func (r *resp3) HMSet(ctx context.Context, key string, values ...interface{}) BoolCmd {
-	fv := r.cmd.B().Hset().Key(key).FieldValue()
+func (c *client) hmset(ctx context.Context, key string, values ...interface{}) BoolCmd {
+	fv := c.cmd.B().Hset().Key(key).FieldValue()
 	args := argsToSlice(values)
 	for i := 0; i < len(args); i += 2 {
 		fv = fv.FieldValue(args[i], args[i+1])
 	}
-	return newBoolCmdFromResult(r.cmd.Do(ctx, fv.Build()))
+	return newBoolCmdFromResult(c.cmd.Do(ctx, fv.Build()))
 }
 
-func (r *resp3) HRandField(ctx context.Context, key string, count int, withValues bool) StringSliceCmd {
-	h := r.cmd.B().Hrandfield().Key(key).Count(int64(count))
+func (c *client) hrandField(ctx context.Context, key string, count int, withValues bool) StringSliceCmd {
+	h := c.cmd.B().Hrandfield().Key(key).Count(int64(count))
 	if withValues {
-		return flattenStringSliceCmd(r.cmd.Do(ctx, h.Withvalues().Build()))
+		return flattenStringSliceCmd(c.cmd.Do(ctx, h.Withvalues().Build()))
 	}
-	return newStringSliceCmdFromResult(r.cmd.Do(ctx, h.Build()))
+	return newStringSliceCmdFromResult(c.cmd.Do(ctx, h.Build()))
 }
 
-func (r *resp3) HScan(ctx context.Context, key string, cursor uint64, match string, count int64) ScanCmd {
-	cmd := r.cmd.B().Arbitrary(HSCAN).Keys(key).Args(str(int64(cursor)))
+func (c *client) hscan(ctx context.Context, key string, cursor uint64, match string, count int64) ScanCmd {
+	cmd := c.cmd.B().Arbitrary(HSCAN).Keys(key).Args(str(int64(cursor)))
 	if match != "" {
 		cmd = cmd.Args(MATCH, match)
 	}
 	if count > 0 {
 		cmd = cmd.Args(COUNT, str(count))
 	}
-	return newScanCmdFromResult(r.cmd.Do(ctx, cmd.ReadOnly()))
+	return newScanCmdFromResult(c.cmd.Do(ctx, cmd.ReadOnly()))
 }
 
-func (r *resp3) HSet(ctx context.Context, key string, values ...interface{}) IntCmd {
-	fv := r.cmd.B().Hset().Key(key).FieldValue()
+func (c *client) hset(ctx context.Context, key string, values ...interface{}) IntCmd {
+	fv := c.cmd.B().Hset().Key(key).FieldValue()
 	args := argsToSlice(values)
 	for i := 0; i < len(args); i += 2 {
 		fv = fv.FieldValue(args[i], args[i+1])
 	}
-	return newIntCmdFromResult(r.cmd.Do(ctx, fv.Build()))
+	return newIntCmdFromResult(c.cmd.Do(ctx, fv.Build()))
 }
 
-func (r *resp3) HSetNX(ctx context.Context, key, field string, value interface{}) BoolCmd {
-	return newBoolCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Hsetnx().Key(key).Field(field).Value(str(value)).Build()))
+func (c *client) getLIndexCompleted(key string, index int64) rueidis.Completed {
+	return c.cmd.B().Lindex().Key(key).Index(index).Build()
 }
 
-func (r *resp3) getHValsCompleted(key string) rueidis.Completed {
-	return r.cmd.B().Hvals().Key(key).Build()
-}
-
-func (r *resp3) HVals(ctx context.Context, key string) StringSliceCmd {
-	return newStringSliceCmdFromResult(r.cmd.Do(ctx, r.getHValsCompleted(key)))
-}
-
-func (r *resp3Cache) HVals(ctx context.Context, key string) StringSliceCmd {
-	return newStringSliceCmdFromResult(r.Do(ctx, r.resp.getHValsCompleted(key)))
-}
-
-func (r *resp3) PFAdd(ctx context.Context, key string, els ...interface{}) IntCmd {
-	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Pfadd().Key(key).Element(argsToSlice(els)...).Build()))
-}
-
-func (r *resp3) PFCount(ctx context.Context, keys ...string) IntCmd {
-	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Pfcount().Key(keys...).Build()))
-}
-
-func (r *resp3) PFMerge(ctx context.Context, dest string, keys ...string) StatusCmd {
-	return newStatusCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Pfmerge().Destkey(dest).Sourcekey(keys...).Build()))
-}
-
-func (r *resp3) BLMove(ctx context.Context, source, destination, srcpos, destpos string, timeout time.Duration) StringCmd {
-	return newStringCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Arbitrary(BLMOVE).Keys(source, destination).
-		Args(srcpos, destpos, str(float64(formatSec(timeout)))).Blocking()))
-}
-
-func (r *resp3) BLPop(ctx context.Context, timeout time.Duration, keys ...string) StringSliceCmd {
-	return newStringSliceCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Blpop().Key(keys...).Timeout(float64(formatSec(timeout))).Build()))
-}
-
-func (r *resp3) BRPop(ctx context.Context, timeout time.Duration, keys ...string) StringSliceCmd {
-	return newStringSliceCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Brpop().Key(keys...).Timeout(float64(formatSec(timeout))).Build()))
-}
-
-func (r *resp3) BRPopLPush(ctx context.Context, source, destination string, timeout time.Duration) StringCmd {
-	return newStringCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Brpoplpush().Source(source).Destination(destination).Timeout(float64(formatSec(timeout))).Build()))
-}
-
-func (r *resp3) getLIndexCompleted(key string, index int64) rueidis.Completed {
-	return r.cmd.B().Lindex().Key(key).Index(index).Build()
-}
-
-func (r *resp3) LIndex(ctx context.Context, key string, index int64) StringCmd {
-	return newStringCmdFromResult(r.cmd.Do(ctx, r.getLIndexCompleted(key, index)))
-}
-
-func (r *resp3Cache) LIndex(ctx context.Context, key string, index int64) StringCmd {
-	return newStringCmdFromResult(r.Do(ctx, r.resp.getLIndexCompleted(key, index)))
-}
-
-func (r *resp3) LInsert(ctx context.Context, key, op string, pivot, value interface{}) IntCmd {
-	var linsertKey = r.cmd.B().Linsert().Key(key)
+func (c *client) linsert(ctx context.Context, key, op string, pivot, value interface{}) IntCmd {
+	var linsertKey = c.cmd.B().Linsert().Key(key)
 	switch strings.ToUpper(op) {
 	case BEFORE:
-		return newIntCmdFromResult(r.cmd.Do(ctx, linsertKey.Before().Pivot(str(pivot)).Element(str(value)).Build()))
+		return newIntCmdFromResult(c.cmd.Do(ctx, linsertKey.Before().Pivot(str(pivot)).Element(str(value)).Build()))
 	case AFTER:
-		return newIntCmdFromResult(r.cmd.Do(ctx, linsertKey.After().Pivot(str(pivot)).Element(str(value)).Build()))
+		return newIntCmdFromResult(c.cmd.Do(ctx, linsertKey.After().Pivot(str(pivot)).Element(str(value)).Build()))
 	default:
 		panic(fmt.Sprintf("Invalid op argument value: %s", op))
 	}
 }
 
-func (r *resp3) LInsertBefore(ctx context.Context, key string, pivot, value interface{}) IntCmd {
-	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Linsert().Key(key).Before().Pivot(str(pivot)).Element(str(value)).Build()))
+func (c *client) getLLenCompleted(key string) rueidis.Completed {
+	return c.cmd.B().Llen().Key(key).Build()
 }
 
-func (r *resp3) LInsertAfter(ctx context.Context, key string, pivot, value interface{}) IntCmd {
-	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Linsert().Key(key).After().Pivot(str(pivot)).Element(str(value)).Build()))
-}
-
-func (r *resp3) getLLenCompleted(key string) rueidis.Completed {
-	return r.cmd.B().Llen().Key(key).Build()
-}
-
-func (r *resp3) LLen(ctx context.Context, key string) IntCmd {
-	return newIntCmdFromResult(r.cmd.Do(ctx, r.getLLenCompleted(key)))
-}
-
-func (r *resp3Cache) LLen(ctx context.Context, key string) IntCmd {
-	return newIntCmdFromResult(r.Do(ctx, r.resp.getLLenCompleted(key)))
-}
-
-func (r *resp3) LMove(ctx context.Context, source, destination, srcpos, destpos string) StringCmd {
-	return newStringCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Arbitrary(LMOVE).Keys(source, destination).Args(srcpos, destpos).Build()))
-}
-
-func (r *resp3) LPop(ctx context.Context, key string) StringCmd {
-	return newStringCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Lpop().Key(key).Build()))
-}
-
-func (r *resp3) LPopCount(ctx context.Context, key string, count int) StringSliceCmd {
-	return newStringSliceCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Lpop().Key(key).Count(int64(count)).Build()))
-}
-
-func (r *resp3) getLPosCompleted(key string, value string, count int64, args LPosArgs) rueidis.Completed {
-	arbitrary := r.cmd.B().Arbitrary(LPOS).Keys(key).Args(value)
+func (c *client) getLPosCompleted(key string, value string, count int64, args LPosArgs) rueidis.Completed {
+	arbitrary := c.cmd.B().Arbitrary(LPOS).Keys(key).Args(value)
 	if count >= 0 {
 		arbitrary = arbitrary.Args(COUNT, str(count))
 	}
@@ -853,525 +414,79 @@ func (r *resp3) getLPosCompleted(key string, value string, count int64, args LPo
 	return arbitrary.Build()
 }
 
-func (r *resp3) LPos(ctx context.Context, key string, value string, args LPosArgs) IntCmd {
-	return newIntCmdFromResult(r.cmd.Do(ctx, r.getLPosCompleted(key, value, -1, args)))
-}
-
-func (r *resp3Cache) LPos(ctx context.Context, key string, value string, args LPosArgs) IntCmd {
-	return newIntCmdFromResult(r.Do(ctx, r.resp.getLPosCompleted(key, value, -1, args)))
-}
-
-func (r *resp3) LPosCount(ctx context.Context, key string, value string, count int64, args LPosArgs) IntSliceCmd {
-	return newIntSliceCmdFromResult(r.cmd.Do(ctx, r.getLPosCompleted(key, value, count, args)))
-}
-
-func (r *resp3Cache) LPosCount(ctx context.Context, key string, value string, count int64, args LPosArgs) IntSliceCmd {
-	return newIntSliceCmdFromResult(r.Do(ctx, r.resp.getLPosCompleted(key, value, count, args)))
-}
-
-func (r *resp3) LPush(ctx context.Context, key string, values ...interface{}) IntCmd {
-	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Lpush().Key(key).Element(argsToSlice(values)...).Build()))
-}
-
-func (r *resp3) LPushX(ctx context.Context, key string, values ...interface{}) IntCmd {
-	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Lpushx().Key(key).Element(argsToSlice(values)...).Build()))
-}
-
-func (r *resp3) getLRangeCompleted(key string, start, stop int64) rueidis.Completed {
-	return r.cmd.B().Lrange().Key(key).Start(start).Stop(stop).Build()
-}
-
-func (r *resp3) LRange(ctx context.Context, key string, start, stop int64) StringSliceCmd {
-	return newStringSliceCmdFromResult(r.cmd.Do(ctx, r.getLRangeCompleted(key, start, stop)))
-}
-
-func (r *resp3Cache) LRange(ctx context.Context, key string, start, stop int64) StringSliceCmd {
-	return newStringSliceCmdFromResult(r.Do(ctx, r.resp.getLRangeCompleted(key, start, stop)))
-}
-
-func (r *resp3) LRem(ctx context.Context, key string, count int64, value interface{}) IntCmd {
-	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Lrem().Key(key).Count(count).Element(str(value)).Build()))
-}
-
-func (r *resp3) LSet(ctx context.Context, key string, index int64, value interface{}) StatusCmd {
-	return newStatusCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Lset().Key(key).Index(index).Element(str(value)).Build()))
-}
-
-func (r *resp3) LTrim(ctx context.Context, key string, start, stop int64) StatusCmd {
-	return newStatusCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Ltrim().Key(key).Start(start).Stop(stop).Build()))
-}
-
-func (r *resp3) RPop(ctx context.Context, key string) StringCmd {
-	return newStringCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Rpop().Key(key).Build()))
-}
-
-func (r *resp3) RPopCount(ctx context.Context, key string, count int) StringSliceCmd {
-	return newStringSliceCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Rpop().Key(key).Count(int64(count)).Build()))
-}
-
-func (r *resp3) RPopLPush(ctx context.Context, source, destination string) StringCmd {
-	return newStringCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Rpoplpush().Source(source).Destination(destination).Build()))
-}
-
-func (r *resp3) RPush(ctx context.Context, key string, values ...interface{}) IntCmd {
-	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Rpush().Key(key).Element(argsToSlice(values)...).Build()))
-}
-
-func (r *resp3) RPushX(ctx context.Context, key string, values ...interface{}) IntCmd {
-	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Rpushx().Key(key).Element(argsToSlice(values)...).Build()))
-}
-
-type pipelineCommand struct{}
-
-func (pipelineCommand) String() string         { return "PIPELINE" }
-func (pipelineCommand) Class() string          { return "Pipeline" }
-func (pipelineCommand) RequireVersion() string { return "0.0.0" }
-func (pipelineCommand) Forbid() bool           { return false }
-func (pipelineCommand) WarnVersion() string    { return "" }
-func (pipelineCommand) Warning() string        { return "" }
-func (pipelineCommand) Cmd() []string          { return nil }
-
-var pipelineCmd = &pipelineCommand{}
-
-type pipeCommand struct {
-	cmd  []string
-	keys []string
-	args []interface{}
-}
-
-type pipelineResp3 struct {
-	resp     *resp3
-	commands []pipeCommand
-	mx       sync.RWMutex
-}
-
-func (r *resp3) Pipeline() Pipeliner { return &pipelineResp3{resp: r} }
-
-func (p *pipelineResp3) Put(_ context.Context, cmd Command, keys []string, args ...interface{}) (err error) {
-	p.mx.Lock()
-	p.commands = append(p.commands, pipeCommand{cmd: cmd.Cmd(), keys: keys, args: args})
-	p.mx.Unlock()
-	return
-}
-
-func (p *pipelineResp3) Exec(ctx context.Context) ([]interface{}, error) {
-	ctx = p.resp.handler.before(ctx, pipelineCmd)
-
-	p.mx.RLock()
-	defer p.mx.RUnlock()
-	var firstError error
-	var result = make([]interface{}, 0, len(p.commands))
-	for _, cmd := range p.commands {
-		r, err := p.resp.cmd.Do(ctx, p.resp.cmd.B().Arbitrary(cmd.cmd...).Keys(cmd.keys...).Args(argsToSlice(cmd.args)...).Build()).ToAny()
-		err = wrapError(err)
-		if err != nil {
-			result = append(result, err)
-			if firstError == nil {
-				firstError = err
-			}
-		} else {
-			result = append(result, r)
-		}
-	}
-	p.resp.handler.after(ctx, firstError)
-	return result, firstError
-}
-
-func (r *resp3) RawCmdable() interface{} { return r.adapter }
-
-func (r *resp3) Publish(ctx context.Context, channel string, message interface{}) IntCmd {
-	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Publish().Channel(channel).Message(str(message)).Build()))
-}
-
-func (r *resp3) PubSubChannels(ctx context.Context, pattern string) StringSliceCmd {
-	return newStringSliceCmdFromResult(r.cmd.Do(ctx, r.cmd.B().PubsubChannels().Pattern(pattern).Build()))
-}
-
-func (r *resp3) PubSubNumPat(ctx context.Context) IntCmd {
-	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().PubsubNumpat().Build()))
-}
-
-func (r *resp3) PubSubNumSub(ctx context.Context, channels ...string) StringIntMapCmd {
-	return newStringIntMapCmdFromResult(r.cmd.Do(ctx, r.cmd.B().PubsubNumsub().Channel(channels...).Build()))
-}
-
-func (r *resp3) Subscribe(ctx context.Context, channels ...string) PubSub {
-	return newPubSubResp3(ctx, r.cmd, r.handler, channels...)
-}
-
-type pubSubResp3 struct {
-	cmd     rueidis.Client
-	msgCh   chan *Message
-	handler handler
-
-	ctx    context.Context
-	cancel context.CancelFunc
-}
-
-func newPubSubResp3(ctx context.Context, cmd rueidis.Client, handler handler, channels ...string) PubSub {
-	// chan size todo, use goredis.ChannelOption?
-	p := &pubSubResp3{cmd: cmd, msgCh: make(chan *Message, 100), handler: handler}
-	p.ctx, p.cancel = context.WithCancel(ctx)
-	if len(channels) > 0 {
-		_ = p.Subscribe(ctx, channels...)
-	}
-	return p
-}
-
-func (p *pubSubResp3) Close() error {
-	close(p.msgCh)
-	p.cancel()
-	return nil
-}
-
-func (p *pubSubResp3) PSubscribe(ctx context.Context, patterns ...string) error {
-	ctx = p.handler.before(ctx, CommandPSubscribe)
-	var err error
-	go func() {
-		err = p.cmd.Receive(p.ctx, p.cmd.B().Psubscribe().Pattern(patterns...).Build(), func(m rueidis.PubSubMessage) {
-			p.msgCh <- &Message{
-				Channel: m.Channel,
-				Pattern: m.Pattern,
-				Payload: m.Message,
-			}
-		})
-	}()
-	p.handler.after(ctx, err)
-	return err
-}
-
-func (p *pubSubResp3) Subscribe(ctx context.Context, channels ...string) error {
-	ctx = p.handler.before(ctx, CommandSubscribe)
-	var err error
-	go func() {
-		err = p.cmd.Receive(p.ctx, p.cmd.B().Subscribe().Channel(channels...).Build(), func(m rueidis.PubSubMessage) {
-			p.msgCh <- &Message{
-				Channel: m.Channel,
-				Pattern: m.Pattern,
-				Payload: m.Message,
-			}
-		})
-	}()
-	p.handler.after(ctx, err)
-	return err
-}
-
-func (p *pubSubResp3) Unsubscribe(ctx context.Context, channels ...string) error {
-	ctx = p.handler.before(ctx, CommandUnsubscribe)
-	err := p.cmd.Do(ctx, p.cmd.B().Unsubscribe().Channel(channels...).Build()).Error()
-	p.handler.after(ctx, err)
-	return err
-}
-
-func (p *pubSubResp3) PUnsubscribe(ctx context.Context, patterns ...string) error {
-	ctx = p.handler.before(ctx, CommandPUnsubscribe)
-	err := p.cmd.Do(ctx, p.cmd.B().Punsubscribe().Pattern(patterns...).Build()).Error()
-	p.handler.after(ctx, err)
-	return err
-}
-
-func (p *pubSubResp3) Channel() <-chan *Message {
-	return p.msgCh
-}
-
-func (r *resp3) CreateScript(string) Scripter { return nil }
-
-func (r *resp3) Eval(ctx context.Context, script string, keys []string, args ...interface{}) Cmd {
-	return newCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Eval().Script(script).Numkeys(int64(len(keys))).Key(keys...).Arg(argsToSlice(args)...).Build()))
-}
-
-func (r *resp3) EvalSha(ctx context.Context, sha1 string, keys []string, args ...interface{}) Cmd {
-	return newCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Evalsha().Sha1(sha1).Numkeys(int64(len(keys))).Key(keys...).Arg(argsToSlice(args)...).Build()))
-}
-
-func (r *resp3) ScriptExists(ctx context.Context, hashes ...string) BoolSliceCmd {
-	//return newBoolSliceCmd(r.cmd.Do(ctx, r.cmd.B().ScriptExists().Sha1(hashes...).Build()))
-	return r.adapter.ScriptExists(ctx, hashes...)
-}
-
-func (r *resp3) ScriptFlush(ctx context.Context) StatusCmd {
-	//return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().ScriptFlush().Build()))
-	return r.adapter.ScriptFlush(ctx)
-}
-
-func (r *resp3) ScriptKill(ctx context.Context) StatusCmd {
-	//return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().ScriptKill().Build()))
-	return r.adapter.ScriptKill(ctx)
-}
-
-func (r *resp3) ScriptLoad(ctx context.Context, script string) StringCmd {
-	//return newStringCmd(r.cmd.Do(ctx, r.cmd.B().ScriptLoad().Script(script).Build()))
-	return newStringCmdFromStringCmd(r.adapter.ScriptLoad(ctx, script))
-}
-
-func (r *resp3) BgRewriteAOF(ctx context.Context) StatusCmd {
-	//return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().Bgrewriteaof().Build()))
-	return r.adapter.BgRewriteAOF(ctx)
-}
-
-func (r *resp3) BgSave(ctx context.Context) StatusCmd {
-	//return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().Bgsave().Build()))
-	return r.adapter.BgSave(ctx)
-}
-
-func (r *resp3) Command(ctx context.Context) CommandsInfoCmd {
-	return newCommandsInfoCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Command().Build()))
-}
-
-func (r *resp3) ConfigGet(ctx context.Context, parameter string) SliceCmd {
-	return newSliceCmdFromMapResult(r.cmd.Do(ctx, r.cmd.B().ConfigGet().Parameter(parameter).Build()))
-}
-
-func (r *resp3) ConfigResetStat(ctx context.Context) StatusCmd {
-	//return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().ConfigResetstat().Build()))
-	return r.adapter.ConfigResetStat(ctx)
-}
-
-func (r *resp3) ConfigRewrite(ctx context.Context) StatusCmd {
-	//return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().ConfigRewrite().Build()))
-	return r.adapter.ConfigRewrite(ctx)
-}
-
-func (r *resp3) ConfigSet(ctx context.Context, parameter, value string) StatusCmd {
-	//return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().ConfigSet().ParameterValue().ParameterValue(parameter, value).Build()))
-	return r.adapter.ConfigSet(ctx, parameter, value)
-}
-
-func (r *resp3) DBSize(ctx context.Context) IntCmd {
-	//return newIntCmd(r.cmd.Do(ctx, r.cmd.B().Dbsize().Build()))
-	return r.adapter.DBSize(ctx)
-}
-
-func (r *resp3) FlushAll(ctx context.Context) StatusCmd {
-	//return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().Flushall().Build()))
-	return r.adapter.FlushAll(ctx)
-}
-
-func (r *resp3) FlushAllAsync(ctx context.Context) StatusCmd {
-	//return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().Flushall().Async().Build()))
-	return r.adapter.FlushAllAsync(ctx)
-}
-
-func (r *resp3) FlushDB(ctx context.Context) StatusCmd {
-	//return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().Flushdb().Build()))
-	return r.adapter.FlushDB(ctx)
-}
-
-func (r *resp3) FlushDBAsync(ctx context.Context) StatusCmd {
-	//return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().Flushdb().Async().Build()))
-	return r.adapter.FlushDBAsync(ctx)
-}
-
-func (r *resp3) Info(ctx context.Context, section ...string) StringCmd {
-	return newStringCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Info().Section(section...).Build()))
-}
-
-func (r *resp3) LastSave(ctx context.Context) IntCmd {
-	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Lastsave().Build()))
-}
-
-func (r *resp3) MemoryUsage(ctx context.Context, key string, samples ...int) IntCmd {
-	var memoryUsageKey = r.cmd.B().MemoryUsage().Key(key)
+func (c *client) memoryUsage(ctx context.Context, key string, samples ...int) IntCmd {
+	var memoryUsageKey = c.cmd.B().MemoryUsage().Key(key)
 	switch len(samples) {
 	case 0:
-		return newIntCmdFromResult(r.cmd.Do(ctx, memoryUsageKey.Build()))
+		return newIntCmdFromResult(c.cmd.Do(ctx, memoryUsageKey.Build()))
 	case 1:
-		return newIntCmdFromResult(r.cmd.Do(ctx, memoryUsageKey.Samples(int64(samples[0])).Build()))
+		return newIntCmdFromResult(c.cmd.Do(ctx, memoryUsageKey.Samples(int64(samples[0])).Build()))
 	default:
 		panic(errMemoryUsageArgsCount)
 	}
-
 }
 
-func (r *resp3) Save(ctx context.Context) StatusCmd {
-	//return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().Save().Build()))
-	return r.adapter.Save(ctx)
-}
-
-func (r *resp3) Shutdown(ctx context.Context) StatusCmd {
-	//return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().Shutdown().Build()))
-	return r.adapter.Shutdown(ctx)
-}
-
-func (r *resp3) ShutdownSave(ctx context.Context) StatusCmd {
-	//return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().Shutdown().Save().Build()))
-	return r.adapter.ShutdownSave(ctx)
-}
-
-func (r *resp3) ShutdownNoSave(ctx context.Context) StatusCmd {
-	//return newStatusCmd(r.cmd.Do(ctx, r.cmd.B().Shutdown().Nosave().Build()))
-	return r.adapter.ShutdownNoSave(ctx)
-}
-
-func (r *resp3) SlaveOf(ctx context.Context, host, port string) StatusCmd {
-	return newStatusCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Arbitrary(SLAVEOF).Args(host, port).Build()))
-}
-
-func (r *resp3) Time(ctx context.Context) TimeCmd {
-	return newTimeCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Time().Build()))
-}
-
-func (r *resp3) DebugObject(ctx context.Context, key string) StringCmd {
-	return newStringCmdFromResult(r.cmd.Do(ctx, r.cmd.B().DebugObject().Key(key).Build()))
-}
-
-func (r *resp3) SAdd(ctx context.Context, key string, members ...interface{}) IntCmd {
-	cmd := r.cmd.B().Sadd().Key(key).Member()
+func (c *client) sadd(ctx context.Context, key string, members ...interface{}) IntCmd {
+	cmd := c.cmd.B().Sadd().Key(key).Member()
 	for _, m := range argsToSlice(members) {
 		cmd = cmd.Member(str(m))
 	}
-	return newIntCmdFromResult(r.cmd.Do(ctx, cmd.Build()))
+	return newIntCmdFromResult(c.cmd.Do(ctx, cmd.Build()))
 }
 
-func (r *resp3) getSCardCompleted(key string) rueidis.Completed {
-	return r.cmd.B().Scard().Key(key).Build()
+func (c *client) getSCardCompleted(key string) rueidis.Completed {
+	return c.cmd.B().Scard().Key(key).Build()
 }
 
-func (r *resp3) SCard(ctx context.Context, key string) IntCmd {
-	return newIntCmdFromResult(r.cmd.Do(ctx, r.getSCardCompleted(key)))
+func (c *client) getSIsMemberCompleted(key string, member interface{}) rueidis.Completed {
+	return c.cmd.B().Sismember().Key(key).Member(str(member)).Build()
 }
 
-func (r *resp3Cache) SCard(ctx context.Context, key string) IntCmd {
-	return newIntCmdFromResult(r.Do(ctx, r.resp.getSCardCompleted(key)))
+func (c *client) getSMIsMemberCompleted(key string, members ...interface{}) rueidis.Completed {
+	return c.cmd.B().Smismember().Key(key).Member(argsToSlice(members)...).Build()
 }
 
-func (r *resp3) SDiff(ctx context.Context, keys ...string) StringSliceCmd {
-	return newStringSliceCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Sdiff().Key(keys...).Build()))
+func (c *client) getSMembersCompleted(key string) rueidis.Completed {
+	return c.cmd.B().Smembers().Key(key).Build()
 }
 
-func (r *resp3) SDiffStore(ctx context.Context, destination string, keys ...string) IntCmd {
-	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Sdiffstore().Destination(destination).Key(keys...).Build()))
-}
-
-func (r *resp3) SInter(ctx context.Context, keys ...string) StringSliceCmd {
-	return newStringSliceCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Sinter().Key(keys...).Build()))
-}
-
-func (r *resp3) SInterStore(ctx context.Context, destination string, keys ...string) IntCmd {
-	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Sinterstore().Destination(destination).Key(keys...).Build()))
-}
-
-func (r *resp3) getSIsMemberCompleted(key string, member interface{}) rueidis.Completed {
-	return r.cmd.B().Sismember().Key(key).Member(str(member)).Build()
-}
-
-func (r *resp3) SIsMember(ctx context.Context, key string, member interface{}) BoolCmd {
-	return newBoolCmdFromResult(r.cmd.Do(ctx, r.getSIsMemberCompleted(key, member)))
-}
-
-func (r *resp3Cache) SIsMember(ctx context.Context, key string, member interface{}) BoolCmd {
-	return newBoolCmdFromResult(r.Do(ctx, r.resp.getSIsMemberCompleted(key, member)))
-}
-
-func (r *resp3) getSMIsMemberCompleted(key string, members ...interface{}) rueidis.Completed {
-	return r.cmd.B().Smismember().Key(key).Member(argsToSlice(members)...).Build()
-}
-
-func (r *resp3) SMIsMember(ctx context.Context, key string, members ...interface{}) BoolSliceCmd {
-	return newBoolSliceCmdFromResult(r.cmd.Do(ctx, r.getSMIsMemberCompleted(key, members...)))
-}
-
-func (r *resp3Cache) SMIsMember(ctx context.Context, key string, members ...interface{}) BoolSliceCmd {
-	return newBoolSliceCmdFromResult(r.Do(ctx, r.resp.getSMIsMemberCompleted(key, members...)))
-}
-
-func (r *resp3) getSMembersCompleted(key string) rueidis.Completed {
-	return r.cmd.B().Smembers().Key(key).Build()
-}
-
-func (r *resp3) SMembers(ctx context.Context, key string) StringSliceCmd {
-	return newStringSliceCmdFromResult(r.cmd.Do(ctx, r.getSMembersCompleted(key)))
-}
-
-func (r *resp3Cache) SMembers(ctx context.Context, key string) StringSliceCmd {
-	return newStringSliceCmdFromResult(r.Do(ctx, r.resp.getSMembersCompleted(key)))
-}
-
-func (r *resp3) SMembersMap(ctx context.Context, key string) StringStructMapCmd {
-	return newStringStructMapCmdFromResult(r.cmd.Do(ctx, r.getSMembersCompleted(key)))
-}
-
-func (r *resp3Cache) SMembersMap(ctx context.Context, key string) StringStructMapCmd {
-	return newStringStructMapCmdFromResult(r.Do(ctx, r.resp.getSMembersCompleted(key)))
-}
-
-func (r *resp3) SMove(ctx context.Context, source, destination string, member interface{}) BoolCmd {
-	return newBoolCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Smove().Source(source).Destination(destination).Member(str(member)).Build()))
-}
-
-func (r *resp3) SPop(ctx context.Context, key string) StringCmd {
-	return newStringCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Spop().Key(key).Build()))
-}
-
-func (r *resp3) SPopN(ctx context.Context, key string, count int64) StringSliceCmd {
-	return newStringSliceCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Spop().Key(key).Count(count).Build()))
-}
-
-func (r *resp3) SRandMember(ctx context.Context, key string) StringCmd {
-	return newStringCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Srandmember().Key(key).Build()))
-}
-
-func (r *resp3) SRandMemberN(ctx context.Context, key string, count int64) StringSliceCmd {
-	return newStringSliceCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Srandmember().Key(key).Count(count).Build()))
-}
-
-func (r *resp3) SRem(ctx context.Context, key string, members ...interface{}) IntCmd {
-	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Srem().Key(key).Member(argsToSlice(members)...).Build()))
-}
-
-func (r *resp3) SScan(ctx context.Context, key string, cursor uint64, match string, count int64) ScanCmd {
-	cmd := r.cmd.B().Arbitrary(SSCAN).Keys(key).Args(str(int64(cursor)))
+func (c *client) sscan(ctx context.Context, key string, cursor uint64, match string, count int64) ScanCmd {
+	cmd := c.cmd.B().Arbitrary(SSCAN).Keys(key).Args(str(int64(cursor)))
 	if match != "" {
 		cmd = cmd.Args(MATCH, match)
 	}
 	if count > 0 {
 		cmd = cmd.Args(COUNT, str(count))
 	}
-	return newScanCmdFromResult(r.cmd.Do(ctx, cmd.ReadOnly()))
+	return newScanCmdFromResult(c.cmd.Do(ctx, cmd.ReadOnly()))
 }
 
-func (r *resp3) SUnion(ctx context.Context, keys ...string) StringSliceCmd {
-	return newStringSliceCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Sunion().Key(keys...).Build()))
-}
-
-func (r *resp3) SUnionStore(ctx context.Context, destination string, keys ...string) IntCmd {
-	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Sunionstore().Destination(destination).Key(keys...).Build()))
-}
-
-func (r *resp3) BZPopMax(ctx context.Context, timeout time.Duration, keys ...string) ZWithKeyCmd {
-	return newZWithKeyCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Bzpopmax().Key(keys...).Timeout(float64(formatSec(timeout))).Build()))
-}
-
-func (r *resp3) BZPopMin(ctx context.Context, timeout time.Duration, keys ...string) ZWithKeyCmd {
-	return newZWithKeyCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Bzpopmin().Key(keys...).Timeout(float64(formatSec(timeout))).Build()))
-}
-
-func (r *resp3) ZAdd(ctx context.Context, key string, members ...Z) IntCmd {
-	cmd := r.cmd.B().Zadd().Key(key).ScoreMember()
+func (c *client) zadd(ctx context.Context, key string, members ...Z) IntCmd {
+	cmd := c.cmd.B().Zadd().Key(key).ScoreMember()
 	for _, v := range members {
 		cmd = cmd.ScoreMember(v.Score, str(v.Member))
 	}
-	return newIntCmdFromResult(r.cmd.Do(ctx, cmd.Build()))
+	return newIntCmdFromResult(c.cmd.Do(ctx, cmd.Build()))
 }
 
-func (r *resp3) ZAddNX(ctx context.Context, key string, members ...Z) IntCmd {
-	cmd := r.cmd.B().Zadd().Key(key).Nx().ScoreMember()
+func (c *client) zaddNX(ctx context.Context, key string, members ...Z) IntCmd {
+	cmd := c.cmd.B().Zadd().Key(key).Nx().ScoreMember()
 	for _, v := range members {
 		cmd = cmd.ScoreMember(v.Score, str(v.Member))
 	}
-	return newIntCmdFromResult(r.cmd.Do(ctx, cmd.Build()))
+	return newIntCmdFromResult(c.cmd.Do(ctx, cmd.Build()))
 }
 
-func (r *resp3) ZAddXX(ctx context.Context, key string, members ...Z) IntCmd {
-	cmd := r.cmd.B().Zadd().Key(key).Xx().ScoreMember()
+func (c *client) zaddXX(ctx context.Context, key string, members ...Z) IntCmd {
+	cmd := c.cmd.B().Zadd().Key(key).Xx().ScoreMember()
 	for _, v := range members {
 		cmd = cmd.ScoreMember(v.Score, str(v.Member))
 	}
-	return newIntCmdFromResult(r.cmd.Do(ctx, cmd.Build()))
+	return newIntCmdFromResult(c.cmd.Do(ctx, cmd.Build()))
 }
 
-func (r *resp3) zAddArgs(ctx context.Context, key string, incr bool, args ZAddArgs, members ...Z) rueidis.RedisResult {
-	cmd := r.cmd.B().Arbitrary(ZADD).Keys(key)
+func (c *client) zAddArgs(ctx context.Context, key string, incr bool, args ZAddArgs, members ...Z) rueidis.RedisResult {
+	cmd := c.cmd.B().Arbitrary(ZADD).Keys(key)
 	if args.NX {
 		cmd = cmd.Args(NX)
 	} else {
@@ -1393,125 +508,33 @@ func (r *resp3) zAddArgs(ctx context.Context, key string, incr bool, args ZAddAr
 	for _, v := range members {
 		cmd = cmd.Args(str(v.Score), str(v.Member))
 	}
-	return r.cmd.Do(ctx, cmd.Build())
+	return c.cmd.Do(ctx, cmd.Build())
 }
 
-func (r *resp3) ZAddCh(ctx context.Context, key string, members ...Z) IntCmd {
-	return newIntCmdFromResult(r.zAddArgs(ctx, key, false, ZAddArgs{Ch: true}, members...))
+func (c *client) getZCardCompleted(key string) rueidis.Completed {
+	return c.cmd.B().Zcard().Key(key).Build()
 }
 
-func (r *resp3) ZAddNXCh(ctx context.Context, key string, members ...Z) IntCmd {
-	return newIntCmdFromResult(r.zAddArgs(ctx, key, false, ZAddArgs{NX: true, Ch: true}, members...))
+func (c *client) getZCount(key, min, max string) rueidis.Completed {
+	return c.cmd.B().Zcount().Key(key).Min(min).Max(max).Build()
 }
 
-func (r *resp3) ZAddXXCh(ctx context.Context, key string, members ...Z) IntCmd {
-	return newIntCmdFromResult(r.zAddArgs(ctx, key, false, ZAddArgs{XX: true, Ch: true}, members...))
+func (c *client) getZLexCountCompleted(key, min, max string) rueidis.Completed {
+	return c.cmd.B().Zlexcount().Key(key).Min(min).Max(max).Build()
 }
 
-func (r *resp3) ZAddArgs(ctx context.Context, key string, args ZAddArgs) IntCmd {
-	return newIntCmdFromResult(r.zAddArgs(ctx, key, false, args, args.Members...))
+func (c *client) getZMScoreCompleted(key string, members ...string) rueidis.Completed {
+	return c.cmd.B().Zmscore().Key(key).Member(members...).Build()
 }
 
-func (r *resp3) ZAddArgsIncr(ctx context.Context, key string, args ZAddArgs) FloatCmd {
-	return newFloatCmdFromResult(r.zAddArgs(ctx, key, true, args, args.Members...))
-}
-
-func (r *resp3) getZCardCompleted(key string) rueidis.Completed {
-	return r.cmd.B().Zcard().Key(key).Build()
-}
-
-func (r *resp3) ZCard(ctx context.Context, key string) IntCmd {
-	return newIntCmdFromResult(r.cmd.Do(ctx, r.getZCardCompleted(key)))
-}
-
-func (r *resp3Cache) ZCard(ctx context.Context, key string) IntCmd {
-	return newIntCmdFromResult(r.Do(ctx, r.resp.getZCardCompleted(key)))
-}
-
-func (r *resp3) getZCount(key, min, max string) rueidis.Completed {
-	return r.cmd.B().Zcount().Key(key).Min(min).Max(max).Build()
-}
-
-func (r *resp3) ZCount(ctx context.Context, key, min, max string) IntCmd {
-	return newIntCmdFromResult(r.cmd.Do(ctx, r.getZCount(key, min, max)))
-}
-
-func (r *resp3Cache) ZCount(ctx context.Context, key, min, max string) IntCmd {
-	return newIntCmdFromResult(r.Do(ctx, r.resp.getZCount(key, min, max)))
-}
-
-func (r *resp3) ZDiff(ctx context.Context, keys ...string) StringSliceCmd {
-	return newStringSliceCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Zdiff().Numkeys(int64(len(keys))).Key(keys...).Build()))
-}
-
-func (r *resp3) ZDiffWithScores(ctx context.Context, keys ...string) ZSliceCmd {
-	return newZSliceCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Zdiff().Numkeys(int64(len(keys))).Key(keys...).Withscores().Build()))
-}
-
-func (r *resp3) ZDiffStore(ctx context.Context, destination string, keys ...string) IntCmd {
-	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Zdiffstore().Destination(destination).Numkeys(int64(len(keys))).Key(keys...).Build()))
-}
-
-func (r *resp3) ZIncr(ctx context.Context, key string, member Z) FloatCmd {
-	return newFloatCmdFromResult(r.zAddArgs(ctx, key, true, ZAddArgs{}, member))
-}
-
-func (r *resp3) ZIncrNX(ctx context.Context, key string, member Z) FloatCmd {
-	return newFloatCmdFromResult(r.zAddArgs(ctx, key, true, ZAddArgs{NX: true}, member))
-}
-
-func (r *resp3) ZIncrXX(ctx context.Context, key string, member Z) FloatCmd {
-	return newFloatCmdFromResult(r.zAddArgs(ctx, key, true, ZAddArgs{XX: true}, member))
-}
-
-func (r *resp3) ZIncrBy(ctx context.Context, key string, increment float64, member string) FloatCmd {
-	return newFloatCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Zincrby().Key(key).Increment(increment).Member(member).Build()))
-}
-
-func (r *resp3) ZInter(ctx context.Context, store ZStore) StringSliceCmd {
-	return newStringSliceCmdFromStringSliceCmd(r.adapter.ZInter(ctx, toZStore(store)))
-}
-
-func (r *resp3) ZInterWithScores(ctx context.Context, store ZStore) ZSliceCmd {
-	return newZSliceCmdFromCmd(r.adapter.ZInterWithScores(ctx, toZStore(store)))
-}
-
-func (r *resp3) ZInterStore(ctx context.Context, destination string, store ZStore) IntCmd {
-	return newIntCmdFromIntCmd(r.adapter.ZInterStore(ctx, destination, toZStore(store)))
-}
-
-func (r *resp3) getZLexCountCompleted(key, min, max string) rueidis.Completed {
-	return r.cmd.B().Zlexcount().Key(key).Min(min).Max(max).Build()
-}
-
-func (r *resp3) ZLexCount(ctx context.Context, key, min, max string) IntCmd {
-	return newIntCmdFromResult(r.cmd.Do(ctx, r.getZLexCountCompleted(key, min, max)))
-}
-
-func (r *resp3Cache) ZLexCount(ctx context.Context, key, min, max string) IntCmd {
-	return newIntCmdFromResult(r.Do(ctx, r.resp.getZLexCountCompleted(key, min, max)))
-}
-
-func (r *resp3) getZMScoreCompleted(key string, members ...string) rueidis.Completed {
-	return r.cmd.B().Zmscore().Key(key).Member(members...).Build()
-}
-
-func (r *resp3) ZMScore(ctx context.Context, key string, members ...string) FloatSliceCmd {
-	return newFloatSliceCmdFromResult(r.cmd.Do(ctx, r.getZMScoreCompleted(key, members...)))
-}
-
-func (r *resp3Cache) ZMScore(ctx context.Context, key string, members ...string) FloatSliceCmd {
-	return newFloatSliceCmdFromResult(r.Do(ctx, r.resp.getZMScoreCompleted(key, members...)))
-}
-
-func (r *resp3) ZPopMax(ctx context.Context, key string, count ...int64) ZSliceCmd {
+func (c *client) zpopMax(ctx context.Context, key string, count ...int64) ZSliceCmd {
 	var resp rueidis.RedisResult
-	var zpopmaxKey = r.cmd.B().Zpopmax().Key(key)
+	var zpopmaxKey = c.cmd.B().Zpopmax().Key(key)
 	switch len(count) {
 	case 0:
-		resp = r.cmd.Do(ctx, zpopmaxKey.Build())
+		resp = c.cmd.Do(ctx, zpopmaxKey.Build())
 	case 1:
-		resp = r.cmd.Do(ctx, zpopmaxKey.Count(count[0]).Build())
+		resp = c.cmd.Do(ctx, zpopmaxKey.Count(count[0]).Build())
 		if count[0] > 1 {
 			return newZSliceCmdFromResult(resp)
 		}
@@ -1521,14 +544,14 @@ func (r *resp3) ZPopMax(ctx context.Context, key string, count ...int64) ZSliceC
 	return newZSliceSingleCmdFromResult(resp)
 }
 
-func (r *resp3) ZPopMin(ctx context.Context, key string, count ...int64) ZSliceCmd {
+func (c *client) zpopMin(ctx context.Context, key string, count ...int64) ZSliceCmd {
 	var resp rueidis.RedisResult
-	var zpopminKey = r.cmd.B().Zpopmin().Key(key)
+	var zpopminKey = c.cmd.B().Zpopmin().Key(key)
 	switch len(count) {
 	case 0:
-		resp = r.cmd.Do(ctx, zpopminKey.Build())
+		resp = c.cmd.Do(ctx, zpopminKey.Build())
 	case 1:
-		resp = r.cmd.Do(ctx, zpopminKey.Count(count[0]).Build())
+		resp = c.cmd.Do(ctx, zpopminKey.Count(count[0]).Build())
 		if count[0] > 1 {
 			return newZSliceCmdFromResult(resp)
 		}
@@ -1538,41 +561,25 @@ func (r *resp3) ZPopMin(ctx context.Context, key string, count ...int64) ZSliceC
 	return newZSliceSingleCmdFromResult(resp)
 }
 
-func (r *resp3) ZRandMember(ctx context.Context, key string, count int, withScores bool) StringSliceCmd {
-	var zrandmemberOptionsCount = r.cmd.B().Zrandmember().Key(key).Count(int64(count))
+func (c *client) zrandMember(ctx context.Context, key string, count int, withScores bool) StringSliceCmd {
+	var zrandmemberOptionsCount = c.cmd.B().Zrandmember().Key(key).Count(int64(count))
 	if withScores {
-		return flattenStringSliceCmd(r.cmd.Do(ctx, zrandmemberOptionsCount.Withscores().Build()))
+		return flattenStringSliceCmd(c.cmd.Do(ctx, zrandmemberOptionsCount.Withscores().Build()))
 	}
-	return newStringSliceCmdFromResult(r.cmd.Do(ctx, zrandmemberOptionsCount.Build()))
+	return newStringSliceCmdFromResult(c.cmd.Do(ctx, zrandmemberOptionsCount.Build()))
 }
 
-func (r *resp3) getZRangeCompleted(key string, start, stop int64) rueidis.Completed {
-	return r.cmd.B().Zrange().Key(key).Min(str(start)).Max(str(stop)).Build()
+func (c *client) getZRangeCompleted(key string, start, stop int64) rueidis.Completed {
+	return c.cmd.B().Zrange().Key(key).Min(str(start)).Max(str(stop)).Build()
 }
 
-func (r *resp3) ZRange(ctx context.Context, key string, start, stop int64) StringSliceCmd {
-	return newStringSliceCmdFromResult(r.cmd.Do(ctx, r.getZRangeCompleted(key, start, stop)))
+func (c *client) getZRangeWithScoresCompleted(key string, start, stop int64) rueidis.Completed {
+	return c.cmd.B().Zrange().Key(key).Min(str(start)).Max(str(stop)).Withscores().Build()
 }
 
-func (r *resp3Cache) ZRange(ctx context.Context, key string, start, stop int64) StringSliceCmd {
-	return newStringSliceCmdFromResult(r.Do(ctx, r.resp.getZRangeCompleted(key, start, stop)))
-}
-
-func (r *resp3) getZRangeWithScoresCompleted(key string, start, stop int64) rueidis.Completed {
-	return r.cmd.B().Zrange().Key(key).Min(str(start)).Max(str(stop)).Withscores().Build()
-}
-
-func (r *resp3) ZRangeWithScores(ctx context.Context, key string, start, stop int64) ZSliceCmd {
-	return newZSliceCmdFromResult(r.cmd.Do(ctx, r.getZRangeWithScoresCompleted(key, start, stop)))
-}
-
-func (r *resp3Cache) ZRangeWithScores(ctx context.Context, key string, start, stop int64) ZSliceCmd {
-	return newZSliceCmdFromResult(r.Do(ctx, r.resp.getZRangeWithScoresCompleted(key, start, stop)))
-}
-
-func (r *resp3) getZRangeByLexCompleted(key string, opt ZRangeBy) rueidis.Completed {
+func (c *client) getZRangeByLexCompleted(key string, opt ZRangeBy) rueidis.Completed {
 	var completed rueidis.Completed
-	var zrangebylexMax = r.cmd.B().Zrangebylex().Key(key).Min(opt.Min).Max(opt.Max)
+	var zrangebylexMax = c.cmd.B().Zrangebylex().Key(key).Min(opt.Min).Max(opt.Max)
 	if opt.Offset != 0 || opt.Count != 0 {
 		completed = zrangebylexMax.Limit(opt.Offset, opt.Count).Build()
 	} else {
@@ -1581,17 +588,9 @@ func (r *resp3) getZRangeByLexCompleted(key string, opt ZRangeBy) rueidis.Comple
 	return completed
 }
 
-func (r *resp3) ZRangeByLex(ctx context.Context, key string, opt ZRangeBy) StringSliceCmd {
-	return newStringSliceCmdFromResult(r.cmd.Do(ctx, r.getZRangeByLexCompleted(key, opt)))
-}
-
-func (r *resp3Cache) ZRangeByLex(ctx context.Context, key string, opt ZRangeBy) StringSliceCmd {
-	return newStringSliceCmdFromResult(r.Do(ctx, r.resp.getZRangeByLexCompleted(key, opt)))
-}
-
-func (r *resp3) getZRangeByScoreCompleted(key string, withScore bool, opt ZRangeBy) rueidis.Completed {
+func (c *client) getZRangeByScoreCompleted(key string, withScore bool, opt ZRangeBy) rueidis.Completed {
 	var completed rueidis.Completed
-	var zrangebyscoreMax = r.cmd.B().Zrangebyscore().Key(key).Min(opt.Min).Max(opt.Max)
+	var zrangebyscoreMax = c.cmd.B().Zrangebyscore().Key(key).Min(opt.Min).Max(opt.Max)
 	if opt.Offset != 0 || opt.Count != 0 {
 		if withScore {
 			completed = zrangebyscoreMax.Withscores().Limit(opt.Offset, opt.Count).Build()
@@ -1608,28 +607,8 @@ func (r *resp3) getZRangeByScoreCompleted(key string, withScore bool, opt ZRange
 	return completed
 }
 
-func (r *resp3) ZRangeByScore(ctx context.Context, key string, opt ZRangeBy) StringSliceCmd {
-	return newStringSliceCmdFromResult(r.cmd.Do(ctx, r.getZRangeByScoreCompleted(key, false, opt)))
-}
-
-func (r *resp3Cache) ZRangeByScore(ctx context.Context, key string, opt ZRangeBy) StringSliceCmd {
-	return newStringSliceCmdFromResult(r.Do(ctx, r.resp.getZRangeByScoreCompleted(key, false, opt)))
-}
-
-func (r *resp3) ZRangeByScoreWithScores(ctx context.Context, key string, opt ZRangeBy) ZSliceCmd {
-	return newZSliceCmdFromResult(r.cmd.Do(ctx, r.getZRangeByScoreCompleted(key, true, opt)))
-}
-
-func (r *resp3Cache) ZRangeByScoreWithScores(ctx context.Context, key string, opt ZRangeBy) ZSliceCmd {
-	return newZSliceCmdFromResult(r.Do(ctx, r.resp.getZRangeByScoreCompleted(key, true, opt)))
-}
-
-func (r *resp3) ZRangeArgs(ctx context.Context, z ZRangeArgs) StringSliceCmd {
-	return newStringSliceCmdFromStringSliceCmd(r.adapter.ZRangeArgs(ctx, toZRangeArgs(z)))
-}
-
-func (r *resp3) zRangeArgs(withScores bool, z ZRangeArgs) rueidis.Completed {
-	cmd := r.cmd.B().Arbitrary("ZRANGE").Keys(z.Key)
+func (c *client) zRangeArgs(withScores bool, z ZRangeArgs) rueidis.Completed {
+	cmd := c.cmd.B().Arbitrary("ZRANGE").Keys(z.Key)
 	if z.Rev && (z.ByScore || z.ByLex) {
 		cmd = cmd.Args(str(z.Stop), str(z.Start))
 	} else {
@@ -1652,77 +631,21 @@ func (r *resp3) zRangeArgs(withScores bool, z ZRangeArgs) rueidis.Completed {
 	return cmd.Build()
 }
 
-func (r *resp3Cache) ZRangeArgs(ctx context.Context, z ZRangeArgs) StringSliceCmd {
-	return newStringSliceCmdFromResult(r.Do(ctx, r.resp.zRangeArgs(false, z)))
+func (c *client) getZRankCompleted(key, member string) rueidis.Completed {
+	return c.cmd.B().Zrank().Key(key).Member(member).Build()
 }
 
-func (r *resp3) ZRangeArgsWithScores(ctx context.Context, z ZRangeArgs) ZSliceCmd {
-	return newZSliceCmdFromCmd(r.adapter.ZRangeArgsWithScores(ctx, toZRangeArgs(z)))
-}
-
-func (r *resp3Cache) ZRangeArgsWithScores(ctx context.Context, z ZRangeArgs) ZSliceCmd {
-	return newZSliceCmdFromResult(r.Do(ctx, r.resp.zRangeArgs(true, z)))
-}
-
-func (r *resp3) ZRangeStore(ctx context.Context, dst string, z ZRangeArgs) IntCmd {
-	return newIntCmdFromIntCmd(r.adapter.ZRangeStore(ctx, dst, toZRangeArgs(z)))
-}
-
-func (r *resp3) getZRankCompleted(key, member string) rueidis.Completed {
-	return r.cmd.B().Zrank().Key(key).Member(member).Build()
-}
-
-func (r *resp3) ZRank(ctx context.Context, key, member string) IntCmd {
-	return newIntCmdFromResult(r.cmd.Do(ctx, r.getZRankCompleted(key, member)))
-}
-
-func (r *resp3Cache) ZRank(ctx context.Context, key, member string) IntCmd {
-	return newIntCmdFromResult(r.Do(ctx, r.resp.getZRankCompleted(key, member)))
-}
-
-func (r *resp3) ZRem(ctx context.Context, key string, members ...interface{}) IntCmd {
-	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Zrem().Key(key).Member(argsToSlice(members)...).Build()))
-}
-
-func (r *resp3) ZRemRangeByLex(ctx context.Context, key, min, max string) IntCmd {
-	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Zremrangebylex().Key(key).Min(min).Max(max).Build()))
-}
-
-func (r *resp3) ZRemRangeByRank(ctx context.Context, key string, start, stop int64) IntCmd {
-	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Zremrangebyrank().Key(key).Start(start).Stop(stop).Build()))
-}
-
-func (r *resp3) ZRemRangeByScore(ctx context.Context, key, min, max string) IntCmd {
-	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Zremrangebyscore().Key(key).Min(min).Max(max).Build()))
-}
-
-func (r *resp3) getZRevRangeCompleted(key string, start, stop int64, withScore bool) rueidis.Completed {
-	var zrevrangeStop = r.cmd.B().Zrevrange().Key(key).Start(start).Stop(stop)
+func (c *client) getZRevRangeCompleted(key string, start, stop int64, withScore bool) rueidis.Completed {
+	var zrevrangeStop = c.cmd.B().Zrevrange().Key(key).Start(start).Stop(stop)
 	if withScore {
 		return zrevrangeStop.Withscores().Build()
 	}
 	return zrevrangeStop.Build()
 }
 
-func (r *resp3) ZRevRange(ctx context.Context, key string, start, stop int64) StringSliceCmd {
-	return newStringSliceCmdFromResult(r.cmd.Do(ctx, r.getZRevRangeCompleted(key, start, stop, false)))
-}
-
-func (r *resp3Cache) ZRevRange(ctx context.Context, key string, start, stop int64) StringSliceCmd {
-	return newStringSliceCmdFromResult(r.Do(ctx, r.resp.getZRevRangeCompleted(key, start, stop, false)))
-}
-
-func (r *resp3) ZRevRangeWithScores(ctx context.Context, key string, start, stop int64) ZSliceCmd {
-	return newZSliceCmdFromResult(r.cmd.Do(ctx, r.getZRevRangeCompleted(key, start, stop, true)))
-}
-
-func (r *resp3Cache) ZRevRangeWithScores(ctx context.Context, key string, start, stop int64) ZSliceCmd {
-	return newZSliceCmdFromResult(r.Do(ctx, r.resp.getZRevRangeCompleted(key, start, stop, true)))
-}
-
-func (r *resp3) getZRevRangeByLexCompleted(key string, opt ZRangeBy) rueidis.Completed {
+func (c *client) getZRevRangeByLexCompleted(key string, opt ZRangeBy) rueidis.Completed {
 	var completed rueidis.Completed
-	var zrevrangebylexMin = r.cmd.B().Zrevrangebylex().Key(key).Max(opt.Max).Min(opt.Min)
+	var zrevrangebylexMin = c.cmd.B().Zrevrangebylex().Key(key).Max(opt.Max).Min(opt.Min)
 	if opt.Offset != 0 || opt.Count != 0 {
 		completed = zrevrangebylexMin.Limit(opt.Offset, opt.Count).Build()
 	} else {
@@ -1731,17 +654,9 @@ func (r *resp3) getZRevRangeByLexCompleted(key string, opt ZRangeBy) rueidis.Com
 	return completed
 }
 
-func (r *resp3) ZRevRangeByLex(ctx context.Context, key string, opt ZRangeBy) StringSliceCmd {
-	return newStringSliceCmdFromResult(r.cmd.Do(ctx, r.getZRevRangeByLexCompleted(key, opt)))
-}
-
-func (r *resp3Cache) ZRevRangeByLex(ctx context.Context, key string, opt ZRangeBy) StringSliceCmd {
-	return newStringSliceCmdFromResult(r.Do(ctx, r.resp.getZRevRangeByLexCompleted(key, opt)))
-}
-
-func (r *resp3) getZRevRangeByScoreCompleted(key string, withScore bool, opt ZRangeBy) rueidis.Completed {
+func (c *client) getZRevRangeByScoreCompleted(key string, withScore bool, opt ZRangeBy) rueidis.Completed {
 	var completed rueidis.Completed
-	var zrevrangebyscoreMin = r.cmd.B().Zrevrangebyscore().Key(key).Max(opt.Max).Min(opt.Min)
+	var zrevrangebyscoreMin = c.cmd.B().Zrevrangebyscore().Key(key).Max(opt.Max).Min(opt.Min)
 	if opt.Offset != 0 || opt.Count != 0 {
 		if withScore {
 			completed = zrevrangebyscoreMin.Withscores().Limit(opt.Offset, opt.Count).Build()
@@ -1758,75 +673,27 @@ func (r *resp3) getZRevRangeByScoreCompleted(key string, withScore bool, opt ZRa
 	return completed
 }
 
-func (r *resp3) ZRevRangeByScore(ctx context.Context, key string, opt ZRangeBy) StringSliceCmd {
-	return newStringSliceCmdFromResult(r.cmd.Do(ctx, r.getZRevRangeByScoreCompleted(key, false, opt)))
+func (c *client) getZRevRankCompleted(key, member string) rueidis.Completed {
+	return c.cmd.B().Zrevrank().Key(key).Member(member).Build()
 }
 
-func (r *resp3Cache) ZRevRangeByScore(ctx context.Context, key string, opt ZRangeBy) StringSliceCmd {
-	return newStringSliceCmdFromResult(r.Do(ctx, r.resp.getZRevRangeByScoreCompleted(key, false, opt)))
-}
-
-func (r *resp3) ZRevRangeByScoreWithScores(ctx context.Context, key string, opt ZRangeBy) ZSliceCmd {
-	return newZSliceCmdFromResult(r.cmd.Do(ctx, r.getZRevRangeByScoreCompleted(key, true, opt)))
-}
-
-func (r *resp3Cache) ZRevRangeByScoreWithScores(ctx context.Context, key string, opt ZRangeBy) ZSliceCmd {
-	return newZSliceCmdFromResult(r.Do(ctx, r.resp.getZRevRangeByScoreCompleted(key, true, opt)))
-}
-
-func (r *resp3) getZRevRankCompleted(key, member string) rueidis.Completed {
-	return r.cmd.B().Zrevrank().Key(key).Member(member).Build()
-}
-
-func (r *resp3) ZRevRank(ctx context.Context, key, member string) IntCmd {
-	return newIntCmdFromResult(r.cmd.Do(ctx, r.getZRevRankCompleted(key, member)))
-}
-
-func (r *resp3Cache) ZRevRank(ctx context.Context, key, member string) IntCmd {
-	return newIntCmdFromResult(r.Do(ctx, r.resp.getZRevRankCompleted(key, member)))
-}
-
-func (r *resp3) ZScan(ctx context.Context, key string, cursor uint64, match string, count int64) ScanCmd {
-	cmd := r.cmd.B().Arbitrary(ZSCAN).Keys(key).Args(str(cursor))
+func (c *client) zscan(ctx context.Context, key string, cursor uint64, match string, count int64) ScanCmd {
+	cmd := c.cmd.B().Arbitrary(ZSCAN).Keys(key).Args(str(cursor))
 	if match != "" {
 		cmd = cmd.Args(MATCH, match)
 	}
 	if count > 0 {
 		cmd = cmd.Args(COUNT, str(count))
 	}
-	return newScanCmdFromResult(r.cmd.Do(ctx, cmd.ReadOnly()))
+	return newScanCmdFromResult(c.cmd.Do(ctx, cmd.ReadOnly()))
 }
 
-func (r *resp3) getZScoreCompleted(key, member string) rueidis.Completed {
-	return r.cmd.B().Zscore().Key(key).Member(member).Build()
+func (c *client) getZScoreCompleted(key, member string) rueidis.Completed {
+	return c.cmd.B().Zscore().Key(key).Member(member).Build()
 }
 
-func (r *resp3) ZScore(ctx context.Context, key, member string) FloatCmd {
-	return newFloatCmdFromResult(r.cmd.Do(ctx, r.getZScoreCompleted(key, member)))
-}
-
-func (r *resp3Cache) ZScore(ctx context.Context, key, member string) FloatCmd {
-	return newFloatCmdFromResult(r.Do(ctx, r.resp.getZScoreCompleted(key, member)))
-}
-
-func (r *resp3) ZUnion(ctx context.Context, store ZStore) StringSliceCmd {
-	return newStringSliceCmdFromStringSliceCmd(r.adapter.ZUnion(ctx, toZStore(store)))
-}
-
-func (r *resp3) ZUnionWithScores(ctx context.Context, store ZStore) ZSliceCmd {
-	return newZSliceCmdFromCmd(r.adapter.ZUnionWithScores(ctx, toZStore(store)))
-}
-
-func (r *resp3) ZUnionStore(ctx context.Context, dest string, store ZStore) IntCmd {
-	return newIntCmdFromIntCmd(r.adapter.ZUnionStore(ctx, dest, toZStore(store)))
-}
-
-func (r *resp3) XAck(ctx context.Context, stream, group string, ids ...string) IntCmd {
-	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Xack().Key(stream).Group(group).Id(ids...).Build()))
-}
-
-func (r *resp3) XAdd(ctx context.Context, a XAddArgs) StringCmd {
-	cmd := r.cmd.B().Arbitrary(XADD).Keys(a.Stream)
+func (c *client) xadd(ctx context.Context, a XAddArgs) StringCmd {
+	cmd := c.cmd.B().Arbitrary(XADD).Keys(a.Stream)
 	if a.NoMkStream {
 		cmd = cmd.Args(NOMKSTREAM)
 	}
@@ -1852,12 +719,12 @@ func (r *resp3) XAdd(ctx context.Context, a XAddArgs) StringCmd {
 	} else {
 		cmd = cmd.Args("*")
 	}
-	return newStringCmdFromResult(r.cmd.Do(ctx, cmd.Args(argToSlice(a.Values)...).Build()))
+	return newStringCmdFromResult(c.cmd.Do(ctx, cmd.Args(argToSlice(a.Values)...).Build()))
 }
 
-func (r *resp3) getXAutoClaimCompleted(a XAutoClaimArgs, justId bool) rueidis.Completed {
+func (c *client) getXAutoClaimCompleted(a XAutoClaimArgs, justId bool) rueidis.Completed {
 	var completed rueidis.Completed
-	var xautoclaimStart = r.cmd.B().Xautoclaim().Key(a.Stream).Group(a.Group).Consumer(a.Consumer).MinIdleTime(str(formatMs(a.MinIdle))).Start(a.Start)
+	var xautoclaimStart = c.cmd.B().Xautoclaim().Key(a.Stream).Group(a.Group).Consumer(a.Consumer).MinIdleTime(str(formatMs(a.MinIdle))).Start(a.Start)
 	if a.Count > 0 {
 		if justId {
 			completed = xautoclaimStart.Count(a.Count).Justid().Build()
@@ -1874,84 +741,16 @@ func (r *resp3) getXAutoClaimCompleted(a XAutoClaimArgs, justId bool) rueidis.Co
 	return completed
 }
 
-func (r *resp3) XAutoClaim(ctx context.Context, a XAutoClaimArgs) XAutoClaimCmd {
-	return newXAutoClaimCmdFromResult(r.cmd.Do(ctx, r.getXAutoClaimCompleted(a, false)))
-}
-
-func (r *resp3) XAutoClaimJustID(ctx context.Context, a XAutoClaimArgs) XAutoClaimJustIDCmd {
-	return newXAutoClaimJustIDCmdFromResult(r.cmd.Do(ctx, r.getXAutoClaimCompleted(a, true)))
-}
-
-func (r *resp3) getXClaimCompleted(a XClaimArgs, justId bool) rueidis.Completed {
-	var xclaimId = r.cmd.B().Xclaim().Key(a.Stream).Group(a.Group).Consumer(a.Consumer).MinIdleTime(str(formatMs(a.MinIdle))).Id(a.Messages...)
+func (c *client) getXClaimCompleted(a XClaimArgs, justId bool) rueidis.Completed {
+	var xclaimId = c.cmd.B().Xclaim().Key(a.Stream).Group(a.Group).Consumer(a.Consumer).MinIdleTime(str(formatMs(a.MinIdle))).Id(a.Messages...)
 	if justId {
 		return xclaimId.Justid().Build()
 	}
 	return xclaimId.Build()
 }
 
-func (r *resp3) XClaim(ctx context.Context, a XClaimArgs) XMessageSliceCmd {
-	return newXMessageSliceCmdFromResult(r.cmd.Do(ctx, r.getXClaimCompleted(a, false)))
-}
-
-func (r *resp3) XClaimJustID(ctx context.Context, a XClaimArgs) StringSliceCmd {
-	return newStringSliceCmdFromResult(r.cmd.Do(ctx, r.getXClaimCompleted(a, true)))
-}
-
-func (r *resp3) XDel(ctx context.Context, stream string, ids ...string) IntCmd {
-	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Xdel().Key(stream).Id(ids...).Build()))
-}
-
-func (r *resp3) XGroupCreate(ctx context.Context, stream, group, start string) StatusCmd {
-	return newStatusCmdFromResult(r.cmd.Do(ctx, r.cmd.B().XgroupCreate().Key(stream).Group(group).Id(start).Build()))
-}
-
-func (r *resp3) XGroupCreateMkStream(ctx context.Context, stream, group, start string) StatusCmd {
-	return newStatusCmdFromResult(r.cmd.Do(ctx, r.cmd.B().XgroupCreate().Key(stream).Group(group).Id(start).Mkstream().Build()))
-}
-
-func (r *resp3) XGroupCreateConsumer(ctx context.Context, stream, group, consumer string) IntCmd {
-	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().XgroupCreateconsumer().Key(stream).Group(group).Consumer(consumer).Build()))
-}
-
-func (r *resp3) XGroupDelConsumer(ctx context.Context, stream, group, consumer string) IntCmd {
-	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().XgroupDelconsumer().Key(stream).Group(group).Consumername(consumer).Build()))
-}
-
-func (r *resp3) XGroupDestroy(ctx context.Context, stream, group string) IntCmd {
-	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().XgroupDestroy().Key(stream).Group(group).Build()))
-}
-
-func (r *resp3) XGroupSetID(ctx context.Context, stream, group, start string) StatusCmd {
-	return newStatusCmdFromResult(r.cmd.Do(ctx, r.cmd.B().XgroupSetid().Key(stream).Group(group).Id(start).Build()))
-}
-
-func (r *resp3) XInfoConsumers(ctx context.Context, key string, group string) XInfoConsumersCmd {
-	return newXInfoConsumersCmdFromResult(r.cmd.Do(ctx, r.cmd.B().XinfoConsumers().Key(key).Group(group).Build()), EMPTY, group)
-}
-
-func (r *resp3) XInfoGroups(ctx context.Context, key string) XInfoGroupsCmd {
-	return newXInfoGroupsCmdFromResult(r.cmd.Do(ctx, r.cmd.B().XinfoGroups().Key(key).Build()), key)
-}
-
-func (r *resp3) XInfoStream(ctx context.Context, key string) XInfoStreamCmd {
-	return newXInfoStreamCmdFromResult(r.cmd.Do(ctx, r.cmd.B().XinfoStream().Key(key).Build()), key)
-}
-
-func (r *resp3) XInfoStreamFull(ctx context.Context, key string, count int) XInfoStreamFullCmd {
-	return newXInfoStreamFullCmdFromResult(r.cmd.Do(ctx, r.cmd.B().XinfoStream().Key(key).Full().Count(int64(count)).Build()))
-}
-
-func (r *resp3) XLen(ctx context.Context, stream string) IntCmd {
-	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Xlen().Key(stream).Build()))
-}
-
-func (r *resp3) XPending(ctx context.Context, stream, group string) XPendingCmd {
-	return newXPendingCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Xpending().Key(stream).Group(group).Build()))
-}
-
-func (r *resp3) XPendingExt(ctx context.Context, a XPendingExtArgs) XPendingExtCmd {
-	cmd := r.cmd.B().Arbitrary(XPENDING).Keys(a.Stream).Args(a.Group)
+func (c *client) xpendingExt(ctx context.Context, a XPendingExtArgs) XPendingExtCmd {
+	cmd := c.cmd.B().Arbitrary(XPENDING).Keys(a.Stream).Args(a.Group)
 	if a.Idle != 0 {
 		cmd = cmd.Args(IDLE, str(formatMs(a.Idle)))
 	}
@@ -1959,40 +758,12 @@ func (r *resp3) XPendingExt(ctx context.Context, a XPendingExtArgs) XPendingExtC
 	if len(a.Consumer) > 0 {
 		cmd = cmd.Args(a.Consumer)
 	}
-	return newXPendingExtCmdFromResult(r.cmd.Do(ctx, cmd.Build()))
+	return newXPendingExtCmdFromResult(c.cmd.Do(ctx, cmd.Build()))
 }
 
-func (r *resp3) XRange(ctx context.Context, stream, start, stop string) XMessageSliceCmd {
-	return newXMessageSliceCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Xrange().Key(stream).Start(start).End(stop).Build()))
-}
-
-func (r *resp3) XRangeN(ctx context.Context, stream, start, stop string, count int64) XMessageSliceCmd {
-	return newXMessageSliceCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Xrange().Key(stream).Start(start).End(stop).Count(count).Build()))
-}
-
-func (r *resp3) XRead(ctx context.Context, a XReadArgs) XStreamSliceCmd {
-	return newXStreamSliceCmdFromCmd(r.adapter.XRead(ctx, toXReadArgs(a)))
-}
-
-func (r *resp3) XReadStreams(ctx context.Context, streams ...string) XStreamSliceCmd {
-	return r.XRead(ctx, XReadArgs{Streams: streams, Block: -1})
-}
-
-func (r *resp3) XReadGroup(ctx context.Context, a XReadGroupArgs) XStreamSliceCmd {
-	return newXStreamSliceCmdFromCmd(r.adapter.XReadGroup(ctx, toXReadGroupArgs(a)))
-}
-
-func (r *resp3) XRevRange(ctx context.Context, stream string, start, stop string) XMessageSliceCmd {
-	return newXMessageSliceCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Xrevrange().Key(stream).End(start).Start(stop).Build()))
-}
-
-func (r *resp3) XRevRangeN(ctx context.Context, stream string, start, stop string, count int64) XMessageSliceCmd {
-	return newXMessageSliceCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Xrevrange().Key(stream).End(start).Start(stop).Count(count).Build()))
-}
-
-func (r *resp3) xTrim(ctx context.Context, key, strategy string,
+func (c *client) xtrim(ctx context.Context, key, strategy string,
 	approx bool, threshold string, limit int64) IntCmd {
-	cmd := r.cmd.B().Arbitrary(XTRIM).Keys(key).Args(strategy)
+	cmd := c.cmd.B().Arbitrary(XTRIM).Keys(key).Args(strategy)
 	if approx {
 		cmd = cmd.Args("~")
 	}
@@ -2000,64 +771,16 @@ func (r *resp3) xTrim(ctx context.Context, key, strategy string,
 	if limit > 0 {
 		cmd = cmd.Args(LIMIT, str(limit))
 	}
-	return newIntCmdFromResult(r.cmd.Do(ctx, cmd.Build()))
+	return newIntCmdFromResult(c.cmd.Do(ctx, cmd.Build()))
 }
 
-func (r *resp3) XTrim(ctx context.Context, key string, maxLen int64) IntCmd {
-	return r.xTrim(ctx, key, MAXLEN, false, str(maxLen), 0)
+func (c *client) getGetCompleted(key string) rueidis.Completed {
+	return c.cmd.B().Get().Key(key).Build()
 }
 
-func (r *resp3) XTrimApprox(ctx context.Context, key string, maxLen int64) IntCmd {
-	return r.xTrim(ctx, key, MAXLEN, true, str(maxLen), 0)
-}
-
-func (r *resp3) XTrimMaxLen(ctx context.Context, key string, maxLen int64) IntCmd {
-	return r.xTrim(ctx, key, MAXLEN, false, str(maxLen), 0)
-}
-
-func (r *resp3) XTrimMinID(ctx context.Context, key string, minID string) IntCmd {
-	return r.xTrim(ctx, key, MINID, false, minID, 0)
-}
-
-func (r *resp3) XTrimMaxLenApprox(ctx context.Context, key string, maxLen, limit int64) IntCmd {
-	return r.xTrim(ctx, key, MAXLEN, true, str(maxLen), limit)
-}
-
-func (r *resp3) XTrimMinIDApprox(ctx context.Context, key string, minID string, limit int64) IntCmd {
-	return r.xTrim(ctx, key, MINID, true, minID, limit)
-}
-
-func (r *resp3) Append(ctx context.Context, key, value string) IntCmd {
-	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Append().Key(key).Value(value).Build()))
-}
-
-func (r *resp3) Decr(ctx context.Context, key string) IntCmd {
-	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Decr().Key(key).Build()))
-}
-
-func (r *resp3) DecrBy(ctx context.Context, key string, decrement int64) IntCmd {
-	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Decrby().Key(key).Decrement(decrement).Build()))
-}
-
-func (r *resp3) getGetCompleted(key string) rueidis.Completed {
-	return r.cmd.B().Get().Key(key).Build()
-}
-
-func (r *resp3) Get(ctx context.Context, key string) StringCmd {
-	return newStringCmdFromResult(r.cmd.Do(ctx, r.getGetCompleted(key)))
-}
-
-func (r *resp3Cache) Get(ctx context.Context, key string) StringCmd {
-	return newStringCmdFromResult(r.Do(ctx, r.resp.getGetCompleted(key)))
-}
-
-func (r *resp3) GetDel(ctx context.Context, key string) StringCmd {
-	return newStringCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Getdel().Key(key).Build()))
-}
-
-func (r *resp3) GetEx(ctx context.Context, key string, expiration time.Duration) StringCmd {
+func (c *client) getEx(ctx context.Context, key string, expiration time.Duration) StringCmd {
 	var completed rueidis.Completed
-	var getexKey = r.cmd.B().Getex().Key(key)
+	var getexKey = c.cmd.B().Getex().Key(key)
 	if expiration > 0 {
 		if usePrecise(expiration) {
 			completed = getexKey.PxMilliseconds(formatMs(expiration)).Build()
@@ -2069,70 +792,38 @@ func (r *resp3) GetEx(ctx context.Context, key string, expiration time.Duration)
 	} else {
 		completed = getexKey.Build()
 	}
-	return newStringCmdFromResult(r.cmd.Do(ctx, completed))
+	return newStringCmdFromResult(c.cmd.Do(ctx, completed))
 }
 
-func (r *resp3) getGetRangeCompleted(key string, start, end int64) rueidis.Completed {
-	return r.cmd.B().Getrange().Key(key).Start(start).End(end).Build()
+func (c *client) getGetRangeCompleted(key string, start, end int64) rueidis.Completed {
+	return c.cmd.B().Getrange().Key(key).Start(start).End(end).Build()
 }
 
-func (r *resp3) GetRange(ctx context.Context, key string, start, end int64) StringCmd {
-	return newStringCmdFromResult(r.cmd.Do(ctx, r.getGetRangeCompleted(key, start, end)))
+func (c *client) getMGetCompleted(keys ...string) rueidis.Completed {
+	return c.cmd.B().Mget().Key(keys...).Build()
 }
 
-func (r *resp3Cache) GetRange(ctx context.Context, key string, start, end int64) StringCmd {
-	return newStringCmdFromResult(r.Do(ctx, r.resp.getGetRangeCompleted(key, start, end)))
-}
-
-func (r *resp3) GetSet(ctx context.Context, key string, value interface{}) StringCmd {
-	return newStringCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Getset().Key(key).Value(str(value)).Build()))
-}
-
-func (r *resp3) Incr(ctx context.Context, key string) IntCmd {
-	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Incr().Key(key).Build()))
-}
-
-func (r *resp3) IncrBy(ctx context.Context, key string, value int64) IntCmd {
-	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Incrby().Key(key).Increment(value).Build()))
-}
-
-func (r *resp3) IncrByFloat(ctx context.Context, key string, value float64) FloatCmd {
-	return newFloatCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Incrbyfloat().Key(key).Increment(value).Build()))
-}
-
-func (r *resp3) getMGetCompleted(keys ...string) rueidis.Completed {
-	return r.cmd.B().Mget().Key(keys...).Build()
-}
-
-func (r *resp3) MGet(ctx context.Context, keys ...string) SliceCmd {
-	return newSliceCmdFromSliceResult(r.cmd.Do(ctx, r.getMGetCompleted(keys...)))
-}
-
-func (r *resp3Cache) MGet(ctx context.Context, keys ...string) SliceCmd {
-	return newSliceCmdFromSliceResult(r.Do(ctx, r.resp.getMGetCompleted(keys...)))
-}
-
-func (r *resp3) MSet(ctx context.Context, values ...interface{}) StatusCmd {
-	kv := r.cmd.B().Mset().KeyValue()
+func (c *client) mset(ctx context.Context, values ...interface{}) StatusCmd {
+	kv := c.cmd.B().Mset().KeyValue()
 	args := argsToSlice(values)
 	for i := 0; i < len(args); i += 2 {
 		kv = kv.KeyValue(args[i], args[i+1])
 	}
-	return newStatusCmdFromResult(r.cmd.Do(ctx, kv.Build()))
+	return newStatusCmdFromResult(c.cmd.Do(ctx, kv.Build()))
 }
 
-func (r *resp3) MSetNX(ctx context.Context, values ...interface{}) BoolCmd {
-	kv := r.cmd.B().Msetnx().KeyValue()
+func (c *client) msetNX(ctx context.Context, values ...interface{}) BoolCmd {
+	kv := c.cmd.B().Msetnx().KeyValue()
 	args := argsToSlice(values)
 	for i := 0; i < len(args); i += 2 {
 		kv = kv.KeyValue(args[i], args[i+1])
 	}
-	return newBoolCmdFromResult(r.cmd.Do(ctx, kv.Build()))
+	return newBoolCmdFromResult(c.cmd.Do(ctx, kv.Build()))
 }
 
-func (r *resp3) Set(ctx context.Context, key string, value interface{}, expiration time.Duration) StatusCmd {
+func (c *client) set(ctx context.Context, key string, value interface{}, expiration time.Duration) StatusCmd {
 	var completed rueidis.Completed
-	var setValue = r.cmd.B().Set().Key(key).Value(str(value))
+	var setValue = c.cmd.B().Set().Key(key).Value(str(value))
 	if expiration > 0 {
 		if usePrecise(expiration) {
 			completed = setValue.PxMilliseconds(formatMs(expiration)).Build()
@@ -2144,49 +835,45 @@ func (r *resp3) Set(ctx context.Context, key string, value interface{}, expirati
 	} else {
 		completed = setValue.Build()
 	}
-	return newStatusCmdFromResult(r.cmd.Do(ctx, completed))
+	return newStatusCmdFromResult(c.cmd.Do(ctx, completed))
 }
 
-func (r *resp3) SetEX(ctx context.Context, key string, value interface{}, expiration time.Duration) StatusCmd {
-	return newStatusCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Setex().Key(key).Seconds(formatSec(expiration)).Value(str(value)).Build()))
-}
-
-func (r *resp3) SetNX(ctx context.Context, key string, value interface{}, expiration time.Duration) BoolCmd {
+func (c *client) setNX(ctx context.Context, key string, value interface{}, expiration time.Duration) BoolCmd {
 	var resp rueidis.RedisResult
 	switch expiration {
 	case 0:
-		resp = r.cmd.Do(ctx, r.cmd.B().Setnx().Key(key).Value(str(value)).Build())
+		resp = c.cmd.Do(ctx, c.cmd.B().Setnx().Key(key).Value(str(value)).Build())
 	case KeepTTL:
-		resp = r.cmd.Do(ctx, r.cmd.B().Set().Key(key).Value(str(value)).Nx().Keepttl().Build())
+		resp = c.cmd.Do(ctx, c.cmd.B().Set().Key(key).Value(str(value)).Nx().Keepttl().Build())
 	default:
 		if usePrecise(expiration) {
-			resp = r.cmd.Do(ctx, r.cmd.B().Set().Key(key).Value(str(value)).Nx().PxMilliseconds(formatMs(expiration)).Build())
+			resp = c.cmd.Do(ctx, c.cmd.B().Set().Key(key).Value(str(value)).Nx().PxMilliseconds(formatMs(expiration)).Build())
 		} else {
-			resp = r.cmd.Do(ctx, r.cmd.B().Set().Key(key).Value(str(value)).Nx().ExSeconds(formatSec(expiration)).Build())
+			resp = c.cmd.Do(ctx, c.cmd.B().Set().Key(key).Value(str(value)).Nx().ExSeconds(formatSec(expiration)).Build())
 		}
 	}
 	return newBoolCmdFromResult(resp)
 }
 
-func (r *resp3) SetXX(ctx context.Context, key string, value interface{}, expiration time.Duration) BoolCmd {
+func (c *client) setXX(ctx context.Context, key string, value interface{}, expiration time.Duration) BoolCmd {
 	var resp rueidis.RedisResult
 	switch expiration {
 	case 0:
-		resp = r.cmd.Do(ctx, r.cmd.B().Set().Key(key).Value(str(value)).Xx().Build())
+		resp = c.cmd.Do(ctx, c.cmd.B().Set().Key(key).Value(str(value)).Xx().Build())
 	case KeepTTL:
-		resp = r.cmd.Do(ctx, r.cmd.B().Set().Key(key).Value(str(value)).Xx().Keepttl().Build())
+		resp = c.cmd.Do(ctx, c.cmd.B().Set().Key(key).Value(str(value)).Xx().Keepttl().Build())
 	default:
 		if usePrecise(expiration) {
-			resp = r.cmd.Do(ctx, r.cmd.B().Set().Key(key).Value(str(value)).Xx().PxMilliseconds(formatMs(expiration)).Build())
+			resp = c.cmd.Do(ctx, c.cmd.B().Set().Key(key).Value(str(value)).Xx().PxMilliseconds(formatMs(expiration)).Build())
 		} else {
-			resp = r.cmd.Do(ctx, r.cmd.B().Set().Key(key).Value(str(value)).Xx().ExSeconds(formatSec(expiration)).Build())
+			resp = c.cmd.Do(ctx, c.cmd.B().Set().Key(key).Value(str(value)).Xx().ExSeconds(formatSec(expiration)).Build())
 		}
 	}
 	return newBoolCmdFromResult(resp)
 }
 
-func (r *resp3) SetArgs(ctx context.Context, key string, value interface{}, a SetArgs) StatusCmd {
-	cmd := r.cmd.B().Arbitrary(SET).Keys(key).Args(str(value))
+func (c *client) setArgs(ctx context.Context, key string, value interface{}, a SetArgs) StatusCmd {
+	cmd := c.cmd.B().Arbitrary(SET).Keys(key).Args(str(value))
 	if a.KeepTTL {
 		cmd = cmd.Args(KEEPTTL)
 	}
@@ -2206,42 +893,9 @@ func (r *resp3) SetArgs(ctx context.Context, key string, value interface{}, a Se
 	if a.Get {
 		cmd = cmd.Args(GET)
 	}
-	return newStatusCmdFromResult(r.cmd.Do(ctx, cmd.Build()))
+	return newStatusCmdFromResult(c.cmd.Do(ctx, cmd.Build()))
 }
 
-func (r *resp3) SetRange(ctx context.Context, key string, offset int64, value string) IntCmd {
-	return newIntCmdFromResult(r.cmd.Do(ctx, r.cmd.B().Setrange().Key(key).Offset(offset).Value(value).Build()))
+func (c *client) getStrLenCompleted(key string) rueidis.Completed {
+	return c.cmd.B().Strlen().Key(key).Build()
 }
-
-func (r *resp3) getStrLenCompleted(key string) rueidis.Completed {
-	return r.cmd.B().Strlen().Key(key).Build()
-}
-
-func (r *resp3) StrLen(ctx context.Context, key string) IntCmd {
-	return newIntCmdFromResult(r.cmd.Do(ctx, r.getStrLenCompleted(key)))
-}
-
-func (r *resp3Cache) StrLen(ctx context.Context, key string) IntCmd {
-	return newIntCmdFromResult(r.Do(ctx, r.resp.getStrLenCompleted(key)))
-}
-
-func (r *resp3) Receive(ctx context.Context, cb func(Message), channels ...string) error {
-	return r.cmd.Receive(ctx, r.cmd.B().Subscribe().Channel(channels...).Build(), func(msg rueidis.PubSubMessage) {
-		cb(Message{
-			Channel: msg.Channel,
-			Pattern: msg.Pattern,
-			Payload: msg.Message,
-		})
-	})
-}
-
-func (r *resp3) PReceive(ctx context.Context, cb func(Message), patterns ...string) error {
-	return r.cmd.Receive(ctx, r.cmd.B().Psubscribe().Pattern(patterns...).Build(), func(msg rueidis.PubSubMessage) {
-		cb(Message{
-			Channel: msg.Channel,
-			Pattern: msg.Pattern,
-			Payload: msg.Message,
-		})
-	})
-}
-func (r *resp3) XMGet(context.Context, ...string) SliceCmd { return nil }

@@ -515,14 +515,14 @@ type SortedSetCacheCmdable interface {
 
 func (c *client) BZPopMax(ctx context.Context, timeout time.Duration, keys ...string) ZWithKeyCmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandBZPopMax, func() []string { return keys })
-	r := c.cmdable.BZPopMax(ctx, timeout, keys...)
+	r := newZWithKeyCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Bzpopmax().Key(keys...).Timeout(float64(formatSec(timeout))).Build()))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) BZPopMin(ctx context.Context, timeout time.Duration, keys ...string) ZWithKeyCmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandBZPopMin, func() []string { return keys })
-	r := c.cmdable.BZPopMin(ctx, timeout, keys...)
+	r := newZWithKeyCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Bzpopmin().Key(keys...).Timeout(float64(formatSec(timeout))).Build()))
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -533,42 +533,42 @@ func (c *client) ZAdd(ctx context.Context, key string, members ...Z) IntCmd {
 	} else {
 		ctx = c.handler.before(ctx, CommandZAdd)
 	}
-	r := c.cmdable.ZAdd(ctx, key, members...)
+	r := c.zadd(ctx, key, members...)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ZAddNX(ctx context.Context, key string, members ...Z) IntCmd {
 	ctx = c.handler.before(ctx, CommandZAddNX)
-	r := c.cmdable.ZAddNX(ctx, key, members...)
+	r := c.zaddNX(ctx, key, members...)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ZAddXX(ctx context.Context, key string, members ...Z) IntCmd {
 	ctx = c.handler.before(ctx, CommandZAddXX)
-	r := c.cmdable.ZAddXX(ctx, key, members...)
+	r := c.zaddXX(ctx, key, members...)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ZAddCh(ctx context.Context, key string, members ...Z) IntCmd {
 	ctx = c.handler.before(ctx, CommandZAddCh)
-	r := c.cmdable.ZAddCh(ctx, key, members...)
+	r := newIntCmdFromResult(c.zAddArgs(ctx, key, false, ZAddArgs{Ch: true}, members...))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ZAddNXCh(ctx context.Context, key string, members ...Z) IntCmd {
 	ctx = c.handler.before(ctx, CommandZAddNX)
-	r := c.cmdable.ZAddNXCh(ctx, key, members...)
+	r := newIntCmdFromResult(c.zAddArgs(ctx, key, false, ZAddArgs{NX: true, Ch: true}, members...))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ZAddXXCh(ctx context.Context, key string, members ...Z) IntCmd {
 	ctx = c.handler.before(ctx, CommandZAddXX)
-	r := c.cmdable.ZAddXXCh(ctx, key, members...)
+	r := newIntCmdFromResult(c.zAddArgs(ctx, key, false, ZAddArgs{XX: true, Ch: true}, members...))
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -587,7 +587,7 @@ func (c *client) ZAddArgs(ctx context.Context, key string, args ZAddArgs) IntCmd
 	} else {
 		ctx = c.handler.before(ctx, CommandZAdd)
 	}
-	r := c.cmdable.ZAddArgs(ctx, key, args)
+	r := newIntCmdFromResult(c.zAddArgs(ctx, key, false, args, args.Members...))
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -600,140 +600,140 @@ func (c *client) ZAddArgsIncr(ctx context.Context, key string, args ZAddArgs) Fl
 	} else {
 		ctx = c.handler.before(ctx, CommandZAddIncr)
 	}
-	r := c.cmdable.ZAddArgsIncr(ctx, key, args)
+	r := newFloatCmdFromResult(c.zAddArgs(ctx, key, true, args, args.Members...))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ZIncr(ctx context.Context, key string, member Z) FloatCmd {
 	ctx = c.handler.before(ctx, CommandZAddIncr)
-	r := c.cmdable.ZIncr(ctx, key, member)
+	r := newFloatCmdFromResult(c.zAddArgs(ctx, key, true, ZAddArgs{}, member))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ZIncrNX(ctx context.Context, key string, member Z) FloatCmd {
 	ctx = c.handler.before(ctx, CommandZAddIncr)
-	r := c.cmdable.ZIncrNX(ctx, key, member)
+	r := newFloatCmdFromResult(c.zAddArgs(ctx, key, true, ZAddArgs{NX: true}, member))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ZIncrXX(ctx context.Context, key string, member Z) FloatCmd {
 	ctx = c.handler.before(ctx, CommandZAddIncr)
-	r := c.cmdable.ZIncrXX(ctx, key, member)
+	r := newFloatCmdFromResult(c.zAddArgs(ctx, key, true, ZAddArgs{XX: true}, member))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ZCard(ctx context.Context, key string) IntCmd {
 	ctx = c.handler.before(ctx, CommandZCard)
-	r := c.cacheCmdable.ZCard(ctx, key)
+	r := newIntCmdFromResult(c.Do(ctx, c.getZCardCompleted(key)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ZCount(ctx context.Context, key, min, max string) IntCmd {
 	ctx = c.handler.before(ctx, CommandZCount)
-	r := c.cacheCmdable.ZCount(ctx, key, min, max)
+	r := newIntCmdFromResult(c.Do(ctx, c.getZCount(key, min, max)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ZDiff(ctx context.Context, keys ...string) StringSliceCmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandZDiff, func() []string { return keys })
-	r := c.cmdable.ZDiff(ctx, keys...)
+	r := newStringSliceCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Zdiff().Numkeys(int64(len(keys))).Key(keys...).Build()))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ZDiffWithScores(ctx context.Context, keys ...string) ZSliceCmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandZDiff, func() []string { return keys })
-	r := c.cmdable.ZDiffWithScores(ctx, keys...)
+	r := newZSliceCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Zdiff().Numkeys(int64(len(keys))).Key(keys...).Withscores().Build()))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ZDiffStore(ctx context.Context, destination string, keys ...string) IntCmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandZDiffStore, func() []string { return appendString(destination, keys...) })
-	r := c.cmdable.ZDiffStore(ctx, destination, keys...)
+	r := newIntCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Zdiffstore().Destination(destination).Numkeys(int64(len(keys))).Key(keys...).Build()))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ZIncrBy(ctx context.Context, key string, increment float64, member string) FloatCmd {
 	ctx = c.handler.before(ctx, CommandZIncrBy)
-	r := c.cmdable.ZIncrBy(ctx, key, increment, member)
+	r := newFloatCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Zincrby().Key(key).Increment(increment).Member(member).Build()))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ZInter(ctx context.Context, store ZStore) StringSliceCmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandZInter, func() []string { return store.Keys })
-	r := c.cmdable.ZInter(ctx, store)
+	r := newStringSliceCmdFromStringSliceCmd(c.adapter.ZInter(ctx, toZStore(store)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ZInterWithScores(ctx context.Context, store ZStore) ZSliceCmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandZInter, func() []string { return store.Keys })
-	r := c.cmdable.ZInterWithScores(ctx, store)
+	r := newZSliceCmdFromCmd(c.adapter.ZInterWithScores(ctx, toZStore(store)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ZInterStore(ctx context.Context, destination string, store ZStore) IntCmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandZInterStore, func() []string { return appendString(destination, store.Keys...) })
-	r := c.cmdable.ZInterStore(ctx, destination, store)
+	r := newIntCmdFromIntCmd(c.adapter.ZInterStore(ctx, destination, toZStore(store)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ZLexCount(ctx context.Context, key, min, max string) IntCmd {
 	ctx = c.handler.before(ctx, CommandZLexCount)
-	r := c.cacheCmdable.ZLexCount(ctx, key, min, max)
+	r := newIntCmdFromResult(c.Do(ctx, c.getZLexCountCompleted(key, min, max)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ZMScore(ctx context.Context, key string, members ...string) FloatSliceCmd {
 	ctx = c.handler.before(ctx, CommandZMScore)
-	r := c.cacheCmdable.ZMScore(ctx, key, members...)
+	r := newFloatSliceCmdFromResult(c.Do(ctx, c.getZMScoreCompleted(key, members...)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ZPopMax(ctx context.Context, key string, count ...int64) ZSliceCmd {
 	ctx = c.handler.before(ctx, CommandZPopMax)
-	r := c.cmdable.ZPopMax(ctx, key, count...)
+	r := c.zpopMax(ctx, key, count...)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ZPopMin(ctx context.Context, key string, count ...int64) ZSliceCmd {
 	ctx = c.handler.before(ctx, CommandZPopMin)
-	r := c.cmdable.ZPopMin(ctx, key, count...)
+	r := c.zpopMin(ctx, key, count...)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ZRandMember(ctx context.Context, key string, count int, withScores bool) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandZRandMember)
-	r := c.cmdable.ZRandMember(ctx, key, count, withScores)
+	r := c.zrandMember(ctx, key, count, withScores)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ZRange(ctx context.Context, key string, start, stop int64) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandZRange)
-	r := c.cacheCmdable.ZRange(ctx, key, start, stop)
+	r := newStringSliceCmdFromResult(c.Do(ctx, c.getZRangeCompleted(key, start, stop)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ZRangeWithScores(ctx context.Context, key string, start, stop int64) ZSliceCmd {
 	ctx = c.handler.before(ctx, CommandZRange)
-	r := c.cacheCmdable.ZRangeWithScores(ctx, key, start, stop)
+	r := newZSliceCmdFromResult(c.Do(ctx, c.getZRangeWithScoresCompleted(key, start, stop)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -750,7 +750,7 @@ func (c *client) ZRangeArgs(ctx context.Context, z ZRangeArgs) StringSliceCmd {
 	} else {
 		ctx = c.handler.before(ctx, CommandZRange)
 	}
-	r := c.cacheCmdable.ZRangeArgs(ctx, z)
+	r := newStringSliceCmdFromResult(c.Do(ctx, c.zRangeArgs(false, z)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -767,42 +767,42 @@ func (c *client) ZRangeArgsWithScores(ctx context.Context, z ZRangeArgs) ZSliceC
 	} else {
 		ctx = c.handler.before(ctx, CommandZRange)
 	}
-	r := c.cacheCmdable.ZRangeArgsWithScores(ctx, z)
+	r := newZSliceCmdFromResult(c.Do(ctx, c.zRangeArgs(true, z)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ZRangeByLex(ctx context.Context, key string, opt ZRangeBy) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandZRangebylex)
-	r := c.cacheCmdable.ZRangeByLex(ctx, key, opt)
+	r := newStringSliceCmdFromResult(c.Do(ctx, c.getZRangeByLexCompleted(key, opt)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ZRangeByScore(ctx context.Context, key string, opt ZRangeBy) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandZrangebyscore)
-	r := c.cacheCmdable.ZRangeByScore(ctx, key, opt)
+	r := newStringSliceCmdFromResult(c.Do(ctx, c.getZRangeByScoreCompleted(key, false, opt)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ZRangeByScoreWithScores(ctx context.Context, key string, opt ZRangeBy) ZSliceCmd {
 	ctx = c.handler.before(ctx, CommandZrangebyscoreWithScores)
-	r := c.cacheCmdable.ZRangeByScoreWithScores(ctx, key, opt)
+	r := newZSliceCmdFromResult(c.Do(ctx, c.getZRangeByScoreCompleted(key, true, opt)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ZRangeStore(ctx context.Context, dst string, z ZRangeArgs) IntCmd {
 	ctx = c.handler.before(ctx, CommandZRangeStore)
-	r := c.cmdable.ZRangeStore(ctx, dst, z)
+	r := newIntCmdFromIntCmd(c.adapter.ZRangeStore(ctx, dst, toZRangeArgs(z)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ZRank(ctx context.Context, key, member string) IntCmd {
 	ctx = c.handler.before(ctx, CommandZRank)
-	r := c.cacheCmdable.ZRank(ctx, key, member)
+	r := newIntCmdFromResult(c.Do(ctx, c.getZRankCompleted(key, member)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -813,105 +813,105 @@ func (c *client) ZRem(ctx context.Context, key string, members ...interface{}) I
 	} else {
 		ctx = c.handler.before(ctx, CommandZRem)
 	}
-	r := c.cmdable.ZRem(ctx, key, members...)
+	r := newIntCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Zrem().Key(key).Member(argsToSlice(members)...).Build()))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ZRemRangeByLex(ctx context.Context, key, min, max string) IntCmd {
 	ctx = c.handler.before(ctx, CommandZRemRangeByLex)
-	r := c.cmdable.ZRemRangeByLex(ctx, key, min, max)
+	r := newIntCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Zremrangebylex().Key(key).Min(min).Max(max).Build()))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ZRemRangeByRank(ctx context.Context, key string, start, stop int64) IntCmd {
 	ctx = c.handler.before(ctx, CommandZRemRangeByRank)
-	r := c.cmdable.ZRemRangeByRank(ctx, key, start, stop)
+	r := newIntCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Zremrangebyrank().Key(key).Start(start).Stop(stop).Build()))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ZRemRangeByScore(ctx context.Context, key, min, max string) IntCmd {
 	ctx = c.handler.before(ctx, CommandZRemRangeByScore)
-	r := c.cmdable.ZRemRangeByScore(ctx, key, min, max)
+	r := newIntCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Zremrangebyscore().Key(key).Min(min).Max(max).Build()))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ZRevRange(ctx context.Context, key string, start, stop int64) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandZRevRange)
-	r := c.cacheCmdable.ZRevRange(ctx, key, start, stop)
+	r := newStringSliceCmdFromResult(c.Do(ctx, c.getZRevRangeCompleted(key, start, stop, false)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ZRevRangeWithScores(ctx context.Context, key string, start, stop int64) ZSliceCmd {
 	ctx = c.handler.before(ctx, CommandZRevRange)
-	r := c.cacheCmdable.ZRevRangeWithScores(ctx, key, start, stop)
+	r := newZSliceCmdFromResult(c.Do(ctx, c.getZRevRangeCompleted(key, start, stop, true)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ZRevRangeByLex(ctx context.Context, key string, opt ZRangeBy) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandZRevRangeByLex)
-	r := c.cacheCmdable.ZRevRangeByLex(ctx, key, opt)
+	r := newStringSliceCmdFromResult(c.Do(ctx, c.getZRevRangeByLexCompleted(key, opt)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ZRevRangeByScore(ctx context.Context, key string, opt ZRangeBy) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandZRevRangeByScore)
-	r := c.cacheCmdable.ZRevRangeByScore(ctx, key, opt)
+	r := newStringSliceCmdFromResult(c.Do(ctx, c.getZRevRangeByScoreCompleted(key, false, opt)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ZRevRangeByScoreWithScores(ctx context.Context, key string, opt ZRangeBy) ZSliceCmd {
 	ctx = c.handler.before(ctx, CommandZRevRangeByScore)
-	r := c.cacheCmdable.ZRevRangeByScoreWithScores(ctx, key, opt)
+	r := newZSliceCmdFromResult(c.Do(ctx, c.getZRevRangeByScoreCompleted(key, true, opt)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ZRevRank(ctx context.Context, key, member string) IntCmd {
 	ctx = c.handler.before(ctx, CommandZRevRank)
-	r := c.cacheCmdable.ZRevRank(ctx, key, member)
+	r := newIntCmdFromResult(c.Do(ctx, c.getZRevRankCompleted(key, member)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ZScan(ctx context.Context, key string, cursor uint64, match string, count int64) ScanCmd {
 	ctx = c.handler.before(ctx, CommandZScan)
-	r := c.cmdable.ZScan(ctx, key, cursor, match, count)
+	r := c.zscan(ctx, key, cursor, match, count)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ZScore(ctx context.Context, key, member string) FloatCmd {
 	ctx = c.handler.before(ctx, CommandZScore)
-	r := c.cacheCmdable.ZScore(ctx, key, member)
+	r := newFloatCmdFromResult(c.Do(ctx, c.getZScoreCompleted(key, member)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ZUnion(ctx context.Context, store ZStore) StringSliceCmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandZUnion, func() []string { return store.Keys })
-	r := c.cmdable.ZUnion(ctx, store)
+	r := newStringSliceCmdFromStringSliceCmd(c.adapter.ZUnion(ctx, toZStore(store)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ZUnionWithScores(ctx context.Context, store ZStore) ZSliceCmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandZUnion, func() []string { return store.Keys })
-	r := c.cmdable.ZUnionWithScores(ctx, store)
+	r := newZSliceCmdFromCmd(c.adapter.ZUnionWithScores(ctx, toZStore(store)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ZUnionStore(ctx context.Context, dest string, store ZStore) IntCmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandZUnionStore, func() []string { return appendString(dest, store.Keys...) })
-	r := c.cmdable.ZUnionStore(ctx, dest, store)
+	r := newIntCmdFromIntCmd(c.adapter.ZUnionStore(ctx, dest, toZStore(store)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
