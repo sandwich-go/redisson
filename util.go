@@ -231,3 +231,108 @@ func parseInt(s string) (int64, error) {
 func warning(msg string) {
 	fmt.Println(msg)
 }
+
+func toLower(s string) string {
+	if isLower(s) {
+		return s
+	}
+
+	b := make([]byte, len(s))
+	for i := range b {
+		c := s[i]
+		if c >= 'A' && c <= 'Z' {
+			c += 'a' - 'A'
+		}
+		b[i] = c
+	}
+	return string(b)
+}
+
+func isLower(s string) bool {
+	for i := 0; i < len(s); i++ {
+		c := s[i]
+		if c >= 'A' && c <= 'Z' {
+			return false
+		}
+	}
+	return true
+}
+
+func toString(val any) (string, error) {
+	switch t := val.(type) {
+	case string:
+		return t, nil
+	default:
+		return "", fmt.Errorf("redis: unexpected type=%T for String", t)
+	}
+}
+
+func toInt(val interface{}) (int, error) {
+	switch t := val.(type) {
+	case int64:
+		return int(t), nil
+	case string:
+		return strconv.Atoi(t)
+	default:
+		return 0, fmt.Errorf("redis: unexpected type=%T for Int", t)
+	}
+}
+
+func toInt64(val any) (int64, error) {
+	switch t := val.(type) {
+	case int64:
+		return t, nil
+	case string:
+		return strconv.ParseInt(t, 10, 64)
+	default:
+		return 0, fmt.Errorf("redis: unexpected type=%T for Int64", t)
+	}
+}
+
+func toUint64(val any) (uint64, error) {
+	switch t := val.(type) {
+	case int64:
+		return uint64(t), nil
+	case string:
+		return strconv.ParseUint(t, 10, 64)
+	default:
+		return 0, fmt.Errorf("redis: unexpected type=%T for Uint64", t)
+	}
+}
+
+func toFloat32(val any) (float32, error) {
+	switch t := val.(type) {
+	case int64:
+		return float32(t), nil
+	case string:
+		f, err := strconv.ParseFloat(t, 32)
+		if err != nil {
+			return 0, err
+		}
+		return float32(f), nil
+	default:
+		return 0, fmt.Errorf("redis: unexpected type=%T for Float32", t)
+	}
+}
+
+func toFloat64(val any) (float64, error) {
+	switch t := val.(type) {
+	case int64:
+		return float64(t), nil
+	case string:
+		return strconv.ParseFloat(t, 64)
+	default:
+		return 0, fmt.Errorf("redis: unexpected type=%T for Float64", t)
+	}
+}
+
+func toBool(val any) (bool, error) {
+	switch t := val.(type) {
+	case int64:
+		return t != 0, nil
+	case string:
+		return strconv.ParseBool(t)
+	default:
+		return false, fmt.Errorf("redis: unexpected type=%T for Bool", t)
+	}
+}

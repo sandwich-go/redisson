@@ -70,7 +70,7 @@ func (p *pipeline) Exec(ctx context.Context) ([]interface{}, error) {
 	var result = make([]interface{}, len(cmds))
 	if len(cmds) == 1 {
 		r, err := cmds[0].exec(ctx, p.client)
-		if err = wrapError(err); err != nil {
+		if err != nil {
 			firstError = err
 			result[0] = err
 		} else {
@@ -84,7 +84,7 @@ func (p *pipeline) Exec(ctx context.Context) ([]interface{}, error) {
 	for i, cmd := range cmds {
 		go func(_i int, _cmd pipeCommand) {
 			r, err := _cmd.exec(ctx, p.client)
-			if err = wrapError(err); err != nil {
+			if err != nil {
 				if firstError == nil {
 					firstError = err
 				}

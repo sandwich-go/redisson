@@ -22,7 +22,7 @@ type GenericWriter interface {
 	// Integer reply, specifically:
 	//	1 if source was copied.
 	//	0 if source was not copied.
-	Copy(ctx context.Context, sourceKey string, destKey string, db int, replace bool) IntCmd
+	Copy(ctx context.Context, sourceKey string, destKey string, db int64, replace bool) IntCmd
 
 	// Del
 	// Available since: 1.0.0
@@ -87,7 +87,7 @@ type GenericWriter interface {
 	// Time complexity: This command actually executes a DUMP+DEL in the source instance, and a RESTORE in the target instance. See the pages of these commands for time complexity. Also an O(N) data transfer between the two instances is performed.
 	// ACL categories: @keyspace @write @slow @dangerous
 	// See https://redis.io/commands/migrate/
-	Migrate(ctx context.Context, host, port, key string, db int, timeout time.Duration) StatusCmd
+	Migrate(ctx context.Context, host string, port int64, key string, db int64, timeout time.Duration) StatusCmd
 
 	// Move
 	// Available since: 1.0.0
@@ -98,7 +98,7 @@ type GenericWriter interface {
 	// Integer reply, specifically:
 	//	1 if key was moved.
 	//	0 if key was not moved.
-	Move(ctx context.Context, key string, db int) BoolCmd
+	Move(ctx context.Context, key string, db int64) BoolCmd
 
 	// Persist
 	// Available since: 2.2.0
@@ -312,33 +312,6 @@ type GenericReader interface {
 	//	Integer reply: The number of keys that were touched.
 	Touch(ctx context.Context, keys ...string) IntCmd
 
-	// TTL
-	// Available since: 1.0.0
-	// Time complexity: O(1)
-	// ACL categories: @keyspace @read @fast
-	// Returns the remaining time to live of a key that has a timeout. This introspection capability allows a Redis client to check how many seconds a given key will continue to be part of the dataset.
-	// In Redis 2.6 or older the command returns -1 if the key does not exist or if the key exist but has no associated expire.
-	// Starting with Redis 2.8 the return value in case of error changed:
-	// The command returns -2 if the key does not exist.
-	// The command returns -1 if the key exists but has no associated expire.
-	// See also the PTTL command that returns the same information with milliseconds resolution (Only available in Redis 2.6 or greater).
-	// Return:
-	// 	Integer reply: TTL in seconds, or a negative value in order to signal an error (see the description above).
-	TTL(ctx context.Context, key string) DurationCmd
-
-	// PTTL
-	// Available since: 2.6.0
-	// Time complexity: O(1)
-	// ACL categories: @keyspace @read @fast
-	// Like TTL this command returns the remaining time to live of a key that has an expire set, with the sole difference that TTL returns the amount of remaining time in seconds while PTTL returns it in milliseconds.
-	// In Redis 2.6 or older the command returns -1 if the key does not exist or if the key exist but has no associated expire.
-	// Starting with Redis 2.8 the return value in case of error changed:
-	// The command returns -2 if the key does not exist.
-	// The command returns -1 if the key exists but has no associated expire.
-	// Return:
-	// 	Integer reply: TTL in milliseconds, or a negative value in order to signal an error (see the description above).
-	PTTL(ctx context.Context, key string) DurationCmd
-
 	// Sort
 	// Available since: 1.0.0
 	// Time complexity: O(N+M*log(M)) where N is the number of elements in the list or set to sort, and M the number of returned elements. When the elements are not sorted, complexity is O(N).
@@ -373,30 +346,52 @@ type GenericCacheCmdable interface {
 	// Return:
 	// 	Integer reply, specifically the number of keys that exist from those specified as arguments.
 	Exists(ctx context.Context, keys ...string) IntCmd
+
+	// TTL
+	// Available since: 1.0.0
+	// Time complexity: O(1)
+	// ACL categories: @keyspace @read @fast
+	// Returns the remaining time to live of a key that has a timeout. This introspection capability allows a Redis client to check how many seconds a given key will continue to be part of the dataset.
+	// In Redis 2.6 or older the command returns -1 if the key does not exist or if the key exist but has no associated expire.
+	// Starting with Redis 2.8 the return value in case of error changed:
+	// The command returns -2 if the key does not exist.
+	// The command returns -1 if the key exists but has no associated expire.
+	// See also the PTTL command that returns the same information with milliseconds resolution (Only available in Redis 2.6 or greater).
+	// Return:
+	// 	Integer reply: TTL in seconds, or a negative value in order to signal an error (see the description above).
+	TTL(ctx context.Context, key string) DurationCmd
+
+	// PTTL
+	// Available since: 2.6.0
+	// Time complexity: O(1)
+	// ACL categories: @keyspace @read @fast
+	// Like TTL this command returns the remaining time to live of a key that has an expire set, with the sole difference that TTL returns the amount of remaining time in seconds while PTTL returns it in milliseconds.
+	// In Redis 2.6 or older the command returns -1 if the key does not exist or if the key exist but has no associated expire.
+	// Starting with Redis 2.8 the return value in case of error changed:
+	// The command returns -2 if the key does not exist.
+	// The command returns -1 if the key exists but has no associated expire.
+	// Return:
+	// 	Integer reply: TTL in milliseconds, or a negative value in order to signal an error (see the description above).
+	PTTL(ctx context.Context, key string) DurationCmd
 }
 
-func (c *client) Copy(ctx context.Context, sourceKey string, destKey string, db int, replace bool) IntCmd {
+func (c *client) Copy(ctx context.Context, sourceKey string, destKey string, db int64, replace bool) IntCmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandCopy, func() []string { return appendString(sourceKey, destKey) })
-	var r IntCmd
-	if replace {
-		r = newIntCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Copy().Source(sourceKey).Destination(destKey).Db(int64(db)).Replace().Build()))
-	} else {
-		r = newIntCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Copy().Source(sourceKey).Destination(destKey).Db(int64(db)).Build()))
-	}
+	r := c.adapter.Copy(ctx, sourceKey, destKey, db, replace)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) Del(ctx context.Context, keys ...string) IntCmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandDel, func() []string { return keys })
-	r := newIntCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Del().Key(keys...).Build()))
+	r := c.adapter.Del(ctx, keys...)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) Dump(ctx context.Context, key string) StringCmd {
 	ctx = c.handler.before(ctx, CommandDump)
-	r := newStringCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Dump().Key(key).Build()))
+	r := c.adapter.Dump(ctx, key)
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -407,131 +402,131 @@ func (c *client) Exists(ctx context.Context, keys ...string) IntCmd {
 	} else {
 		ctx = c.handler.before(ctx, CommandExists)
 	}
-	r := newIntCmdFromResult(c.Do(ctx, c.cmd.B().Exists().Key(keys...).Build()))
+	r := c.adapter.Exists(ctx, keys...)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) Expire(ctx context.Context, key string, expiration time.Duration) BoolCmd {
 	ctx = c.handler.before(ctx, CommandExpire)
-	r := newBoolCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Expire().Key(key).Seconds(formatSec(expiration)).Build()))
+	r := c.adapter.Expire(ctx, key, expiration)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ExpireAt(ctx context.Context, key string, tm time.Time) BoolCmd {
 	ctx = c.handler.before(ctx, CommandExpireAt)
-	r := newBoolCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Expireat().Key(key).Timestamp(tm.Unix()).Build()))
+	r := c.adapter.ExpireAt(ctx, key, tm)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) Keys(ctx context.Context, pattern string) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandKeys)
-	r := newStringSliceCmdFromStringSliceCmd(c.adapter.Keys(ctx, pattern))
+	r := c.adapter.Keys(ctx, pattern)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
-func (c *client) Migrate(ctx context.Context, host, port, key string, db int, timeout time.Duration) StatusCmd {
+func (c *client) Migrate(ctx context.Context, host string, port int64, key string, db int64, timeout time.Duration) StatusCmd {
 	ctx = c.handler.before(ctx, CommandMigrate)
-	var r StatusCmd
-	if p, err := parseInt(port); err != nil {
-		r = newStatusCmdWithError(err)
-	} else {
-		r = newStatusCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Migrate().Host(host).Port(p).Key(key).DestinationDb(int64(db)).Timeout(formatSec(timeout)).Build()))
-	}
+	r := c.adapter.Migrate(ctx, host, port, key, db, timeout)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
-func (c *client) Move(ctx context.Context, key string, db int) BoolCmd {
+func (c *client) Move(ctx context.Context, key string, db int64) BoolCmd {
 	ctx = c.handler.before(ctx, CommandMove)
-	r := newBoolCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Move().Key(key).Db(int64(db)).Build()))
+	r := c.adapter.Move(ctx, key, db)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ObjectRefCount(ctx context.Context, key string) IntCmd {
 	ctx = c.handler.before(ctx, CommandObjectRefCount)
-	r := newIntCmdFromResult(c.cmd.Do(ctx, c.cmd.B().ObjectRefcount().Key(key).Build()))
+	r := c.adapter.ObjectRefCount(ctx, key)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ObjectEncoding(ctx context.Context, key string) StringCmd {
 	ctx = c.handler.before(ctx, CommandObjectEncoding)
-	r := newStringCmdFromResult(c.cmd.Do(ctx, c.cmd.B().ObjectEncoding().Key(key).Build()))
+	r := c.adapter.ObjectEncoding(ctx, key)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ObjectIdleTime(ctx context.Context, key string) DurationCmd {
 	ctx = c.handler.before(ctx, CommandObjectIdleTime)
-	r := newDurationCmdFromResult(c.cmd.Do(ctx, c.cmd.B().ObjectIdletime().Key(key).Build()), time.Second)
+	r := c.adapter.ObjectIdleTime(ctx, key)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) Persist(ctx context.Context, key string) BoolCmd {
 	ctx = c.handler.before(ctx, CommandPersist)
-	r := newBoolCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Persist().Key(key).Build()))
+	r := c.adapter.Persist(ctx, key)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) PExpire(ctx context.Context, key string, expiration time.Duration) BoolCmd {
 	ctx = c.handler.before(ctx, CommandPExpire)
-	r := newBoolCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Pexpire().Key(key).Milliseconds(formatMs(expiration)).Build()))
+	r := c.adapter.PExpire(ctx, key, expiration)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) PExpireAt(ctx context.Context, key string, tm time.Time) BoolCmd {
 	ctx = c.handler.before(ctx, CommandPExpireAt)
-	r := newBoolCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Pexpireat().Key(key).MillisecondsTimestamp(tm.UnixNano()/int64(time.Millisecond)).Build()))
+	r := c.adapter.PExpireAt(ctx, key, tm)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) PTTL(ctx context.Context, key string) DurationCmd {
 	ctx = c.handler.before(ctx, CommandPTTL)
-	r := newDurationCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Pttl().Key(key).Build()), time.Millisecond)
+	var r DurationCmd
+	if c.ttl > 0 {
+		r = c.adapter.Cache(c.ttl).PTTL(ctx, key)
+	} else {
+		r = c.adapter.PTTL(ctx, key)
+	}
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) Rename(ctx context.Context, key, newkey string) StatusCmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandRename, func() []string { return appendString(key, newkey) })
-	r := newStatusCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Rename().Key(key).Newkey(newkey).Build()))
+	r := c.adapter.Rename(ctx, key, newkey)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) RenameNX(ctx context.Context, key, newkey string) BoolCmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandRenameNX, func() []string { return appendString(key, newkey) })
-	r := newBoolCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Renamenx().Key(key).Newkey(newkey).Build()))
+	r := c.adapter.RenameNX(ctx, key, newkey)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) RandomKey(ctx context.Context) StringCmd {
 	ctx = c.handler.before(ctx, CommandRandomKey)
-	r := newStringCmdFromStringCmd(c.adapter.RandomKey(ctx))
+	r := c.adapter.RandomKey(ctx)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) Restore(ctx context.Context, key string, ttl time.Duration, value string) StatusCmd {
 	ctx = c.handler.before(ctx, CommandRestore)
-	r := newStatusCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Restore().Key(key).Ttl(formatMs(ttl)).SerializedValue(value).Build()))
+	r := c.adapter.Restore(ctx, key, ttl, value)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) RestoreReplace(ctx context.Context, key string, ttl time.Duration, value string) StatusCmd {
 	ctx = c.handler.before(ctx, CommandRestoreReplace)
-	r := newStatusCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Restore().Key(key).Ttl(formatMs(ttl)).SerializedValue(value).Replace().Build()))
+	r := c.adapter.RestoreReplace(ctx, key, ttl, value)
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -556,49 +551,59 @@ func (c *client) ScanType(ctx context.Context, cursor uint64, match string, coun
 
 func (c *client) Sort(ctx context.Context, key string, sort Sort) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandSort)
-	r := newStringSliceCmdFromResult(c.cmd.Do(ctx, c.sort("SORT", key, sort)))
+	r := c.adapter.Sort(ctx, key, sort)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) SortStore(ctx context.Context, key, store string, sort Sort) IntCmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandSort, func() []string { return appendString(key, store) })
-	r := newIntCmdFromIntCmd(c.adapter.SortStore(ctx, key, store, toSort(sort)))
+	r := c.adapter.SortStore(ctx, key, store, sort)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) SortInterfaces(ctx context.Context, key string, sort Sort) SliceCmd {
 	ctx = c.handler.before(ctx, CommandSort)
-	r := newSliceCmdFromSliceResult(c.cmd.Do(ctx, c.sort("SORT", key, sort)))
+	r := c.adapter.SortInterfaces(ctx, key, sort)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) Touch(ctx context.Context, keys ...string) IntCmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandTouch, func() []string { return keys })
-	r := newIntCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Touch().Key(keys...).Build()))
+	r := c.adapter.Touch(ctx, keys...)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) TTL(ctx context.Context, key string) DurationCmd {
 	ctx = c.handler.before(ctx, CommandTTL)
-	r := newDurationCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Ttl().Key(key).Build()), time.Second)
+	var r DurationCmd
+	if c.ttl > 0 {
+		r = c.adapter.Cache(c.ttl).TTL(ctx, key)
+	} else {
+		r = c.adapter.TTL(ctx, key)
+	}
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) Type(ctx context.Context, key string) StatusCmd {
 	ctx = c.handler.before(ctx, CommandType)
-	r := newStatusCmdFromResult(c.Do(ctx, c.cmd.B().Type().Key(key).Build()))
+	var r StatusCmd
+	if c.ttl > 0 {
+		r = c.adapter.Cache(c.ttl).Type(ctx, key)
+	} else {
+		r = c.adapter.Type(ctx, key)
+	}
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) Unlink(ctx context.Context, keys ...string) IntCmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandUnlink, func() []string { return keys })
-	r := newIntCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Unlink().Key(keys...).Build()))
+	r := c.adapter.Unlink(ctx, keys...)
 	c.handler.after(ctx, r.Err())
 	return r
 }

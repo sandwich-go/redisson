@@ -72,7 +72,7 @@ type ServerCmdable interface {
 	// Note that you should look at the redis.conf file relevant to the version you're working with as configuration options might change between versions. The link above is to the latest development version.
 	// Return:
 	//	The return type of the command is a Array reply.
-	ConfigGet(ctx context.Context, parameter string) SliceCmd
+	ConfigGet(ctx context.Context, parameter string) StringStringMapCmd
 
 	// ConfigResetStat
 	// Available since: 2.0.0
@@ -225,7 +225,7 @@ type ServerCmdable interface {
 	// For nested data types, the optional SAMPLES option can be provided, where count is the number of sampled nested values. By default, this option is set to 5. To sample the all of the nested values, use SAMPLES 0.
 	// Return:
 	// 	Integer reply: the memory usage in bytes, or nil when the key does not exist.
-	MemoryUsage(ctx context.Context, key string, samples ...int) IntCmd
+	MemoryUsage(ctx context.Context, key string, samples ...int64) IntCmd
 
 	// Save
 	// Available since: 1.0.0
@@ -271,20 +271,6 @@ type ServerCmdable interface {
 	// See Shutdown
 	ShutdownNoSave(ctx context.Context) StatusCmd
 
-	// SlaveOf
-	// Available since: 1.0.0
-	// Time complexity: O(1)
-	// ACL categories: @admin @slow @dangerous
-	// As of Redis version 5.0.0, this command is regarded as deprecated.
-	// It can be replaced by REPLICAOF when migrating or writing new code.
-	// A note about the word slave used in this man page and command name: starting with Redis version 5, if not for backward compatibility, the Redis project no longer uses the word slave. Please use the new command REPLICAOF. The command SLAVEOF will continue to work for backward compatibility.
-	// The SLAVEOF command can change the replication settings of a replica on the fly. If a Redis server is already acting as replica, the command SLAVEOF NO ONE will turn off the replication, turning the Redis server into a MASTER. In the proper form SLAVEOF hostname port will make the server a replica of another server listening at the specified hostname and port.
-	// If a server is already a replica of some master, SLAVEOF hostname port will stop the replication against the old server and start the synchronization against the new one, discarding the old dataset.
-	// The form SLAVEOF NO ONE will stop replication, turning the server into a MASTER, but will not discard the replication. So, if the old master stops working, it is possible to turn the replica into a master and set the application to use this new master in read/write. Later when the other Redis server is fixed, it can be reconfigured to work as a replica.
-	// Return
-	//	Simple string reply
-	SlaveOf(ctx context.Context, host, port string) StatusCmd
-
 	// Time
 	// Available since: 2.6.0
 	// Time complexity: O(1)
@@ -321,14 +307,14 @@ func (c *client) BgSave(ctx context.Context) StatusCmd {
 
 func (c *client) Command(ctx context.Context) CommandsInfoCmd {
 	ctx = c.handler.before(ctx, CommandCommand)
-	r := newCommandsInfoCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Command().Build()))
+	r := c.adapter.Command(ctx)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
-func (c *client) ConfigGet(ctx context.Context, parameter string) SliceCmd {
+func (c *client) ConfigGet(ctx context.Context, parameter string) StringStringMapCmd {
 	ctx = c.handler.before(ctx, CommandConfigGet)
-	r := newSliceCmdFromMapResult(c.cmd.Do(ctx, c.cmd.B().ConfigGet().Parameter(parameter).Build()))
+	r := c.adapter.ConfigGet(ctx, parameter)
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -395,29 +381,21 @@ func (c *client) Info(ctx context.Context, section ...string) StringCmd {
 	} else {
 		ctx = c.handler.before(ctx, CommandInfos)
 	}
-	r := newStringCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Info().Section(section...).Build()))
+	r := c.adapter.Info(ctx, section...)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) LastSave(ctx context.Context) IntCmd {
 	ctx = c.handler.before(ctx, CommandLastSave)
-	r := newIntCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Lastsave().Build()))
+	r := c.adapter.LastSave(ctx)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
-func (c *client) MemoryUsage(ctx context.Context, key string, samples ...int) IntCmd {
+func (c *client) MemoryUsage(ctx context.Context, key string, samples ...int64) IntCmd {
 	ctx = c.handler.before(ctx, CommandMemoryUsage)
-	var r IntCmd
-	switch len(samples) {
-	case 0:
-		r = newIntCmdFromResult(c.cmd.Do(ctx, c.cmd.B().MemoryUsage().Key(key).Build()))
-	case 1:
-		r = newIntCmdFromResult(c.cmd.Do(ctx, c.cmd.B().MemoryUsage().Key(key).Samples(int64(samples[0])).Build()))
-	default:
-		panic(errMemoryUsageArgsCount)
-	}
+	r := c.adapter.MemoryUsage(ctx, key, samples...)
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -450,23 +428,16 @@ func (c *client) ShutdownNoSave(ctx context.Context) StatusCmd {
 	return r
 }
 
-func (c *client) SlaveOf(ctx context.Context, host, port string) StatusCmd {
-	ctx = c.handler.before(ctx, CommandSlaveOf)
-	r := newStatusCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Arbitrary(SLAVEOF).Args(host, port).Build()))
-	c.handler.after(ctx, r.Err())
-	return r
-}
-
 func (c *client) Time(ctx context.Context) TimeCmd {
 	ctx = c.handler.before(ctx, CommandTime)
-	r := newTimeCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Time().Build()))
+	r := c.adapter.Time(ctx)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) DebugObject(ctx context.Context, key string) StringCmd {
 	ctx = c.handler.before(ctx, CommandDebug)
-	r := newStringCmdFromResult(c.cmd.Do(ctx, c.cmd.B().DebugObject().Key(key).Build()))
+	r := c.adapter.DebugObject(ctx, key)
 	c.handler.after(ctx, r.Err())
 	return r
 }

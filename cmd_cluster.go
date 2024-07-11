@@ -16,7 +16,7 @@ type ClusterCmdable interface {
 	// 	As a side effect of the command execution, if a slot among the ones specified as argument is set as importing, this state gets cleared once the node assigns the (previously unbound) slot to itself.
 	// Return:
 	//	Simple string reply: OK if the command was successful. Otherwise an error is returned.
-	ClusterAddSlots(ctx context.Context, slots ...int) StatusCmd
+	ClusterAddSlots(ctx context.Context, slots ...int64) StatusCmd
 
 	// ClusterAddSlotsRange
 	// Available since: 7.0.0
@@ -37,7 +37,7 @@ type ClusterCmdable interface {
 	// 	In order to fix a broken cluster where certain slots are unassigned.
 	// Return:
 	//	Simple string reply: OK if the command was successful. Otherwise an error is returned.
-	ClusterAddSlotsRange(ctx context.Context, min, max int) StatusCmd
+	ClusterAddSlotsRange(ctx context.Context, min, max int64) StatusCmd
 
 	// ClusterCountFailureReports
 	// Available since: 3.0.0
@@ -65,7 +65,7 @@ type ClusterCmdable interface {
 	//	(integer) 50341
 	// Return:
 	//	Integer reply: The number of keys in the specified hash slot, or an error if the hash slot is invalid.
-	ClusterCountKeysInSlot(ctx context.Context, slot int) IntCmd
+	ClusterCountKeysInSlot(ctx context.Context, slot int64) IntCmd
 
 	// ClusterDelSlots
 	// Available since: 3.0.0
@@ -81,7 +81,7 @@ type ClusterCmdable interface {
 	//	As a side effect of the command execution, the node may go into down state because not all hash slots are covered.
 	// Return:
 	//	Simple string reply: OK if the command was successful. Otherwise an error is returned.
-	ClusterDelSlots(ctx context.Context, slots ...int) StatusCmd
+	ClusterDelSlots(ctx context.Context, slots ...int64) StatusCmd
 
 	// ClusterDelSlotsRange
 	// Available since: 7.0.0
@@ -90,7 +90,7 @@ type ClusterCmdable interface {
 	// The CLUSTER DELSLOTSRANGE command is similar to the CLUSTER DELSLOTS command in that they both remove hash slots from the node. The difference is that CLUSTER DELSLOTS takes a list of hash slots to remove from the node, while CLUSTER DELSLOTSRANGE takes a list of slot ranges (specified by start and end slots) to remove from the node.
 	// Return:
 	//	Simple string reply: OK if the command was successful. Otherwise an error is returned.
-	ClusterDelSlotsRange(ctx context.Context, min, max int) StatusCmd
+	ClusterDelSlotsRange(ctx context.Context, min, max int64) StatusCmd
 
 	// ClusterFailover
 	// Available since: 3.0.0
@@ -127,7 +127,7 @@ type ClusterCmdable interface {
 	// The main usage of this command is during rehashing of cluster slots from one node to another. The way the rehashing is performed is exposed in the Redis Cluster specification, or in a more simple to digest form, as an appendix of the CLUSTER SETSLOT command documentation.
 	// Return:
 	//	Array reply: From 0 to count key names in a Redis array reply.
-	ClusterGetKeysInSlot(ctx context.Context, slot int, count int) StringSliceCmd
+	ClusterGetKeysInSlot(ctx context.Context, slot int64, count int64) StringSliceCmd
 
 	// ClusterInfo
 	// Available since: 3.0.0
@@ -152,7 +152,7 @@ type ClusterCmdable interface {
 	// Time complexity: O(1)
 	// ACL categories: @admin @slow @dangerous
 	// See https://redis.io/commands/cluster-meet/
-	ClusterMeet(ctx context.Context, host, port string) StatusCmd
+	ClusterMeet(ctx context.Context, host string, port int64) StatusCmd
 
 	// ClusterNodes
 	// Available since: 3.0.0
@@ -284,154 +284,149 @@ type ClusterCmdable interface {
 	ReadWrite(ctx context.Context) StatusCmd
 }
 
-func (c *client) ClusterAddSlots(ctx context.Context, slots ...int) StatusCmd {
+func (c *client) ClusterAddSlots(ctx context.Context, slots ...int64) StatusCmd {
 	ctx = c.handler.before(ctx, CommandClusterAddSlots)
-	r := newStatusCmdFromResult(c.cmd.Do(ctx, c.cmd.B().ClusterAddslots().Slot(intSliceToInt64ToSlice(slots)...).Build()))
+	r := c.adapter.ClusterAddSlots(ctx, slots...)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
-func (c *client) ClusterAddSlotsRange(ctx context.Context, min, max int) StatusCmd {
+func (c *client) ClusterAddSlotsRange(ctx context.Context, min, max int64) StatusCmd {
 	ctx = c.handler.before(ctx, CommandClusterAddSlotsRange)
-	r := newStatusCmdFromResult(c.cmd.Do(ctx, c.cmd.B().ClusterAddslotsrange().StartSlotEndSlot().StartSlotEndSlot(int64(min), int64(max)).Build()))
+	r := c.adapter.ClusterAddSlotsRange(ctx, min, max)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ClusterCountFailureReports(ctx context.Context, nodeID string) IntCmd {
 	ctx = c.handler.before(ctx, CommandClusterCountFailureReports)
-	r := newIntCmdFromResult(c.cmd.Do(ctx, c.cmd.B().ClusterCountFailureReports().NodeId(nodeID).Build()))
+	r := c.adapter.ClusterCountFailureReports(ctx, nodeID)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
-func (c *client) ClusterCountKeysInSlot(ctx context.Context, slot int) IntCmd {
+func (c *client) ClusterCountKeysInSlot(ctx context.Context, slot int64) IntCmd {
 	ctx = c.handler.before(ctx, CommandClusterCountKeysInSlot)
-	r := newIntCmdFromResult(c.cmd.Do(ctx, c.cmd.B().ClusterCountkeysinslot().Slot(int64(slot)).Build()))
+	r := c.adapter.ClusterCountKeysInSlot(ctx, slot)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
-func (c *client) ClusterDelSlots(ctx context.Context, slots ...int) StatusCmd {
+func (c *client) ClusterDelSlots(ctx context.Context, slots ...int64) StatusCmd {
 	ctx = c.handler.before(ctx, CommandClusterDelSlots)
-	r := newStatusCmdFromResult(c.cmd.Do(ctx, c.cmd.B().ClusterDelslots().Slot(intSliceToInt64ToSlice(slots)...).Build()))
+	r := c.adapter.ClusterDelSlots(ctx, slots...)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
-func (c *client) ClusterDelSlotsRange(ctx context.Context, min, max int) StatusCmd {
+func (c *client) ClusterDelSlotsRange(ctx context.Context, min, max int64) StatusCmd {
 	ctx = c.handler.before(ctx, CommandClusterDelSlotsRange)
-	r := newStatusCmdFromResult(c.cmd.Do(ctx, c.cmd.B().ClusterDelslotsrange().StartSlotEndSlot().StartSlotEndSlot(int64(min), int64(max)).Build()))
+	r := c.adapter.ClusterDelSlotsRange(ctx, min, max)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ClusterFailover(ctx context.Context) StatusCmd {
 	ctx = c.handler.before(ctx, CommandClusterFailover)
-	r := newStatusCmdFromResult(c.cmd.Do(ctx, c.cmd.B().ClusterFailover().Build()))
+	r := c.adapter.ClusterFailover(ctx)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ClusterForget(ctx context.Context, nodeID string) StatusCmd {
 	ctx = c.handler.before(ctx, CommandClusterForget)
-	r := newStatusCmdFromResult(c.cmd.Do(ctx, c.cmd.B().ClusterForget().NodeId(nodeID).Build()))
+	r := c.adapter.ClusterForget(ctx, nodeID)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
-func (c *client) ClusterGetKeysInSlot(ctx context.Context, slot int, count int) StringSliceCmd {
+func (c *client) ClusterGetKeysInSlot(ctx context.Context, slot int64, count int64) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandClusterGetKeysInSlot)
-	r := newStringSliceCmdFromResult(c.cmd.Do(ctx, c.cmd.B().ClusterGetkeysinslot().Slot(int64(slot)).Count(int64(count)).Build()))
+	r := c.adapter.ClusterGetKeysInSlot(ctx, slot, count)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ClusterInfo(ctx context.Context) StringCmd {
 	ctx = c.handler.before(ctx, CommandClusterInfo)
-	r := newStringCmdFromResult(c.cmd.Do(ctx, c.cmd.B().ClusterInfo().Build()))
+	r := c.adapter.ClusterInfo(ctx)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ClusterKeySlot(ctx context.Context, key string) IntCmd {
 	ctx = c.handler.before(ctx, CommandClusterKeySlot)
-	r := newIntCmdFromResult(c.cmd.Do(ctx, c.cmd.B().ClusterKeyslot().Key(key).Build()))
+	r := c.adapter.ClusterKeySlot(ctx, key)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
-func (c *client) ClusterMeet(ctx context.Context, host, port string) StatusCmd {
+func (c *client) ClusterMeet(ctx context.Context, host string, port int64) StatusCmd {
 	ctx = c.handler.before(ctx, CommandClusterMeet)
-	var r StatusCmd
-	if iport, err := parseInt(port); err != nil {
-		r = newStatusCmdWithError(err)
-	} else {
-		r = newStatusCmdFromResult(c.cmd.Do(ctx, c.cmd.B().ClusterMeet().Ip(host).Port(iport).Build()))
-	}
+	r := c.adapter.ClusterMeet(ctx, host, port)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ClusterNodes(ctx context.Context) StringCmd {
 	ctx = c.handler.before(ctx, CommandClusterNodes)
-	r := newStringCmdFromResult(c.cmd.Do(ctx, c.cmd.B().ClusterNodes().Build()))
+	r := c.adapter.ClusterNodes(ctx)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ClusterReplicate(ctx context.Context, nodeID string) StatusCmd {
 	ctx = c.handler.before(ctx, CommandClusterReplicate)
-	r := newStatusCmdFromResult(c.cmd.Do(ctx, c.cmd.B().ClusterReplicate().NodeId(nodeID).Build()))
+	r := c.adapter.ClusterReplicate(ctx, nodeID)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ClusterResetSoft(ctx context.Context) StatusCmd {
 	ctx = c.handler.before(ctx, CommandClusterResetSoft)
-	r := newStatusCmdFromStatusCmd(c.adapter.ClusterResetSoft(ctx))
+	r := c.adapter.ClusterResetSoft(ctx)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ClusterResetHard(ctx context.Context) StatusCmd {
 	ctx = c.handler.before(ctx, CommandClusterResetHard)
-	r := newStatusCmdFromStatusCmd(c.adapter.ClusterResetHard(ctx))
+	r := c.adapter.ClusterResetHard(ctx)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ClusterSaveConfig(ctx context.Context) StatusCmd {
 	ctx = c.handler.before(ctx, CommandClusterSaveConfig)
-	r := newStatusCmdFromStatusCmd(c.adapter.ClusterSaveConfig(ctx))
+	r := c.adapter.ClusterSaveConfig(ctx)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ClusterSlaves(ctx context.Context, nodeID string) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandClusterSlaves)
-	r := newStringSliceCmdFromResult(c.cmd.Do(ctx, c.cmd.B().ClusterSlaves().NodeId(nodeID).Build()))
+	r := c.adapter.ClusterSlaves(ctx, nodeID)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ClusterSlots(ctx context.Context) ClusterSlotsCmd {
 	ctx = c.handler.before(ctx, CommandClusterSlots)
-	r := newClusterSlotsCmdFromResult(c.cmd.Do(ctx, c.cmd.B().ClusterSlots().Build()))
+	r := c.adapter.ClusterSlots(ctx)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ReadOnly(ctx context.Context) StatusCmd {
 	ctx = c.handler.before(ctx, CommandReadOnly)
-	r := newStatusCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Readonly().Build()))
+	r := c.adapter.ReadOnly(ctx)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ReadWrite(ctx context.Context) StatusCmd {
 	ctx = c.handler.before(ctx, CommandReadWrite)
-	r := newStatusCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Readwrite().Build()))
+	r := c.adapter.ReadWrite(ctx)
 	c.handler.after(ctx, r.Err())
 	return r
 }

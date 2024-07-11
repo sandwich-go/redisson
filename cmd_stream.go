@@ -245,7 +245,7 @@ type StreamReader interface {
 	// Time complexity: O(1)
 	// ACL categories: @read @stream @slow
 	// See XInfoStream
-	XInfoStreamFull(ctx context.Context, key string, count int) XInfoStreamFullCmd
+	XInfoStreamFull(ctx context.Context, key string, count int64) XInfoStreamFullCmd
 
 	// XLen
 	// Available since: 5.0.0
@@ -331,7 +331,7 @@ type StreamReader interface {
 
 func (c *client) XAck(ctx context.Context, stream, group string, ids ...string) IntCmd {
 	ctx = c.handler.before(ctx, CommandXAck)
-	r := newIntCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Xack().Key(stream).Group(group).Id(ids...).Build()))
+	r := c.adapter.XAck(ctx, stream, group, ids...)
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -346,152 +346,126 @@ func (c *client) XAdd(ctx context.Context, a XAddArgs) StringCmd {
 	} else {
 		ctx = c.handler.before(ctx, CommandXAdd)
 	}
-	cmd := c.cmd.B().Arbitrary(XADD).Keys(a.Stream)
-	if a.NoMkStream {
-		cmd = cmd.Args(NOMKSTREAM)
-	}
-	switch {
-	case a.MaxLen > 0:
-		if a.Approx {
-			cmd = cmd.Args(MAXLEN, "~", str(a.MaxLen))
-		} else {
-			cmd = cmd.Args(MAXLEN, str(a.MaxLen))
-		}
-	case len(a.MinID) > 0:
-		if a.Approx {
-			cmd = cmd.Args(MINID, "~", a.MinID)
-		} else {
-			cmd = cmd.Args(MINID, a.MinID)
-		}
-	}
-	if a.Limit > 0 {
-		cmd = cmd.Args(LIMIT, str(a.Limit))
-	}
-	if len(a.ID) > 0 {
-		cmd = cmd.Args(a.ID)
-	} else {
-		cmd = cmd.Args("*")
-	}
-	r := newStringCmdFromResult(c.cmd.Do(ctx, cmd.Args(argToSlice(a.Values)...).Build()))
+	r := c.adapter.XAdd(ctx, a)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) XAutoClaim(ctx context.Context, a XAutoClaimArgs) XAutoClaimCmd {
 	ctx = c.handler.before(ctx, CommandXAutoClaim)
-	r := newXAutoClaimCmdFromResult(c.cmd.Do(ctx, c.getXAutoClaimCompleted(a, false)))
+	r := c.adapter.XAutoClaim(ctx, a)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) XAutoClaimJustID(ctx context.Context, a XAutoClaimArgs) XAutoClaimJustIDCmd {
 	ctx = c.handler.before(ctx, CommandXAutoClaim)
-	r := newXAutoClaimJustIDCmdFromResult(c.cmd.Do(ctx, c.getXAutoClaimCompleted(a, true)))
+	r := c.adapter.XAutoClaimJustID(ctx, a)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) XClaim(ctx context.Context, a XClaimArgs) XMessageSliceCmd {
 	ctx = c.handler.before(ctx, CommandXClaim)
-	r := newXMessageSliceCmdFromResult(c.cmd.Do(ctx, c.getXClaimCompleted(a, false)))
+	r := c.adapter.XClaim(ctx, a)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) XClaimJustID(ctx context.Context, a XClaimArgs) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandXClaim)
-	r := newStringSliceCmdFromResult(c.cmd.Do(ctx, c.getXClaimCompleted(a, true)))
+	r := c.adapter.XClaimJustID(ctx, a)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) XDel(ctx context.Context, stream string, ids ...string) IntCmd {
 	ctx = c.handler.before(ctx, CommandXDel)
-	r := newIntCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Xdel().Key(stream).Id(ids...).Build()))
+	r := c.adapter.XDel(ctx, stream, ids...)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) XGroupCreate(ctx context.Context, stream, group, start string) StatusCmd {
 	ctx = c.handler.before(ctx, CommandXGroupCreate)
-	r := newStatusCmdFromResult(c.cmd.Do(ctx, c.cmd.B().XgroupCreate().Key(stream).Group(group).Id(start).Build()))
+	r := c.adapter.XGroupCreate(ctx, stream, group, start)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) XGroupCreateMkStream(ctx context.Context, stream, group, start string) StatusCmd {
 	ctx = c.handler.before(ctx, CommandXGroupCreate)
-	r := newStatusCmdFromResult(c.cmd.Do(ctx, c.cmd.B().XgroupCreate().Key(stream).Group(group).Id(start).Mkstream().Build()))
+	r := c.adapter.XGroupCreateMkStream(ctx, stream, group, start)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) XGroupCreateConsumer(ctx context.Context, stream, group, consumer string) IntCmd {
 	ctx = c.handler.before(ctx, CommandXGroupCreateConsumer)
-	r := newIntCmdFromResult(c.cmd.Do(ctx, c.cmd.B().XgroupCreateconsumer().Key(stream).Group(group).Consumer(consumer).Build()))
+	r := c.adapter.XGroupCreateConsumer(ctx, stream, group, consumer)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) XGroupDelConsumer(ctx context.Context, stream, group, consumer string) IntCmd {
 	ctx = c.handler.before(ctx, CommandXGroupDelConsumer)
-	r := newIntCmdFromResult(c.cmd.Do(ctx, c.cmd.B().XgroupDelconsumer().Key(stream).Group(group).Consumername(consumer).Build()))
+	r := c.adapter.XGroupDelConsumer(ctx, stream, group, consumer)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) XGroupDestroy(ctx context.Context, stream, group string) IntCmd {
 	ctx = c.handler.before(ctx, CommandXGroupDestroy)
-	r := newIntCmdFromResult(c.cmd.Do(ctx, c.cmd.B().XgroupDestroy().Key(stream).Group(group).Build()))
+	r := c.adapter.XGroupDestroy(ctx, stream, group)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) XGroupSetID(ctx context.Context, stream, group, start string) StatusCmd {
 	ctx = c.handler.before(ctx, CommandXGroupSetID)
-	r := newStatusCmdFromResult(c.cmd.Do(ctx, c.cmd.B().XgroupSetid().Key(stream).Group(group).Id(start).Build()))
+	r := c.adapter.XGroupSetID(ctx, stream, group, start)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) XInfoConsumers(ctx context.Context, key string, group string) XInfoConsumersCmd {
 	ctx = c.handler.before(ctx, CommandXInfoConsumers)
-	r := newXInfoConsumersCmdFromResult(c.cmd.Do(ctx, c.cmd.B().XinfoConsumers().Key(key).Group(group).Build()), EMPTY, group)
+	r := c.adapter.XInfoConsumers(ctx, key, group)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) XInfoGroups(ctx context.Context, key string) XInfoGroupsCmd {
 	ctx = c.handler.before(ctx, CommandXInfoGroups)
-	r := newXInfoGroupsCmdFromResult(c.cmd.Do(ctx, c.cmd.B().XinfoGroups().Key(key).Build()), key)
+	r := c.adapter.XInfoGroups(ctx, key)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) XInfoStream(ctx context.Context, key string) XInfoStreamCmd {
 	ctx = c.handler.before(ctx, CommandXInfoStream)
-	r := newXInfoStreamCmdFromResult(c.cmd.Do(ctx, c.cmd.B().XinfoStream().Key(key).Build()), key)
+	r := c.adapter.XInfoStream(ctx, key)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
-func (c *client) XInfoStreamFull(ctx context.Context, key string, count int) XInfoStreamFullCmd {
+func (c *client) XInfoStreamFull(ctx context.Context, key string, count int64) XInfoStreamFullCmd {
 	ctx = c.handler.before(ctx, CommandXInfoStreamFull)
-	r := newXInfoStreamFullCmdFromResult(c.cmd.Do(ctx, c.cmd.B().XinfoStream().Key(key).Full().Count(int64(count)).Build()))
+	r := c.adapter.XInfoStreamFull(ctx, key, count)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) XLen(ctx context.Context, stream string) IntCmd {
 	ctx = c.handler.before(ctx, CommandXLen)
-	r := newIntCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Xlen().Key(stream).Build()))
+	r := c.adapter.XLen(ctx, stream)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) XPending(ctx context.Context, stream, group string) XPendingCmd {
 	ctx = c.handler.before(ctx, CommandXPending)
-	r := newXPendingCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Xpending().Key(stream).Group(group).Build()))
+	r := c.adapter.XPending(ctx, stream, group)
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -502,64 +476,56 @@ func (c *client) XPendingExt(ctx context.Context, a XPendingExtArgs) XPendingExt
 	} else {
 		ctx = c.handler.before(ctx, CommandXPending)
 	}
-	cmd := c.cmd.B().Arbitrary(XPENDING).Keys(a.Stream).Args(a.Group)
-	if a.Idle != 0 {
-		cmd = cmd.Args(IDLE, str(formatMs(a.Idle)))
-	}
-	cmd = cmd.Args(a.Start, a.End, str(a.Count))
-	if len(a.Consumer) > 0 {
-		cmd = cmd.Args(a.Consumer)
-	}
-	r := newXPendingExtCmdFromResult(c.cmd.Do(ctx, cmd.Build()))
+	r := c.adapter.XPendingExt(ctx, a)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) XRange(ctx context.Context, stream, start, stop string) XMessageSliceCmd {
 	ctx = c.handler.before(ctx, CommandXRange)
-	r := newXMessageSliceCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Xrange().Key(stream).Start(start).End(stop).Build()))
+	r := c.adapter.XRange(ctx, stream, start, stop)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) XRangeN(ctx context.Context, stream, start, stop string, count int64) XMessageSliceCmd {
 	ctx = c.handler.before(ctx, CommandXRange)
-	r := newXMessageSliceCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Xrange().Key(stream).Start(start).End(stop).Count(count).Build()))
+	r := c.adapter.XRangeN(ctx, stream, start, stop, count)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) XRead(ctx context.Context, a XReadArgs) XStreamSliceCmd {
 	ctx = c.handler.before(ctx, CommandXRead)
-	r := newXStreamSliceCmdFromCmd(c.adapter.XRead(ctx, toXReadArgs(a)))
+	r := c.adapter.XRead(ctx, a)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) XReadStreams(ctx context.Context, streams ...string) XStreamSliceCmd {
 	ctx = c.handler.before(ctx, CommandXRead)
-	r := newXStreamSliceCmdFromCmd(c.adapter.XReadStreams(ctx, streams...))
+	r := c.adapter.XReadStreams(ctx, streams...)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) XReadGroup(ctx context.Context, a XReadGroupArgs) XStreamSliceCmd {
 	ctx = c.handler.before(ctx, CommandXReadGroup)
-	r := newXStreamSliceCmdFromCmd(c.adapter.XReadGroup(ctx, toXReadGroupArgs(a)))
+	r := c.adapter.XReadGroup(ctx, a)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) XRevRange(ctx context.Context, stream string, start, stop string) XMessageSliceCmd {
 	ctx = c.handler.before(ctx, CommandXRevRange)
-	r := newXMessageSliceCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Xrevrange().Key(stream).End(start).Start(stop).Build()))
+	r := c.adapter.XRevRange(ctx, stream, start, stop)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) XRevRangeN(ctx context.Context, stream string, start, stop string, count int64) XMessageSliceCmd {
 	ctx = c.handler.before(ctx, CommandXRevRange)
-	r := newXMessageSliceCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Xrevrange().Key(stream).End(start).Start(stop).Count(count).Build()))
+	r := c.adapter.XRevRangeN(ctx, stream, start, stop, count)
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -573,14 +539,14 @@ func (c *client) XTrim(ctx context.Context, key string, maxLen int64) IntCmd {
 
 func (c *client) XTrimApprox(ctx context.Context, key string, maxLen int64) IntCmd {
 	ctx = c.handler.before(ctx, CommandXTrim)
-	r := c.xtrim(ctx, key, MAXLEN, true, str(maxLen), 0)
+	r := c.adapter.XTrimMaxLenApprox(ctx, key, maxLen, 0)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) XTrimMaxLen(ctx context.Context, key string, maxLen int64) IntCmd {
 	ctx = c.handler.before(ctx, CommandXTrim)
-	r := c.xtrim(ctx, key, MAXLEN, false, str(maxLen), 0)
+	r := c.adapter.XTrimMaxLen(ctx, key, maxLen)
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -591,21 +557,21 @@ func (c *client) XTrimMaxLenApprox(ctx context.Context, key string, maxLen, limi
 	} else {
 		ctx = c.handler.before(ctx, CommandXTrim)
 	}
-	r := c.xtrim(ctx, key, MAXLEN, true, str(maxLen), limit)
+	r := c.adapter.XTrimMaxLenApprox(ctx, key, maxLen, limit)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) XTrimMinID(ctx context.Context, key string, minID string) IntCmd {
 	ctx = c.handler.before(ctx, CommandXTrimMinId)
-	r := c.xtrim(ctx, key, MINID, false, minID, 0)
+	r := c.adapter.XTrimMinID(ctx, key, minID)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) XTrimMinIDApprox(ctx context.Context, key string, minID string, limit int64) IntCmd {
 	ctx = c.handler.before(ctx, CommandXTrimMinId)
-	r := c.xtrim(ctx, key, MINID, true, minID, limit)
+	r := c.adapter.XTrimMinIDApprox(ctx, key, minID, limit)
 	c.handler.after(ctx, r.Err())
 	return r
 }

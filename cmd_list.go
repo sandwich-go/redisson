@@ -2,8 +2,6 @@ package redisson
 
 import (
 	"context"
-	"fmt"
-	"strings"
 	"time"
 )
 
@@ -113,7 +111,7 @@ type ListWriter interface {
 	// 	Bulk string reply: the value of the first element, or nil when key does not exist.
 	// When called with the count argument:
 	// 	Array reply: list of popped elements, or nil when key does not exist.
-	LPopCount(ctx context.Context, key string, count int) StringSliceCmd
+	LPopCount(ctx context.Context, key string, count int64) StringSliceCmd
 
 	// LPush
 	// Available since: 1.0.0
@@ -192,7 +190,7 @@ type ListWriter interface {
 	// Time complexity: O(N) where N is the number of elements returned
 	// ACL categories: @write @list @fast
 	// See RPop
-	RPopCount(ctx context.Context, key string, count int) StringSliceCmd
+	RPopCount(ctx context.Context, key string, count int64) StringSliceCmd
 
 	// RPopLPush
 	// Available since: 1.2.0
@@ -227,7 +225,14 @@ type ListWriter interface {
 	RPushX(ctx context.Context, key string, values ...interface{}) IntCmd
 }
 
-type ListReader interface{}
+type ListReader interface {
+	// LPosCount
+	// vailable since: 6.0.6
+	// Time complexity: O(N) where N is the number of elements in the list, for the average case. When searching for elements near the head or the tail of the list, or when the MAXLEN option is provided, the command may run in constant time.
+	// ACL categories: @read @list @slow
+	// See https://redis.io/commands/lpos/
+	LPosCount(ctx context.Context, key string, value string, count int64, args LPosArgs) IntSliceCmd
+}
 
 type ListCacheCmdable interface {
 	// LIndex
@@ -269,118 +274,117 @@ type ListCacheCmdable interface {
 	// ACL categories: @read @list @slow
 	// See https://redis.io/commands/lpos/
 	LPos(ctx context.Context, key string, value string, args LPosArgs) IntCmd
-
-	// LPosCount
-	// vailable since: 6.0.6
-	// Time complexity: O(N) where N is the number of elements in the list, for the average case. When searching for elements near the head or the tail of the list, or when the MAXLEN option is provided, the command may run in constant time.
-	// ACL categories: @read @list @slow
-	// See https://redis.io/commands/lpos/
-	LPosCount(ctx context.Context, key string, value string, count int64, args LPosArgs) IntSliceCmd
 }
 
 func (c *client) BLMove(ctx context.Context, source, destination, srcpos, destpos string, timeout time.Duration) StringCmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandBLMove, func() []string { return appendString(source, destination) })
-	r := newStringCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Arbitrary(BLMOVE).Keys(source, destination).
-		Args(srcpos, destpos, str(float64(formatSec(timeout)))).Blocking()))
+	r := c.adapter.BLMove(ctx, source, destination, srcpos, destpos, timeout)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) BLPop(ctx context.Context, timeout time.Duration, keys ...string) StringSliceCmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandBLPop, func() []string { return keys })
-	r := newStringSliceCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Blpop().Key(keys...).Timeout(float64(formatSec(timeout))).Build()))
+	r := c.adapter.BLPop(ctx, timeout, keys...)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) BRPop(ctx context.Context, timeout time.Duration, keys ...string) StringSliceCmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandBRPop, func() []string { return keys })
-	r := newStringSliceCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Brpop().Key(keys...).Timeout(float64(formatSec(timeout))).Build()))
+	r := c.adapter.BRPop(ctx, timeout, keys...)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) BRPopLPush(ctx context.Context, source, destination string, timeout time.Duration) StringCmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandBRPopLPush, func() []string { return appendString(source, destination) })
-	r := newStringCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Brpoplpush().Source(source).Destination(destination).Timeout(float64(formatSec(timeout))).Build()))
+	r := c.adapter.BRPopLPush(ctx, source, destination, timeout)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) LIndex(ctx context.Context, key string, index int64) StringCmd {
 	ctx = c.handler.before(ctx, CommandLIndex)
-	r := newStringCmdFromResult(c.Do(ctx, c.cmd.B().Lindex().Key(key).Index(index).Build()))
+	var r StringCmd
+	if c.ttl > 0 {
+		r = c.adapter.Cache(c.ttl).LIndex(ctx, key, index)
+	} else {
+		r = c.adapter.LIndex(ctx, key, index)
+	}
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) LInsert(ctx context.Context, key, op string, pivot, value interface{}) IntCmd {
 	ctx = c.handler.before(ctx, CommandLInsert)
-	var r IntCmd
-	switch strings.ToUpper(op) {
-	case BEFORE:
-		r = newIntCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Linsert().Key(key).Before().Pivot(str(pivot)).Element(str(value)).Build()))
-	case AFTER:
-		r = newIntCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Linsert().Key(key).After().Pivot(str(pivot)).Element(str(value)).Build()))
-	default:
-		panic(fmt.Sprintf("Invalid op argument value: %s", op))
-	}
+	r := c.adapter.LInsert(ctx, key, op, pivot, value)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) LInsertBefore(ctx context.Context, key string, pivot, value interface{}) IntCmd {
 	ctx = c.handler.before(ctx, CommandLInsert)
-	r := newIntCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Linsert().Key(key).Before().Pivot(str(pivot)).Element(str(value)).Build()))
+	r := c.adapter.LInsertBefore(ctx, key, pivot, value)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) LInsertAfter(ctx context.Context, key string, pivot, value interface{}) IntCmd {
 	ctx = c.handler.before(ctx, CommandLInsert)
-	r := newIntCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Linsert().Key(key).After().Pivot(str(pivot)).Element(str(value)).Build()))
+	r := c.adapter.LInsertAfter(ctx, key, pivot, value)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) LLen(ctx context.Context, key string) IntCmd {
 	ctx = c.handler.before(ctx, CommandLLen)
-	r := newIntCmdFromResult(c.Do(ctx, c.cmd.B().Llen().Key(key).Build()))
+	var r IntCmd
+	if c.ttl > 0 {
+		r = c.adapter.Cache(c.ttl).LLen(ctx, key)
+	} else {
+		r = c.adapter.LLen(ctx, key)
+	}
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) LMove(ctx context.Context, source, destination, srcpos, destpos string) StringCmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandLMove, func() []string { return appendString(source, destination) })
-	r := newStringCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Arbitrary(LMOVE).Keys(source, destination).Args(srcpos, destpos).Build()))
+	r := c.adapter.LMove(ctx, source, destination, srcpos, destpos)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) LPop(ctx context.Context, key string) StringCmd {
 	ctx = c.handler.before(ctx, CommandLPop)
-	r := newStringCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Lpop().Key(key).Build()))
+	r := c.adapter.LPop(ctx, key)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
-func (c *client) LPopCount(ctx context.Context, key string, count int) StringSliceCmd {
+func (c *client) LPopCount(ctx context.Context, key string, count int64) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandLPopCount)
-	r := newStringSliceCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Lpop().Key(key).Count(int64(count)).Build()))
+	r := c.adapter.LPopCount(ctx, key, count)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) LPos(ctx context.Context, key string, value string, args LPosArgs) IntCmd {
 	ctx = c.handler.before(ctx, CommandLPos)
-	r := newIntCmdFromResult(c.Do(ctx, c.getLPosCompleted(key, value, -1, args)))
+	var r IntCmd
+	if c.ttl > 0 {
+		r = c.adapter.Cache(c.ttl).LPos(ctx, key, value, args)
+	} else {
+		r = c.adapter.LPos(ctx, key, value, args)
+	}
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) LPosCount(ctx context.Context, key string, value string, count int64, args LPosArgs) IntSliceCmd {
 	ctx = c.handler.before(ctx, CommandLPos)
-	r := newIntSliceCmdFromResult(c.Do(ctx, c.getLPosCompleted(key, value, count, args)))
+	r := c.adapter.LPosCount(ctx, key, value, count, args)
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -391,7 +395,7 @@ func (c *client) LPush(ctx context.Context, key string, values ...interface{}) I
 	} else {
 		ctx = c.handler.before(ctx, CommandLPush)
 	}
-	r := newIntCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Lpush().Key(key).Element(argsToSlice(values)...).Build()))
+	r := c.adapter.LPush(ctx, key, values...)
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -402,56 +406,61 @@ func (c *client) LPushX(ctx context.Context, key string, values ...interface{}) 
 	} else {
 		ctx = c.handler.before(ctx, CommandLPushX)
 	}
-	r := newIntCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Lpushx().Key(key).Element(argsToSlice(values)...).Build()))
+	r := c.adapter.LPushX(ctx, key, values...)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) LRange(ctx context.Context, key string, start, stop int64) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandLRange)
-	r := newStringSliceCmdFromResult(c.Do(ctx, c.cmd.B().Lrange().Key(key).Start(start).Stop(stop).Build()))
+	var r StringSliceCmd
+	if c.ttl > 0 {
+		r = c.adapter.Cache(c.ttl).LRange(ctx, key, start, stop)
+	} else {
+		r = c.adapter.LRange(ctx, key, start, stop)
+	}
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) LRem(ctx context.Context, key string, count int64, value interface{}) IntCmd {
 	ctx = c.handler.before(ctx, CommandLRem)
-	r := newIntCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Lrem().Key(key).Count(count).Element(str(value)).Build()))
+	r := c.adapter.LRem(ctx, key, count, value)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) LSet(ctx context.Context, key string, index int64, value interface{}) StatusCmd {
 	ctx = c.handler.before(ctx, CommandLSet)
-	r := newStatusCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Lset().Key(key).Index(index).Element(str(value)).Build()))
+	r := c.adapter.LSet(ctx, key, index, value)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) LTrim(ctx context.Context, key string, start, stop int64) StatusCmd {
 	ctx = c.handler.before(ctx, CommandLTrim)
-	r := newStatusCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Ltrim().Key(key).Start(start).Stop(stop).Build()))
+	r := c.adapter.LTrim(ctx, key, start, stop)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) RPop(ctx context.Context, key string) StringCmd {
 	ctx = c.handler.before(ctx, CommandRPop)
-	r := newStringCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Rpop().Key(key).Build()))
+	r := c.adapter.RPop(ctx, key)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
-func (c *client) RPopCount(ctx context.Context, key string, count int) StringSliceCmd {
+func (c *client) RPopCount(ctx context.Context, key string, count int64) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandRPopCount)
-	r := newStringSliceCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Rpop().Key(key).Count(int64(count)).Build()))
+	r := c.adapter.RPopCount(ctx, key, count)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) RPopLPush(ctx context.Context, source, destination string) StringCmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandRPopLPush, func() []string { return appendString(source, destination) })
-	r := newStringCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Rpoplpush().Source(source).Destination(destination).Build()))
+	r := c.adapter.RPopLPush(ctx, source, destination)
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -462,7 +471,7 @@ func (c *client) RPush(ctx context.Context, key string, values ...interface{}) I
 	} else {
 		ctx = c.handler.before(ctx, CommandRPush)
 	}
-	r := newIntCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Rpush().Key(key).Element(argsToSlice(values)...).Build()))
+	r := c.adapter.RPush(ctx, key, values...)
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -473,7 +482,7 @@ func (c *client) RPushX(ctx context.Context, key string, values ...interface{}) 
 	} else {
 		ctx = c.handler.before(ctx, CommandRPushX)
 	}
-	r := newIntCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Rpushx().Key(key).Element(argsToSlice(values)...).Build()))
+	r := c.adapter.RPushX(ctx, key, values...)
 	c.handler.after(ctx, r.Err())
 	return r
 }

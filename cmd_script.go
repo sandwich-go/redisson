@@ -138,14 +138,14 @@ func (c *client) CreateScript(src string) Scripter { return newScript(c, src) }
 
 func (c *client) Eval(ctx context.Context, script string, keys []string, args ...interface{}) Cmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandEval, func() []string { return keys })
-	r := newCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Eval().Script(script).Numkeys(int64(len(keys))).Key(keys...).Arg(argsToSlice(args)...).Build()))
+	r := c.adapter.Eval(ctx, script, keys, args...)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) EvalSha(ctx context.Context, sha1 string, keys []string, args ...interface{}) Cmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandEvalSha, func() []string { return keys })
-	r := newCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Evalsha().Sha1(sha1).Numkeys(int64(len(keys))).Key(keys...).Arg(argsToSlice(args)...).Build()))
+	r := c.adapter.EvalSha(ctx, sha1, keys, args...)
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -173,7 +173,7 @@ func (c *client) ScriptKill(ctx context.Context) StatusCmd {
 
 func (c *client) ScriptLoad(ctx context.Context, script string) StringCmd {
 	ctx = c.handler.before(ctx, CommandScriptLoad)
-	r := newStringCmdFromStringCmd(c.adapter.ScriptLoad(ctx, script))
+	r := c.adapter.ScriptLoad(ctx, script)
 	c.handler.after(ctx, r.Err())
 	return r
 }

@@ -1,8 +1,6 @@
 package redisson
 
-import (
-	"context"
-)
+import "context"
 
 type BitmapCmdable interface {
 	BitmapWriter
@@ -65,7 +63,7 @@ type BitmapWriter interface {
 	// Warning: When setting the last possible bit (offset equal to 2^32 -1) and the string value stored at key does not yet hold a string value, or holds a small string value, Redis needs to allocate all intermediate memory which can block the server for some time. On a 2010 MacBook Pro, setting bit number 2^32 -1 (512MB allocation) takes ~300ms, setting bit number 2^30 -1 (128MB allocation) takes ~80ms, setting bit number 2^28 -1 (32MB allocation) takes ~30ms and setting bit number 2^26 -1 (8MB allocation) takes ~8ms. Note that once this first allocation is done, subsequent calls to SETBIT for the same key will not have the allocation overhead.
 	// Return:
 	// Integer reply: the original bit value stored at offset.
-	SetBit(ctx context.Context, key string, offset int64, value int) IntCmd
+	SetBit(ctx context.Context, key string, offset int64, value int64) IntCmd
 }
 
 type BitmapReader interface{}
@@ -120,10 +118,10 @@ type BitmapCacheCmdable interface {
 func (c *client) BitCount(ctx context.Context, key string, bc *BitCount) IntCmd {
 	ctx = c.handler.before(ctx, CommandBitCount)
 	var r IntCmd
-	if bc != nil {
-		r = newIntCmdFromResult(c.Do(ctx, c.cmd.B().Bitcount().Key(key).Start(bc.Start).End(bc.End).Build()))
+	if c.ttl > 0 {
+		r = c.adapter.Cache(c.ttl).BitCount(ctx, key, bc)
 	} else {
-		r = newIntCmdFromResult(c.Do(ctx, c.cmd.B().Bitcount().Key(key).Build()))
+		r = c.adapter.BitCount(ctx, key, bc)
 	}
 	c.handler.after(ctx, r.Err())
 	return r
@@ -131,35 +129,35 @@ func (c *client) BitCount(ctx context.Context, key string, bc *BitCount) IntCmd 
 
 func (c *client) BitField(ctx context.Context, key string, args ...interface{}) IntSliceCmd {
 	ctx = c.handler.before(ctx, CommandBitField)
-	r := newIntSliceCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Arbitrary(BITFIELD).Keys(key).Args(argsToSlice(args)...).Build()))
+	r := c.adapter.BitField(ctx, key, args...)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) BitOpAnd(ctx context.Context, destKey string, keys ...string) IntCmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandBitOpAnd, func() []string { return appendString(destKey, keys...) })
-	r := newIntCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Bitop().And().Destkey(destKey).Key(keys...).Build()))
+	r := c.adapter.BitOpAnd(ctx, destKey, keys...)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) BitOpOr(ctx context.Context, destKey string, keys ...string) IntCmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandBitOpOr, func() []string { return appendString(destKey, keys...) })
-	r := newIntCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Bitop().Or().Destkey(destKey).Key(keys...).Build()))
+	r := c.adapter.BitOpOr(ctx, destKey, keys...)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) BitOpXor(ctx context.Context, destKey string, keys ...string) IntCmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandBitOpXor, func() []string { return appendString(destKey, keys...) })
-	r := newIntCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Bitop().Xor().Destkey(destKey).Key(keys...).Build()))
+	r := c.adapter.BitOpXor(ctx, destKey, keys...)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) BitOpNot(ctx context.Context, destKey string, key string) IntCmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandBitOpNot, func() []string { return appendString(destKey, key) })
-	r := newIntCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Bitop().Not().Destkey(destKey).Key(key).Build()))
+	r := c.adapter.BitOpNot(ctx, destKey, key)
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -167,15 +165,10 @@ func (c *client) BitOpNot(ctx context.Context, destKey string, key string) IntCm
 func (c *client) BitPos(ctx context.Context, key string, bit int64, pos ...int64) IntCmd {
 	ctx = c.handler.before(ctx, CommandBitPos)
 	var r IntCmd
-	switch len(pos) {
-	case 0:
-		r = newIntCmdFromResult(c.Do(ctx, c.cmd.B().Bitpos().Key(key).Bit(bit).Build()))
-	case 1:
-		r = newIntCmdFromResult(c.Do(ctx, c.cmd.B().Bitpos().Key(key).Bit(bit).Start(pos[0]).Build()))
-	case 2:
-		r = newIntCmdFromResult(c.Do(ctx, c.cmd.B().Bitpos().Key(key).Bit(bit).Start(pos[0]).End(pos[1]).Build()))
-	default:
-		panic(errTooManyArguments)
+	if c.ttl > 0 {
+		r = c.adapter.Cache(c.ttl).BitPos(ctx, key, bit, pos...)
+	} else {
+		r = c.adapter.BitPos(ctx, key, bit, pos...)
 	}
 	c.handler.after(ctx, r.Err())
 	return r
@@ -183,14 +176,19 @@ func (c *client) BitPos(ctx context.Context, key string, bit int64, pos ...int64
 
 func (c *client) GetBit(ctx context.Context, key string, offset int64) IntCmd {
 	ctx = c.handler.before(ctx, CommandGetBit)
-	r := newIntCmdFromResult(c.Do(ctx, c.cmd.B().Getbit().Key(key).Offset(offset).Build()))
+	var r IntCmd
+	if c.ttl > 0 {
+		r = c.adapter.Cache(c.ttl).GetBit(ctx, key, offset)
+	} else {
+		r = c.adapter.GetBit(ctx, key, offset)
+	}
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
-func (c *client) SetBit(ctx context.Context, key string, offset int64, value int) IntCmd {
+func (c *client) SetBit(ctx context.Context, key string, offset int64, value int64) IntCmd {
 	ctx = c.handler.before(ctx, CommandSetBit)
-	r := newIntCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Setbit().Key(key).Offset(offset).Value(int64(value)).Build()))
+	r := c.adapter.SetBit(ctx, key, offset, value)
 	c.handler.after(ctx, r.Err())
 	return r
 }

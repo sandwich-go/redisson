@@ -7,19 +7,6 @@ import (
 )
 
 type ConnectionCmdable interface {
-	// Select
-	// Available since: 1.0.0
-	// Time complexity: O(1)
-	// ACL categories: @fast @connection
-	// Select the Redis logical database having the specified zero-based numeric index. New connections always use the database 0.
-	// Selectable Redis databases are a form of namespacing: all databases are still persisted in the same RDB / AOF file. However different databases can have keys with the same name, and commands like FLUSHDB, SWAPDB or RANDOMKEY work on specific databases.
-	// In practical terms, Redis databases should be used to separate different keys belonging to the same application (if needed), and not to use a single Redis instance for multiple unrelated applications.
-	// When using Redis Cluster, the SELECT command cannot be used, since Redis Cluster only supports database zero. In the case of a Redis Cluster, having multiple databases would be useless and an unnecessary source of complexity. Commands operating atomically on a single database would not be possible with the Redis Cluster design and goals.
-	// Since the currently selected database is a property of the connection, clients should track the currently selected database and re-select it on reconnection. While there is no command in order to query the selected database in the current connection, the CLIENT LIST output shows, for each client, the currently selected database.
-	// Return:
-	//	Simple string reply
-	Select(ctx context.Context, index int) StatusCmd
-
 	// ClientGetName
 	// Available since: 2.6.9
 	// Time complexity: O(1)
@@ -106,30 +93,23 @@ type ConnectionCmdable interface {
 	Quit(ctx context.Context) StatusCmd
 }
 
-func (c *client) Select(ctx context.Context, index int) StatusCmd {
-	ctx = c.handler.before(ctx, CommandSelect)
-	r := newStatusCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Select().Index(int64(index)).Build()))
-	c.handler.after(ctx, r.Err())
-	return r
-}
-
 func (c *client) ClientGetName(ctx context.Context) StringCmd {
 	ctx = c.handler.before(ctx, CommandClientGetName)
-	r := newStringCmdFromResult(c.cmd.Do(ctx, c.cmd.B().ClientGetname().Build()))
+	r := c.adapter.ClientGetName(ctx)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ClientID(ctx context.Context) IntCmd {
 	ctx = c.handler.before(ctx, CommandClientID)
-	r := newIntCmdFromResult(c.cmd.Do(ctx, c.cmd.B().ClientId().Build()))
+	r := c.adapter.ClientID(ctx)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ClientKill(ctx context.Context, ipPort string) StatusCmd {
 	ctx = c.handler.before(ctx, CommandClientKill)
-	r := newStatusCmdFromStatusCmd(c.adapter.ClientKill(ctx, ipPort))
+	r := c.adapter.ClientKill(ctx, ipPort)
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -144,42 +124,42 @@ func (c *client) ClientKillByFilter(ctx context.Context, keys ...string) IntCmd 
 	} else {
 		ctx = c.handler.before(ctx, CommandClientKillByFilter)
 	}
-	r := newIntCmdFromIntCmd(c.adapter.ClientKillByFilter(ctx, keys...))
+	r := c.adapter.ClientKillByFilter(ctx, keys...)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ClientList(ctx context.Context) StringCmd {
 	ctx = c.handler.before(ctx, CommandClientList)
-	r := newStringCmdFromResult(c.cmd.Do(ctx, c.cmd.B().ClientList().Build()))
+	r := c.adapter.ClientList(ctx)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ClientPause(ctx context.Context, dur time.Duration) BoolCmd {
 	ctx = c.handler.before(ctx, CommandClientPause)
-	r := newBoolCmdFromBoolCmd(c.adapter.ClientPause(ctx, dur))
+	r := c.adapter.ClientPause(ctx, dur)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) Echo(ctx context.Context, message interface{}) StringCmd {
 	ctx = c.handler.before(ctx, CommandEcho)
-	r := newStringCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Echo().Message(str(message)).Build()))
+	r := c.adapter.Echo(ctx, message)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) Ping(ctx context.Context) StatusCmd {
 	ctx = c.handler.before(ctx, CommandPing)
-	r := newStatusCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Ping().Build()))
+	r := c.adapter.Ping(ctx)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) Quit(ctx context.Context) StatusCmd {
 	ctx = c.handler.before(ctx, CommandQuit)
-	r := newStatusCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Quit().Build()))
+	r := c.adapter.Quit(ctx)
 	c.handler.after(ctx, r.Err())
 	return r
 }

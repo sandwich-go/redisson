@@ -208,16 +208,6 @@ type SetCacheCmdable interface {
 	// Return:
 	// 	Array reply: all elements of the set.
 	SMembers(ctx context.Context, key string) StringSliceCmd
-
-	// SMembersMap
-	// Available since: 1.0.0
-	// Time complexity: O(N) where N is the set cardinality.
-	// ACL categories: @read @set @slow
-	// Returns all the members of the set value stored at key.
-	// This has the same effect as running SINTER with one argument key.
-	// Return:
-	// 	Array reply: all elements of the set.
-	SMembersMap(ctx context.Context, key string) StringStructMapCmd
 }
 
 func (c *client) SAdd(ctx context.Context, key string, members ...interface{}) IntCmd {
@@ -226,109 +216,118 @@ func (c *client) SAdd(ctx context.Context, key string, members ...interface{}) I
 	} else {
 		ctx = c.handler.before(ctx, CommandSAdd)
 	}
-	cmd := c.cmd.B().Sadd().Key(key).Member()
-	for _, m := range argsToSlice(members) {
-		cmd = cmd.Member(str(m))
-	}
-	r := newIntCmdFromResult(c.cmd.Do(ctx, cmd.Build()))
+	r := c.adapter.SAdd(ctx, key, members...)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) SCard(ctx context.Context, key string) IntCmd {
 	ctx = c.handler.before(ctx, CommandSCard)
-	r := newIntCmdFromResult(c.Do(ctx, c.cmd.B().Scard().Key(key).Build()))
+	var r IntCmd
+	if c.ttl > 0 {
+		r = c.adapter.Cache(c.ttl).SCard(ctx, key)
+	} else {
+		r = c.adapter.SCard(ctx, key)
+	}
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) SDiff(ctx context.Context, keys ...string) StringSliceCmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandSDiff, func() []string { return keys })
-	r := newStringSliceCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Sdiff().Key(keys...).Build()))
+	r := c.adapter.SDiff(ctx, keys...)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) SDiffStore(ctx context.Context, destination string, keys ...string) IntCmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandSDiffStore, func() []string { return appendString(destination, keys...) })
-	r := newIntCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Sdiffstore().Destination(destination).Key(keys...).Build()))
+	r := c.adapter.SDiffStore(ctx, destination, keys...)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) SInter(ctx context.Context, keys ...string) StringSliceCmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandSInter, func() []string { return keys })
-	r := newStringSliceCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Sinter().Key(keys...).Build()))
+	r := c.adapter.SInter(ctx, keys...)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) SInterStore(ctx context.Context, destination string, keys ...string) IntCmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandSInterStore, func() []string { return appendString(destination, keys...) })
-	r := newIntCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Sinterstore().Destination(destination).Key(keys...).Build()))
+	r := c.adapter.SInterStore(ctx, destination, keys...)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) SIsMember(ctx context.Context, key string, member interface{}) BoolCmd {
 	ctx = c.handler.before(ctx, CommandSIsMember)
-	r := newBoolCmdFromResult(c.Do(ctx, c.cmd.B().Sismember().Key(key).Member(str(member)).Build()))
+	var r BoolCmd
+	if c.ttl > 0 {
+		r = c.adapter.Cache(c.ttl).SIsMember(ctx, key, member)
+	} else {
+		r = c.adapter.SIsMember(ctx, key, member)
+	}
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) SMIsMember(ctx context.Context, key string, members ...interface{}) BoolSliceCmd {
 	ctx = c.handler.before(ctx, CommandSMIsMember)
-	r := newBoolSliceCmdFromResult(c.Do(ctx, c.cmd.B().Smismember().Key(key).Member(argsToSlice(members)...).Build()))
+	var r BoolSliceCmd
+	if c.ttl > 0 {
+		r = c.adapter.Cache(c.ttl).SMIsMember(ctx, key, members...)
+	} else {
+		r = c.adapter.SMIsMember(ctx, key, members...)
+	}
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) SMembers(ctx context.Context, key string) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandSMembers)
-	r := newStringSliceCmdFromResult(c.Do(ctx, c.cmd.B().Smembers().Key(key).Build()))
-	c.handler.after(ctx, r.Err())
-	return r
-}
-
-func (c *client) SMembersMap(ctx context.Context, key string) StringStructMapCmd {
-	ctx = c.handler.before(ctx, CommandSMembers)
-	r := newStringStructMapCmdFromResult(c.Do(ctx, c.cmd.B().Smembers().Key(key).Build()))
+	var r StringSliceCmd
+	if c.ttl > 0 {
+		r = c.adapter.Cache(c.ttl).SMembers(ctx, key)
+	} else {
+		r = c.adapter.SMembers(ctx, key)
+	}
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) SMove(ctx context.Context, source, destination string, member interface{}) BoolCmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandSMove, func() []string { return appendString(source, destination) })
-	r := newBoolCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Smove().Source(source).Destination(destination).Member(str(member)).Build()))
+	r := c.adapter.SMove(ctx, source, destination, member)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) SPop(ctx context.Context, key string) StringCmd {
 	ctx = c.handler.before(ctx, CommandSPop)
-	r := newStringCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Spop().Key(key).Build()))
+	r := c.adapter.SPop(ctx, key)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) SPopN(ctx context.Context, key string, count int64) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandSPopN)
-	r := newStringSliceCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Spop().Key(key).Count(count).Build()))
+	r := c.adapter.SPopN(ctx, key, count)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) SRandMember(ctx context.Context, key string) StringCmd {
 	ctx = c.handler.before(ctx, CommandSRandMember)
-	r := newStringCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Srandmember().Key(key).Build()))
+	r := c.adapter.SRandMember(ctx, key)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) SRandMemberN(ctx context.Context, key string, count int64) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandSRandMemberN)
-	r := newStringSliceCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Srandmember().Key(key).Count(count).Build()))
+	r := c.adapter.SRandMemberN(ctx, key, count)
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -339,35 +338,28 @@ func (c *client) SRem(ctx context.Context, key string, members ...interface{}) I
 	} else {
 		ctx = c.handler.before(ctx, CommandSRem)
 	}
-	r := newIntCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Srem().Key(key).Member(argsToSlice(members)...).Build()))
+	r := c.adapter.SRem(ctx, key, members...)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) SScan(ctx context.Context, key string, cursor uint64, match string, count int64) ScanCmd {
 	ctx = c.handler.before(ctx, CommandSScan)
-	cmd := c.cmd.B().Arbitrary(SSCAN).Keys(key).Args(str(int64(cursor)))
-	if match != "" {
-		cmd = cmd.Args(MATCH, match)
-	}
-	if count > 0 {
-		cmd = cmd.Args(COUNT, str(count))
-	}
-	r := newScanCmdFromResult(c.cmd.Do(ctx, cmd.ReadOnly()))
+	r := c.adapter.SScan(ctx, key, cursor, match, count)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) SUnion(ctx context.Context, keys ...string) StringSliceCmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandSUnion, func() []string { return keys })
-	r := newStringSliceCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Sunion().Key(keys...).Build()))
+	r := c.adapter.SUnion(ctx, keys...)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) SUnionStore(ctx context.Context, destination string, keys ...string) IntCmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandSUnionStore, func() []string { return appendString(destination, keys...) })
-	r := newIntCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Sunionstore().Destination(destination).Key(keys...).Build()))
+	r := c.adapter.SUnionStore(ctx, destination, keys...)
 	c.handler.after(ctx, r.Err())
 	return r
 }

@@ -55,21 +55,21 @@ type HyperLogReader interface {
 
 func (c *client) PFAdd(ctx context.Context, key string, els ...interface{}) IntCmd {
 	ctx = c.handler.before(ctx, CommandPFAdd)
-	r := newIntCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Pfadd().Key(key).Element(argsToSlice(els)...).Build()))
+	r := c.adapter.PFAdd(ctx, key, els...)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) PFCount(ctx context.Context, keys ...string) IntCmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandPFCount, func() []string { return keys })
-	r := newIntCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Pfcount().Key(keys...).Build()))
+	r := c.adapter.PFCount(ctx, keys...)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) PFMerge(ctx context.Context, dest string, keys ...string) StatusCmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandPFMerge, func() []string { return appendString(dest, keys...) })
-	r := newStatusCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Pfmerge().Destkey(dest).Sourcekey(keys...).Build()))
+	r := c.adapter.PFMerge(ctx, dest, keys...)
 	c.handler.after(ctx, r.Err())
 	return r
 }

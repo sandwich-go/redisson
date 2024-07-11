@@ -44,7 +44,7 @@ type PubSub interface {
 
 	// Channel
 	// Receive Message by chan
-	Channel() <-chan *Message
+	Channel() <-chan Message
 
 	// Close
 	// Release the hold connection
@@ -108,28 +108,28 @@ type PubSubCmdable interface {
 
 func (c *client) Publish(ctx context.Context, channel string, message interface{}) IntCmd {
 	ctx = c.handler.before(ctx, CommandPublish)
-	r := newIntCmdFromResult(c.cmd.Do(ctx, c.cmd.B().Publish().Channel(channel).Message(str(message)).Build()))
+	r := c.adapter.Publish(ctx, channel, message)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) PubSubChannels(ctx context.Context, pattern string) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandPubSubChannels)
-	r := newStringSliceCmdFromResult(c.cmd.Do(ctx, c.cmd.B().PubsubChannels().Pattern(pattern).Build()))
+	r := c.adapter.PubSubChannels(ctx, pattern)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) PubSubNumPat(ctx context.Context) IntCmd {
 	ctx = c.handler.before(ctx, CommandPubSubNumPat)
-	r := newIntCmdFromResult(c.cmd.Do(ctx, c.cmd.B().PubsubNumpat().Build()))
+	r := c.adapter.PubSubNumPat(ctx)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) PubSubNumSub(ctx context.Context, channels ...string) StringIntMapCmd {
 	ctx = c.handler.before(ctx, CommandPubSubNumSub)
-	r := newStringIntMapCmdFromResult(c.cmd.Do(ctx, c.cmd.B().PubsubNumsub().Channel(channels...).Build()))
+	r := c.adapter.PubSubNumSub(ctx, channels...)
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -143,27 +143,19 @@ func (c *client) Subscribe(ctx context.Context, channels ...string) PubSub {
 
 func (c *client) Receive(ctx context.Context, cb func(Message), channels ...string) error {
 	return c.cmd.Receive(ctx, c.cmd.B().Subscribe().Channel(channels...).Build(), func(msg rueidis.PubSubMessage) {
-		cb(Message{
-			Channel: msg.Channel,
-			Pattern: msg.Pattern,
-			Payload: msg.Message,
-		})
+		cb(msg)
 	})
 }
 
 func (c *client) PReceive(ctx context.Context, cb func(Message), patterns ...string) error {
 	return c.cmd.Receive(ctx, c.cmd.B().Psubscribe().Pattern(patterns...).Build(), func(msg rueidis.PubSubMessage) {
-		cb(Message{
-			Channel: msg.Channel,
-			Pattern: msg.Pattern,
-			Payload: msg.Message,
-		})
+		cb(msg)
 	})
 }
 
 type pubSub struct {
 	client  *client
-	msgCh   chan *Message
+	msgCh   chan Message
 	handler handler
 
 	ctx    context.Context
@@ -172,7 +164,7 @@ type pubSub struct {
 
 func newPubSub(ctx context.Context, client *client, handler handler, channels ...string) PubSub {
 	// chan size todo, use goredis.ChannelOption?
-	p := &pubSub{client: client, msgCh: make(chan *Message, 100), handler: handler}
+	p := &pubSub{client: client, msgCh: make(chan Message, 100), handler: handler}
 	p.ctx, p.cancel = context.WithCancel(ctx)
 	if len(channels) > 0 {
 		_ = p.Subscribe(ctx, channels...)
@@ -191,11 +183,7 @@ func (p *pubSub) PSubscribe(ctx context.Context, patterns ...string) error {
 	var err error
 	go func() {
 		err = p.client.cmd.Receive(p.ctx, p.client.cmd.B().Psubscribe().Pattern(patterns...).Build(), func(m rueidis.PubSubMessage) {
-			p.msgCh <- &Message{
-				Channel: m.Channel,
-				Pattern: m.Pattern,
-				Payload: m.Message,
-			}
+			p.msgCh <- m
 		})
 	}()
 	p.handler.after(ctx, err)
@@ -207,11 +195,7 @@ func (p *pubSub) Subscribe(ctx context.Context, channels ...string) error {
 	var err error
 	go func() {
 		err = p.client.cmd.Receive(p.ctx, p.client.cmd.B().Subscribe().Channel(channels...).Build(), func(m rueidis.PubSubMessage) {
-			p.msgCh <- &Message{
-				Channel: m.Channel,
-				Pattern: m.Pattern,
-				Payload: m.Message,
-			}
+			p.msgCh <- m
 		})
 	}()
 	p.handler.after(ctx, err)
@@ -232,6 +216,6 @@ func (p *pubSub) PUnsubscribe(ctx context.Context, patterns ...string) error {
 	return err
 }
 
-func (p *pubSub) Channel() <-chan *Message {
+func (p *pubSub) Channel() <-chan Message {
 	return p.msgCh
 }
