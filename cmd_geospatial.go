@@ -61,6 +61,13 @@ type GeospatialWriter interface {
 	// Return:
 	//	Integer reply: the number of elements in the resulting set.
 	GeoSearchStore(ctx context.Context, key, store string, q GeoSearchStoreQuery) IntCmd
+
+	// GeoSearchLocation
+	// Available since: 6.2.0
+	// Time complexity: O(N+log(M)) where N is the number of elements in the grid-aligned bounding box area around the shape provided as the filter and M is the number of items inside the shape
+	// ACL categories: @read @geo @slow
+	// See GeoSearch
+	GeoSearchLocation(ctx context.Context, key string, q GeoSearchLocationQuery) GeoSearchLocationCmd
 }
 
 type GeospatialReader interface{}
@@ -164,13 +171,6 @@ type GeospatialCacheCmdable interface {
 	//	The geohash integer.
 	//	The coordinates as a two items x,y array (longitude,latitude).
 	GeoSearch(ctx context.Context, key string, q GeoSearchQuery) StringSliceCmd
-
-	// GeoSearchLocation
-	// Available since: 6.2.0
-	// Time complexity: O(N+log(M)) where N is the number of elements in the grid-aligned bounding box area around the shape provided as the filter and M is the number of items inside the shape
-	// ACL categories: @read @geo @slow
-	// See GeoSearch
-	GeoSearchLocation(ctx context.Context, key string, q GeoSearchLocationQuery) GeoSearchLocationCmd
 }
 
 func (c *client) GeoAdd(ctx context.Context, key string, geoLocation ...GeoLocation) IntCmd {

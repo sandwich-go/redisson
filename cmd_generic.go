@@ -222,6 +222,16 @@ type GenericReader interface {
 	//	Bulk string reply: the serialized value.
 	Dump(ctx context.Context, key string) StringCmd
 
+	// Exists
+	// Available since: 1.0.0
+	// Time complexity: O(N) where N is the number of keys to check.
+	// ACL categories: @keyspace @read @fast
+	// Returns if key exists.
+	// The user should be aware that if the same existing key is mentioned in the arguments multiple times, it will be counted multiple times. So if somekey exists, EXISTS somekey somekey will return 2.
+	// Return:
+	// 	Integer reply, specifically the number of keys that exist from those specified as arguments.
+	Exists(ctx context.Context, keys ...string) IntCmd
+
 	// Keys
 	// Available since: 1.0.0
 	// Time complexity: O(N) with N being the number of keys in the database, under the assumption that the key names in the database and the given pattern have limited length.
@@ -336,16 +346,6 @@ type GenericCacheCmdable interface {
 	// Return:
 	// 	Simple string reply: type of key, or none when key does not exist.
 	Type(ctx context.Context, key string) StatusCmd
-
-	// Exists
-	// Available since: 1.0.0
-	// Time complexity: O(N) where N is the number of keys to check.
-	// ACL categories: @keyspace @read @fast
-	// Returns if key exists.
-	// The user should be aware that if the same existing key is mentioned in the arguments multiple times, it will be counted multiple times. So if somekey exists, EXISTS somekey somekey will return 2.
-	// Return:
-	// 	Integer reply, specifically the number of keys that exist from those specified as arguments.
-	Exists(ctx context.Context, keys ...string) IntCmd
 
 	// TTL
 	// Available since: 1.0.0

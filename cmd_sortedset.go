@@ -368,16 +368,6 @@ type SortedSetCacheCmdable interface {
 	// See https://redis.io/commands/zrange/
 	ZRange(ctx context.Context, key string, start, stop int64) StringSliceCmd
 
-	// ZRangeWithScores
-	// Available since: 1.2.0
-	// Time complexity: O(log(N)+M) with N being the number of elements in the sorted set and M the number of elements returned.
-	// ACL categories: @read @sortedset @slow
-	// Returns the specified range of elements in the sorted set stored at <key>.
-	// ZRANGE can perform different types of range queries: by index (rank), by the score, or by lexicographical order.
-	// Array reply: list of elements in the specified range (optionally with their scores, in case the WITHSCORES option is given).
-	// See https://redis.io/commands/zrange/
-	ZRangeWithScores(ctx context.Context, key string, start, stop int64) ZSliceCmd
-
 	// ZRangeArgs
 	// Available since: 1.2.0
 	// Time complexity: O(log(N)+M) with N being the number of elements in the sorted set and M the number of elements returned.
@@ -399,6 +389,16 @@ type SortedSetCacheCmdable interface {
 	// Starting with Redis version 6.2.0: Added the REV, BYSCORE, BYLEX and LIMIT options.
 	// See https://redis.io/commands/zrange/
 	ZRangeArgsWithScores(ctx context.Context, z ZRangeArgs) ZSliceCmd
+
+	// ZRangeWithScores
+	// Available since: 1.2.0
+	// Time complexity: O(log(N)+M) with N being the number of elements in the sorted set and M the number of elements returned.
+	// ACL categories: @read @sortedset @slow
+	// Returns the specified range of elements in the sorted set stored at <key>.
+	// ZRANGE can perform different types of range queries: by index (rank), by the score, or by lexicographical order.
+	// Array reply: list of elements in the specified range (optionally with their scores, in case the WITHSCORES option is given).
+	// See https://redis.io/commands/zrange/
+	ZRangeWithScores(ctx context.Context, key string, start, stop int64) ZSliceCmd
 
 	// ZRangeByLex
 	// Available since: 2.8.9
@@ -775,14 +775,28 @@ func (c *client) ZRandMemberWithScores(ctx context.Context, key string, count in
 
 func (c *client) ZRange(ctx context.Context, key string, start, stop int64) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandZRange)
-	r := c.adapter.ZRange(ctx, key, start, stop)
+	var r StringSliceCmd
+	if c.ttl > 0 {
+		r = c.adapter.Cache(c.ttl).ZRangeArgs(ctx, ZRangeArgs{
+			Key:   key,
+			Start: start,
+			Stop:  stop,
+		})
+	} else {
+		r = c.adapter.ZRange(ctx, key, start, stop)
+	}
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ZRangeWithScores(ctx context.Context, key string, start, stop int64) ZSliceCmd {
 	ctx = c.handler.before(ctx, CommandZRange)
-	r := c.adapter.ZRangeWithScores(ctx, key, start, stop)
+	var r ZSliceCmd
+	if c.ttl > 0 {
+		r = c.adapter.Cache(c.ttl).ZRangeWithScores(ctx, key, start, stop)
+	} else {
+		r = c.adapter.ZRangeWithScores(ctx, key, start, stop)
+	}
 	c.handler.after(ctx, r.Err())
 	return r
 }

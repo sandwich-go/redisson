@@ -532,7 +532,7 @@ func (c *client) XRevRangeN(ctx context.Context, stream string, start, stop stri
 
 func (c *client) XTrim(ctx context.Context, key string, maxLen int64) IntCmd {
 	ctx = c.handler.before(ctx, CommandXTrim)
-	r := c.xtrim(ctx, key, MAXLEN, false, str(maxLen), 0)
+	r := c.adapter.XTrimMaxLen(ctx, key, maxLen)
 	c.handler.after(ctx, r.Err())
 	return r
 }
