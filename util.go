@@ -10,35 +10,18 @@ import (
 
 const (
 	OK                   = "OK"
-	BITFIELD             = "BITFIELD"
-	AND                  = "AND"
-	OR                   = "OR"
-	XOR                  = "XOR"
-	NOT                  = "NOT"
-	CLIENT               = "CLIENT"
-	KILL                 = "KILL"
-	SORT                 = "SORT"
-	BY                   = "BY"
 	LIMIT                = "LIMIT"
 	GET                  = "GET"
-	ALPHA                = "ALPHA"
 	STORE                = "STORE"
-	TYPE                 = "TYPE"
-	SCAN                 = "SCAN"
-	SLAVEOF              = "SLAVEOF"
-	MATCH                = "MATCH"
 	COUNT                = "COUNT"
 	M                    = "M"
 	MI                   = "MI"
 	FT                   = "FT"
 	KM                   = "KM"
 	EMPTY                = ""
-	GEORADIUS            = "GEORADIUS"
 	GEORADIUS_RO         = "GEORADIUS_RO"
-	GEORADIUSBYMEMBER    = "GEORADIUSBYMEMBER"
 	GEORADIUSBYMEMBER_RO = "GEORADIUSBYMEMBER_RO"
 	GEOSEARCH            = "GEOSEARCH"
-	GEOSEARCHSTORE       = "GEOSEARCHSTORE"
 	STOREDIST            = "STOREDIST"
 	BYRADIUS             = "BYRADIUS"
 	FROMMEMBER           = "FROMMEMBER"
@@ -48,53 +31,16 @@ const (
 	WITHCOORD            = "WITHCOORD"
 	WITHDIST             = "WITHDIST"
 	WITHHASH             = "WITHHASH"
-	HMGET                = "hmget"
-	HSCAN                = "HSCAN"
-	BLMOVE               = "BLMOVE"
-	LMOVE                = "LMOVE"
-	BEFORE               = "BEFORE"
-	AFTER                = "AFTER"
 	LPOS                 = "LPOS"
 	RANK                 = "RANK"
-	MINID                = "MINID"
 	MAXLEN               = "MAXLEN"
-	SSCAN                = "SSCAN"
-	ZADD                 = "ZADD"
 	XX                   = "XX"
 	NX                   = "NX"
-	GT                   = "GT"
-	LT                   = "LT"
-	CH                   = "CH"
-	INCR                 = "INCR"
-	ZINTER               = "ZINTER"
-	WEIGHTS              = "WEIGHTS"
-	AGGREGATE            = "AGGREGATE"
 	WITHSCORES           = "WITHSCORES"
-	ZINTERSTORE          = "ZINTERSTORE"
 	BYSCORE              = "BYSCORE"
 	BYLEX                = "BYLEX"
 	REV                  = "REV"
 	ZRANGE               = "ZRANGE"
-	ZRANGESTORE          = "ZRANGESTORE"
-	ZSCAN                = "ZSCAN"
-	ZUNION               = "ZUNION"
-	ZUNIONSTORE          = "ZUNIONSTORE"
-	XADD                 = "XADD"
-	NOMKSTREAM           = "NOMKSTREAM"
-	XPENDING             = "XPENDING"
-	IDLE                 = "IDLE"
-	XREAD                = "XREAD"
-	BLOCK                = "BLOCK"
-	STREAMS              = "STREAMS"
-	XREADGROUP           = "XREADGROUP"
-	GROUP                = "GROUP"
-	NOACK                = "NOACK"
-	XTRIM                = "XTRIM"
-	SET                  = "SET"
-	KEEPTTL              = "KEEPTTL"
-	EXAT                 = "EXAT"
-	PX                   = "PX"
-	EX                   = "EX"
 	SERVER               = "SERVER"
 	CLUSTER              = "CLUSTER"
 	LADDR                = "LADDR"
@@ -106,32 +52,6 @@ var (
 	nowFunc   = time.Now
 	sinceFunc = time.Since
 )
-
-func usePrecise(dur time.Duration) bool {
-	return dur < time.Second || dur%time.Second != 0
-}
-
-func formatMs(dur time.Duration) int64 {
-	if dur > 0 && dur < time.Millisecond {
-		warning(fmt.Sprintf(
-			"specified duration is %s, but minimal supported value is %s - truncating to 1ms",
-			dur, time.Millisecond,
-		))
-		return 1
-	}
-	return int64(dur / time.Millisecond)
-}
-
-func formatSec(dur time.Duration) int64 {
-	if dur > 0 && dur < time.Second {
-		warning(fmt.Sprintf(
-			"specified duration is %s, but minimal supported value is %s - truncating to 1s",
-			dur, time.Second,
-		))
-		return 1
-	}
-	return int64(dur / time.Second)
-}
 
 func appendString(s string, ss ...string) []string {
 	sss := make([]string, 0, len(ss)+1)
@@ -167,14 +87,6 @@ func str(arg interface{}) string {
 		}
 	}
 	return fmt.Sprint(arg)
-}
-
-func intSliceToInt64ToSlice(src []int) []int64 {
-	dst := make([]int64, 0, len(src))
-	for _, v := range src {
-		dst = append(dst, int64(v))
-	}
-	return dst
 }
 
 func argsToSlice(src []interface{}) []string {
@@ -226,80 +138,8 @@ func argToSlice(a interface{}) []string {
 	}
 }
 
-func parseInt(s string) (int64, error) {
-	return strconv.ParseInt(s, 10, 64)
-}
-
 func warning(msg string) {
 	fmt.Println(msg)
-}
-
-func toLower(s string) string {
-	if isLower(s) {
-		return s
-	}
-
-	b := make([]byte, len(s))
-	for i := range b {
-		c := s[i]
-		if c >= 'A' && c <= 'Z' {
-			c += 'a' - 'A'
-		}
-		b[i] = c
-	}
-	return string(b)
-}
-
-func isLower(s string) bool {
-	for i := 0; i < len(s); i++ {
-		c := s[i]
-		if c >= 'A' && c <= 'Z' {
-			return false
-		}
-	}
-	return true
-}
-
-func toString(val any) (string, error) {
-	switch t := val.(type) {
-	case string:
-		return t, nil
-	default:
-		return "", fmt.Errorf("redis: unexpected type=%T for String", t)
-	}
-}
-
-func toInt(val interface{}) (int, error) {
-	switch t := val.(type) {
-	case int64:
-		return int(t), nil
-	case string:
-		return strconv.Atoi(t)
-	default:
-		return 0, fmt.Errorf("redis: unexpected type=%T for Int", t)
-	}
-}
-
-func toInt64(val any) (int64, error) {
-	switch t := val.(type) {
-	case int64:
-		return t, nil
-	case string:
-		return strconv.ParseInt(t, 10, 64)
-	default:
-		return 0, fmt.Errorf("redis: unexpected type=%T for Int64", t)
-	}
-}
-
-func toUint64(val any) (uint64, error) {
-	switch t := val.(type) {
-	case int64:
-		return uint64(t), nil
-	case string:
-		return strconv.ParseUint(t, 10, 64)
-	default:
-		return 0, fmt.Errorf("redis: unexpected type=%T for Uint64", t)
-	}
 }
 
 func toFloat32(val any) (float32, error) {
@@ -325,16 +165,5 @@ func toFloat64(val any) (float64, error) {
 		return strconv.ParseFloat(t, 64)
 	default:
 		return 0, fmt.Errorf("redis: unexpected type=%T for Float64", t)
-	}
-}
-
-func toBool(val any) (bool, error) {
-	switch t := val.(type) {
-	case int64:
-		return t != 0, nil
-	case string:
-		return strconv.ParseBool(t)
-	default:
-		return false, fmt.Errorf("redis: unexpected type=%T for Bool", t)
 	}
 }

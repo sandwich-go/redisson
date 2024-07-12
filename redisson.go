@@ -6,6 +6,7 @@ import (
 	"github.com/coreos/go-semver/semver"
 	"github.com/redis/rueidis"
 	"github.com/redis/rueidis/rueidiscompat"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -15,15 +16,6 @@ type RESP = string
 const (
 	RESP2 RESP = "RESP2"
 	RESP3 RESP = "RESP3"
-)
-
-var (
-	errTooManyArguments                    = errors.New("too many arguments")
-	errGeoRadiusByMemberNotSupportStore    = errors.New("GeoRadiusByMember does not support Store or StoreDist")
-	errGeoRadiusNotSupportStore            = errors.New("GeoRadius does not support Store or StoreDist")
-	errGeoRadiusStoreRequiresStore         = errors.New("GeoRadiusStore requires Store or StoreDist")
-	errGeoRadiusByMemberStoreRequiresStore = errors.New("GeoRadiusByMemberStore requires Store or StoreDist")
-	errMemoryUsageArgsCount                = errors.New("MemoryUsage expects single sample count")
 )
 
 var Nil = rueidis.Nil
@@ -102,44 +94,26 @@ func (c *client) doCache(ctx context.Context, cacheable rueidis.Cacheable) rueid
 	return resp
 }
 
-func (c *client) XMGet(ctx context.Context, keys ...string) SliceCmd {
-	if len(keys) <= 1 {
-		return c.MGet(ctx, keys...)
+func (c *client) zRangeArgs(withScores bool, z ZRangeArgs) rueidis.Cacheable {
+	cmd := c.cmd.B().Arbitrary(ZRANGE).Keys(z.Key)
+	if z.Rev && (z.ByScore || z.ByLex) {
+		cmd = cmd.Args(str(z.Stop), str(z.Start))
+	} else {
+		cmd = cmd.Args(str(z.Start), str(z.Stop))
 	}
-	var slot2Keys = make(map[uint16][]string)
-	var keyIndexes = make(map[string]int)
-	for i, key := range keys {
-		keySlot := slot(key)
-		slot2Keys[keySlot] = append(slot2Keys[keySlot], key)
-		keyIndexes[key] = i
+	if z.ByScore {
+		cmd = cmd.Args(BYSCORE)
+	} else if z.ByLex {
+		cmd = cmd.Args(BYLEX)
 	}
-	if len(slot2Keys) == 1 {
-		return c.MGet(ctx, keys...)
+	if z.Rev {
+		cmd = cmd.Args(REV)
 	}
-	var wg sync.WaitGroup
-	var mx sync.Mutex
-	var scs = make(map[uint16]SliceCmd)
-	wg.Add(len(slot2Keys))
-	for i, sameSlotKeys := range slot2Keys {
-		go func(_i uint16, _keys []string) {
-			ret := c.MGet(context.Background(), _keys...)
-			mx.Lock()
-			scs[_i] = ret
-			mx.Unlock()
-			wg.Done()
-		}(i, sameSlotKeys)
+	if z.Offset != 0 || z.Count != 0 {
+		cmd = cmd.Args(LIMIT, strconv.FormatInt(z.Offset, 10), strconv.FormatInt(z.Count, 10))
 	}
-	wg.Wait()
-
-	var res = make([]interface{}, len(keys))
-	for i, ret := range scs {
-		if err := ret.Err(); err != nil {
-			return newSliceCmdFromSlice(nil, err, keys...)
-		}
-		_values := ret.Val()
-		for _i, _key := range slot2Keys[i] {
-			res[keyIndexes[_key]] = _values[_i]
-		}
+	if withScores {
+		cmd = cmd.Args(WITHSCORES)
 	}
-	return newSliceCmdFromSlice(res, nil, keys...)
+	return rueidis.Cacheable(cmd.Build())
 }

@@ -681,10 +681,6 @@ func testMGet(ctx context.Context, c Cmdable) []string {
 	So(mGet.Err(), ShouldBeNil)
 	So(interfaceSliceEqual(mGet.Val(), []interface{}{value1, value2, nil}), ShouldBeTrue)
 
-	mGet = cacheCmd(c).MGet(ctx, key1, key2, "_")
-	So(mGet.Err(), ShouldBeNil)
-	So(interfaceSliceEqual(mGet.Val(), []interface{}{value1, value2, nil}), ShouldBeTrue)
-
 	return []string{key1, key2}
 }
 

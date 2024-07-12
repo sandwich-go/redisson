@@ -7,13 +7,6 @@ import (
 	"time"
 )
 
-func testSelect(ctx context.Context, c Cmdable) []string {
-	sel := c.Select(ctx, 1)
-	So(sel.Err(), ShouldBeNil)
-	So(sel.Val(), ShouldEqual, OK)
-	return nil
-}
-
 func testClientGetName(ctx context.Context, c Cmdable) []string {
 	pipe := c.Pipeline()
 	_ = pipe.Put(ctx, CommandClientSetName, nil, "theclientname")
@@ -93,7 +86,6 @@ func testQuit(_ context.Context, _ Cmdable) []string {
 
 func connectionTestUnits() []TestUnit {
 	return []TestUnit{
-		{CommandSelect, testSelect},
 		{CommandClientGetName, testClientGetName},
 		{CommandClientID, testClientID},
 		{CommandClientKill, testClientKill},

@@ -3,6 +3,7 @@ package redisson
 import (
 	"context"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -278,7 +279,7 @@ func (c *client) Get(ctx context.Context, key string) StringCmd {
 	ctx = c.handler.before(ctx, CommandGet)
 	var r StringCmd
 	if c.ttl > 0 {
-		r = c.adapter.Cache(c.ttl).Get(ctx, key)
+		r = newStringCmd(c.doCache(ctx, c.cmd.B().Get().Key(key).Cache()))
 	} else {
 		r = c.adapter.Get(ctx, key)
 	}
@@ -304,7 +305,7 @@ func (c *client) GetRange(ctx context.Context, key string, start, end int64) Str
 	ctx = c.handler.before(ctx, CommandGetRange)
 	var r StringCmd
 	if c.ttl > 0 {
-		r = c.adapter.Cache(c.ttl).GetRange(ctx, key, start, end)
+		r = newStringCmd(c.doCache(ctx, c.cmd.B().Getrange().Key(key).Start(start).End(end).Cache()))
 	} else {
 		r = c.adapter.GetRange(ctx, key, start, end)
 	}
@@ -345,6 +346,48 @@ func (c *client) MGet(ctx context.Context, keys ...string) SliceCmd {
 	r := c.adapter.MGet(ctx, keys...)
 	c.handler.after(ctx, r.Err())
 	return r
+}
+
+func (c *client) XMGet(ctx context.Context, keys ...string) SliceCmd {
+	if len(keys) <= 1 {
+		return c.MGet(ctx, keys...)
+	}
+	var slot2Keys = make(map[uint16][]string)
+	var keyIndexes = make(map[string]int)
+	for i, key := range keys {
+		keySlot := slot(key)
+		slot2Keys[keySlot] = append(slot2Keys[keySlot], key)
+		keyIndexes[key] = i
+	}
+	if len(slot2Keys) == 1 {
+		return c.MGet(ctx, keys...)
+	}
+	var wg sync.WaitGroup
+	var mx sync.Mutex
+	var scs = make(map[uint16]SliceCmd)
+	wg.Add(len(slot2Keys))
+	for i, sameSlotKeys := range slot2Keys {
+		go func(_i uint16, _keys []string) {
+			ret := c.MGet(context.Background(), _keys...)
+			mx.Lock()
+			scs[_i] = ret
+			mx.Unlock()
+			wg.Done()
+		}(i, sameSlotKeys)
+	}
+	wg.Wait()
+
+	var res = make([]interface{}, len(keys))
+	for i, ret := range scs {
+		if err := ret.Err(); err != nil {
+			return newSliceCmdFromSlice(nil, err, keys...)
+		}
+		_values := ret.Val()
+		for _i, _key := range slot2Keys[i] {
+			res[keyIndexes[_key]] = _values[_i]
+		}
+	}
+	return newSliceCmdFromSlice(res, nil, keys...)
 }
 
 func (c *client) MSet(ctx context.Context, values ...interface{}) StatusCmd {
@@ -433,7 +476,7 @@ func (c *client) StrLen(ctx context.Context, key string) IntCmd {
 	ctx = c.handler.before(ctx, CommandStrLen)
 	var r IntCmd
 	if c.ttl > 0 {
-		r = c.adapter.Cache(c.ttl).StrLen(ctx, key)
+		r = newIntCmd(c.doCache(ctx, c.cmd.B().Strlen().Key(key).Cache()))
 	} else {
 		r = c.adapter.StrLen(ctx, key)
 	}

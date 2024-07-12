@@ -340,7 +340,7 @@ func testLPosCount(ctx context.Context, c Cmdable) []string {
 	So(lPosCount.Err(), ShouldBeNil)
 	So(int64SliceEqual(lPosCount.Val(), []int64{8, 9, 10}, true), ShouldBeTrue)
 
-	lPosCount = cacheCmd(c).LPosCount(ctx, key1, "3", 2, LPosArgs{Rank: 2})
+	lPosCount = c.LPosCount(ctx, key1, "3", 2, LPosArgs{Rank: 2})
 	So(lPosCount.Err(), ShouldBeNil)
 	So(int64SliceEqual(lPosCount.Val(), []int64{8, 9}, true), ShouldBeTrue)
 

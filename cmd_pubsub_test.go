@@ -28,7 +28,7 @@ func testSubscribe(ctx context.Context, c Cmdable) []string {
 	var index int
 	for msg := range s.Channel() {
 		index++
-		So(msg.Payload, ShouldEqual, "one")
+		So(msg.Message, ShouldEqual, "one")
 		break
 	}
 

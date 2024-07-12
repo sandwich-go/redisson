@@ -77,6 +77,7 @@ type BaseCmd interface {
 type Cmd interface {
 	BaseCmd
 
+	Val() any
 	Text() (string, error)
 	Int() (int, error)
 	Int64() (int64, error)
@@ -740,28 +741,4 @@ func geoSearchQueryArgs(q GeoSearchQuery) []string {
 		}
 	}
 	return args
-}
-
-func (c *client) zRangeArgs(withScores bool, z ZRangeArgs) rueidis.Cacheable {
-	cmd := c.cmd.B().Arbitrary(ZRANGE).Keys(z.Key)
-	if z.Rev && (z.ByScore || z.ByLex) {
-		cmd = cmd.Args(str(z.Stop), str(z.Start))
-	} else {
-		cmd = cmd.Args(str(z.Start), str(z.Stop))
-	}
-	if z.ByScore {
-		cmd = cmd.Args(BYSCORE)
-	} else if z.ByLex {
-		cmd = cmd.Args(BYLEX)
-	}
-	if z.Rev {
-		cmd = cmd.Args(REV)
-	}
-	if z.Offset != 0 || z.Count != 0 {
-		cmd = cmd.Args(LIMIT, strconv.FormatInt(z.Offset, 10), strconv.FormatInt(z.Count, 10))
-	}
-	if withScores {
-		cmd = cmd.Args(WITHSCORES)
-	}
-	return rueidis.Cacheable(cmd.Build())
 }

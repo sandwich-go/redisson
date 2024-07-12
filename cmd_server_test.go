@@ -58,10 +58,9 @@ func testConfigRewrite(ctx context.Context, c Cmdable) []string {
 func testConfigSet(ctx context.Context, c Cmdable) []string {
 	configGet := c.ConfigGet(ctx, "maxmemory")
 	So(configGet.Err(), ShouldBeNil)
-	So(len(configGet.Val()), ShouldEqual, 2)
-	So(configGet.Val()[0], ShouldEqual, "maxmemory")
+	So(len(configGet.Val()), ShouldEqual, 1)
 
-	configSet := c.ConfigSet(ctx, "maxmemory", configGet.Val()[1].(string))
+	configSet := c.ConfigSet(ctx, "maxmemory", configGet.Val()["maxmemory"])
 	So(configSet.Err(), ShouldBeNil)
 	So(configSet.Val(), ShouldEqual, OK)
 
@@ -128,18 +127,6 @@ func testShutdown(context.Context, Cmdable) []string       { return nil }
 func testShutdownSave(context.Context, Cmdable) []string   { return nil }
 func testShutdownNoSave(context.Context, Cmdable) []string { return nil }
 
-func testSlaveOf(ctx context.Context, c Cmdable) []string {
-	slaveOf := c.SlaveOf(ctx, "localhost", "8888")
-	So(slaveOf.Err(), ShouldBeNil)
-	So(slaveOf.Val(), ShouldEqual, OK)
-
-	slaveOf = c.SlaveOf(ctx, "NO", "ONE")
-	So(slaveOf.Err(), ShouldBeNil)
-	So(slaveOf.Val(), ShouldEqual, OK)
-
-	return nil
-}
-
 func testTime(ctx context.Context, c Cmdable) []string {
 	tm, err := c.Time(ctx).Result()
 	So(err, ShouldBeNil)
@@ -171,7 +158,6 @@ func serverTestUnits() []TestUnit {
 		{CommandShutdown, testShutdown},
 		{CommandShutdownSave, testShutdownSave},
 		{CommandShutdownNoSave, testShutdownNoSave},
-		{CommandSlaveOf, testSlaveOf},
 		{CommandTime, testTime},
 		{CommandDebug, testDebugObject},
 	}

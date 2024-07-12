@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	. "github.com/smartystreets/goconvey/convey"
+	"strconv"
 	"testing"
 	"time"
 )
@@ -66,7 +67,8 @@ func testBZPopMax(ctx context.Context, c Cmdable) []string {
 
 	bZPopMax := c.BZPopMax(ctx, 0, key1, key2)
 	So(bZPopMax.Err(), ShouldBeNil)
-	So(zWithKeyEqual(bZPopMax.Val(), &ZWithKey{
+	v := bZPopMax.Val()
+	So(zWithKeyEqual(&v, &ZWithKey{
 		Z: Z{
 			Score:  3,
 			Member: value3,
@@ -105,7 +107,8 @@ func testBZPopMin(ctx context.Context, c Cmdable) []string {
 
 	bZPopMax := c.BZPopMin(ctx, 0, key1, key2)
 	So(bZPopMax.Err(), ShouldBeNil)
-	So(zWithKeyEqual(bZPopMax.Val(), &ZWithKey{
+	v := bZPopMax.Val()
+	So(zWithKeyEqual(&v, &ZWithKey{
 		Z: Z{
 			Score:  1,
 			Member: value1,
@@ -172,28 +175,28 @@ func testZAdd(ctx context.Context, c Cmdable) []string {
 
 	added = c.ZAdd(ctx, key, Z{
 		Score:  1,
-		Member: []byte("one"),
+		Member: "one",
 	})
 	So(added.Err(), ShouldBeNil)
 	So(added.Val(), ShouldEqual, 1)
 
 	added = c.ZAdd(ctx, key, Z{
 		Score:  1,
-		Member: []byte("uno"),
+		Member: "uno",
 	})
 	So(added.Err(), ShouldBeNil)
 	So(added.Val(), ShouldEqual, 1)
 
 	added = c.ZAdd(ctx, key, Z{
 		Score:  2,
-		Member: []byte("two"),
+		Member: "two",
 	})
 	So(added.Err(), ShouldBeNil)
 	So(added.Val(), ShouldEqual, 1)
 
 	added = c.ZAdd(ctx, key, Z{
 		Score:  3,
-		Member: []byte("two"),
+		Member: "two",
 	})
 	So(added.Err(), ShouldBeNil)
 	So(added.Val(), ShouldEqual, 0)
@@ -643,7 +646,7 @@ func testZInterStore(ctx context.Context, c Cmdable) []string {
 
 	n := c.ZInterStore(ctx, dest, ZStore{
 		Keys:    []string{key1, key2},
-		Weights: []float64{2, 3},
+		Weights: []int64{2, 3},
 	})
 	So(n.Err(), ShouldBeNil)
 	So(n.Val(), ShouldEqual, 2)
@@ -960,7 +963,7 @@ func testZUnionStore(ctx context.Context, c Cmdable) []string {
 
 	n := c.ZUnionStore(ctx, dest, ZStore{
 		Keys:    []string{key1, key2},
-		Weights: []float64{2, 3},
+		Weights: []int64{2, 3},
 	})
 	So(n.Err(), ShouldBeNil)
 	So(n.Val(), ShouldEqual, 3)
@@ -1020,7 +1023,7 @@ func testZInterWithScores(ctx context.Context, c Cmdable) []string {
 
 	v := c.ZInterWithScores(ctx, ZStore{
 		Keys:      []string{key1, key2},
-		Weights:   []float64{2, 3},
+		Weights:   []int64{2, 3},
 		Aggregate: "Max",
 	})
 	So(v.Err(), ShouldBeNil)
@@ -1043,17 +1046,21 @@ func testZRandMember(ctx context.Context, c Cmdable) []string {
 	err = c.ZAdd(ctx, key, Z{Score: 2, Member: "two"}).Err()
 	So(err, ShouldBeNil)
 
-	v := c.ZRandMember(ctx, key, 2, false)
+	v := c.ZRandMember(ctx, key, 2)
 	So(v.Err(), ShouldBeNil)
 	So(stringSliceEqual(v.Val(), []string{"one", "two"}, false), ShouldBeTrue)
 
-	v = c.ZRandMember(ctx, key, 0, false)
+	v = c.ZRandMember(ctx, key, 0)
 	So(v.Err(), ShouldBeNil)
 	So(v.Val(), ShouldBeEmpty)
 
 	var slice []string
-	err = c.ZRandMember(ctx, key, 2, true).ScanSlice(&slice)
+	var zs []Z
+	zs, err = c.ZRandMemberWithScores(ctx, key, 2).Result()
 	So(err, ShouldBeNil)
+	for _, _zs := range zs {
+		slice = append(slice, _zs.Member, strconv.FormatInt(int64(_zs.Score), 10))
+	}
 	So(stringSliceEqual(slice, []string{"one", "1", "two", "2"}, false), ShouldBeTrue)
 
 	return []string{key}
@@ -1146,7 +1153,7 @@ func testZUnion(ctx context.Context, c Cmdable) []string {
 
 	union := c.ZUnion(ctx, ZStore{
 		Keys:      []string{key1, key2},
-		Weights:   []float64{2, 3},
+		Weights:   []int64{2, 3},
 		Aggregate: "sum",
 	})
 	So(union.Err(), ShouldBeNil)
@@ -1154,7 +1161,7 @@ func testZUnion(ctx context.Context, c Cmdable) []string {
 
 	unionScores := c.ZUnionWithScores(ctx, ZStore{
 		Keys:      []string{key1, key2},
-		Weights:   []float64{2, 3},
+		Weights:   []int64{2, 3},
 		Aggregate: "sum",
 	})
 	So(unionScores.Err(), ShouldBeNil)
@@ -1184,7 +1191,7 @@ func testZUnionWithScores(ctx context.Context, c Cmdable) []string {
 
 	n := c.ZUnionStore(ctx, dest, ZStore{
 		Keys:    []string{key1, key2},
-		Weights: []float64{2, 3},
+		Weights: []int64{2, 3},
 	})
 	So(n.Err(), ShouldBeNil)
 	So(n.Val(), ShouldEqual, 3)

@@ -104,13 +104,6 @@ var reconnectErrors = []func(*client, string) bool{
 		return false
 	},
 	func(c *client, errString string) bool {
-		if strings.Contains(errString, "ERR This instance has cluster support disabled") || strings.Contains(errString, "ERR Cluster setting conflict") {
-			c.v.ApplyOption(WithCluster(!c.v.GetCluster()))
-			return true
-		}
-		return false
-	},
-	func(c *client, errString string) bool {
 		if !c.v.GetAlwaysRESP2() && strings.Contains(errString, "elements in cluster info address, expected 2 or 3") {
 			c.v.ApplyOption(WithAlwaysRESP2(true))
 			return true
@@ -153,13 +146,12 @@ func (c *client) Close() error {
 func Connect(v ConfInterface) (Cmdable, error) {
 	c := &client{v: v, handler: newBaseHandler(v)}
 	err := c.connect()
-	if err == nil && c.isCluster != c.v.GetCluster() {
-		err = fmt.Errorf("ERR Cluster setting conflict, server's cluster_enabled is %t, but client's cluster_enabled is %t", c.isCluster, c.v.GetCluster())
-	}
-	for i := 0; i < len(reconnectErrors); i++ {
-		err = c.reconnectWhenError(err)
-		if err == nil {
-			break
+	if err != nil {
+		for i := 0; i < len(reconnectErrors); i++ {
+			err = c.reconnectWhenError(err)
+			if err == nil {
+				break
+			}
 		}
 	}
 	if err != nil {

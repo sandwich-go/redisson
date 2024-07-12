@@ -251,25 +251,6 @@ func stringStructMapEqual(a, b map[string]struct{}) bool {
 	return true
 }
 
-func testSMembersMap(ctx context.Context, c Cmdable) []string {
-	var key, value1, value2 = "set", "Hello", "World"
-
-	sAdd := c.SAdd(ctx, key, value1)
-	So(sAdd.Err(), ShouldBeNil)
-	sAdd = c.SAdd(ctx, key, value2)
-	So(sAdd.Err(), ShouldBeNil)
-
-	sMembersMap := cacheCmd(c).SMembersMap(ctx, key)
-	So(sMembersMap.Err(), ShouldBeNil)
-	So(stringStructMapEqual(sMembersMap.Val(), map[string]struct{}{"Hello": {}, "World": {}}), ShouldBeTrue)
-
-	sMembersMap = c.SMembersMap(ctx, key)
-	So(sMembersMap.Err(), ShouldBeNil)
-	So(stringStructMapEqual(sMembersMap.Val(), map[string]struct{}{"Hello": {}, "World": {}}), ShouldBeTrue)
-
-	return []string{key}
-}
-
 func testSMove(ctx context.Context, c Cmdable) []string {
 	var key1, key2 = "set1", "set2"
 
@@ -485,7 +466,6 @@ func setTestUnits() []TestUnit {
 		{CommandSIsMember, testSIsMember},
 		{CommandSMIsMember, testSMIsMember},
 		{CommandSMembers, testSMembers},
-		{CommandSMembers, testSMembersMap},
 		{CommandSMove, testSMove},
 		{CommandSPop, testSPop},
 		{CommandSPopN, testSPopN},
