@@ -8,12 +8,11 @@
 * 开发模式下，检查在当前版本已过期的`Redis`命令
 * 开发模式下，检查多`Key`是否属于同一`Redis`槽
 * 开发模式下，检查禁止使用的`Redis`命令
-* 监控`Redis`命令耗时时间 
-* 监控`Redis`连接状态
+* 监控`Redis`命令耗时时间
 * 监控`Redis RESP3`客户端缓存命中状态
 * 支持`RESP2/RESP3`协议
 * 支持`Redis RESP3`客户端缓存
-* `Redis RESP3`客户端命令自动进行`pipeline`
+* `Redis RESP3`客户端并发命令自动进行`pipeline`
 * `Redis RESP3`客户端自动管理阻塞的连接
 
 ## 要求
@@ -23,8 +22,7 @@
 如果不能升级`Golang`至`1.18`，请使用`redisson/version/0.1`版本。
 
 ## 基础库
-- RESP2, 使用 [go-redis/redis](https://github.com/go-redis/redis).
-- RESP3, 使用 [rueian/rueidis](https://github.com/rueian/rueidis).
+使用 [rueian/rueidis](https://github.com/rueian/rueidis)
 
 ## 链接
 * [English](https://github.com/sandwich-go/redisson/blob/master/README.md)

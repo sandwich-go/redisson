@@ -9,11 +9,10 @@ A Type-safe Golang Redis RESP2/RESP3 client.
 * Check Redis slot when use multiple keys in development mode.
 * Check forbid Redis commands in development mode.
 * Monitoring cost of Redis commands.
-* Monitoring status of connections.
 * Monitoring hits/miss of Redis RESP3 client side caching.
 * Support Redis RESP2/RESP3.
 * Opt-in client side caching.
-* Auto pipeline for non-blocking Redis RESP3 commands.
+* Auto pipeline for concurrent non-blocking Redis RESP3 commands.
 * Connection pooling for blocking Redis RESP3 commands.
 
 ## Requirement
@@ -23,8 +22,7 @@ A Type-safe Golang Redis RESP2/RESP3 client.
 If you can't upgrade Golang to 1.18, install redisson/version/0.1.
 
 ## Base Library
-- RESP2, using [go-redis/redis](https://github.com/go-redis/redis) library.
-- RESP3, using [rueian/rueidis](https://github.com/rueian/rueidis) library.
+using [go-redis/redis](https://github.com/go-redis/redis) library
 
 ## Links
 * [English](https://github.com/sandwich-go/redisson/blob/master/README.md)
