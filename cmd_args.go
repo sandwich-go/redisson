@@ -78,6 +78,7 @@ type Cmd interface {
 	BaseCmd
 
 	Val() any
+	Result() (any, error)
 	Text() (string, error)
 	Int() (int, error)
 	Int64() (int64, error)
