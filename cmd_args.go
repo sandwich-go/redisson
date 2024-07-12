@@ -98,6 +98,22 @@ type IntCmd interface {
 	Uint64() (uint64, error)
 }
 
+type intCmd struct {
+	baseCmd[int64]
+}
+
+func newIntCmd(res rueidis.RedisResult) IntCmd {
+	cmd := &intCmd{}
+	val, err := res.AsInt64()
+	cmd.SetErr(err)
+	cmd.SetVal(val)
+	return cmd
+}
+
+func (c *intCmd) Uint64() (uint64, error) {
+	return uint64(c.val), c.err
+}
+
 type BoolCmd interface {
 	BaseCmd
 	Val() bool

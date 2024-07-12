@@ -87,7 +87,7 @@ func testExists(ctx context.Context, c Cmdable) []string {
 	So(b.Err(), ShouldBeNil)
 	So(b.Val(), ShouldEqual, 0)
 
-	b = cacheCmd(c).Exists(ctx, nosuchkey)
+	b = c.Exists(ctx, nosuchkey)
 	So(b.Err(), ShouldBeNil)
 	So(b.Val(), ShouldEqual, 0)
 
@@ -95,7 +95,7 @@ func testExists(ctx context.Context, c Cmdable) []string {
 	So(s.Err(), ShouldBeNil)
 	So(s.Val(), ShouldEqual, OK)
 
-	b = cacheCmd(c).Exists(ctx, key1, nosuchkey, key2)
+	b = c.Exists(ctx, key1, nosuchkey, key2)
 	So(b.Err(), ShouldBeNil)
 	So(b.Val(), ShouldEqual, 2)
 
@@ -109,7 +109,7 @@ func testExists(ctx context.Context, c Cmdable) []string {
 
 	time.Sleep(1 * time.Second)
 
-	b = cacheCmd(c).Exists(ctx, key1, nosuchkey, key2)
+	b = c.Exists(ctx, key1, nosuchkey, key2)
 	So(b.Err(), ShouldBeNil)
 	So(b.Val(), ShouldEqual, 0)
 
@@ -231,7 +231,7 @@ func testKeys(ctx context.Context, c Cmdable) []string {
 }
 
 func testMigrate(ctx context.Context, c Cmdable) []string {
-	var key, redisSecondaryPort = "key", "6389"
+	var key, redisSecondaryPort = "key", int64(6389)
 	migrate := c.Migrate(ctx, "localhost", redisSecondaryPort, key, 0, 0)
 	So(migrate.Err(), ShouldBeNil)
 	So(migrate.Val(), ShouldEqual, "NOKEY")

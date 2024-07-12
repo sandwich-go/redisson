@@ -1,6 +1,10 @@
 package redisson
 
-import "context"
+import (
+	"context"
+	"github.com/redis/rueidis"
+	"github.com/redis/rueidis/rueidiscompat"
+)
 
 type BitmapCmdable interface {
 	BitmapWriter
@@ -119,7 +123,20 @@ func (c *client) BitCount(ctx context.Context, key string, bc *BitCount) IntCmd 
 	ctx = c.handler.before(ctx, CommandBitCount)
 	var r IntCmd
 	if c.ttl > 0 {
-		r = c.adapter.Cache(c.ttl).BitCount(ctx, key, bc)
+		var resp rueidis.RedisResult
+		if bc == nil {
+			resp = c.doCache(ctx, c.cmd.B().Bitcount().Key(key).Cache())
+		} else if bc.Unit == "" {
+			resp = c.doCache(ctx, c.cmd.B().Bitcount().Key(key).Start(bc.Start).End(bc.End).Cache())
+		} else {
+			switch bc.Unit {
+			case rueidiscompat.BitCountIndexByte:
+				resp = c.doCache(ctx, c.cmd.B().Bitcount().Key(key).Start(bc.Start).End(bc.End).Byte().Cache())
+			case rueidiscompat.BitCountIndexBit:
+				resp = c.doCache(ctx, c.cmd.B().Bitcount().Key(key).Start(bc.Start).End(bc.End).Bit().Cache())
+			}
+		}
+		r = newIntCmd(resp)
 	} else {
 		r = c.adapter.BitCount(ctx, key, bc)
 	}
@@ -166,7 +183,18 @@ func (c *client) BitPos(ctx context.Context, key string, bit int64, pos ...int64
 	ctx = c.handler.before(ctx, CommandBitPos)
 	var r IntCmd
 	if c.ttl > 0 {
-		r = c.adapter.Cache(c.ttl).BitPos(ctx, key, bit, pos...)
+		var resp rueidis.RedisResult
+		switch len(pos) {
+		case 0:
+			resp = c.doCache(ctx, c.cmd.B().Bitpos().Key(key).Bit(bit).Cache())
+		case 1:
+			resp = c.doCache(ctx, c.cmd.B().Bitpos().Key(key).Bit(bit).Start(pos[0]).Cache())
+		case 2:
+			resp = c.doCache(ctx, c.cmd.B().Bitpos().Key(key).Bit(bit).Start(pos[0]).End(pos[1]).Cache())
+		default:
+			panic("too many arguments")
+		}
+		r = newIntCmd(resp)
 	} else {
 		r = c.adapter.BitPos(ctx, key, bit, pos...)
 	}
@@ -178,7 +206,7 @@ func (c *client) GetBit(ctx context.Context, key string, offset int64) IntCmd {
 	ctx = c.handler.before(ctx, CommandGetBit)
 	var r IntCmd
 	if c.ttl > 0 {
-		r = c.adapter.Cache(c.ttl).GetBit(ctx, key, offset)
+		r = newIntCmd(c.doCache(ctx, c.cmd.B().Getbit().Key(key).Offset(offset).Cache()))
 	} else {
 		r = c.adapter.GetBit(ctx, key, offset)
 	}
