@@ -530,18 +530,6 @@ func (commandQuit) WarnVersion() string    { return "" }
 func (commandQuit) Warning() string        { return "" }
 func (commandQuit) Cmd() []string          { return []string{"QUIT"} }
 
-var CommandSelect = new(commandSelect)
-
-type commandSelect string
-
-func (commandSelect) String() string         { return "SELECT" }
-func (commandSelect) Class() string          { return "Connection" }
-func (commandSelect) RequireVersion() string { return "1.0.0" }
-func (commandSelect) Forbid() bool           { return true }
-func (commandSelect) WarnVersion() string    { return "" }
-func (commandSelect) Warning() string        { return "" }
-func (commandSelect) Cmd() []string          { return []string{"SELECT"} }
-
 var CommandCopy = new(commandCopy)
 
 type commandCopy string
@@ -1897,18 +1885,6 @@ func (commandShutdownSave) Forbid() bool           { return true }
 func (commandShutdownSave) WarnVersion() string    { return "" }
 func (commandShutdownSave) Warning() string        { return "" }
 func (commandShutdownSave) Cmd() []string          { return []string{"SHUTDOWN", "SAVE"} }
-
-var CommandSlaveOf = new(commandSlaveOf)
-
-type commandSlaveOf string
-
-func (commandSlaveOf) String() string         { return "SLAVEOF" }
-func (commandSlaveOf) Class() string          { return "Server" }
-func (commandSlaveOf) RequireVersion() string { return "1.0.0" }
-func (commandSlaveOf) Forbid() bool           { return true }
-func (commandSlaveOf) WarnVersion() string    { return "" }
-func (commandSlaveOf) Warning() string        { return "" }
-func (commandSlaveOf) Cmd() []string          { return []string{"SLAVEOF"} }
 
 var CommandTime = new(commandTime)
 
