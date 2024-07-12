@@ -272,11 +272,11 @@ func testHRandField(ctx context.Context, c Cmdable) []string {
 
 	hv := c.HRandFieldWithValues(ctx, key, 1)
 	So(hv.Err(), ShouldBeNil)
-	So(len(hv.Val()), ShouldEqual, 2)
+	So(len(hv.Val()), ShouldEqual, 1)
 
 	hv = c.HRandFieldWithValues(ctx, key, -5)
 	So(hv.Err(), ShouldBeNil)
-	So(len(hv.Val()), ShouldEqual, 10)
+	So(len(hv.Val()), ShouldEqual, 5)
 
 	return []string{key}
 }

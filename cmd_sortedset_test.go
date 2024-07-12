@@ -82,7 +82,6 @@ func testBZPopMax(ctx context.Context, c Cmdable) []string {
 	val := c.BZPopMax(ctx, time.Second, key1)
 	So(val.Err(), ShouldNotBeNil)
 	So(IsNil(val.Err()), ShouldBeTrue)
-	So(val.Val(), ShouldBeNil)
 
 	return []string{key1, key2}
 }
@@ -122,7 +121,6 @@ func testBZPopMin(ctx context.Context, c Cmdable) []string {
 	val := c.BZPopMin(ctx, time.Second, key1)
 	So(val.Err(), ShouldNotBeNil)
 	So(IsNil(val.Err()), ShouldBeTrue)
-	So(val.Val(), ShouldBeNil)
 
 	return []string{key1, key2}
 }

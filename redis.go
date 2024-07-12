@@ -16,7 +16,6 @@ type XCmdable interface {
 	ForEachNodes(context.Context, func(context.Context, Cmdable) error) error
 	Receive(ctx context.Context, cb func(Message), channels ...string) error
 	PReceive(ctx context.Context, cb func(Message), patterns ...string) error
-
 	XMGet(ctx context.Context, keys ...string) SliceCmd
 }
 

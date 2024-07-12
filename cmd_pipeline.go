@@ -2,6 +2,7 @@ package redisson
 
 import (
 	"context"
+	"github.com/redis/rueidis"
 	"sync"
 )
 
@@ -32,8 +33,12 @@ type pipeCommand struct {
 	args []interface{}
 }
 
+func (p pipeCommand) getCompleted(c *client) rueidis.Completed {
+	return c.cmd.B().Arbitrary(p.cmd...).Keys(p.keys...).Args(argsToSlice(p.args)...).Build()
+}
+
 func (p pipeCommand) exec(ctx context.Context, c *client) (v interface{}, err error) {
-	return c.cmd.Do(ctx, c.cmd.B().Arbitrary(p.cmd...).Keys(p.keys...).Args(argsToSlice(p.args)...).Build()).ToAny()
+	return c.cmd.Do(ctx, p.getCompleted(c)).ToAny()
 }
 
 type pipeline struct {
@@ -67,6 +72,7 @@ func (p *pipeline) Exec(ctx context.Context) ([]interface{}, error) {
 	if len(cmds) == 0 {
 		return nil, nil
 	}
+
 	var result = make([]interface{}, len(cmds))
 	if len(cmds) == 1 {
 		r, err := cmds[0].exec(ctx, p.client)
@@ -76,25 +82,22 @@ func (p *pipeline) Exec(ctx context.Context) ([]interface{}, error) {
 		} else {
 			result[0] = r
 		}
-		return result, firstError
+		return result, err
 	}
 
-	var wg sync.WaitGroup
-	wg.Add(len(cmds))
-	for i, cmd := range cmds {
-		go func(_i int, _cmd pipeCommand) {
-			r, err := _cmd.exec(ctx, p.client)
-			if err != nil {
-				if firstError == nil {
-					firstError = err
-				}
-				result[_i] = err
-			} else {
-				result[_i] = r
-			}
-			wg.Done()
-		}(i, cmd)
+	var cs = make([]rueidis.Completed, 0, len(cmds))
+	for _, cmd := range cmds {
+		cs = append(cs, cmd.getCompleted(p.client))
 	}
-	wg.Wait()
+	resps := p.client.cmd.DoMulti(ctx, cs...)
+	for i, resp := range resps {
+		r, err := resp.ToAny()
+		if err != nil && firstError == nil {
+			firstError = err
+			result[i] = err
+		} else {
+			result[i] = r
+		}
+	}
 	return result, firstError
 }
