@@ -16,7 +16,13 @@ var (
 	clusterEnabled = regexp.MustCompile(`cluster_enabled:(.+)`)
 )
 
-func (c *client) reviseCluster(info string) error {
+func (c *client) reviseCluster(ctx context.Context, info string) (err error) {
+	if len(info) == 0 {
+		info, err = c.Info(ctx, CLUSTER).Result()
+		if err != nil {
+			return
+		}
+	}
 	match := clusterEnabled.FindAllStringSubmatch(info, -1)
 	if len(match) < 1 || len(strings.TrimSpace(match[0][1])) == 0 || strings.TrimSpace(match[0][1]) == "0" {
 		c.isCluster = false
@@ -24,10 +30,16 @@ func (c *client) reviseCluster(info string) error {
 		c.isCluster = true
 	}
 	c.handler.setIsCluster(c.isCluster)
-	return nil
+	return
 }
 
-func (c *client) reviseVersion(info string) (err error) {
+func (c *client) reviseVersion(ctx context.Context, info string) (err error) {
+	if len(info) == 0 {
+		info, err = c.Info(ctx, SERVER).Result()
+		if err != nil {
+			return err
+		}
+	}
 	match := versionRE.FindAllStringSubmatch(info, -1)
 	if len(match) < 1 {
 		err = fmt.Errorf("could not extract redis server version")
@@ -44,12 +56,12 @@ func (c *client) reviseVersion(info string) (err error) {
 func (c *client) revise(ctx context.Context) error {
 	info, err := c.Info(ctx, CLUSTER, SERVER).Result()
 	if err != nil {
+		info = ""
+	}
+	if err = c.reviseVersion(ctx, info); err != nil {
 		return err
 	}
-	if err = c.reviseVersion(info); err != nil {
-		return err
-	}
-	if err = c.reviseCluster(info); err != nil {
+	if err = c.reviseCluster(ctx, info); err != nil {
 		return err
 	}
 	return nil
@@ -88,9 +100,11 @@ func (c *client) connect() error {
 		return err
 	}
 	c.adapter = rueidiscompat.NewAdapter(c.cmd)
-	if err = c.revise(context.Background()); err != nil {
-		_ = c.Close()
-		return err
+	if t := c.v.GetT(); t == nil {
+		if err = c.revise(context.Background()); err != nil {
+			_ = c.Close()
+			return err
+		}
 	}
 	return nil
 }
