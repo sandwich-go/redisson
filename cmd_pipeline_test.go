@@ -44,5 +44,4 @@ func pipelineTestUnits() []TestUnit {
 	}
 }
 
-func TestResp2Client_Pipeline(t *testing.T) { doTestUnits(t, RESP2, pipelineTestUnits) }
-func TestResp3Client_Pipeline(t *testing.T) { doTestUnits(t, RESP3, pipelineTestUnits) }
+func TestClient_Pipeline(t *testing.T) { doTestUnits(t, pipelineTestUnits) }

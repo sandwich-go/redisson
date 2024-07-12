@@ -11,7 +11,6 @@ import (
 
 // Conf should use NewConf to initialize it
 type Conf struct {
-	Resp              RESP          `xconf:"resp" usage:"RESP版本"`
 	AlwaysRESP2       bool          `xconf:"always_resp2" usage:"always uses RESP2, otherwise it will try using RESP3 first"`
 	Name              string        `xconf:"name" usage:"Redis客户端名字"`
 	MasterName        string        `xconf:"master_name" usage:"Redis Sentinel模式下，master名字"`
@@ -20,17 +19,11 @@ type Conf struct {
 	DB                int           `xconf:"db" usage:"Redis实例数据库编号，集群下只能用0"`
 	Username          string        `xconf:"username" usage:"Redis用户名"`
 	Password          string        `xconf:"password" usage:"Redis用户密码"`
-	ReadTimeout       time.Duration `xconf:"read_timeout" usage:"Redis连接读取的超时时长"`
 	WriteTimeout      time.Duration `xconf:"write_timeout" usage:"Redis连接写入的超时时长"`
-	ConnPoolSize      int           `xconf:"conn_pool_size" usage:"Redis连接池大小，默认0，RESP2时，即非集群模式下为10*runtime.GOMAXPROCS，集群模式下为5*runtime.GOMAXPROCS。RESP3时，为Block连接池，默认1000"`
-	MinIdleConns      int           `xconf:"min_idle_conns" usage:"Redis连接池最小空闲连接数量，RESP2时有效"`
-	ConnMaxAge        time.Duration `xconf:"conn_max_age" usage:"Redis连接生命周期，RESP2时有效"`
-	ConnPoolTimeout   time.Duration `xconf:"conn_pool_timeout" usage:"Redis获取连接超时时间，默认0s，表示socket_read_timeout+1s，RESP2时有效"`
-	IdleConnTimeout   time.Duration `xconf:"idle_conn_timeout" usage:"Redis连接空闲超时时间，默认-1s，表示空闲连接不会被回收，RESP2时有效"`
-	EnableCache       bool          `xconf:"enable_cache" usage:"是否开启客户端缓存，RESP3时有效"`
-	CacheSizeEachConn int           `xconf:"cache_size_each_conn" usage:"开启客户端缓存时，单个连接缓存大小，默认128 MiB，RESP3时有效"`
-	RingScaleEachConn int           `xconf:"ring_scale_each_conn" usage:"单个连接ring buffer大小，默认2 ^ RingScaleEachConn, RingScaleEachConn默认情况下为10，RESP3时有效"`
-	Cluster           bool          `xconf:"cluster" usage:"是否为Redis集群，默认为false，集群需要设置为true"`
+	ConnPoolSize      int           `xconf:"conn_pool_size" usage:"RedisBlock连接池，默认1000"`
+	EnableCache       bool          `xconf:"enable_cache" usage:"是否开启客户端缓存"`
+	CacheSizeEachConn int           `xconf:"cache_size_each_conn" usage:"开启客户端缓存时，单个连接缓存大小，默认128 MiB"`
+	RingScaleEachConn int           `xconf:"ring_scale_each_conn" usage:"单个连接ring buffer大小，默认2 ^ RingScaleEachConn, RingScaleEachConn默认情况下为10"`
 	Development       bool          `xconf:"development" usage:"是否为开发模式，开发模式下，使用部分接口会有警告日志输出，会校验多key是否为同一hash槽，会校验部分接口是否满足版本要求"`
 	T                 Tester        `xconf:"t" usage:"如果设置该值，则启动mock"`
 	ForceSingleClient bool          `xconf:"force_single_client" usage:"ForceSingleClient force the usage of a single client connection, without letting the lib guessing"`
@@ -62,15 +55,6 @@ func (cc *Conf) ApplyOption(opts ...ConfOption) []ConfOption {
 
 // ConfOption option func
 type ConfOption func(cc *Conf) ConfOption
-
-// WithResp RESP版本
-func WithResp(v RESP) ConfOption {
-	return func(cc *Conf) ConfOption {
-		previous := cc.Resp
-		cc.Resp = v
-		return WithResp(previous)
-	}
-}
 
 // WithAlwaysRESP2 always uses RESP2, otherwise it will try using RESP3 first
 func WithAlwaysRESP2(v bool) ConfOption {
@@ -153,15 +137,6 @@ func WithPassword(v string) ConfOption {
 	}
 }
 
-// WithReadTimeout Redis连接读取的超时时长
-func WithReadTimeout(v time.Duration) ConfOption {
-	return func(cc *Conf) ConfOption {
-		previous := cc.ReadTimeout
-		cc.ReadTimeout = v
-		return WithReadTimeout(previous)
-	}
-}
-
 // WithWriteTimeout Redis连接写入的超时时长
 func WithWriteTimeout(v time.Duration) ConfOption {
 	return func(cc *Conf) ConfOption {
@@ -171,7 +146,7 @@ func WithWriteTimeout(v time.Duration) ConfOption {
 	}
 }
 
-// WithConnPoolSize Redis连接池大小，默认0，RESP2时，即非集群模式下为10*runtime.GOMAXPROCS，集群模式下为5*runtime.GOMAXPROCS。RESP3时，为Block连接池，默认1000
+// WithConnPoolSize RedisBlock连接池，默认1000
 func WithConnPoolSize(v int) ConfOption {
 	return func(cc *Conf) ConfOption {
 		previous := cc.ConnPoolSize
@@ -180,43 +155,7 @@ func WithConnPoolSize(v int) ConfOption {
 	}
 }
 
-// WithMinIdleConns Redis连接池最小空闲连接数量，RESP2时有效
-func WithMinIdleConns(v int) ConfOption {
-	return func(cc *Conf) ConfOption {
-		previous := cc.MinIdleConns
-		cc.MinIdleConns = v
-		return WithMinIdleConns(previous)
-	}
-}
-
-// WithConnMaxAge Redis连接生命周期，RESP2时有效
-func WithConnMaxAge(v time.Duration) ConfOption {
-	return func(cc *Conf) ConfOption {
-		previous := cc.ConnMaxAge
-		cc.ConnMaxAge = v
-		return WithConnMaxAge(previous)
-	}
-}
-
-// WithConnPoolTimeout Redis获取连接超时时间，默认0s，表示socket_read_timeout+1s，RESP2时有效
-func WithConnPoolTimeout(v time.Duration) ConfOption {
-	return func(cc *Conf) ConfOption {
-		previous := cc.ConnPoolTimeout
-		cc.ConnPoolTimeout = v
-		return WithConnPoolTimeout(previous)
-	}
-}
-
-// WithIdleConnTimeout Redis连接空闲超时时间，默认-1s，表示空闲连接不会被回收，RESP2时有效
-func WithIdleConnTimeout(v time.Duration) ConfOption {
-	return func(cc *Conf) ConfOption {
-		previous := cc.IdleConnTimeout
-		cc.IdleConnTimeout = v
-		return WithIdleConnTimeout(previous)
-	}
-}
-
-// WithEnableCache 是否开启客户端缓存，RESP3时有效
+// WithEnableCache 是否开启客户端缓存
 func WithEnableCache(v bool) ConfOption {
 	return func(cc *Conf) ConfOption {
 		previous := cc.EnableCache
@@ -225,7 +164,7 @@ func WithEnableCache(v bool) ConfOption {
 	}
 }
 
-// WithCacheSizeEachConn 开启客户端缓存时，单个连接缓存大小，默认128 MiB，RESP3时有效
+// WithCacheSizeEachConn 开启客户端缓存时，单个连接缓存大小，默认128 MiB
 func WithCacheSizeEachConn(v int) ConfOption {
 	return func(cc *Conf) ConfOption {
 		previous := cc.CacheSizeEachConn
@@ -234,21 +173,12 @@ func WithCacheSizeEachConn(v int) ConfOption {
 	}
 }
 
-// WithRingScaleEachConn 单个连接ring buffer大小，默认2 ^ RingScaleEachConn, RingScaleEachConn默认情况下为10，RESP3时有效
+// WithRingScaleEachConn 单个连接ring buffer大小，默认2 ^ RingScaleEachConn, RingScaleEachConn默认情况下为10
 func WithRingScaleEachConn(v int) ConfOption {
 	return func(cc *Conf) ConfOption {
 		previous := cc.RingScaleEachConn
 		cc.RingScaleEachConn = v
 		return WithRingScaleEachConn(previous)
-	}
-}
-
-// WithCluster 是否为Redis集群，默认为false，集群需要设置为true
-func WithCluster(v bool) ConfOption {
-	return func(cc *Conf) ConfOption {
-		previous := cc.Cluster
-		cc.Cluster = v
-		return WithCluster(previous)
 	}
 }
 
@@ -288,7 +218,6 @@ var watchDogConf func(cc *Conf)
 // setConfDefaultValue default Conf value
 func setConfDefaultValue(cc *Conf) {
 	for _, opt := range [...]ConfOption{
-		WithResp(RESP3),
 		WithAlwaysRESP2(false),
 		WithName(""),
 		WithMasterName(""),
@@ -297,17 +226,11 @@ func setConfDefaultValue(cc *Conf) {
 		WithDB(0),
 		WithUsername(""),
 		WithPassword(""),
-		WithReadTimeout(10 * time.Second),
 		WithWriteTimeout(10 * time.Second),
 		WithConnPoolSize(0),
-		WithMinIdleConns(0),
-		WithConnMaxAge(4 * time.Hour),
-		WithConnPoolTimeout(0),
-		WithIdleConnTimeout(-1 * time.Second),
 		WithEnableCache(true),
 		WithCacheSizeEachConn(0),
 		WithRingScaleEachConn(0),
-		WithCluster(false),
 		WithDevelopment(true),
 		WithT(nil),
 		WithForceSingleClient(false),
@@ -361,33 +284,25 @@ func AtomicConf() ConfVisitor {
 }
 
 // all getter func
-func (cc *Conf) GetResp() RESP                     { return cc.Resp }
-func (cc *Conf) GetAlwaysRESP2() bool              { return cc.AlwaysRESP2 }
-func (cc *Conf) GetName() string                   { return cc.Name }
-func (cc *Conf) GetMasterName() string             { return cc.MasterName }
-func (cc *Conf) GetEnableMonitor() bool            { return cc.EnableMonitor }
-func (cc *Conf) GetAddrs() []string                { return cc.Addrs }
-func (cc *Conf) GetDB() int                        { return cc.DB }
-func (cc *Conf) GetUsername() string               { return cc.Username }
-func (cc *Conf) GetPassword() string               { return cc.Password }
-func (cc *Conf) GetReadTimeout() time.Duration     { return cc.ReadTimeout }
-func (cc *Conf) GetWriteTimeout() time.Duration    { return cc.WriteTimeout }
-func (cc *Conf) GetConnPoolSize() int              { return cc.ConnPoolSize }
-func (cc *Conf) GetMinIdleConns() int              { return cc.MinIdleConns }
-func (cc *Conf) GetConnMaxAge() time.Duration      { return cc.ConnMaxAge }
-func (cc *Conf) GetConnPoolTimeout() time.Duration { return cc.ConnPoolTimeout }
-func (cc *Conf) GetIdleConnTimeout() time.Duration { return cc.IdleConnTimeout }
-func (cc *Conf) GetEnableCache() bool              { return cc.EnableCache }
-func (cc *Conf) GetCacheSizeEachConn() int         { return cc.CacheSizeEachConn }
-func (cc *Conf) GetRingScaleEachConn() int         { return cc.RingScaleEachConn }
-func (cc *Conf) GetCluster() bool                  { return cc.Cluster }
-func (cc *Conf) GetDevelopment() bool              { return cc.Development }
-func (cc *Conf) GetT() Tester                      { return cc.T }
-func (cc *Conf) GetForceSingleClient() bool        { return cc.ForceSingleClient }
+func (cc *Conf) GetAlwaysRESP2() bool           { return cc.AlwaysRESP2 }
+func (cc *Conf) GetName() string                { return cc.Name }
+func (cc *Conf) GetMasterName() string          { return cc.MasterName }
+func (cc *Conf) GetEnableMonitor() bool         { return cc.EnableMonitor }
+func (cc *Conf) GetAddrs() []string             { return cc.Addrs }
+func (cc *Conf) GetDB() int                     { return cc.DB }
+func (cc *Conf) GetUsername() string            { return cc.Username }
+func (cc *Conf) GetPassword() string            { return cc.Password }
+func (cc *Conf) GetWriteTimeout() time.Duration { return cc.WriteTimeout }
+func (cc *Conf) GetConnPoolSize() int           { return cc.ConnPoolSize }
+func (cc *Conf) GetEnableCache() bool           { return cc.EnableCache }
+func (cc *Conf) GetCacheSizeEachConn() int      { return cc.CacheSizeEachConn }
+func (cc *Conf) GetRingScaleEachConn() int      { return cc.RingScaleEachConn }
+func (cc *Conf) GetDevelopment() bool           { return cc.Development }
+func (cc *Conf) GetT() Tester                   { return cc.T }
+func (cc *Conf) GetForceSingleClient() bool     { return cc.ForceSingleClient }
 
 // ConfVisitor visitor interface for Conf
 type ConfVisitor interface {
-	GetResp() RESP
 	GetAlwaysRESP2() bool
 	GetName() string
 	GetMasterName() string
@@ -396,17 +311,11 @@ type ConfVisitor interface {
 	GetDB() int
 	GetUsername() string
 	GetPassword() string
-	GetReadTimeout() time.Duration
 	GetWriteTimeout() time.Duration
 	GetConnPoolSize() int
-	GetMinIdleConns() int
-	GetConnMaxAge() time.Duration
-	GetConnPoolTimeout() time.Duration
-	GetIdleConnTimeout() time.Duration
 	GetEnableCache() bool
 	GetCacheSizeEachConn() int
 	GetRingScaleEachConn() int
-	GetCluster() bool
 	GetDevelopment() bool
 	GetT() Tester
 	GetForceSingleClient() bool

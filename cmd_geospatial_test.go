@@ -322,5 +322,4 @@ func geospatialTestUnits() []TestUnit {
 	}
 }
 
-func TestResp2Client_Geospatial(t *testing.T) { doTestUnits(t, RESP2, geospatialTestUnits) }
-func TestResp3Client_Geospatial(t *testing.T) { doTestUnits(t, RESP3, geospatialTestUnits) }
+func TestClient_Geospatial(t *testing.T) { doTestUnits(t, geospatialTestUnits) }

@@ -478,5 +478,4 @@ func setTestUnits() []TestUnit {
 	}
 }
 
-func TestResp2Client_Set(t *testing.T) { doTestUnits(t, RESP2, scriptTestUnits) }
-func TestResp3Client_Set(t *testing.T) { doTestUnits(t, RESP3, setTestUnits) }
+func TestClient_Set(t *testing.T) { doTestUnits(t, scriptTestUnits) }

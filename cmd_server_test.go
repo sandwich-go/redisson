@@ -163,5 +163,4 @@ func serverTestUnits() []TestUnit {
 	}
 }
 
-func TestResp2Client_Server(t *testing.T) { doTestUnits(t, RESP2, serverTestUnits) }
-func TestResp3Client_Server(t *testing.T) { doTestUnits(t, RESP3, serverTestUnits) }
+func TestClient_Server(t *testing.T) { doTestUnits(t, serverTestUnits) }

@@ -758,5 +758,4 @@ func stringTestUnits() []TestUnit {
 	}
 }
 
-func TestResp2Client_String(t *testing.T) { doTestUnits(t, RESP2, stringTestUnits) }
-func TestResp3Client_String(t *testing.T) { doTestUnits(t, RESP3, stringTestUnits) }
+func TestClient_String(t *testing.T) { doTestUnits(t, stringTestUnits) }

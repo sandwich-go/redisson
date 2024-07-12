@@ -659,5 +659,4 @@ func listTestUnits() []TestUnit {
 	}
 }
 
-func TestResp2Client_List(t *testing.T) { doTestUnits(t, RESP2, listTestUnits) }
-func TestResp3Client_List(t *testing.T) { doTestUnits(t, RESP3, listTestUnits) }
+func TestClient_List(t *testing.T) { doTestUnits(t, listTestUnits) }

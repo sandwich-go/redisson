@@ -813,5 +813,4 @@ func genericTestUnits() []TestUnit {
 	}
 }
 
-func TestResp2Client_Generic(t *testing.T) { doTestUnits(t, RESP2, genericTestUnits) }
-func TestResp3Client_Generic(t *testing.T) { doTestUnits(t, RESP3, genericTestUnits) }
+func TestClient_Generic(t *testing.T) { doTestUnits(t, genericTestUnits) }

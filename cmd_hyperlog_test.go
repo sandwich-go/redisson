@@ -79,5 +79,4 @@ func hyperLogTestUnits() []TestUnit {
 	}
 }
 
-func TestResp2Client_HyperLog(t *testing.T) { doTestUnits(t, RESP2, hyperLogTestUnits) }
-func TestResp3Client_HyperLog(t *testing.T) { doTestUnits(t, RESP3, hyperLogTestUnits) }
+func TestClient_HyperLog(t *testing.T) { doTestUnits(t, hyperLogTestUnits) }

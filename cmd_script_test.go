@@ -170,5 +170,4 @@ func scriptTestUnits() []TestUnit {
 	}
 }
 
-func TestResp2Client_Script(t *testing.T) { doTestUnits(t, RESP2, scriptTestUnits) }
-func TestResp3Client_Script(t *testing.T) { doTestUnits(t, RESP3, scriptTestUnits) }
+func TestClient_Script(t *testing.T) { doTestUnits(t, scriptTestUnits) }

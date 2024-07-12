@@ -269,8 +269,8 @@ func bitMapTestUnits() []TestUnit {
 	}
 }
 
-func doTestUnits(t *testing.T, r RESP, unitsFunc func() []TestUnit) {
-	c := MustNewClient(NewConf(WithResp(r), WithDevelopment(false)))
+func doTestUnits(t *testing.T, unitsFunc func() []TestUnit) {
+	c := MustNewClient(NewConf(WithDevelopment(false)))
 	c.FlushAll(context.Background())
 	t.Cleanup(func() {
 		_ = c.Close()
@@ -281,5 +281,4 @@ func doTestUnits(t *testing.T, r RESP, unitsFunc func() []TestUnit) {
 	}
 }
 
-func TestResp2Client_BitMap(t *testing.T) { doTestUnits(t, RESP2, bitMapTestUnits) }
-func TestResp3Client_BitMap(t *testing.T) { doTestUnits(t, RESP3, bitMapTestUnits) }
+func TestClient_BitMap(t *testing.T) { doTestUnits(t, bitMapTestUnits) }
