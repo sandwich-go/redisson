@@ -98,6 +98,8 @@ const (
 	SERVER               = "SERVER"
 	CLUSTER              = "CLUSTER"
 	LADDR                = "LADDR"
+	BitCountIndexByte    = "BYTE"
+	BitCountIndexBit     = "BIT"
 )
 
 var (

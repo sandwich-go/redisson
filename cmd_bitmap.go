@@ -2,8 +2,7 @@ package redisson
 
 import (
 	"context"
-	"github.com/redis/rueidis"
-	"github.com/redis/rueidis/rueidiscompat"
+	"fmt"
 )
 
 type BitmapCmdable interface {
@@ -123,20 +122,20 @@ func (c *client) BitCount(ctx context.Context, key string, bc *BitCount) IntCmd 
 	ctx = c.handler.before(ctx, CommandBitCount)
 	var r IntCmd
 	if c.ttl > 0 {
-		var resp rueidis.RedisResult
 		if bc == nil {
-			resp = c.doCache(ctx, c.cmd.B().Bitcount().Key(key).Cache())
+			r = newIntCmd(c.doCache(ctx, c.cmd.B().Bitcount().Key(key).Cache()))
 		} else if bc.Unit == "" {
-			resp = c.doCache(ctx, c.cmd.B().Bitcount().Key(key).Start(bc.Start).End(bc.End).Cache())
+			r = newIntCmd(c.doCache(ctx, c.cmd.B().Bitcount().Key(key).Start(bc.Start).End(bc.End).Cache()))
 		} else {
 			switch bc.Unit {
-			case rueidiscompat.BitCountIndexByte:
-				resp = c.doCache(ctx, c.cmd.B().Bitcount().Key(key).Start(bc.Start).End(bc.End).Byte().Cache())
-			case rueidiscompat.BitCountIndexBit:
-				resp = c.doCache(ctx, c.cmd.B().Bitcount().Key(key).Start(bc.Start).End(bc.End).Bit().Cache())
+			case BitCountIndexByte:
+				r = newIntCmd(c.doCache(ctx, c.cmd.B().Bitcount().Key(key).Start(bc.Start).End(bc.End).Byte().Cache()))
+			case BitCountIndexBit:
+				r = newIntCmd(c.doCache(ctx, c.cmd.B().Bitcount().Key(key).Start(bc.Start).End(bc.End).Bit().Cache()))
+			default:
+				panic(fmt.Sprintf("invalid unit %s", bc.Unit))
 			}
 		}
-		r = newIntCmd(resp)
 	} else {
 		r = c.adapter.BitCount(ctx, key, bc)
 	}
@@ -183,18 +182,16 @@ func (c *client) BitPos(ctx context.Context, key string, bit int64, pos ...int64
 	ctx = c.handler.before(ctx, CommandBitPos)
 	var r IntCmd
 	if c.ttl > 0 {
-		var resp rueidis.RedisResult
 		switch len(pos) {
 		case 0:
-			resp = c.doCache(ctx, c.cmd.B().Bitpos().Key(key).Bit(bit).Cache())
+			r = newIntCmd(c.doCache(ctx, c.cmd.B().Bitpos().Key(key).Bit(bit).Cache()))
 		case 1:
-			resp = c.doCache(ctx, c.cmd.B().Bitpos().Key(key).Bit(bit).Start(pos[0]).Cache())
+			r = newIntCmd(c.doCache(ctx, c.cmd.B().Bitpos().Key(key).Bit(bit).Start(pos[0]).Cache()))
 		case 2:
-			resp = c.doCache(ctx, c.cmd.B().Bitpos().Key(key).Bit(bit).Start(pos[0]).End(pos[1]).Cache())
+			r = newIntCmd(c.doCache(ctx, c.cmd.B().Bitpos().Key(key).Bit(bit).Start(pos[0]).End(pos[1]).Cache()))
 		default:
 			panic("too many arguments")
 		}
-		r = newIntCmd(resp)
 	} else {
 		r = c.adapter.BitPos(ctx, key, bit, pos...)
 	}

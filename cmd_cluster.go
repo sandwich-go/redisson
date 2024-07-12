@@ -1,8 +1,6 @@
 package redisson
 
-import (
-	"context"
-)
+import "context"
 
 type ClusterCmdable interface {
 	// ClusterAddSlots

@@ -652,7 +652,7 @@ func (c *client) ZCard(ctx context.Context, key string) IntCmd {
 	ctx = c.handler.before(ctx, CommandZCard)
 	var r IntCmd
 	if c.ttl > 0 {
-		r = c.adapter.Cache(c.ttl).ZCard(ctx, key)
+		r = newIntCmd(c.doCache(ctx, c.cmd.B().Zcard().Key(key).Cache()))
 	} else {
 		r = c.adapter.ZCard(ctx, key)
 	}
@@ -664,7 +664,7 @@ func (c *client) ZCount(ctx context.Context, key, min, max string) IntCmd {
 	ctx = c.handler.before(ctx, CommandZCount)
 	var r IntCmd
 	if c.ttl > 0 {
-		r = c.adapter.Cache(c.ttl).ZCount(ctx, key, min, max)
+		r = newIntCmd(c.doCache(ctx, c.cmd.B().Zcount().Key(key).Min(min).Max(max).Cache()))
 	} else {
 		r = c.adapter.ZCount(ctx, key, min, max)
 	}
@@ -725,7 +725,7 @@ func (c *client) ZLexCount(ctx context.Context, key, min, max string) IntCmd {
 	ctx = c.handler.before(ctx, CommandZLexCount)
 	var r IntCmd
 	if c.ttl > 0 {
-		r = c.adapter.Cache(c.ttl).ZLexCount(ctx, key, min, max)
+		r = newIntCmd(c.doCache(ctx, c.cmd.B().Zlexcount().Key(key).Min(min).Max(max).Cache()))
 	} else {
 		r = c.adapter.ZLexCount(ctx, key, min, max)
 	}
@@ -737,7 +737,7 @@ func (c *client) ZMScore(ctx context.Context, key string, members ...string) Flo
 	ctx = c.handler.before(ctx, CommandZMScore)
 	var r FloatSliceCmd
 	if c.ttl > 0 {
-		r = c.adapter.Cache(c.ttl).ZMScore(ctx, key, members...)
+		r = newFloatSliceCmd(c.doCache(ctx, c.cmd.B().Zmscore().Key(key).Member(members...).Cache()))
 	} else {
 		r = c.adapter.ZMScore(ctx, key, members...)
 	}
@@ -777,11 +777,11 @@ func (c *client) ZRange(ctx context.Context, key string, start, stop int64) Stri
 	ctx = c.handler.before(ctx, CommandZRange)
 	var r StringSliceCmd
 	if c.ttl > 0 {
-		r = c.adapter.Cache(c.ttl).ZRangeArgs(ctx, ZRangeArgs{
+		return newStringSliceCmd(c.doCache(ctx, c.zRangeArgs(false, ZRangeArgs{
 			Key:   key,
 			Start: start,
 			Stop:  stop,
-		})
+		})))
 	} else {
 		r = c.adapter.ZRange(ctx, key, start, stop)
 	}
@@ -793,7 +793,11 @@ func (c *client) ZRangeWithScores(ctx context.Context, key string, start, stop i
 	ctx = c.handler.before(ctx, CommandZRange)
 	var r ZSliceCmd
 	if c.ttl > 0 {
-		r = c.adapter.Cache(c.ttl).ZRangeWithScores(ctx, key, start, stop)
+		r = newZSliceCmd(c.doCache(ctx, c.zRangeArgs(true, ZRangeArgs{
+			Key:   key,
+			Start: start,
+			Stop:  stop,
+		})))
 	} else {
 		r = c.adapter.ZRangeWithScores(ctx, key, start, stop)
 	}
@@ -815,7 +819,7 @@ func (c *client) ZRangeArgs(ctx context.Context, z ZRangeArgs) StringSliceCmd {
 	}
 	var r StringSliceCmd
 	if c.ttl > 0 {
-		r = c.adapter.Cache(c.ttl).ZRangeArgs(ctx, z)
+		r = newStringSliceCmd(c.doCache(ctx, c.zRangeArgs(false, z)))
 	} else {
 		r = c.adapter.ZRangeArgs(ctx, z)
 	}
@@ -837,7 +841,7 @@ func (c *client) ZRangeArgsWithScores(ctx context.Context, z ZRangeArgs) ZSliceC
 	}
 	var r ZSliceCmd
 	if c.ttl > 0 {
-		r = c.adapter.Cache(c.ttl).ZRangeArgsWithScores(ctx, z)
+		r = newZSliceCmd(c.doCache(ctx, c.zRangeArgs(true, z)))
 	} else {
 		r = c.adapter.ZRangeArgsWithScores(ctx, z)
 	}
@@ -849,7 +853,11 @@ func (c *client) ZRangeByLex(ctx context.Context, key string, opt ZRangeBy) Stri
 	ctx = c.handler.before(ctx, CommandZRangebylex)
 	var r StringSliceCmd
 	if c.ttl > 0 {
-		r = c.adapter.Cache(c.ttl).ZRangeByLex(ctx, key, opt)
+		if opt.Offset != 0 || opt.Count != 0 {
+			r = newStringSliceCmd(c.doCache(ctx, c.cmd.B().Zrangebylex().Key(key).Min(opt.Min).Max(opt.Max).Limit(opt.Offset, opt.Count).Cache()))
+		} else {
+			r = newStringSliceCmd(c.doCache(ctx, c.cmd.B().Zrangebylex().Key(key).Min(opt.Min).Max(opt.Max).Cache()))
+		}
 	} else {
 		r = c.adapter.ZRangeByLex(ctx, key, opt)
 	}
@@ -861,7 +869,11 @@ func (c *client) ZRangeByScore(ctx context.Context, key string, opt ZRangeBy) St
 	ctx = c.handler.before(ctx, CommandZrangebyscore)
 	var r StringSliceCmd
 	if c.ttl > 0 {
-		r = c.adapter.Cache(c.ttl).ZRangeByScore(ctx, key, opt)
+		if opt.Offset != 0 || opt.Count != 0 {
+			r = newStringSliceCmd(c.doCache(ctx, c.cmd.B().Zrangebyscore().Key(key).Min(opt.Min).Max(opt.Max).Limit(opt.Offset, opt.Count).Cache()))
+		} else {
+			r = newStringSliceCmd(c.doCache(ctx, c.cmd.B().Zrangebyscore().Key(key).Min(opt.Min).Max(opt.Max).Cache()))
+		}
 	} else {
 		r = c.adapter.ZRangeByScore(ctx, key, opt)
 	}
@@ -873,7 +885,11 @@ func (c *client) ZRangeByScoreWithScores(ctx context.Context, key string, opt ZR
 	ctx = c.handler.before(ctx, CommandZrangebyscoreWithScores)
 	var r ZSliceCmd
 	if c.ttl > 0 {
-		r = c.adapter.Cache(c.ttl).ZRangeByScoreWithScores(ctx, key, opt)
+		if opt.Offset != 0 || opt.Count != 0 {
+			r = newZSliceCmd(c.doCache(ctx, c.cmd.B().Zrangebyscore().Key(key).Min(opt.Min).Max(opt.Max).Withscores().Limit(opt.Offset, opt.Count).Cache()))
+		} else {
+			r = newZSliceCmd(c.doCache(ctx, c.cmd.B().Zrangebyscore().Key(key).Min(opt.Min).Max(opt.Max).Withscores().Cache()))
+		}
 	} else {
 		r = c.adapter.ZRangeByScoreWithScores(ctx, key, opt)
 	}
@@ -892,7 +908,7 @@ func (c *client) ZRank(ctx context.Context, key, member string) IntCmd {
 	ctx = c.handler.before(ctx, CommandZRank)
 	var r IntCmd
 	if c.ttl > 0 {
-		r = c.adapter.Cache(c.ttl).ZRank(ctx, key, member)
+		r = newIntCmd(c.doCache(ctx, c.cmd.B().Zrank().Key(key).Member(member).Cache()))
 	} else {
 		r = c.adapter.ZRank(ctx, key, member)
 	}
@@ -904,7 +920,7 @@ func (c *client) ZRankWithScore(ctx context.Context, key, member string) RankWit
 	ctx = c.handler.before(ctx, CommandZRank)
 	var r RankWithScoreCmd
 	if c.ttl > 0 {
-		r = c.adapter.Cache(c.ttl).ZRankWithScore(ctx, key, member)
+		r = newRankWithScoreCmd(c.doCache(ctx, c.cmd.B().Zrank().Key(key).Member(member).Withscore().Cache()))
 	} else {
 		r = c.adapter.ZRankWithScore(ctx, key, member)
 	}
@@ -948,7 +964,7 @@ func (c *client) ZRevRange(ctx context.Context, key string, start, stop int64) S
 	ctx = c.handler.before(ctx, CommandZRevRange)
 	var r StringSliceCmd
 	if c.ttl > 0 {
-		r = c.adapter.Cache(c.ttl).ZRevRange(ctx, key, start, stop)
+		r = newStringSliceCmd(c.doCache(ctx, c.cmd.B().Zrevrange().Key(key).Start(start).Stop(stop).Cache()))
 	} else {
 		r = c.adapter.ZRevRange(ctx, key, start, stop)
 	}
@@ -960,7 +976,7 @@ func (c *client) ZRevRangeWithScores(ctx context.Context, key string, start, sto
 	ctx = c.handler.before(ctx, CommandZRevRange)
 	var r ZSliceCmd
 	if c.ttl > 0 {
-		r = c.adapter.Cache(c.ttl).ZRevRangeWithScores(ctx, key, start, stop)
+		r = newZSliceCmd(c.doCache(ctx, c.cmd.B().Zrevrange().Key(key).Start(start).Stop(stop).Withscores().Cache()))
 	} else {
 		r = c.adapter.ZRevRangeWithScores(ctx, key, start, stop)
 	}
@@ -972,7 +988,11 @@ func (c *client) ZRevRangeByLex(ctx context.Context, key string, opt ZRangeBy) S
 	ctx = c.handler.before(ctx, CommandZRevRangeByLex)
 	var r StringSliceCmd
 	if c.ttl > 0 {
-		r = c.adapter.Cache(c.ttl).ZRevRangeByLex(ctx, key, opt)
+		if opt.Offset != 0 || opt.Count != 0 {
+			r = newStringSliceCmd(c.doCache(ctx, c.cmd.B().Zrevrangebylex().Key(key).Max(opt.Max).Min(opt.Min).Limit(opt.Offset, opt.Count).Cache()))
+		} else {
+			r = newStringSliceCmd(c.doCache(ctx, c.cmd.B().Zrevrangebylex().Key(key).Max(opt.Max).Min(opt.Min).Cache()))
+		}
 	} else {
 		r = c.adapter.ZRevRangeByLex(ctx, key, opt)
 	}
@@ -984,7 +1004,11 @@ func (c *client) ZRevRangeByScore(ctx context.Context, key string, opt ZRangeBy)
 	ctx = c.handler.before(ctx, CommandZRevRangeByScore)
 	var r StringSliceCmd
 	if c.ttl > 0 {
-		r = c.adapter.Cache(c.ttl).ZRevRangeByScore(ctx, key, opt)
+		if opt.Offset != 0 || opt.Count != 0 {
+			r = newStringSliceCmd(c.doCache(ctx, c.cmd.B().Zrevrangebyscore().Key(key).Max(opt.Max).Min(opt.Min).Limit(opt.Offset, opt.Count).Cache()))
+		} else {
+			r = newStringSliceCmd(c.doCache(ctx, c.cmd.B().Zrevrangebyscore().Key(key).Max(opt.Max).Min(opt.Min).Cache()))
+		}
 	} else {
 		r = c.adapter.ZRevRangeByScore(ctx, key, opt)
 	}
@@ -996,7 +1020,11 @@ func (c *client) ZRevRangeByScoreWithScores(ctx context.Context, key string, opt
 	ctx = c.handler.before(ctx, CommandZRevRangeByScore)
 	var r ZSliceCmd
 	if c.ttl > 0 {
-		r = c.adapter.Cache(c.ttl).ZRevRangeByScoreWithScores(ctx, key, opt)
+		if opt.Offset != 0 || opt.Count != 0 {
+			r = newZSliceCmd(c.doCache(ctx, c.cmd.B().Zrevrangebyscore().Key(key).Max(opt.Max).Min(opt.Min).Withscores().Limit(opt.Offset, opt.Count).Cache()))
+		} else {
+			r = newZSliceCmd(c.doCache(ctx, c.cmd.B().Zrevrangebyscore().Key(key).Max(opt.Max).Min(opt.Min).Withscores().Cache()))
+		}
 	} else {
 		r = c.adapter.ZRevRangeByScoreWithScores(ctx, key, opt)
 	}
@@ -1008,7 +1036,7 @@ func (c *client) ZRevRank(ctx context.Context, key, member string) IntCmd {
 	ctx = c.handler.before(ctx, CommandZRevRank)
 	var r IntCmd
 	if c.ttl > 0 {
-		r = c.adapter.Cache(c.ttl).ZRevRank(ctx, key, member)
+		r = newIntCmd(c.doCache(ctx, c.cmd.B().Zrevrank().Key(key).Member(member).Cache()))
 	} else {
 		r = c.adapter.ZRevRank(ctx, key, member)
 	}
@@ -1020,7 +1048,7 @@ func (c *client) ZRevRankWithScore(ctx context.Context, key, member string) Rank
 	ctx = c.handler.before(ctx, CommandZRevRank)
 	var r RankWithScoreCmd
 	if c.ttl > 0 {
-		r = c.adapter.Cache(c.ttl).ZRevRankWithScore(ctx, key, member)
+		r = newRankWithScoreCmd(c.doCache(ctx, c.cmd.B().Zrevrank().Key(key).Member(member).Withscore().Cache()))
 	} else {
 		r = c.adapter.ZRevRankWithScore(ctx, key, member)
 	}
@@ -1039,7 +1067,7 @@ func (c *client) ZScore(ctx context.Context, key, member string) FloatCmd {
 	ctx = c.handler.before(ctx, CommandZScore)
 	var r FloatCmd
 	if c.ttl > 0 {
-		r = c.adapter.Cache(c.ttl).ZScore(ctx, key, member)
+		r = newFloatCmd(c.doCache(ctx, c.cmd.B().Zscore().Key(key).Member(member).Cache()))
 	} else {
 		r = c.adapter.ZScore(ctx, key, member)
 	}

@@ -488,7 +488,7 @@ func (c *client) PTTL(ctx context.Context, key string) DurationCmd {
 	ctx = c.handler.before(ctx, CommandPTTL)
 	var r DurationCmd
 	if c.ttl > 0 {
-		r = c.adapter.Cache(c.ttl).PTTL(ctx, key)
+		r = newDurationCmd(c.doCache(ctx, c.cmd.B().Pttl().Key(key).Cache()), time.Millisecond)
 	} else {
 		r = c.adapter.PTTL(ctx, key)
 	}
@@ -581,7 +581,7 @@ func (c *client) TTL(ctx context.Context, key string) DurationCmd {
 	ctx = c.handler.before(ctx, CommandTTL)
 	var r DurationCmd
 	if c.ttl > 0 {
-		r = c.adapter.Cache(c.ttl).TTL(ctx, key)
+		r = newDurationCmd(c.doCache(ctx, c.cmd.B().Ttl().Key(key).Cache()), time.Second)
 	} else {
 		r = c.adapter.TTL(ctx, key)
 	}
@@ -593,7 +593,7 @@ func (c *client) Type(ctx context.Context, key string) StatusCmd {
 	ctx = c.handler.before(ctx, CommandType)
 	var r StatusCmd
 	if c.ttl > 0 {
-		r = c.adapter.Cache(c.ttl).Type(ctx, key)
+		r = newStatusCmd(c.doCache(ctx, c.cmd.B().Type().Key(key).Cache()))
 	} else {
 		r = c.adapter.Type(ctx, key)
 	}

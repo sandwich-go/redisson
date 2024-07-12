@@ -225,7 +225,7 @@ func (c *client) SCard(ctx context.Context, key string) IntCmd {
 	ctx = c.handler.before(ctx, CommandSCard)
 	var r IntCmd
 	if c.ttl > 0 {
-		r = c.adapter.Cache(c.ttl).SCard(ctx, key)
+		r = newIntCmd(c.doCache(ctx, c.cmd.B().Scard().Key(key).Cache()))
 	} else {
 		r = c.adapter.SCard(ctx, key)
 	}
@@ -265,7 +265,7 @@ func (c *client) SIsMember(ctx context.Context, key string, member interface{}) 
 	ctx = c.handler.before(ctx, CommandSIsMember)
 	var r BoolCmd
 	if c.ttl > 0 {
-		r = c.adapter.Cache(c.ttl).SIsMember(ctx, key, member)
+		r = newBoolCmd(c.doCache(ctx, c.cmd.B().Sismember().Key(key).Member(str(member)).Cache()))
 	} else {
 		r = c.adapter.SIsMember(ctx, key, member)
 	}
@@ -277,7 +277,7 @@ func (c *client) SMIsMember(ctx context.Context, key string, members ...interfac
 	ctx = c.handler.before(ctx, CommandSMIsMember)
 	var r BoolSliceCmd
 	if c.ttl > 0 {
-		r = c.adapter.Cache(c.ttl).SMIsMember(ctx, key, members...)
+		r = newBoolSliceCmd(c.doCache(ctx, c.cmd.B().Smismember().Key(key).Member(argsToSlice(members)...).Cache()))
 	} else {
 		r = c.adapter.SMIsMember(ctx, key, members...)
 	}
@@ -289,7 +289,7 @@ func (c *client) SMembers(ctx context.Context, key string) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandSMembers)
 	var r StringSliceCmd
 	if c.ttl > 0 {
-		r = c.adapter.Cache(c.ttl).SMembers(ctx, key)
+		r = newStringSliceCmd(c.doCache(ctx, c.cmd.B().Smembers().Key(key).Cache()))
 	} else {
 		r = c.adapter.SMembers(ctx, key)
 	}

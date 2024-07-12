@@ -179,7 +179,7 @@ func (c *client) HExists(ctx context.Context, key, field string) BoolCmd {
 	ctx = c.handler.before(ctx, CommandHExists)
 	var r BoolCmd
 	if c.ttl > 0 {
-		r = c.adapter.Cache(c.ttl).HExists(ctx, key, field)
+		r = newBoolCmd(c.doCache(ctx, c.cmd.B().Hexists().Key(key).Field(field).Cache()))
 	} else {
 		r = c.adapter.HExists(ctx, key, field)
 	}
@@ -191,7 +191,7 @@ func (c *client) HGet(ctx context.Context, key, field string) StringCmd {
 	ctx = c.handler.before(ctx, CommandHGet)
 	var r StringCmd
 	if c.ttl > 0 {
-		r = c.adapter.Cache(c.ttl).HGet(ctx, key, field)
+		r = newStringCmd(c.doCache(ctx, c.cmd.B().Hget().Key(key).Field(field).Cache()))
 	} else {
 		r = c.adapter.HGet(ctx, key, field)
 	}
@@ -203,7 +203,7 @@ func (c *client) HGetAll(ctx context.Context, key string) StringStringMapCmd {
 	ctx = c.handler.before(ctx, CommandHGetAll)
 	var r StringStringMapCmd
 	if c.ttl > 0 {
-		r = c.adapter.Cache(c.ttl).HGetAll(ctx, key)
+		r = newStringStringMapCmd(c.doCache(ctx, c.cmd.B().Hgetall().Key(key).Cache()))
 	} else {
 		r = c.adapter.HGetAll(ctx, key)
 	}
@@ -229,7 +229,7 @@ func (c *client) HKeys(ctx context.Context, key string) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandHKeys)
 	var r StringSliceCmd
 	if c.ttl > 0 {
-		r = c.adapter.Cache(c.ttl).HKeys(ctx, key)
+		r = newStringSliceCmd(c.doCache(ctx, c.cmd.B().Hkeys().Key(key).Cache()))
 	} else {
 		r = c.adapter.HKeys(ctx, key)
 	}
@@ -241,7 +241,7 @@ func (c *client) HLen(ctx context.Context, key string) IntCmd {
 	ctx = c.handler.before(ctx, CommandHLen)
 	var r IntCmd
 	if c.ttl > 0 {
-		r = c.adapter.Cache(c.ttl).HLen(ctx, key)
+		r = newIntCmd(c.doCache(ctx, c.cmd.B().Hlen().Key(key).Cache()))
 	} else {
 		r = c.adapter.HLen(ctx, key)
 	}
@@ -253,7 +253,7 @@ func (c *client) HMGet(ctx context.Context, key string, fields ...string) SliceC
 	ctx = c.handler.before(ctx, CommandHMGet)
 	var r SliceCmd
 	if c.ttl > 0 {
-		r = c.adapter.Cache(c.ttl).HMGet(ctx, key, fields...)
+		r = newSliceCmd(c.doCache(ctx, c.cmd.B().Hmget().Key(key).Field(fields...).Cache()), false, fields...)
 	} else {
 		r = c.adapter.HMGet(ctx, key, fields...)
 	}
@@ -311,7 +311,7 @@ func (c *client) HVals(ctx context.Context, key string) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandHVals)
 	var r StringSliceCmd
 	if c.ttl > 0 {
-		r = c.adapter.Cache(c.ttl).HVals(ctx, key)
+		r = newStringSliceCmd(c.doCache(ctx, c.cmd.B().Hvals().Key(key).Cache()))
 	} else {
 		r = c.adapter.HVals(ctx, key)
 	}

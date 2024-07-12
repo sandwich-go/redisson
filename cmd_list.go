@@ -2,6 +2,7 @@ package redisson
 
 import (
 	"context"
+	"strconv"
 	"time"
 )
 
@@ -308,7 +309,7 @@ func (c *client) LIndex(ctx context.Context, key string, index int64) StringCmd 
 	ctx = c.handler.before(ctx, CommandLIndex)
 	var r StringCmd
 	if c.ttl > 0 {
-		r = c.adapter.Cache(c.ttl).LIndex(ctx, key, index)
+		r = newStringCmd(c.doCache(ctx, c.cmd.B().Lindex().Key(key).Index(index).Cache()))
 	} else {
 		r = c.adapter.LIndex(ctx, key, index)
 	}
@@ -341,7 +342,7 @@ func (c *client) LLen(ctx context.Context, key string) IntCmd {
 	ctx = c.handler.before(ctx, CommandLLen)
 	var r IntCmd
 	if c.ttl > 0 {
-		r = c.adapter.Cache(c.ttl).LLen(ctx, key)
+		r = newIntCmd(c.doCache(ctx, c.cmd.B().Llen().Key(key).Cache()))
 	} else {
 		r = c.adapter.LLen(ctx, key)
 	}
@@ -374,7 +375,14 @@ func (c *client) LPos(ctx context.Context, key string, value string, args LPosAr
 	ctx = c.handler.before(ctx, CommandLPos)
 	var r IntCmd
 	if c.ttl > 0 {
-		r = c.adapter.Cache(c.ttl).LPos(ctx, key, value, args)
+		cmd := c.cmd.B().Arbitrary(LPOS).Keys(key).Args(value)
+		if args.Rank != 0 {
+			cmd = cmd.Args(RANK, strconv.FormatInt(args.Rank, 10))
+		}
+		if args.MaxLen != 0 {
+			cmd = cmd.Args(MAXLEN, strconv.FormatInt(args.MaxLen, 10))
+		}
+		r = newIntCmd(c.Do(ctx, cmd.Build()))
 	} else {
 		r = c.adapter.LPos(ctx, key, value, args)
 	}
@@ -415,7 +423,7 @@ func (c *client) LRange(ctx context.Context, key string, start, stop int64) Stri
 	ctx = c.handler.before(ctx, CommandLRange)
 	var r StringSliceCmd
 	if c.ttl > 0 {
-		r = c.adapter.Cache(c.ttl).LRange(ctx, key, start, stop)
+		r = newStringSliceCmd(c.doCache(ctx, c.cmd.B().Lrange().Key(key).Start(start).Stop(stop).Cache()))
 	} else {
 		r = c.adapter.LRange(ctx, key, start, stop)
 	}

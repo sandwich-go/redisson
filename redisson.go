@@ -89,6 +89,13 @@ func (c *client) Cache(ttl time.Duration) CacheCmdable {
 	return cp
 }
 
+func (c *client) Do(ctx context.Context, completed rueidis.Completed) rueidis.RedisResult {
+	if c.ttl <= 0 {
+		return c.cmd.Do(ctx, completed)
+	}
+	return c.doCache(ctx, rueidis.Cacheable(completed))
+}
+
 func (c *client) doCache(ctx context.Context, cacheable rueidis.Cacheable) rueidis.RedisResult {
 	resp := c.cmd.DoCache(ctx, cacheable, c.ttl)
 	c.handler.cache(ctx, resp.IsCacheHit())
@@ -135,11 +142,4 @@ func (c *client) XMGet(ctx context.Context, keys ...string) SliceCmd {
 		}
 	}
 	return newSliceCmdFromSlice(res, nil, keys...)
-}
-
-func (c *client) Do(ctx context.Context, completed rueidis.Completed) rueidis.RedisResult {
-	if c.ttl == 0 {
-		return c.cmd.Do(ctx, completed)
-	}
-	return c.doCache(ctx, rueidis.Cacheable(completed))
 }
