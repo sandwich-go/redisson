@@ -19,9 +19,17 @@ const (
 	FT                   = "FT"
 	KM                   = "KM"
 	EMPTY                = ""
+	SCAN                 = "SCAN"
+	SET                  = "SET"
+	KEEPTTL              = "KEEPTTL"
+	EXAT                 = "EXAT"
+	PX                   = "PX"
+	EX                   = "EX"
+	BITFIELD             = "BITFIELD"
 	GEORADIUS_RO         = "GEORADIUS_RO"
 	GEORADIUSBYMEMBER_RO = "GEORADIUSBYMEMBER_RO"
 	GEOSEARCH            = "GEOSEARCH"
+	GEOSEARCHSTORE       = "GEOSEARCHSTORE"
 	STOREDIST            = "STOREDIST"
 	BYRADIUS             = "BYRADIUS"
 	FROMMEMBER           = "FROMMEMBER"
@@ -34,6 +42,9 @@ const (
 	LPOS                 = "LPOS"
 	RANK                 = "RANK"
 	MAXLEN               = "MAXLEN"
+	MINID                = "MINID"
+	NOMKSTREAM           = "NOMKSTREAM"
+	XADD                 = "XADD"
 	XX                   = "XX"
 	NX                   = "NX"
 	WITHSCORES           = "WITHSCORES"
@@ -46,12 +57,57 @@ const (
 	LADDR                = "LADDR"
 	BitCountIndexByte    = "BYTE"
 	BitCountIndexBit     = "BIT"
+	TYPE                 = "TYPE"
+	HSCAN                = "HSCAN"
+	MATCH                = "MATCH"
+	BEFORE               = "BEFORE"
+	AFTER                = "AFTER"
+	LMPOP                = "LMPOP"
+	LMOVE                = "LMOVE"
+	SSCAN                = "SSCAN"
+	XPENDING             = "XPENDING"
+	IDLE                 = "IDLE"
+	XTRIM                = "XTRIM"
+	ZADD                 = "ZADD"
+	GT                   = "GT"
+	LT                   = "LT"
+	CH                   = "CH"
+	INCR                 = "INCR"
+	ZRANGESTORE          = "ZRANGESTORE"
+	ZINTER               = "ZINTER"
+	ZINTERSTORE          = "ZINTERSTORE"
+	ZUNION               = "ZUNION"
+	ZUNIONSTORE          = "ZUNIONSTORE"
+	WEIGHTS              = "WEIGHTS"
+	AGGREGATE            = "AGGREGATE"
+	ZMPOP                = "ZMPOP"
+	ZSCAN                = "ZSCAN"
 )
 
 var (
 	nowFunc   = time.Now
 	sinceFunc = time.Since
 )
+
+func usePrecise(dur time.Duration) bool {
+	return dur < time.Second || dur%time.Second != 0
+}
+
+func formatSec(dur time.Duration) int64 {
+	if dur > 0 && dur < time.Second {
+		// too small, truncate too 1s
+		return 1
+	}
+	return int64(dur / time.Second)
+}
+
+func formatMs(dur time.Duration) int64 {
+	if dur > 0 && dur < time.Millisecond {
+		// too small, truncate too 1ms
+		return 1
+	}
+	return int64(dur / time.Millisecond)
+}
 
 func appendString(s string, ss ...string) []string {
 	sss := make([]string, 0, len(ss)+1)
@@ -60,7 +116,7 @@ func appendString(s string, ss ...string) []string {
 	return sss
 }
 
-func str(arg interface{}) string {
+func str(arg any) string {
 	switch v := arg.(type) {
 	case string:
 		return v
@@ -89,7 +145,7 @@ func str(arg interface{}) string {
 	return fmt.Sprint(arg)
 }
 
-func argsToSlice(src []interface{}) []string {
+func argsToSlice(src []any) []string {
 	if len(src) == 1 {
 		return argToSlice(src[0])
 	}
@@ -100,7 +156,7 @@ func argsToSlice(src []interface{}) []string {
 	return dst
 }
 
-func argsToSliceWithValues(src []interface{}) []string {
+func argsToSliceWithValues(src []any) []string {
 	if len(src) == 2 {
 		return argToSlice(src[0])
 	}
@@ -111,17 +167,17 @@ func argsToSliceWithValues(src []interface{}) []string {
 	return dst
 }
 
-func argToSlice(a interface{}) []string {
+func argToSlice(a any) []string {
 	switch arg := a.(type) {
 	case []string:
 		return arg
-	case []interface{}:
+	case []any:
 		dst := make([]string, 0, len(arg))
 		for _, v := range arg {
 			dst = append(dst, str(v))
 		}
 		return dst
-	case map[string]interface{}:
+	case map[string]any:
 		dst := make([]string, 0, len(arg))
 		for k, v := range arg {
 			dst = append(dst, k, str(v))

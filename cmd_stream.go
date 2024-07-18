@@ -338,9 +338,11 @@ func (c *client) XAck(ctx context.Context, stream, group string, ids ...string) 
 
 func (c *client) XAdd(ctx context.Context, a XAddArgs) StringCmd {
 	if a.NoMkStream {
-		ctx = c.handler.before(ctx, CommandXAddNoMkStream)
+		ctx = c.handler.before(ctx, CommandXAddNoMKStream)
+	} else if a.MaxLen > 0 {
+		ctx = c.handler.before(ctx, CommandXAddMaxLen)
 	} else if len(a.MinID) > 0 {
-		ctx = c.handler.before(ctx, CommandXAddMinId)
+		ctx = c.handler.before(ctx, CommandXAddMinID)
 	} else if a.Limit > 0 {
 		ctx = c.handler.before(ctx, CommandXAddLimit)
 	} else {
@@ -359,7 +361,7 @@ func (c *client) XAutoClaim(ctx context.Context, a XAutoClaimArgs) XAutoClaimCmd
 }
 
 func (c *client) XAutoClaimJustID(ctx context.Context, a XAutoClaimArgs) XAutoClaimJustIDCmd {
-	ctx = c.handler.before(ctx, CommandXAutoClaim)
+	ctx = c.handler.before(ctx, CommandXAutoClaimJustID)
 	r := c.adapter.XAutoClaimJustID(ctx, a)
 	c.handler.after(ctx, r.Err())
 	return r
@@ -373,7 +375,7 @@ func (c *client) XClaim(ctx context.Context, a XClaimArgs) XMessageSliceCmd {
 }
 
 func (c *client) XClaimJustID(ctx context.Context, a XClaimArgs) StringSliceCmd {
-	ctx = c.handler.before(ctx, CommandXClaim)
+	ctx = c.handler.before(ctx, CommandXClaimJustID)
 	r := c.adapter.XClaimJustID(ctx, a)
 	c.handler.after(ctx, r.Err())
 	return r
@@ -394,7 +396,7 @@ func (c *client) XGroupCreate(ctx context.Context, stream, group, start string) 
 }
 
 func (c *client) XGroupCreateMkStream(ctx context.Context, stream, group, start string) StatusCmd {
-	ctx = c.handler.before(ctx, CommandXGroupCreate)
+	ctx = c.handler.before(ctx, CommandXGroupCreateMkStream)
 	r := c.adapter.XGroupCreateMkStream(ctx, stream, group, start)
 	c.handler.after(ctx, r.Err())
 	return r
@@ -471,11 +473,7 @@ func (c *client) XPending(ctx context.Context, stream, group string) XPendingCmd
 }
 
 func (c *client) XPendingExt(ctx context.Context, a XPendingExtArgs) XPendingExtCmd {
-	if a.Idle != 0 {
-		ctx = c.handler.before(ctx, CommandXPendingIdle)
-	} else {
-		ctx = c.handler.before(ctx, CommandXPending)
-	}
+	ctx = c.handler.before(ctx, CommandXPendingExt)
 	r := c.adapter.XPendingExt(ctx, a)
 	c.handler.after(ctx, r.Err())
 	return r
@@ -489,7 +487,7 @@ func (c *client) XRange(ctx context.Context, stream, start, stop string) XMessag
 }
 
 func (c *client) XRangeN(ctx context.Context, stream, start, stop string, count int64) XMessageSliceCmd {
-	ctx = c.handler.before(ctx, CommandXRange)
+	ctx = c.handler.before(ctx, CommandXRangeN)
 	r := c.adapter.XRangeN(ctx, stream, start, stop, count)
 	c.handler.after(ctx, r.Err())
 	return r
@@ -516,16 +514,16 @@ func (c *client) XReadGroup(ctx context.Context, a XReadGroupArgs) XStreamSliceC
 	return r
 }
 
-func (c *client) XRevRange(ctx context.Context, stream string, start, stop string) XMessageSliceCmd {
+func (c *client) XRevRange(ctx context.Context, stream string, stop, start string) XMessageSliceCmd {
 	ctx = c.handler.before(ctx, CommandXRevRange)
-	r := c.adapter.XRevRange(ctx, stream, start, stop)
+	r := c.adapter.XRevRange(ctx, stream, stop, start)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
-func (c *client) XRevRangeN(ctx context.Context, stream string, start, stop string, count int64) XMessageSliceCmd {
-	ctx = c.handler.before(ctx, CommandXRevRange)
-	r := c.adapter.XRevRangeN(ctx, stream, start, stop, count)
+func (c *client) XRevRangeN(ctx context.Context, stream string, stop, start string, count int64) XMessageSliceCmd {
+	ctx = c.handler.before(ctx, CommandXRevRangeN)
+	r := c.adapter.XRevRangeN(ctx, stream, stop, start, count)
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -553,7 +551,7 @@ func (c *client) XTrimMaxLen(ctx context.Context, key string, maxLen int64) IntC
 
 func (c *client) XTrimMaxLenApprox(ctx context.Context, key string, maxLen, limit int64) IntCmd {
 	if limit > 0 {
-		ctx = c.handler.before(ctx, CommandXTrimLimit)
+		ctx = c.handler.before(ctx, CommandXTrimMaxLenApprox)
 	} else {
 		ctx = c.handler.before(ctx, CommandXTrim)
 	}
@@ -563,14 +561,14 @@ func (c *client) XTrimMaxLenApprox(ctx context.Context, key string, maxLen, limi
 }
 
 func (c *client) XTrimMinID(ctx context.Context, key string, minID string) IntCmd {
-	ctx = c.handler.before(ctx, CommandXTrimMinId)
+	ctx = c.handler.before(ctx, CommandXTrimMinID)
 	r := c.adapter.XTrimMinID(ctx, key, minID)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) XTrimMinIDApprox(ctx context.Context, key string, minID string, limit int64) IntCmd {
-	ctx = c.handler.before(ctx, CommandXTrimMinId)
+	ctx = c.handler.before(ctx, CommandXTrimMinIDApprox)
 	r := c.adapter.XTrimMinIDApprox(ctx, key, minID, limit)
 	c.handler.after(ctx, r.Err())
 	return r

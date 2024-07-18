@@ -13,20 +13,12 @@ func (_pipeline) String() string { return "Pipeline" }
 func testPipeline(ctx context.Context, c Cmdable) []string {
 	var key1, key2, value1, value2 = "key1", "key2", "value1", "value2"
 	pip := c.Pipeline()
-	err := pip.Put(ctx, CommandSet, []string{key1}, value1)
-	So(err, ShouldBeNil)
+	CommandSet.P(pip).Cmd(key1, value1, 0)
+	CommandSet.P(pip).Cmd(key2, value2, 0)
+	CommandGet.P(pip).Cmd(key1)
+	CommandGet.P(pip).Cmd(key2)
 
-	err = pip.Put(ctx, CommandSet, []string{key2}, value2)
-	So(err, ShouldBeNil)
-
-	err = pip.Put(ctx, CommandGet, []string{key1})
-	So(err, ShouldBeNil)
-
-	err = pip.Put(ctx, CommandGet, []string{key2})
-	So(err, ShouldBeNil)
-
-	var res []interface{}
-	res, err = pip.Exec(ctx)
+	res, err := pip.Exec(ctx)
 	So(err, ShouldBeNil)
 	So(res, ShouldNotBeNil)
 	So(len(res), ShouldEqual, 4)

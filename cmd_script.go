@@ -45,7 +45,7 @@ type Scripter interface {
 	// The second argument is the number of input key name arguments, followed by all the keys accessed by the script. These names of input keys are available to the script as the KEYS global runtime variable Any additional input arguments should not represent names of keys.
 	// Important: to ensure the correct execution of scripts, both in standalone and clustered deployments, all names of keys that a script accesses must be explicitly provided as input key arguments. The script should only access keys whose names are given as input arguments. Scripts should never access keys with programmatically-generated names or based on the contents of data structures stored in the database.
 	// Please refer to the Redis Programmability and Introduction to Eval Scripts for more information about Lua scripts.
-	Eval(ctx context.Context, keys []string, args ...interface{}) Cmd
+	Eval(ctx context.Context, keys []string, args ...any) Cmd
 
 	// EvalSha
 	// Available since: 2.6.0
@@ -54,11 +54,11 @@ type Scripter interface {
 	// Evaluate a script from the server's cache by its SHA1 digest.
 	// The server caches scripts by using the SCRIPT LOAD command. The command is otherwise identical to EVAL.
 	// Please refer to the Redis Programmability and Introduction to Eval Scripts for more information about Lua scripts.
-	EvalSha(ctx context.Context, keys []string, args ...interface{}) Cmd
+	EvalSha(ctx context.Context, keys []string, args ...any) Cmd
 
 	// Run optimistically uses EVALSHA to run the script. If script does not exist
 	// it is retried using EVAL.
-	Run(ctx context.Context, keys []string, args ...interface{}) Cmd
+	Run(ctx context.Context, keys []string, args ...any) Cmd
 }
 
 type ScriptCmdable interface {
@@ -73,7 +73,16 @@ type ScriptCmdable interface {
 	// The second argument is the number of input key name arguments, followed by all the keys accessed by the script. These names of input keys are available to the script as the KEYS global runtime variable Any additional input arguments should not represent names of keys.
 	// Important: to ensure the correct execution of scripts, both in standalone and clustered deployments, all names of keys that a script accesses must be explicitly provided as input key arguments. The script should only access keys whose names are given as input arguments. Scripts should never access keys with programmatically-generated names or based on the contents of data structures stored in the database.
 	// Please refer to the Redis Programmability and Introduction to Eval Scripts for more information about Lua scripts.
-	Eval(ctx context.Context, script string, keys []string, args ...interface{}) Cmd
+	Eval(ctx context.Context, script string, keys []string, args ...any) Cmd
+
+	// EvalRO
+	// Available since: 7.0.0
+	// Time complexity: Depends on the script that is executed.
+	// ACL categories: @slow @scripting
+	// This is a read-only variant of the EVAL command that cannot execute commands that modify data.
+	// For more information about when to use this command vs EVAL, please refer to Read-only scripts.
+	// For more information about EVAL scripts please refer to Introduction to Eval Scripts.
+	EvalRO(ctx context.Context, script string, keys []string, args ...any) Cmd
 
 	// EvalSha
 	// Available since: 2.6.0
@@ -82,7 +91,72 @@ type ScriptCmdable interface {
 	// Evaluate a script from the server's cache by its SHA1 digest.
 	// The server caches scripts by using the SCRIPT LOAD command. The command is otherwise identical to EVAL.
 	// Please refer to the Redis Programmability and Introduction to Eval Scripts for more information about Lua scripts.
-	EvalSha(ctx context.Context, sha1 string, keys []string, args ...interface{}) Cmd
+	EvalSha(ctx context.Context, sha1 string, keys []string, args ...any) Cmd
+
+	// EvalShaRO
+	// Available since: 7.0.0
+	// Time complexity: Depends on the script that is executed.
+	// ACL categories: @slow @scripting
+	// Evaluate a script from the server's cache by its SHA1 digest.
+	// The server caches scripts by using the SCRIPT LOAD command. The command is otherwise identical to EVAL.
+	// Please refer to the Redis Programmability and Introduction to Eval Scripts for more information about Lua scripts.
+	EvalShaRO(ctx context.Context, sha1 string, keys []string, args ...any) Cmd
+
+	// FCall
+	// Available since: 7.0.0
+	// Time complexity: Depends on the script that is executed.
+	// ACL categories: @slow @scripting
+	FCall(ctx context.Context, function string, keys []string, args ...any) Cmd
+
+	// FCallRO
+	// Available since: 7.0.0
+	// Time complexity: Depends on the script that is executed.
+	// ACL categories: @slow @scripting
+	FCallRO(ctx context.Context, function string, keys []string, args ...any) Cmd
+
+	// FunctionDelete
+	// Available since: 7.0.0
+	// Time complexity: Depends on the script that is executed.
+	// ACL categories: @write, @slow, @scripting
+	FunctionDelete(ctx context.Context, libName string) StringCmd
+
+	// FunctionDump
+	// Available since: 7.0.0
+	// Time complexity: Depends on the script that is executed.
+	// ACL categories: @slow @scripting
+	FunctionDump(ctx context.Context) StringCmd
+
+	// FunctionFlush
+	// Available since: 7.0.0
+	// Time complexity: Depends on the script that is executed.
+	// ACL categories: @write, @slow, @scripting
+	FunctionFlush(ctx context.Context) StringCmd
+	FunctionFlushAsync(ctx context.Context) StringCmd
+
+	// FunctionKill
+	// Available since: 7.0.0
+	// Time complexity: Depends on the script that is executed.
+	// ACL categories: @slow @scripting
+	FunctionKill(ctx context.Context) StringCmd
+
+	// FunctionList
+	// Available since: 7.0.0
+	// Time complexity: Depends on the script that is executed.
+	// ACL categories: @slow @scripting
+	FunctionList(ctx context.Context, q FunctionListQuery) FunctionListCmd
+
+	// FunctionLoad
+	// Available since: 7.0.0
+	// Time complexity: Depends on the script that is executed.
+	// ACL categories: @write, @slow, @scripting
+	FunctionLoad(ctx context.Context, code string) StringCmd
+	FunctionLoadReplace(ctx context.Context, code string) StringCmd
+
+	// FunctionRestore
+	// Available since: 7.0.0
+	// Time complexity: Depends on the script that is executed.
+	// ACL categories: @write, @slow, @scripting
+	FunctionRestore(ctx context.Context, libDump string) StringCmd
 
 	// ScriptExists
 	// Available since: 2.6.0
@@ -136,16 +210,107 @@ type ScriptCmdable interface {
 
 func (c *client) CreateScript(src string) Scripter { return newScript(c, src) }
 
-func (c *client) Eval(ctx context.Context, script string, keys []string, args ...interface{}) Cmd {
+func (c *client) Eval(ctx context.Context, script string, keys []string, args ...any) Cmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandEval, func() []string { return keys })
 	r := c.adapter.Eval(ctx, script, keys, args...)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
-func (c *client) EvalSha(ctx context.Context, sha1 string, keys []string, args ...interface{}) Cmd {
+func (c *client) EvalRO(ctx context.Context, script string, keys []string, args ...any) Cmd {
+	ctx = c.handler.beforeWithKeys(ctx, CommandEvalRO, func() []string { return keys })
+	r := c.adapter.EvalRO(ctx, script, keys, args...)
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
+func (c *client) EvalSha(ctx context.Context, sha1 string, keys []string, args ...any) Cmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandEvalSha, func() []string { return keys })
 	r := c.adapter.EvalSha(ctx, sha1, keys, args...)
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
+func (c *client) EvalShaRO(ctx context.Context, sha1 string, keys []string, args ...any) Cmd {
+	ctx = c.handler.beforeWithKeys(ctx, CommandEvalShaRO, func() []string { return keys })
+	r := c.adapter.EvalShaRO(ctx, sha1, keys, args...)
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
+func (c *client) FCall(ctx context.Context, function string, keys []string, args ...any) Cmd {
+	ctx = c.handler.beforeWithKeys(ctx, CommandFCall, func() []string { return keys })
+	r := c.adapter.FCall(ctx, function, keys, args...)
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
+func (c *client) FCallRO(ctx context.Context, function string, keys []string, args ...any) Cmd {
+	ctx = c.handler.beforeWithKeys(ctx, CommandFCallRO, func() []string { return keys })
+	r := c.adapter.FCallRO(ctx, function, keys, args...)
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
+func (c *client) FunctionDelete(ctx context.Context, libName string) StringCmd {
+	ctx = c.handler.before(ctx, CommandFunctionDelete)
+	r := c.adapter.FunctionDelete(ctx, libName)
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
+func (c *client) FunctionDump(ctx context.Context) StringCmd {
+	ctx = c.handler.before(ctx, CommandFunctionDump)
+	r := c.adapter.FunctionDump(ctx)
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
+func (c *client) FunctionFlush(ctx context.Context) StringCmd {
+	ctx = c.handler.before(ctx, CommandFunctionFlush)
+	r := c.adapter.FunctionFlush(ctx)
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
+func (c *client) FunctionFlushAsync(ctx context.Context) StringCmd {
+	ctx = c.handler.before(ctx, CommandFunctionFlushAsync)
+	r := c.adapter.FunctionFlushAsync(ctx)
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
+func (c *client) FunctionKill(ctx context.Context) StringCmd {
+	ctx = c.handler.before(ctx, CommandFunctionKill)
+	r := c.adapter.FunctionKill(ctx)
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
+func (c *client) FunctionList(ctx context.Context, q FunctionListQuery) FunctionListCmd {
+	ctx = c.handler.before(ctx, CommandFunctionList)
+	r := c.adapter.FunctionList(ctx, q)
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
+func (c *client) FunctionLoad(ctx context.Context, code string) StringCmd {
+	ctx = c.handler.before(ctx, CommandFunctionLoad)
+	r := c.adapter.FunctionLoad(ctx, code)
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
+func (c *client) FunctionLoadReplace(ctx context.Context, code string) StringCmd {
+	ctx = c.handler.before(ctx, CommandFunctionLoadReplace)
+	r := c.adapter.FunctionLoadReplace(ctx, code)
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
+func (c *client) FunctionRestore(ctx context.Context, libDump string) StringCmd {
+	ctx = c.handler.before(ctx, CommandFunctionRestore)
+	r := c.adapter.FunctionRestore(ctx, libDump)
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -196,15 +361,15 @@ func newScript(c ScriptCmdable, src string) Scripter {
 func (s *script) Hash() string                            { return s.hash }
 func (s *script) Load(ctx context.Context) StringCmd      { return s.ScriptLoad(ctx, s.src) }
 func (s *script) Exists(ctx context.Context) BoolSliceCmd { return s.ScriptExists(ctx, s.hash) }
-func (s *script) Eval(ctx context.Context, keys []string, args ...interface{}) Cmd {
+func (s *script) Eval(ctx context.Context, keys []string, args ...any) Cmd {
 	return s.ScriptCmdable.Eval(ctx, s.src, keys, args...)
 }
 
-func (s *script) EvalSha(ctx context.Context, keys []string, args ...interface{}) Cmd {
+func (s *script) EvalSha(ctx context.Context, keys []string, args ...any) Cmd {
 	return s.ScriptCmdable.EvalSha(ctx, s.hash, keys, args...)
 }
 
-func (s *script) Run(ctx context.Context, keys []string, args ...interface{}) Cmd {
+func (s *script) Run(ctx context.Context, keys []string, args ...any) Cmd {
 	r := s.EvalSha(ctx, keys, args...)
 	if err := r.Err(); err != nil && strings.HasPrefix(err.Error(), "NOSCRIPT ") {
 		return s.Eval(ctx, keys, args...)

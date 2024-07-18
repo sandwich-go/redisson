@@ -6,7 +6,6 @@ import (
 	"github.com/coreos/go-semver/semver"
 	"github.com/redis/rueidis"
 	"github.com/redis/rueidis/rueidiscompat"
-	"strconv"
 	"sync"
 	"time"
 )
@@ -30,6 +29,7 @@ type client struct {
 	cmd       rueidis.Client
 	adapter   rueidiscompat.Cmdable
 	ttl       time.Duration
+	builder   builder
 
 	once sync.Once
 }
@@ -57,6 +57,7 @@ func (c *client) ForEachNodes(ctx context.Context, f func(context.Context, Cmdab
 			isCluster: c.isCluster,
 			cmd:       v,
 			adapter:   rueidiscompat.NewAdapter(v),
+			builder:   c.builder,
 		})
 		if err != nil {
 			errs.Push(err)
@@ -77,43 +78,16 @@ func (c *client) Cache(ttl time.Duration) CacheCmdable {
 		cmd:       c.cmd,
 		adapter:   c.adapter,
 		ttl:       ttl,
+		builder:   c.builder,
 	}
 	return cp
 }
 
-func (c *client) Do(ctx context.Context, completed rueidis.Completed) rueidis.RedisResult {
+func (c *client) Do(ctx context.Context, completed Completed) RedisResult {
 	if c.ttl <= 0 {
 		return c.cmd.Do(ctx, completed)
 	}
-	return c.doCache(ctx, rueidis.Cacheable(completed))
-}
-
-func (c *client) doCache(ctx context.Context, cacheable rueidis.Cacheable) rueidis.RedisResult {
-	resp := c.cmd.DoCache(ctx, cacheable, c.ttl)
+	resp := c.cmd.DoCache(ctx, rueidis.Cacheable(completed), c.ttl)
 	c.handler.cache(ctx, resp.IsCacheHit())
 	return resp
-}
-
-func (c *client) zRangeArgs(withScores bool, z ZRangeArgs) rueidis.Cacheable {
-	cmd := c.cmd.B().Arbitrary(ZRANGE).Keys(z.Key)
-	if z.Rev && (z.ByScore || z.ByLex) {
-		cmd = cmd.Args(str(z.Stop), str(z.Start))
-	} else {
-		cmd = cmd.Args(str(z.Start), str(z.Stop))
-	}
-	if z.ByScore {
-		cmd = cmd.Args(BYSCORE)
-	} else if z.ByLex {
-		cmd = cmd.Args(BYLEX)
-	}
-	if z.Rev {
-		cmd = cmd.Args(REV)
-	}
-	if z.Offset != 0 || z.Count != 0 {
-		cmd = cmd.Args(LIMIT, strconv.FormatInt(z.Offset, 10), strconv.FormatInt(z.Count, 10))
-	}
-	if withScores {
-		cmd = cmd.Args(WITHSCORES)
-	}
-	return rueidis.Cacheable(cmd.Build())
 }

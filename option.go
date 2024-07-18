@@ -5,13 +5,13 @@ import (
 )
 
 type Tester interface {
-	Fatalf(string, ...interface{})
+	Fatalf(string, ...any)
 	Cleanup(func())
 }
 
 //go:generate optiongen --new_func=NewConf --xconf=true --empty_composite_nil=true --usage_tag_name=usage
-func ConfOptionDeclareWithDefault() interface{} {
-	return map[string]interface{}{
+func ConfOptionDeclareWithDefault() any {
+	return map[string]any{
 		"AlwaysRESP2":       bool(false),                     // @MethodComment(always uses RESP2, otherwise it will try using RESP3 first)
 		"Name":              "",                              // @MethodComment(Redis客户端名字)
 		"MasterName":        "",                              // @MethodComment(Redis Sentinel模式下，master名字)

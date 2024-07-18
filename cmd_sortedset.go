@@ -11,6 +11,12 @@ type SortedSetCmdable interface {
 }
 
 type SortedSetWriter interface {
+	// BZMPop
+	// Available since: 7.0.0
+	// Time complexity: O(K) + O(M*log(N)) where K is the number of provided keys, N being the number of elements in the sorted set, and M being the number of elements popped.
+	// ACL categories: @write, @sortedset, @slow, @blocking
+	BZMPop(ctx context.Context, timeout time.Duration, order string, count int64, keys ...string) ZSliceWithKeyCmd
+
 	// BZPopMax
 	// Available since: 5.0.0
 	// Time complexity: O(log(N)) with N being the number of elements in the sorted set.
@@ -69,26 +75,19 @@ type SortedSetWriter interface {
 	// See https://redis.io/commands/zadd/
 	ZAddXX(ctx context.Context, key string, members ...Z) IntCmd
 
-	// ZAddCh
+	// ZAddLT
 	// Available since:3.0.2
 	// Time complexity: O(log(N)) for each item added, where N is the number of elements in the sorted set.
 	// ACL categories: @write @sortedset @fast
 	// See https://redis.io/commands/zadd/
-	ZAddCh(ctx context.Context, key string, members ...Z) IntCmd
+	ZAddLT(ctx context.Context, key string, members ...Z) IntCmd
 
-	// ZAddNXCh
+	// ZAddGT
 	// Available since: 3.0.2
 	// Time complexity: O(log(N)) for each item added, where N is the number of elements in the sorted set.
 	// ACL categories: @write @sortedset @fast
 	// See https://redis.io/commands/zadd/
-	ZAddNXCh(ctx context.Context, key string, members ...Z) IntCmd
-
-	// ZAddXXCh
-	// Available since: 3.0.2
-	// Time complexity: O(log(N)) for each item added, where N is the number of elements in the sorted set.
-	// ACL categories: @write @sortedset @fast
-	// See https://redis.io/commands/zadd/
-	ZAddXXCh(ctx context.Context, key string, members ...Z) IntCmd
+	ZAddGT(ctx context.Context, key string, members ...Z) IntCmd
 
 	// ZAddArgs
 	// Available since: 3.0.2
@@ -105,30 +104,6 @@ type SortedSetWriter interface {
 	// Starting with Redis version 6.2.0: Added the GT and LT options.
 	// See https://redis.io/commands/zadd/
 	ZAddArgsIncr(ctx context.Context, key string, args ZAddArgs) FloatCmd
-
-	// ZIncr
-	// Available since: 3.0.2
-	// Time complexity: O(log(N)) for each item added, where N is the number of elements in the sorted set.
-	// ACL categories: @write @sortedset @fast
-	// Starting with Redis version 6.2.0: Added the GT and LT options.
-	// See https://redis.io/commands/zadd/
-	ZIncr(ctx context.Context, key string, member Z) FloatCmd
-
-	// ZIncrNX
-	// Available since: 3.0.2
-	// Time complexity: O(log(N)) for each item added, where N is the number of elements in the sorted set.
-	// ACL categories: @write @sortedset @fast
-	// Starting with Redis version 6.2.0: Added the GT and LT options.
-	// See https://redis.io/commands/zadd/
-	ZIncrNX(ctx context.Context, key string, member Z) FloatCmd
-
-	// ZIncrXX
-	// Available since: 3.0.2
-	// Time complexity: O(log(N)) for each item added, where N is the number of elements in the sorted set.
-	// ACL categories: @write @sortedset @fast
-	// Starting with Redis version 6.2.0: Added the GT and LT options.
-	// See https://redis.io/commands/zadd/
-	ZIncrXX(ctx context.Context, key string, member Z) FloatCmd
 
 	// ZDiffStore
 	// Available since: 6.2.0
@@ -163,6 +138,13 @@ type SortedSetWriter interface {
 	// Return:
 	//	Integer reply: the number of elements in the resulting sorted set at destination.
 	ZInterStore(ctx context.Context, destination string, store ZStore) IntCmd
+
+	// ZMPop
+	// Available since: 7.0.0
+	// Time complexity: O(K) + O(M*log(N)) where K is the number of provided keys, N being the number of elements in the sorted set, and M being the number of elements popped.
+	// ACL categories: @write @sortedset @slow
+	// Pops one or more elements, that are member-score pairs, from the first non-empty sorted set in the provided list of key names.
+	ZMPop(ctx context.Context, order string, count int64, keys ...string) ZSliceWithKeyCmd
 
 	// ZPopMax
 	// Available since: 5.0.0
@@ -202,7 +184,7 @@ type SortedSetWriter interface {
 	// Return:
 	// 	Integer reply, specifically:
 	// 	The number of members removed from the sorted set, not including non existing members.
-	ZRem(ctx context.Context, key string, members ...interface{}) IntCmd
+	ZRem(ctx context.Context, key string, members ...any) IntCmd
 
 	// ZRemRangeByLex
 	// Available since: 2.8.9
@@ -262,6 +244,18 @@ type SortedSetReader interface {
 	// Time complexity: O(NK)+O(Mlog(M)) worst case with N being the smallest input sorted set, K being the number of input sorted sets and M being the number of elements in the resulting sorted set.
 	// ACL categories: @read @sortedset @slow
 	ZInterWithScores(ctx context.Context, store ZStore) ZSliceCmd
+
+	// ZInterCard
+	// Available since: 7.0.0
+	// Time complexity: O(N*K) worst case with N being the smallest input sorted set, K being the number of input sorted sets.
+	// ACL categories: @read @sortedset @slow
+	// This command is similar to ZINTER, but instead of returning the result set, it returns just the cardinality of the result.
+	// Keys that do not exist are considered to be empty sets.
+	// With one of the keys being an empty set, the resulting set is also empty (since set intersection with an empty set always results in an empty set).
+	// By default, the command calculates the cardinality of the intersection of all given sets. When provided with the optional LIMIT argument (which defaults to 0 and means unlimited),
+	// if the intersection cardinality reaches limit partway through the computation, the algorithm will exit and yield limit as the cardinality.
+	// Such implementation ensures a significant speedup for queries where the limit is lower than the actual intersection cardinality.
+	ZInterCard(ctx context.Context, limit int64, keys ...string) IntCmd
 
 	// ZRandMember
 	// Available since: 6.2.0
@@ -516,6 +510,13 @@ type SortedSetCacheCmdable interface {
 	ZScore(ctx context.Context, key, member string) FloatCmd
 }
 
+func (c *client) BZMPop(ctx context.Context, timeout time.Duration, order string, count int64, keys ...string) ZSliceWithKeyCmd {
+	ctx = c.handler.beforeWithKeys(ctx, CommandBZMPop, func() []string { return keys })
+	r := c.adapter.BZMPop(ctx, timeout, order, count, keys...)
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
 func (c *client) BZPopMax(ctx context.Context, timeout time.Duration, keys ...string) ZWithKeyCmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandBZPopMax, func() []string { return keys })
 	r := c.adapter.BZPopMax(ctx, timeout, keys...)
@@ -532,11 +533,25 @@ func (c *client) BZPopMin(ctx context.Context, timeout time.Duration, keys ...st
 
 func (c *client) ZAdd(ctx context.Context, key string, members ...Z) IntCmd {
 	if len(members) > 1 {
-		ctx = c.handler.before(ctx, CommandZAddMultiple)
+		ctx = c.handler.before(ctx, CommandZMAdd)
 	} else {
 		ctx = c.handler.before(ctx, CommandZAdd)
 	}
 	r := c.adapter.ZAdd(ctx, key, members...)
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
+func (c *client) ZAddLT(ctx context.Context, key string, members ...Z) IntCmd {
+	ctx = c.handler.before(ctx, CommandZAddLT)
+	r := c.adapter.ZAddLT(ctx, key, members...)
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
+func (c *client) ZAddGT(ctx context.Context, key string, members ...Z) IntCmd {
+	ctx = c.handler.before(ctx, CommandZAddGT)
+	r := c.adapter.ZAddGT(ctx, key, members...)
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -555,38 +570,6 @@ func (c *client) ZAddXX(ctx context.Context, key string, members ...Z) IntCmd {
 	return r
 }
 
-func (c *client) ZAddCh(ctx context.Context, key string, members ...Z) IntCmd {
-	ctx = c.handler.before(ctx, CommandZAddCh)
-	r := c.adapter.ZAddArgs(ctx, key, ZAddArgs{
-		Ch:      true,
-		Members: members,
-	})
-	c.handler.after(ctx, r.Err())
-	return r
-}
-
-func (c *client) ZAddNXCh(ctx context.Context, key string, members ...Z) IntCmd {
-	ctx = c.handler.before(ctx, CommandZAddNX)
-	r := c.adapter.ZAddArgs(ctx, key, ZAddArgs{
-		Ch:      true,
-		NX:      true,
-		Members: members,
-	})
-	c.handler.after(ctx, r.Err())
-	return r
-}
-
-func (c *client) ZAddXXCh(ctx context.Context, key string, members ...Z) IntCmd {
-	ctx = c.handler.before(ctx, CommandZAddXX)
-	r := c.adapter.ZAddArgs(ctx, key, ZAddArgs{
-		Ch:      true,
-		XX:      true,
-		Members: members,
-	})
-	c.handler.after(ctx, r.Err())
-	return r
-}
-
 func (c *client) ZAddArgs(ctx context.Context, key string, args ZAddArgs) IntCmd {
 	if args.GT {
 		ctx = c.handler.before(ctx, CommandZAddGT)
@@ -598,6 +581,8 @@ func (c *client) ZAddArgs(ctx context.Context, key string, args ZAddArgs) IntCmd
 		ctx = c.handler.before(ctx, CommandZAddNX)
 	} else if args.XX {
 		ctx = c.handler.before(ctx, CommandZAddXX)
+	} else if len(args.Members) > 1 {
+		ctx = c.handler.before(ctx, CommandZMAdd)
 	} else {
 		ctx = c.handler.before(ctx, CommandZAdd)
 	}
@@ -612,38 +597,9 @@ func (c *client) ZAddArgsIncr(ctx context.Context, key string, args ZAddArgs) Fl
 	} else if args.LT {
 		ctx = c.handler.before(ctx, CommandZAddLT)
 	} else {
-		ctx = c.handler.before(ctx, CommandZAddIncr)
+		ctx = c.handler.before(ctx, CommandZAddINCR)
 	}
 	r := c.adapter.ZAddArgsIncr(ctx, key, args)
-	c.handler.after(ctx, r.Err())
-	return r
-}
-
-func (c *client) ZIncr(ctx context.Context, key string, member Z) FloatCmd {
-	ctx = c.handler.before(ctx, CommandZAddIncr)
-	r := c.adapter.ZAddArgsIncr(ctx, key, ZAddArgs{
-		Members: []Z{member},
-	})
-	c.handler.after(ctx, r.Err())
-	return r
-}
-
-func (c *client) ZIncrNX(ctx context.Context, key string, member Z) FloatCmd {
-	ctx = c.handler.before(ctx, CommandZAddIncr)
-	r := c.adapter.ZAddArgsIncr(ctx, key, ZAddArgs{
-		Members: []Z{member},
-		NX:      true,
-	})
-	c.handler.after(ctx, r.Err())
-	return r
-}
-
-func (c *client) ZIncrXX(ctx context.Context, key string, member Z) FloatCmd {
-	ctx = c.handler.before(ctx, CommandZAddIncr)
-	r := c.adapter.ZAddArgsIncr(ctx, key, ZAddArgs{
-		Members: []Z{member},
-		XX:      true,
-	})
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -652,7 +608,7 @@ func (c *client) ZCard(ctx context.Context, key string) IntCmd {
 	ctx = c.handler.before(ctx, CommandZCard)
 	var r IntCmd
 	if c.ttl > 0 {
-		r = newIntCmd(c.doCache(ctx, c.cmd.B().Zcard().Key(key).Cache()))
+		r = newIntCmd(c.Do(ctx, c.builder.ZCardCompleted(key)))
 	} else {
 		r = c.adapter.ZCard(ctx, key)
 	}
@@ -664,7 +620,7 @@ func (c *client) ZCount(ctx context.Context, key, min, max string) IntCmd {
 	ctx = c.handler.before(ctx, CommandZCount)
 	var r IntCmd
 	if c.ttl > 0 {
-		r = newIntCmd(c.doCache(ctx, c.cmd.B().Zcount().Key(key).Min(min).Max(max).Cache()))
+		r = newIntCmd(c.Do(ctx, c.builder.ZCountCompleted(key, min, max)))
 	} else {
 		r = c.adapter.ZCount(ctx, key, min, max)
 	}
@@ -680,7 +636,7 @@ func (c *client) ZDiff(ctx context.Context, keys ...string) StringSliceCmd {
 }
 
 func (c *client) ZDiffWithScores(ctx context.Context, keys ...string) ZSliceCmd {
-	ctx = c.handler.beforeWithKeys(ctx, CommandZDiff, func() []string { return keys })
+	ctx = c.handler.beforeWithKeys(ctx, CommandZDiffWithScores, func() []string { return keys })
 	r := c.adapter.ZDiffWithScores(ctx, keys...)
 	c.handler.after(ctx, r.Err())
 	return r
@@ -721,14 +677,28 @@ func (c *client) ZInterStore(ctx context.Context, destination string, store ZSto
 	return r
 }
 
+func (c *client) ZInterCard(ctx context.Context, limit int64, keys ...string) IntCmd {
+	ctx = c.handler.beforeWithKeys(ctx, CommandZInterCard, func() []string { return keys })
+	r := c.adapter.ZInterCard(ctx, limit, keys...)
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
 func (c *client) ZLexCount(ctx context.Context, key, min, max string) IntCmd {
 	ctx = c.handler.before(ctx, CommandZLexCount)
 	var r IntCmd
 	if c.ttl > 0 {
-		r = newIntCmd(c.doCache(ctx, c.cmd.B().Zlexcount().Key(key).Min(min).Max(max).Cache()))
+		r = newIntCmd(c.Do(ctx, c.builder.ZLexCountCompleted(key, min, max)))
 	} else {
 		r = c.adapter.ZLexCount(ctx, key, min, max)
 	}
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
+func (c *client) ZMPop(ctx context.Context, order string, count int64, keys ...string) ZSliceWithKeyCmd {
+	ctx = c.handler.before(ctx, CommandZMPop)
+	r := c.adapter.ZMPop(ctx, order, count, keys...)
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -737,7 +707,7 @@ func (c *client) ZMScore(ctx context.Context, key string, members ...string) Flo
 	ctx = c.handler.before(ctx, CommandZMScore)
 	var r FloatSliceCmd
 	if c.ttl > 0 {
-		r = newFloatSliceCmd(c.doCache(ctx, c.cmd.B().Zmscore().Key(key).Member(members...).Cache()))
+		r = newFloatSliceCmd(c.Do(ctx, c.builder.ZMScoreCompleted(key, members...)))
 	} else {
 		r = c.adapter.ZMScore(ctx, key, members...)
 	}
@@ -767,7 +737,7 @@ func (c *client) ZRandMember(ctx context.Context, key string, count int64) Strin
 }
 
 func (c *client) ZRandMemberWithScores(ctx context.Context, key string, count int64) ZSliceCmd {
-	ctx = c.handler.before(ctx, CommandZRandMember)
+	ctx = c.handler.before(ctx, CommandZRandMemberWithScores)
 	r := c.adapter.ZRandMemberWithScores(ctx, key, count)
 	c.handler.after(ctx, r.Err())
 	return r
@@ -777,11 +747,7 @@ func (c *client) ZRange(ctx context.Context, key string, start, stop int64) Stri
 	ctx = c.handler.before(ctx, CommandZRange)
 	var r StringSliceCmd
 	if c.ttl > 0 {
-		return newStringSliceCmd(c.doCache(ctx, c.zRangeArgs(false, ZRangeArgs{
-			Key:   key,
-			Start: start,
-			Stop:  stop,
-		})))
+		r = newStringSliceCmd(c.Do(ctx, c.builder.ZRangeCompleted(key, start, stop)))
 	} else {
 		r = c.adapter.ZRange(ctx, key, start, stop)
 	}
@@ -793,11 +759,7 @@ func (c *client) ZRangeWithScores(ctx context.Context, key string, start, stop i
 	ctx = c.handler.before(ctx, CommandZRange)
 	var r ZSliceCmd
 	if c.ttl > 0 {
-		r = newZSliceCmd(c.doCache(ctx, c.zRangeArgs(true, ZRangeArgs{
-			Key:   key,
-			Start: start,
-			Stop:  stop,
-		})))
+		r = newZSliceCmd(c.Do(ctx, c.builder.ZRangeWithScoresCompleted(key, start, stop)))
 	} else {
 		r = c.adapter.ZRangeWithScores(ctx, key, start, stop)
 	}
@@ -806,20 +768,14 @@ func (c *client) ZRangeWithScores(ctx context.Context, key string, start, stop i
 }
 
 func (c *client) ZRangeArgs(ctx context.Context, z ZRangeArgs) StringSliceCmd {
-	if z.Rev {
-		ctx = c.handler.before(ctx, CommandZRangeRev)
-	} else if z.ByScore {
-		ctx = c.handler.before(ctx, CommandZRangeByScore)
-	} else if z.ByLex {
-		ctx = c.handler.before(ctx, CommandZRangeByLex)
-	} else if z.Offset != 0 || z.Count != 0 {
-		ctx = c.handler.before(ctx, CommandZRangeLimit)
+	if z.Rev || z.ByScore || z.ByLex || z.Offset != 0 || z.Count != 0 {
+		ctx = c.handler.before(ctx, CommandZRangeArgsWithOption)
 	} else {
-		ctx = c.handler.before(ctx, CommandZRange)
+		ctx = c.handler.before(ctx, CommandZRangeArgs)
 	}
 	var r StringSliceCmd
 	if c.ttl > 0 {
-		r = newStringSliceCmd(c.doCache(ctx, c.zRangeArgs(false, z)))
+		r = newStringSliceCmd(c.Do(ctx, c.builder.ZRangeArgsCompleted(z)))
 	} else {
 		r = c.adapter.ZRangeArgs(ctx, z)
 	}
@@ -828,20 +784,14 @@ func (c *client) ZRangeArgs(ctx context.Context, z ZRangeArgs) StringSliceCmd {
 }
 
 func (c *client) ZRangeArgsWithScores(ctx context.Context, z ZRangeArgs) ZSliceCmd {
-	if z.Rev {
-		ctx = c.handler.before(ctx, CommandZRangeRev)
-	} else if z.ByScore {
-		ctx = c.handler.before(ctx, CommandZRangeByScore)
-	} else if z.ByLex {
-		ctx = c.handler.before(ctx, CommandZRangeByLex)
-	} else if z.Offset != 0 || z.Count != 0 {
-		ctx = c.handler.before(ctx, CommandZRangeLimit)
+	if z.Rev || z.ByScore || z.ByLex || z.Offset != 0 || z.Count != 0 {
+		ctx = c.handler.before(ctx, CommandZRangeArgsWithScoresWithOption)
 	} else {
-		ctx = c.handler.before(ctx, CommandZRange)
+		ctx = c.handler.before(ctx, CommandZRangeArgsWithScores)
 	}
 	var r ZSliceCmd
 	if c.ttl > 0 {
-		r = newZSliceCmd(c.doCache(ctx, c.zRangeArgs(true, z)))
+		r = newZSliceCmd(c.Do(ctx, c.builder.ZRangeArgsWithScoresCompleted(z)))
 	} else {
 		r = c.adapter.ZRangeArgsWithScores(ctx, z)
 	}
@@ -850,14 +800,10 @@ func (c *client) ZRangeArgsWithScores(ctx context.Context, z ZRangeArgs) ZSliceC
 }
 
 func (c *client) ZRangeByLex(ctx context.Context, key string, opt ZRangeBy) StringSliceCmd {
-	ctx = c.handler.before(ctx, CommandZRangebylex)
+	ctx = c.handler.before(ctx, CommandZRangeByLex)
 	var r StringSliceCmd
 	if c.ttl > 0 {
-		if opt.Offset != 0 || opt.Count != 0 {
-			r = newStringSliceCmd(c.doCache(ctx, c.cmd.B().Zrangebylex().Key(key).Min(opt.Min).Max(opt.Max).Limit(opt.Offset, opt.Count).Cache()))
-		} else {
-			r = newStringSliceCmd(c.doCache(ctx, c.cmd.B().Zrangebylex().Key(key).Min(opt.Min).Max(opt.Max).Cache()))
-		}
+		r = newStringSliceCmd(c.Do(ctx, c.builder.ZRangeByLexCompleted(key, opt)))
 	} else {
 		r = c.adapter.ZRangeByLex(ctx, key, opt)
 	}
@@ -866,14 +812,10 @@ func (c *client) ZRangeByLex(ctx context.Context, key string, opt ZRangeBy) Stri
 }
 
 func (c *client) ZRangeByScore(ctx context.Context, key string, opt ZRangeBy) StringSliceCmd {
-	ctx = c.handler.before(ctx, CommandZrangebyscore)
+	ctx = c.handler.before(ctx, CommandZRangeByScore)
 	var r StringSliceCmd
 	if c.ttl > 0 {
-		if opt.Offset != 0 || opt.Count != 0 {
-			r = newStringSliceCmd(c.doCache(ctx, c.cmd.B().Zrangebyscore().Key(key).Min(opt.Min).Max(opt.Max).Limit(opt.Offset, opt.Count).Cache()))
-		} else {
-			r = newStringSliceCmd(c.doCache(ctx, c.cmd.B().Zrangebyscore().Key(key).Min(opt.Min).Max(opt.Max).Cache()))
-		}
+		r = newStringSliceCmd(c.Do(ctx, c.builder.ZRangeByScoreCompleted(key, opt)))
 	} else {
 		r = c.adapter.ZRangeByScore(ctx, key, opt)
 	}
@@ -882,14 +824,10 @@ func (c *client) ZRangeByScore(ctx context.Context, key string, opt ZRangeBy) St
 }
 
 func (c *client) ZRangeByScoreWithScores(ctx context.Context, key string, opt ZRangeBy) ZSliceCmd {
-	ctx = c.handler.before(ctx, CommandZrangebyscoreWithScores)
+	ctx = c.handler.before(ctx, CommandZRangeByScoreWithScores)
 	var r ZSliceCmd
 	if c.ttl > 0 {
-		if opt.Offset != 0 || opt.Count != 0 {
-			r = newZSliceCmd(c.doCache(ctx, c.cmd.B().Zrangebyscore().Key(key).Min(opt.Min).Max(opt.Max).Withscores().Limit(opt.Offset, opt.Count).Cache()))
-		} else {
-			r = newZSliceCmd(c.doCache(ctx, c.cmd.B().Zrangebyscore().Key(key).Min(opt.Min).Max(opt.Max).Withscores().Cache()))
-		}
+		r = newZSliceCmd(c.Do(ctx, c.builder.ZRangeByScoreWithScoresCompleted(key, opt)))
 	} else {
 		r = c.adapter.ZRangeByScoreWithScores(ctx, key, opt)
 	}
@@ -908,7 +846,7 @@ func (c *client) ZRank(ctx context.Context, key, member string) IntCmd {
 	ctx = c.handler.before(ctx, CommandZRank)
 	var r IntCmd
 	if c.ttl > 0 {
-		r = newIntCmd(c.doCache(ctx, c.cmd.B().Zrank().Key(key).Member(member).Cache()))
+		r = newIntCmd(c.Do(ctx, c.builder.ZRankCompleted(key, member)))
 	} else {
 		r = c.adapter.ZRank(ctx, key, member)
 	}
@@ -920,7 +858,7 @@ func (c *client) ZRankWithScore(ctx context.Context, key, member string) RankWit
 	ctx = c.handler.before(ctx, CommandZRank)
 	var r RankWithScoreCmd
 	if c.ttl > 0 {
-		r = newRankWithScoreCmd(c.doCache(ctx, c.cmd.B().Zrank().Key(key).Member(member).Withscore().Cache()))
+		r = newRankWithScoreCmd(c.Do(ctx, c.builder.ZRankWithScoreCompleted(key, member)))
 	} else {
 		r = c.adapter.ZRankWithScore(ctx, key, member)
 	}
@@ -928,9 +866,9 @@ func (c *client) ZRankWithScore(ctx context.Context, key, member string) RankWit
 	return r
 }
 
-func (c *client) ZRem(ctx context.Context, key string, members ...interface{}) IntCmd {
+func (c *client) ZRem(ctx context.Context, key string, members ...any) IntCmd {
 	if len(members) > 1 {
-		ctx = c.handler.before(ctx, CommandZRemMultiple)
+		ctx = c.handler.before(ctx, CommandZMRem)
 	} else {
 		ctx = c.handler.before(ctx, CommandZRem)
 	}
@@ -964,7 +902,7 @@ func (c *client) ZRevRange(ctx context.Context, key string, start, stop int64) S
 	ctx = c.handler.before(ctx, CommandZRevRange)
 	var r StringSliceCmd
 	if c.ttl > 0 {
-		r = newStringSliceCmd(c.doCache(ctx, c.cmd.B().Zrevrange().Key(key).Start(start).Stop(stop).Cache()))
+		r = newStringSliceCmd(c.Do(ctx, c.builder.ZRevRangeCompleted(key, start, stop)))
 	} else {
 		r = c.adapter.ZRevRange(ctx, key, start, stop)
 	}
@@ -976,7 +914,7 @@ func (c *client) ZRevRangeWithScores(ctx context.Context, key string, start, sto
 	ctx = c.handler.before(ctx, CommandZRevRange)
 	var r ZSliceCmd
 	if c.ttl > 0 {
-		r = newZSliceCmd(c.doCache(ctx, c.cmd.B().Zrevrange().Key(key).Start(start).Stop(stop).Withscores().Cache()))
+		r = newZSliceCmd(c.Do(ctx, c.builder.ZRevRangeWithScoresCompleted(key, start, stop)))
 	} else {
 		r = c.adapter.ZRevRangeWithScores(ctx, key, start, stop)
 	}
@@ -988,11 +926,7 @@ func (c *client) ZRevRangeByLex(ctx context.Context, key string, opt ZRangeBy) S
 	ctx = c.handler.before(ctx, CommandZRevRangeByLex)
 	var r StringSliceCmd
 	if c.ttl > 0 {
-		if opt.Offset != 0 || opt.Count != 0 {
-			r = newStringSliceCmd(c.doCache(ctx, c.cmd.B().Zrevrangebylex().Key(key).Max(opt.Max).Min(opt.Min).Limit(opt.Offset, opt.Count).Cache()))
-		} else {
-			r = newStringSliceCmd(c.doCache(ctx, c.cmd.B().Zrevrangebylex().Key(key).Max(opt.Max).Min(opt.Min).Cache()))
-		}
+		r = newStringSliceCmd(c.Do(ctx, c.builder.ZRevRangeByLexCompleted(key, opt)))
 	} else {
 		r = c.adapter.ZRevRangeByLex(ctx, key, opt)
 	}
@@ -1004,11 +938,7 @@ func (c *client) ZRevRangeByScore(ctx context.Context, key string, opt ZRangeBy)
 	ctx = c.handler.before(ctx, CommandZRevRangeByScore)
 	var r StringSliceCmd
 	if c.ttl > 0 {
-		if opt.Offset != 0 || opt.Count != 0 {
-			r = newStringSliceCmd(c.doCache(ctx, c.cmd.B().Zrevrangebyscore().Key(key).Max(opt.Max).Min(opt.Min).Limit(opt.Offset, opt.Count).Cache()))
-		} else {
-			r = newStringSliceCmd(c.doCache(ctx, c.cmd.B().Zrevrangebyscore().Key(key).Max(opt.Max).Min(opt.Min).Cache()))
-		}
+		r = newStringSliceCmd(c.Do(ctx, c.builder.ZRevRangeByScoreCompleted(key, opt)))
 	} else {
 		r = c.adapter.ZRevRangeByScore(ctx, key, opt)
 	}
@@ -1020,11 +950,7 @@ func (c *client) ZRevRangeByScoreWithScores(ctx context.Context, key string, opt
 	ctx = c.handler.before(ctx, CommandZRevRangeByScore)
 	var r ZSliceCmd
 	if c.ttl > 0 {
-		if opt.Offset != 0 || opt.Count != 0 {
-			r = newZSliceCmd(c.doCache(ctx, c.cmd.B().Zrevrangebyscore().Key(key).Max(opt.Max).Min(opt.Min).Withscores().Limit(opt.Offset, opt.Count).Cache()))
-		} else {
-			r = newZSliceCmd(c.doCache(ctx, c.cmd.B().Zrevrangebyscore().Key(key).Max(opt.Max).Min(opt.Min).Withscores().Cache()))
-		}
+		r = newZSliceCmd(c.Do(ctx, c.builder.ZRevRangeByScoreWithScoresCompleted(key, opt)))
 	} else {
 		r = c.adapter.ZRevRangeByScoreWithScores(ctx, key, opt)
 	}
@@ -1036,7 +962,7 @@ func (c *client) ZRevRank(ctx context.Context, key, member string) IntCmd {
 	ctx = c.handler.before(ctx, CommandZRevRank)
 	var r IntCmd
 	if c.ttl > 0 {
-		r = newIntCmd(c.doCache(ctx, c.cmd.B().Zrevrank().Key(key).Member(member).Cache()))
+		r = newIntCmd(c.Do(ctx, c.builder.ZRevRankCompleted(key, member)))
 	} else {
 		r = c.adapter.ZRevRank(ctx, key, member)
 	}
@@ -1048,7 +974,7 @@ func (c *client) ZRevRankWithScore(ctx context.Context, key, member string) Rank
 	ctx = c.handler.before(ctx, CommandZRevRank)
 	var r RankWithScoreCmd
 	if c.ttl > 0 {
-		r = newRankWithScoreCmd(c.doCache(ctx, c.cmd.B().Zrevrank().Key(key).Member(member).Withscore().Cache()))
+		r = newRankWithScoreCmd(c.Do(ctx, c.builder.ZRevRankWithScoreCompleted(key, member)))
 	} else {
 		r = c.adapter.ZRevRankWithScore(ctx, key, member)
 	}
@@ -1067,7 +993,7 @@ func (c *client) ZScore(ctx context.Context, key, member string) FloatCmd {
 	ctx = c.handler.before(ctx, CommandZScore)
 	var r FloatCmd
 	if c.ttl > 0 {
-		r = newFloatCmd(c.doCache(ctx, c.cmd.B().Zscore().Key(key).Member(member).Cache()))
+		r = newFloatCmd(c.Do(ctx, c.builder.ZScoreCompleted(key, member)))
 	} else {
 		r = c.adapter.ZScore(ctx, key, member)
 	}

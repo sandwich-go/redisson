@@ -7,12 +7,19 @@ type ClusterCmdable interface {
 	// Available since: 3.0.0
 	// Time complexity: O(N) where N is the total number of hash slot arguments
 	// ACL categories: @admin @slow @dangerous
-	// This command is useful in order to modify a node's view of the cluster configuration. Specifically it assigns a set of hash slots to the node receiving the command. If the command is successful, the node will map the specified hash slots to itself, and will start broadcasting the new configuration.
+	//
+	// This command is useful in order to modify a node's view of the cluster configuration.
+	// Specifically it assigns a set of hash slots to the node receiving the command. If the command is successful,
+	// the node will map the specified hash slots to itself, and will start broadcasting the new configuration.
+	//
 	// However note that:
-	// 	The command only works if all the specified slots are, from the point of view of the node receiving the command, currently not assigned. A node will refuse to take ownership for slots that already belong to some other node (including itself).
-	// 	The command fails if the same slot is specified multiple times.
-	// 	As a side effect of the command execution, if a slot among the ones specified as argument is set as importing, this state gets cleared once the node assigns the (previously unbound) slot to itself.
-	// Return:
+	// 	1. The command only works if all the specified slots are, from the point of view of the node receiving the command,
+	//		currently not assigned. A node will refuse to take ownership for slots that already belong to some other node (including itself).
+	// 	2. The command fails if the same slot is specified multiple times.
+	// 	3. As a side effect of the command execution, if a slot among the ones specified as argument is set as importing,
+	//		this state gets cleared once the node assigns the (previously unbound) slot to itself.
+	//
+	// RESP2/RESP3 Reply
 	//	Simple string reply: OK if the command was successful. Otherwise an error is returned.
 	ClusterAddSlots(ctx context.Context, slots ...int64) StatusCmd
 
@@ -20,20 +27,13 @@ type ClusterCmdable interface {
 	// Available since: 7.0.0
 	// Time complexity: O(N) where N is the total number of the slots between the start slot and end slot arguments.
 	// ACL categories: @admin @slow @dangerous
+	//
 	// The CLUSTER ADDSLOTSRANGE is similar to the CLUSTER ADDSLOTS command in that they both assign hash slots to nodes.
-	// The difference between the two commands is that ADDSLOTS takes a list of slots to assign to the node, while ADDSLOTSRANGE takes a list of slot ranges (specified by start and end slots) to assign to the node.
-	// Example
-	// To assign slots 1 2 3 4 5 to the node, the ADDSLOTS command is:
-	//	> CLUSTER ADDSLOTS 1 2 3 4 5
-	//	OK
-	// The same operation can be completed with the following ADDSLOTSRANGE command:
-	//	> CLUSTER ADDSLOTSRANGE 1 5
-	//	OK
-	// Usage in Redis Cluster
-	// This command only works in cluster mode and is useful in the following Redis Cluster operations:
-	// 	To create a new cluster ADDSLOTSRANGE is used in order to initially setup master nodes splitting the available hash slots among them.
-	// 	In order to fix a broken cluster where certain slots are unassigned.
-	// Return:
+	//
+	// The difference between the two commands is that ADDSLOTS takes a list of slots to assign to the node,
+	// while ADDSLOTSRANGE takes a list of slot ranges (specified by start and end slots) to assign to the node.
+	//
+	// RESP2/RESP3 Reply
 	//	Simple string reply: OK if the command was successful. Otherwise an error is returned.
 	ClusterAddSlotsRange(ctx context.Context, min, max int64) StatusCmd
 
@@ -41,16 +41,30 @@ type ClusterCmdable interface {
 	// Available since: 3.0.0
 	// Time complexity: O(N) where N is the number of failure reports
 	// ACL categories: @admin @slow @dangerous
-	// The command returns the number of failure reports for the specified node. Failure reports are the way Redis Cluster uses in order to promote a PFAIL state, that means a node is not reachable, to a FAIL state, that means that the majority of masters in the cluster agreed within a window of time that the node is not reachable.
+	//
+	// The command returns the number of failure reports for the specified node.
+	// Failure reports are the way Redis Cluster uses in order to promote a PFAIL state,
+	// that means a node is not reachable, to a FAIL state, that means that the majority of masters in the cluster
+	// agreed within a window of time that the node is not reachable.
+	//
 	// A few more details:
-	//	A node flags another node with PFAIL when the node is not reachable for a time greater than the configured node timeout, which is a fundamental configuration parameter of a Redis Cluster.
-	//	Nodes in PFAIL state are provided in gossip sections of heartbeat packets.
-	//	Every time a node processes gossip packets from other nodes, it creates (and refreshes the TTL if needed) failure reports, remembering that a given node said another given node is in PFAIL condition.
-	//	Each failure report has a time to live of two times the node timeout time.
-	// 	If at a given time a node has another node flagged with PFAIL, and at the same time collected the majority of other master nodes failure reports about this node (including itself if it is a master), then it elevates the failure state of the node from PFAIL to FAIL, and broadcasts a message forcing all the nodes that can be reached to flag the node as FAIL.
-	// This command returns the number of failure reports for the current node which are currently not expired (so received within two times the node timeout time). The count does not include what the node we are asking this count believes about the node ID we pass as argument, the count only includes the failure reports the node received from other nodes.
+	//	- A node flags another node with PFAIL when the node is not reachable for a time greater than the configured node timeout,
+	// 		which is a fundamental configuration parameter of a Redis Cluster.
+	//	- Nodes in PFAIL state are provided in gossip sections of heartbeat packets.
+	//	- Every time a node processes gossip packets from other nodes, it creates (and refreshes the TTL if needed) failure reports,
+	//		remembering that a given node said another given node is in PFAIL condition.
+	//	- Each failure report has a time to live of two times the node timeout time.
+	// 	- If at a given time a node has another node flagged with PFAIL, and at the same time collected the majority of other master
+	//		nodes failure reports about this node (including itself if it is a master), then it elevates the failure state of the node
+	//		from PFAIL to FAIL, and broadcasts a message forcing all the nodes that can be reached to flag the node as FAIL.
+	//
+	// This command returns the number of failure reports for the current node which are currently not expired (so received within two times the node timeout time).
+	// The count does not include what the node we are asking this count believes about the node ID we pass as argument, the count only includes the failure reports
+	// the node received from other nodes.
+	//
 	// This command is mainly useful for debugging, when the failure detector of Redis Cluster is not operating as we believe it should.
-	// Return:
+	//
+	// RESP2/RESP3 Reply
 	//	Integer reply: the number of active failure reports for the node.
 	ClusterCountFailureReports(ctx context.Context, nodeID string) IntCmd
 
@@ -58,10 +72,11 @@ type ClusterCmdable interface {
 	// Available since: 3.0.0
 	// Time complexity: O(1)
 	// ACL categories: @slow
-	// Returns the number of keys in the specified Redis Cluster hash slot. The command only queries the local data set, so contacting a node that is not serving the specified hash slot will always result in a count of zero being returned.
-	//	> CLUSTER COUNTKEYSINSLOT 7000
-	//	(integer) 50341
-	// Return:
+	//
+	// Returns the number of keys in the specified Redis Cluster hash slot. The command only queries the local data set,
+	// so contacting a node that is not serving the specified hash slot will always result in a count of zero being returned.
+	//
+	// RESP2/RESP3 Reply
 	//	Integer reply: The number of keys in the specified hash slot, or an error if the hash slot is invalid.
 	ClusterCountKeysInSlot(ctx context.Context, slot int64) IntCmd
 
@@ -69,15 +84,25 @@ type ClusterCmdable interface {
 	// Available since: 3.0.0
 	// Time complexity: O(N) where N is the total number of hash slot arguments
 	// ACL categories: @admin @slow @dangerous
+	//
 	// In Redis Cluster, each node keeps track of which master is serving a particular hash slot.
+	//
 	// The CLUSTER DELSLOTS command asks a particular Redis Cluster node to forget which master is serving the hash slots specified as arguments.
-	// In the context of a node that has received a CLUSTER DELSLOTS command and has consequently removed the associations for the passed hash slots, we say those hash slots are unbound. Note that the existence of unbound hash slots occurs naturally when a node has not been configured to handle them (something that can be done with the CLUSTER ADDSLOTS command) and if it has not received any information about who owns those hash slots (something that it can learn from heartbeat or update messages).
-	// If a node with unbound hash slots receives a heartbeat packet from another node that claims to be the owner of some of those hash slots, the association is established instantly. Moreover, if a heartbeat or update message is received with a configuration epoch greater than the node's own, the association is re-established.
+	//
+	// In the context of a node that has received a CLUSTER DELSLOTS command and has consequently removed the associations for the passed hash slots,
+	// we say those hash slots are unbound. Note that the existence of unbound hash slots occurs naturally when a node has not been configured to handle
+	// them (something that can be done with the CLUSTER ADDSLOTS command) and if it has not received any information about who owns those hash slots
+	// (something that it can learn from heartbeat or update messages).
+	//
+	// If a node with unbound hash slots receives a heartbeat packet from another node that claims to be the owner of some of those hash slots, the association
+	// is established instantly. Moreover, if a heartbeat or update message is received with a configuration epoch greater than the node's own, the association is re-established.
+	//
 	// However, note that:
-	//	The command only works if all the specified slots are already associated with some node.
-	//	The command fails if the same slot is specified multiple times.
-	//	As a side effect of the command execution, the node may go into down state because not all hash slots are covered.
-	// Return:
+	//	1. The command only works if all the specified slots are already associated with some node.
+	//	2. The command fails if the same slot is specified multiple times.
+	//	3. As a side effect of the command execution, the node may go into down state because not all hash slots are covered.
+	//
+	// RESP2/RESP3 Reply
 	//	Simple string reply: OK if the command was successful. Otherwise an error is returned.
 	ClusterDelSlots(ctx context.Context, slots ...int64) StatusCmd
 
@@ -85,8 +110,12 @@ type ClusterCmdable interface {
 	// Available since: 7.0.0
 	// Time complexity: O(N) where N is the total number of the slots between the start slot and end slot arguments.
 	// ACL categories: @admin @slow @dangerous
-	// The CLUSTER DELSLOTSRANGE command is similar to the CLUSTER DELSLOTS command in that they both remove hash slots from the node. The difference is that CLUSTER DELSLOTS takes a list of hash slots to remove from the node, while CLUSTER DELSLOTSRANGE takes a list of slot ranges (specified by start and end slots) to remove from the node.
-	// Return:
+	//
+	// The CLUSTER DELSLOTSRANGE command is similar to the CLUSTER DELSLOTS command in that they both remove hash slots from the node.
+	// The difference is that CLUSTER DELSLOTS takes a list of hash slots to remove from the node, while CLUSTER DELSLOTSRANGE takes a
+	// list of slot ranges (specified by start and end slots) to remove from the node.
+	//
+	// RESP2/RESP3 Reply
 	//	Simple string reply: OK if the command was successful. Otherwise an error is returned.
 	ClusterDelSlotsRange(ctx context.Context, min, max int64) StatusCmd
 
@@ -94,26 +123,38 @@ type ClusterCmdable interface {
 	// Available since: 3.0.0
 	// Time complexity: O(1)
 	// ACL categories: @admin @slow @dangerous
+	//
 	// This command, that can only be sent to a Redis Cluster replica node, forces the replica to start a manual failover of its master instance.
-	// A manual failover is a special kind of failover that is usually executed when there are no actual failures, but we wish to swap the current master with one of its replicas (which is the node we send the command to), in a safe way, without any window for data loss. It works in the following way:
-	//	The replica tells the master to stop processing queries from clients.
-	//	The master replies to the replica with the current replication offset.
-	//	The replica waits for the replication offset to match on its side, to make sure it processed all the data from the master before it continues.
-	//	The replica starts a failover, obtains a new configuration epoch from the majority of the masters, and broadcasts the new configuration.
-	//	The old master receives the configuration update: unblocks its clients and starts replying with redirection messages so that they'll continue the chat with the new master.
+	//
+	// A manual failover is a special kind of failover that is usually executed when there are no actual failures, but we wish to swap the current
+	// master with one of its replicas (which is the node we send the command to), in a safe way, without any window for data loss. It works in the following way:
+	//	1. The replica tells the master to stop processing queries from clients.
+	//	2. The master replies to the replica with the current replication offset.
+	//	3. The replica waits for the replication offset to match on its side, to make sure it processed all the data from the master before it continues.
+	//	4. The replica starts a failover, obtains a new configuration epoch from the majority of the masters, and broadcasts the new configuration.
+	//	5. The old master receives the configuration update: unblocks its clients and starts replying with redirection messages so that they'll continue the chat with the new master.
+	//
 	// This way clients are moved away from the old master to the new master atomically and only when the replica that is turning into the new master has processed all of the replication stream from the old master.
-	// Return:
-	//	Simple string reply: OK if the command was accepted and a manual failover is going to be attempted. An error if the operation cannot be executed, for example if we are talking with a node which is already a master.
+	//
+	// RESP2/RESP3 Reply
+	//	Simple string reply: OK if the command was accepted and a manual failover is going to be attempted. An error if the operation cannot be executed, for example if the client is connected to a node that is already a master.
 	ClusterFailover(ctx context.Context) StatusCmd
 
 	// ClusterForget
 	// Available since: 3.0.0
 	// Time complexity: O(1)
 	// ACL categories: @admin @slow @dangerous
-	// The command is used in order to remove a node, specified via its node ID, from the set of known nodes of the Redis Cluster node receiving the command. In other words the specified node is removed from the nodes table of the node receiving the command.
-	// Because when a given node is part of the cluster, all the other nodes participating in the cluster knows about it, in order for a node to be completely removed from a cluster, the CLUSTER FORGET command must be sent to all the remaining nodes, regardless of the fact they are masters or replicas.
-	// However the command cannot simply drop the node from the internal node table of the node receiving the command, it also implements a ban-list, not allowing the same node to be added again as a side effect of processing the gossip section of the heartbeat packets received from other nodes.
-	// Return:
+	//
+	// The command is used in order to remove a node, specified via its node ID, from the set of known nodes of the Redis Cluster node receiving the command.
+	// In other words the specified node is removed from the nodes table of the node receiving the command.
+	//
+	// Because when a given node is part of the cluster, all the other nodes participating in the cluster knows about it, in order for a node to be completely
+	// removed from a cluster, the CLUSTER FORGET command must be sent to all the remaining nodes, regardless of the fact they are masters or replicas.
+	//
+	// However the command cannot simply drop the node from the internal node table of the node receiving the command, it also implements a ban-list, not allowing
+	// the same node to be added again as a side effect of processing the gossip section of the heartbeat packets received from other nodes.
+	//
+	// RESP2/RESP3 Reply
 	//	Simple string reply: OK if the command was executed successfully, otherwise an error is returned.
 	ClusterForget(ctx context.Context, nodeID string) StatusCmd
 
@@ -121,9 +162,14 @@ type ClusterCmdable interface {
 	// Available since: 3.0.0
 	// Time complexity: O(log(N)) where N is the number of requested keys
 	// ACL categories: @slow
-	// The command returns an array of keys names stored in the contacted node and hashing to the specified hash slot. The maximum number of keys to return is specified via the count argument, so that it is possible for the user of this API to batch-processing keys.
-	// The main usage of this command is during rehashing of cluster slots from one node to another. The way the rehashing is performed is exposed in the Redis Cluster specification, or in a more simple to digest form, as an appendix of the CLUSTER SETSLOT command documentation.
-	// Return:
+	//
+	// The command returns an array of keys names stored in the contacted node and hashing to the specified hash slot.
+	// The maximum number of keys to return is specified via the count argument, so that it is possible for the user of this API to batch-processing keys.
+	//
+	// The main usage of this command is during rehashing of cluster slots from one node to another. The way the rehashing is performed is exposed in the Redis Cluster specification,
+	// or in a more simple to digest form, as an appendix of the CLUSTER SETSLOT command documentation.
+	//
+	// RESP2/RESP3 Reply
 	//	Array reply: From 0 to count key names in a Redis array reply.
 	ClusterGetKeysInSlot(ctx context.Context, slot int64, count int64) StringSliceCmd
 
@@ -131,17 +177,53 @@ type ClusterCmdable interface {
 	// Available since: 3.0.0
 	// Time complexity: O(1)
 	// ACL categories: @slow
-	// See https://redis.io/commands/cluster-info/
+	//
+	// CLUSTER INFO provides INFO style information about Redis Cluster vital parameters. The following fields are always present in the reply:
+	//  - cluster_state: State is ok if the node is able to receive queries. fail if there is at least one hash slot which is unbound (no node associated), in error state (node serving it is flagged with FAIL flag), or if the majority of masters can't be reached by this node.
+	//	- cluster_slots_assigned: Number of slots which are associated to some node (not unbound). This number should be 16384 for the node to work properly, which means that each hash slot should be mapped to a node.
+	//	- cluster_slots_ok: Number of hash slots mapping to a node not in FAIL or PFAIL state.
+	//	- cluster_slots_pfail: Number of hash slots mapping to a node in PFAIL state. Note that those hash slots still work correctly, as long as the PFAIL state is not promoted to FAIL by the failure detection algorithm. PFAIL only means that we are currently not able to talk with the node, but may be just a transient error.
+	//	- cluster_slots_fail: Number of hash slots mapping to a node in FAIL state. If this number is not zero the node is not able to serve queries unless cluster-require-full-coverage is set to no in the configuration.
+	//	- cluster_known_nodes: The total number of known nodes in the cluster, including nodes in HANDSHAKE state that may not currently be proper members of the cluster.
+	//	- cluster_size: The number of master nodes serving at least one hash slot in the cluster.
+	//	- cluster_current_epoch: The local Current Epoch variable. This is used in order to create unique increasing version numbers during fail overs.
+	//	- cluster_my_epoch: The Config Epoch of the node we are talking with. This is the current configuration version assigned to this node.
+	//	- cluster_stats_messages_sent: Number of messages sent via the cluster node-to-node binary bus.
+	//	- cluster_stats_messages_received: Number of messages received via the cluster node-to-node binary bus.
+	//	- total_cluster_links_buffer_limit_exceeded: Accumulated count of cluster links freed due to exceeding the cluster-link-sendbuf-limit configuration.
+	//
+	// The following message-related fields may be included in the reply if the value is not 0: Each message type includes statistics on the number of messages sent and received. Here are the explanation of these fields:
+	//
+	//	- cluster_stats_messages_ping_sent and cluster_stats_messages_ping_received: Cluster bus PING (not to be confused with the client command PING).
+	//	- cluster_stats_messages_pong_sent and cluster_stats_messages_pong_received: PONG (reply to PING).
+	//	- cluster_stats_messages_meet_sent and cluster_stats_messages_meet_received: Handshake message sent to a new node, either through gossip or CLUSTER MEET.
+	//	- cluster_stats_messages_fail_sent and cluster_stats_messages_fail_received: Mark node xxx as failing.
+	//	- cluster_stats_messages_publish_sent and cluster_stats_messages_publish_received: Pub/Sub Publish propagation, see Pubsub.
+	//	- cluster_stats_messages_auth-req_sent and cluster_stats_messages_auth-req_received: Replica initiated leader election to replace its master.
+	//	- cluster_stats_messages_auth-ack_sent and cluster_stats_messages_auth-ack_received: Message indicating a vote during leader election.
+	//	- cluster_stats_messages_update_sent and cluster_stats_messages_update_received: Another node slots configuration.
+	//	- cluster_stats_messages_mfstart_sent and cluster_stats_messages_mfstart_received: Pause clients for manual failover.
+	//	- cluster_stats_messages_module_sent and cluster_stats_messages_module_received: Module cluster API message.
+	//	- cluster_stats_messages_publishshard_sent and cluster_stats_messages_publishshard_received: Pub/Sub Publish shard propagation, see Sharded Pubsub.
+	//
+	// RESP2 Reply
+	// 	Bulk string reply: A map between named fields and values in the form of <field>:<value> lines separated by newlines composed by the two bytes CRLF.
+	//
+	// RESP3 Reply
+	//  Bulk string reply: A map between named fields and values in the form of : lines separated by newlines composed by the two bytes CRLF
 	ClusterInfo(ctx context.Context) StringCmd
 
 	// ClusterKeySlot
 	// Available since: 3.0.0
 	// Time complexity: O(N) where N is the number of bytes in the key
 	// ACL categories: @slow
-	// Returns an integer identifying the hash slot the specified key hashes to. This command is mainly useful for debugging and testing, since it exposes via an API the underlying Redis implementation of the hashing algorithm. Example use cases for this command:
-	//	Client libraries may use Redis in order to test their own hashing algorithm, generating random keys and hashing them with both their local implementation and using Redis CLUSTER KEYSLOT command, then checking if the result is the same.
-	//	Humans may use this command in order to check what is the hash slot, and then the associated Redis Cluster node, responsible for a given key.
-	// Return:
+	//
+	// Returns an integer identifying the hash slot the specified key hashes to. This command is mainly useful for debugging and testing,
+	// since it exposes via an API the underlying Redis implementation of the hashing algorithm. Example use cases for this command:
+	//	1. Client libraries may use Redis in order to test their own hashing algorithm, generating random keys and hashing them with both their local implementation and using Redis CLUSTER KEYSLOT command, then checking if the result is the same.
+	//	2. Humans may use this command in order to check what is the hash slot, and then the associated Redis Cluster node, responsible for a given key.
+	//
+	// RESP2/RESP3 Reply
 	//	Integer reply: The hash slot number.
 	ClusterKeySlot(ctx context.Context, key string) IntCmd
 
@@ -149,7 +231,25 @@ type ClusterCmdable interface {
 	// Available since: 3.0.0
 	// Time complexity: O(1)
 	// ACL categories: @admin @slow @dangerous
-	// See https://redis.io/commands/cluster-meet/
+	//
+	// CLUSTER MEET is used in order to connect different Redis nodes with cluster support enabled, into a working cluster.
+	//
+	// The basic idea is that nodes by default don't trust each other, and are considered unknown, so that it is unlikely that different cluster
+	// nodes will mix into a single one because of system administration errors or network addresses modifications.
+	//
+	// So in order for a given node to accept another one into the list of nodes composing a Redis Cluster, there are only two ways:
+	// 	1. The system administrator sends a CLUSTER MEET command to force a node to meet another one.
+	// 	2. An already known node sends a list of nodes in the gossip section that we are not aware of. If the receiving node trusts the sending node as a known node, it will process the gossip section and send a handshake to the nodes that are still not known.
+	//
+	// Note that Redis Cluster needs to form a full mesh (each node is connected with each other node), but in order to create a cluster, there is no need to send all
+	// the CLUSTER MEET commands needed to form the full mesh. What matter is to send enough CLUSTER MEET messages so that each node can reach each other node through
+	// a chain of known nodes. Thanks to the exchange of gossip information in heartbeat packets, the missing links will be created.
+	//
+	// RESP2/RESP3 Reply
+	//	Simple string reply: OK if the command was successful. If the address or port specified are invalid an error is returned.
+	//
+	// History
+	//	Starting with Redis version 4.0.0: Added the optional cluster_bus_port argument.
 	ClusterMeet(ctx context.Context, host string, port int64) StatusCmd
 
 	// ClusterNodes
@@ -256,6 +356,12 @@ type ClusterCmdable interface {
 	// Return:
 	//	Array reply: nested list of slot ranges with networking information.
 	ClusterSlots(ctx context.Context) ClusterSlotsCmd
+
+	// ClusterShards
+	// Available since: 7.0.0
+	// Time complexity: O(N) where N is the total number of cluster nodes
+	// ACL categories: @slow
+	ClusterShards(ctx context.Context) ClusterShardsCmd
 
 	// ReadOnly
 	// Available since: 3.0.0
@@ -411,6 +517,13 @@ func (c *client) ClusterSlaves(ctx context.Context, nodeID string) StringSliceCm
 func (c *client) ClusterSlots(ctx context.Context) ClusterSlotsCmd {
 	ctx = c.handler.before(ctx, CommandClusterSlots)
 	r := c.adapter.ClusterSlots(ctx)
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
+func (c *client) ClusterShards(ctx context.Context) ClusterShardsCmd {
+	ctx = c.handler.before(ctx, CommandClusterShards)
+	r := c.adapter.ClusterShards(ctx)
 	c.handler.after(ctx, r.Err())
 	return r
 }

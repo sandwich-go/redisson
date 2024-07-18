@@ -2,9 +2,6 @@ package redisson
 
 import (
 	"context"
-	"fmt"
-	"strconv"
-	"strings"
 )
 
 type GeospatialCmdable interface {
@@ -66,7 +63,9 @@ type GeospatialWriter interface {
 	// Return:
 	//	Integer reply: the number of elements in the resulting set.
 	GeoSearchStore(ctx context.Context, key, store string, q GeoSearchStoreQuery) IntCmd
+}
 
+type GeospatialReader interface {
 	// GeoSearchLocation
 	// Available since: 6.2.0
 	// Time complexity: O(N+log(M)) where N is the number of elements in the grid-aligned bounding box area around the shape provided as the filter and M is the number of items inside the shape
@@ -74,8 +73,6 @@ type GeospatialWriter interface {
 	// See GeoSearch
 	GeoSearchLocation(ctx context.Context, key string, q GeoSearchLocationQuery) GeoSearchLocationCmd
 }
-
-type GeospatialReader interface{}
 
 type GeospatialCacheCmdable interface {
 	// GeoDist
@@ -189,18 +186,7 @@ func (c *client) GeoDist(ctx context.Context, key string, member1, member2, unit
 	ctx = c.handler.before(ctx, CommandGeoDist)
 	var r FloatCmd
 	if c.ttl > 0 {
-		switch strings.ToUpper(unit) {
-		case M:
-			r = newFloatCmd(c.doCache(ctx, c.cmd.B().Geodist().Key(key).Member1(member1).Member2(member2).M().Cache()))
-		case MI:
-			r = newFloatCmd(c.doCache(ctx, c.cmd.B().Geodist().Key(key).Member1(member1).Member2(member2).Mi().Cache()))
-		case FT:
-			r = newFloatCmd(c.doCache(ctx, c.cmd.B().Geodist().Key(key).Member1(member1).Member2(member2).Ft().Cache()))
-		case KM, EMPTY:
-			r = newFloatCmd(c.doCache(ctx, c.cmd.B().Geodist().Key(key).Member1(member1).Member2(member2).Km().Cache()))
-		default:
-			panic(fmt.Sprintf("invalid unit %s", unit))
-		}
+		r = newFloatCmd(c.Do(ctx, c.builder.GeoDistCompleted(key, member1, member2, unit)))
 	} else {
 		r = c.adapter.GeoDist(ctx, key, member1, member2, unit)
 	}
@@ -212,7 +198,7 @@ func (c *client) GeoHash(ctx context.Context, key string, members ...string) Str
 	ctx = c.handler.before(ctx, CommandGeoHash)
 	var r StringSliceCmd
 	if c.ttl > 0 {
-		r = newStringSliceCmd(c.doCache(ctx, c.cmd.B().Geohash().Key(key).Member(members...).Cache()))
+		r = newStringSliceCmd(c.Do(ctx, c.builder.GeoHashCompleted(key, members...)))
 	} else {
 		r = c.adapter.GeoHash(ctx, key, members...)
 	}
@@ -224,7 +210,7 @@ func (c *client) GeoPos(ctx context.Context, key string, members ...string) GeoP
 	ctx = c.handler.before(ctx, CommandGeoPos)
 	var r GeoPosCmd
 	if c.ttl > 0 {
-		r = newGeoPosCmd(c.doCache(ctx, c.cmd.B().Geopos().Key(key).Member(members...).Cache()))
+		r = newGeoPosCmd(c.Do(ctx, c.builder.GeoPosCompleted(key, members...)))
 	} else {
 		r = c.adapter.GeoPos(ctx, key, members...)
 	}
@@ -240,11 +226,7 @@ func (c *client) GeoRadius(ctx context.Context, key string, longitude, latitude 
 	}
 	var r GeoLocationCmd
 	if c.ttl > 0 {
-		cmd := c.cmd.B().Arbitrary(GEORADIUS_RO).Keys(key).Args(strconv.FormatFloat(longitude, 'f', -1, 64), strconv.FormatFloat(latitude, 'f', -1, 64))
-		if query.Store != "" || query.StoreDist != "" {
-			panic("GeoRadius does not support Store or StoreDist")
-		}
-		r = newGeoLocationCmd(c.Do(ctx, cmd.Args(geoRadiusQueryArgs(query)...).Build()))
+		r = newGeoLocationCmd(c.Do(ctx, c.builder.GeoRadiusCompleted(key, longitude, latitude, query)))
 	} else {
 		r = c.adapter.GeoRadius(ctx, key, longitude, latitude, query)
 	}
@@ -277,11 +259,7 @@ func (c *client) GeoRadiusByMember(ctx context.Context, key, member string, quer
 	ctx = c.handler.before(ctx, CommandGeoRadiusByMemberRO)
 	var r GeoLocationCmd
 	if c.ttl > 0 {
-		cmd := c.cmd.B().Arbitrary(GEORADIUSBYMEMBER_RO).Keys(key).Args(member)
-		if query.Store != "" || query.StoreDist != "" {
-			panic("GeoRadiusByMember does not support Store or StoreDist")
-		}
-		r = newGeoLocationCmd(c.Do(ctx, cmd.Args(geoRadiusQueryArgs(query)...).Build()))
+		r = newGeoLocationCmd(c.Do(ctx, c.builder.GeoRadiusByMemberCompleted(key, member, query)))
 	} else {
 		r = c.adapter.GeoRadiusByMember(ctx, key, member, query)
 	}
@@ -300,7 +278,7 @@ func (c *client) GeoSearch(ctx context.Context, key string, q GeoSearchQuery) St
 	ctx = c.handler.before(ctx, CommandGeoSearch)
 	var r StringSliceCmd
 	if c.ttl > 0 {
-		r = newStringSliceCmd(c.Do(ctx, c.cmd.B().Arbitrary(GEOSEARCH).Keys(key).Args(geoSearchQueryArgs(q)...).Build()))
+		r = newStringSliceCmd(c.Do(ctx, c.builder.GeoSearchCompleted(key, q)))
 	} else {
 		r = c.adapter.GeoSearch(ctx, key, q)
 	}

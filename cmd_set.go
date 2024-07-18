@@ -18,7 +18,7 @@ type SetWriter interface {
 	// An error is returned when the value stored at key is not a set.
 	// Return:
 	// 	Integer reply: the number of elements that were added to the set, not including all the elements already present in the set.
-	SAdd(ctx context.Context, key string, members ...interface{}) IntCmd
+	SAdd(ctx context.Context, key string, members ...any) IntCmd
 
 	// SDiffStore
 	// Available since: 1.0.0
@@ -51,7 +51,7 @@ type SetWriter interface {
 	// Integer reply, specifically:
 	//	1 if the element is moved.
 	//	0 if the element is not a member of source and no operation was performed.
-	SMove(ctx context.Context, source, destination string, member interface{}) BoolCmd
+	SMove(ctx context.Context, source, destination string, member any) BoolCmd
 
 	// SPop
 	// Available since: 1.0.0
@@ -82,7 +82,7 @@ type SetWriter interface {
 	// An error is returned when the value stored at key is not a set.
 	// Return:
 	// 	Integer reply: the number of members that were removed from the set, not including non existing members.
-	SRem(ctx context.Context, key string, members ...interface{}) IntCmd
+	SRem(ctx context.Context, key string, members ...any) IntCmd
 
 	// SUnionStore
 	// Available since: 1.0.0
@@ -125,6 +125,12 @@ type SetReader interface {
 	// Return:
 	//	Array reply: list with members of the resulting set.
 	SInter(ctx context.Context, keys ...string) StringSliceCmd
+
+	// SInterCard
+	// Available since: 7.0.0
+	// Time complexity: O(N*M) worst case where N is the cardinality of the smallest set and M is the number of sets.
+	// ACL categories: @read @set @slow
+	SInterCard(ctx context.Context, limit int64, keys ...string) IntCmd
 
 	// SRandMember
 	// Available since: 1.0.0
@@ -187,7 +193,7 @@ type SetCacheCmdable interface {
 	// Integer reply, specifically:
 	//	1 if the element is a member of the set.
 	//	0 if the element is not a member of the set, or if key does not exist.
-	SIsMember(ctx context.Context, key string, member interface{}) BoolCmd
+	SIsMember(ctx context.Context, key string, member any) BoolCmd
 
 	// SMIsMember
 	// Available since: 6.2.0
@@ -197,7 +203,7 @@ type SetCacheCmdable interface {
 	// For every member, 1 is returned if the value is a member of the set, or 0 if the element is not a member of the set or if key does not exist.
 	// Return:
 	// 	Array reply: list representing the membership of the given elements, in the same order as they are requested.
-	SMIsMember(ctx context.Context, key string, members ...interface{}) BoolSliceCmd
+	SMIsMember(ctx context.Context, key string, members ...any) BoolSliceCmd
 
 	// SMembers
 	// Available since: 1.0.0
@@ -210,9 +216,9 @@ type SetCacheCmdable interface {
 	SMembers(ctx context.Context, key string) StringSliceCmd
 }
 
-func (c *client) SAdd(ctx context.Context, key string, members ...interface{}) IntCmd {
+func (c *client) SAdd(ctx context.Context, key string, members ...any) IntCmd {
 	if len(members) > 1 {
-		ctx = c.handler.before(ctx, CommandSAddMultiple)
+		ctx = c.handler.before(ctx, CommandSMAdd)
 	} else {
 		ctx = c.handler.before(ctx, CommandSAdd)
 	}
@@ -225,7 +231,7 @@ func (c *client) SCard(ctx context.Context, key string) IntCmd {
 	ctx = c.handler.before(ctx, CommandSCard)
 	var r IntCmd
 	if c.ttl > 0 {
-		r = newIntCmd(c.doCache(ctx, c.cmd.B().Scard().Key(key).Cache()))
+		r = newIntCmd(c.Do(ctx, c.builder.SCardCompleted(key)))
 	} else {
 		r = c.adapter.SCard(ctx, key)
 	}
@@ -261,11 +267,18 @@ func (c *client) SInterStore(ctx context.Context, destination string, keys ...st
 	return r
 }
 
-func (c *client) SIsMember(ctx context.Context, key string, member interface{}) BoolCmd {
+func (c *client) SInterCard(ctx context.Context, limit int64, keys ...string) IntCmd {
+	ctx = c.handler.beforeWithKeys(ctx, CommandSInterCard, func() []string { return keys })
+	r := c.adapter.SInterCard(ctx, limit, keys...)
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
+func (c *client) SIsMember(ctx context.Context, key string, member any) BoolCmd {
 	ctx = c.handler.before(ctx, CommandSIsMember)
 	var r BoolCmd
 	if c.ttl > 0 {
-		r = newBoolCmd(c.doCache(ctx, c.cmd.B().Sismember().Key(key).Member(str(member)).Cache()))
+		r = newBoolCmd(c.Do(ctx, c.builder.SIsMemberCompleted(key, member)))
 	} else {
 		r = c.adapter.SIsMember(ctx, key, member)
 	}
@@ -273,11 +286,11 @@ func (c *client) SIsMember(ctx context.Context, key string, member interface{}) 
 	return r
 }
 
-func (c *client) SMIsMember(ctx context.Context, key string, members ...interface{}) BoolSliceCmd {
+func (c *client) SMIsMember(ctx context.Context, key string, members ...any) BoolSliceCmd {
 	ctx = c.handler.before(ctx, CommandSMIsMember)
 	var r BoolSliceCmd
 	if c.ttl > 0 {
-		r = newBoolSliceCmd(c.doCache(ctx, c.cmd.B().Smismember().Key(key).Member(argsToSlice(members)...).Cache()))
+		r = newBoolSliceCmd(c.Do(ctx, c.builder.SMIsMemberCompleted(key, members...)))
 	} else {
 		r = c.adapter.SMIsMember(ctx, key, members...)
 	}
@@ -289,7 +302,7 @@ func (c *client) SMembers(ctx context.Context, key string) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandSMembers)
 	var r StringSliceCmd
 	if c.ttl > 0 {
-		r = newStringSliceCmd(c.doCache(ctx, c.cmd.B().Smembers().Key(key).Cache()))
+		r = newStringSliceCmd(c.Do(ctx, c.builder.SMembersCompleted(key)))
 	} else {
 		r = c.adapter.SMembers(ctx, key)
 	}
@@ -297,7 +310,7 @@ func (c *client) SMembers(ctx context.Context, key string) StringSliceCmd {
 	return r
 }
 
-func (c *client) SMove(ctx context.Context, source, destination string, member interface{}) BoolCmd {
+func (c *client) SMove(ctx context.Context, source, destination string, member any) BoolCmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandSMove, func() []string { return appendString(source, destination) })
 	r := c.adapter.SMove(ctx, source, destination, member)
 	c.handler.after(ctx, r.Err())
@@ -332,9 +345,9 @@ func (c *client) SRandMemberN(ctx context.Context, key string, count int64) Stri
 	return r
 }
 
-func (c *client) SRem(ctx context.Context, key string, members ...interface{}) IntCmd {
+func (c *client) SRem(ctx context.Context, key string, members ...any) IntCmd {
 	if len(members) > 1 {
-		ctx = c.handler.before(ctx, CommandSRemMultiple)
+		ctx = c.handler.before(ctx, CommandSMRem)
 	} else {
 		ctx = c.handler.before(ctx, CommandSRem)
 	}

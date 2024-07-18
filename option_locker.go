@@ -11,8 +11,8 @@ const (
 )
 
 //go:generate optiongen --option_with_struct_name=false --new_func=newLockerOptions --empty_composite_nil=true --usage_tag_name=usage
-func LockerOptionsOptionDeclareWithDefault() interface{} {
-	return map[string]interface{}{
+func LockerOptionsOptionDeclareWithDefault() any {
+	return map[string]any{
 		// annotation@KeyPrefix(KeyPrefix is the prefix of redis key for locks. Default value is defaultKeyPrefix)
 		"KeyPrefix": string(defaultKeyPrefix),
 		// annotation@KeyValidity(KeyValidity is the validity duration of locks and will be extended periodically by the ExtendInterval. Default value is defaultKeyValidity)

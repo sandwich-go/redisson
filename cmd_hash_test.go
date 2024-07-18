@@ -233,11 +233,11 @@ func testHMGet(ctx context.Context, c Cmdable) []string {
 
 	hMGet := c.HMGet(ctx, key, field1, field2, field3)
 	So(hMGet.Err(), ShouldBeNil)
-	So(interfaceSliceEqual(hMGet.Val(), []interface{}{value1, value2, nil}), ShouldBeTrue)
+	So(interfaceSliceEqual(hMGet.Val(), []any{value1, value2, nil}), ShouldBeTrue)
 
 	hMGet = cacheCmd(c).HMGet(ctx, key, field1, field2, field3)
 	So(hMGet.Err(), ShouldBeNil)
-	So(interfaceSliceEqual(hMGet.Val(), []interface{}{value1, value2, nil}), ShouldBeTrue)
+	So(interfaceSliceEqual(hMGet.Val(), []any{value1, value2, nil}), ShouldBeTrue)
 
 	return []string{key}
 }
@@ -251,7 +251,7 @@ func testHMSet(ctx context.Context, c Cmdable) []string {
 
 	hMGet := c.HMGet(ctx, key, field1, field2, field3)
 	So(hMGet.Err(), ShouldBeNil)
-	So(interfaceSliceEqual(hMGet.Val(), []interface{}{value1, value2, nil}), ShouldBeTrue)
+	So(interfaceSliceEqual(hMGet.Val(), []any{value1, value2, nil}), ShouldBeTrue)
 
 	return []string{key}
 }

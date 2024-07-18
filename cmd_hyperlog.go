@@ -22,7 +22,7 @@ type HyperLogWriter interface {
 	// Return:
 	// Integer reply, specifically:
 	//	1 if at least 1 HyperLogLog internal register was altered. 0 otherwise.
-	PFAdd(ctx context.Context, key string, els ...interface{}) IntCmd
+	PFAdd(ctx context.Context, key string, els ...any) IntCmd
 
 	// PFMerge
 	// Available since: 2.8.9
@@ -53,7 +53,7 @@ type HyperLogReader interface {
 	PFCount(ctx context.Context, keys ...string) IntCmd
 }
 
-func (c *client) PFAdd(ctx context.Context, key string, els ...interface{}) IntCmd {
+func (c *client) PFAdd(ctx context.Context, key string, els ...any) IntCmd {
 	ctx = c.handler.before(ctx, CommandPFAdd)
 	r := c.adapter.PFAdd(ctx, key, els...)
 	c.handler.after(ctx, r.Err())

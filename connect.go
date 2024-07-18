@@ -106,6 +106,7 @@ func (c *client) connect() error {
 			return err
 		}
 	}
+	c.builder = builder{c.cmd.B()}
 	return nil
 }
 

@@ -76,7 +76,7 @@ type StringWriter interface {
 	//	Bulk string reply: the old value stored at key, or nil when key did not exist.
 	// As of Redis version 6.2.0, this command is regarded as deprecated.
 	// It can be replaced by SET with the GET argument when migrating or writing new code.
-	GetSet(ctx context.Context, key string, value interface{}) StringCmd
+	GetSet(ctx context.Context, key string, value any) StringCmd
 
 	// Incr
 	// Available since: 1.0.0
@@ -121,7 +121,7 @@ type StringWriter interface {
 	// MSET is atomic, so all given keys are set at once. It is not possible for clients to see that some of the keys were updated while others are unchanged.
 	// Return:
 	//	Simple string reply: always OK since MSET can't fail.
-	MSet(ctx context.Context, values ...interface{}) StatusCmd
+	MSet(ctx context.Context, values ...any) StatusCmd
 
 	// MSetNX
 	// Available since: 1.0.1
@@ -134,7 +134,7 @@ type StringWriter interface {
 	// Integer reply, specifically:
 	//	1 if the all the keys were set.
 	//	0 if no key was set (at least one key already existed).
-	MSetNX(ctx context.Context, values ...interface{}) BoolCmd
+	MSetNX(ctx context.Context, values ...any) BoolCmd
 
 	// Set
 	// Available since: 1.0.0
@@ -159,7 +159,7 @@ type StringWriter interface {
 	// Bulk string reply: the old string value stored at key.
 	// Null reply: (nil) if the key did not exist.
 	// Starting with Redis version 7.0.0: Allowed the NX and GET options to be used together.
-	Set(ctx context.Context, key string, value interface{}, expiration time.Duration) StatusCmd
+	Set(ctx context.Context, key string, value any, expiration time.Duration) StatusCmd
 
 	// SetEX
 	// Available since: 2.0.0
@@ -172,7 +172,7 @@ type StringWriter interface {
 	// An error is returned when seconds is invalid.
 	// Return:
 	//	Simple string reply
-	SetEX(ctx context.Context, key string, value interface{}, expiration time.Duration) StatusCmd
+	SetEX(ctx context.Context, key string, value any, expiration time.Duration) StatusCmd
 
 	// SetNX
 	// Available since: 1.0.0
@@ -183,21 +183,21 @@ type StringWriter interface {
 	// Integer reply, specifically:
 	//	1 if the key was set
 	//	0 if the key was not set
-	SetNX(ctx context.Context, key string, value interface{}, expiration time.Duration) BoolCmd
+	SetNX(ctx context.Context, key string, value any, expiration time.Duration) BoolCmd
 
 	// SetXX
 	// Available since: 1.0.0
 	// Time complexity: O(1)
 	// ACL categories: @write @string @fast
 	// Only set the key if it already exist.
-	SetXX(ctx context.Context, key string, value interface{}, expiration time.Duration) BoolCmd
+	SetXX(ctx context.Context, key string, value any, expiration time.Duration) BoolCmd
 
 	// SetArgs
 	// Available since: 1.0.0
 	// Time complexity: O(1)
 	// ACL categories: @write @string @fast
 	// See Set
-	SetArgs(ctx context.Context, key string, value interface{}, a SetArgs) StatusCmd
+	SetArgs(ctx context.Context, key string, value any, a SetArgs) StatusCmd
 
 	// SetRange
 	// Available since: 2.2.0
@@ -279,7 +279,7 @@ func (c *client) Get(ctx context.Context, key string) StringCmd {
 	ctx = c.handler.before(ctx, CommandGet)
 	var r StringCmd
 	if c.ttl > 0 {
-		r = newStringCmd(c.doCache(ctx, c.cmd.B().Get().Key(key).Cache()))
+		r = newStringCmd(c.Do(ctx, c.builder.GetCompleted(key)))
 	} else {
 		r = c.adapter.Get(ctx, key)
 	}
@@ -295,7 +295,7 @@ func (c *client) GetDel(ctx context.Context, key string) StringCmd {
 }
 
 func (c *client) GetEx(ctx context.Context, key string, expiration time.Duration) StringCmd {
-	ctx = c.handler.before(ctx, CommandGetEX)
+	ctx = c.handler.before(ctx, CommandGetEx)
 	r := c.adapter.GetEx(ctx, key, expiration)
 	c.handler.after(ctx, r.Err())
 	return r
@@ -305,7 +305,7 @@ func (c *client) GetRange(ctx context.Context, key string, start, end int64) Str
 	ctx = c.handler.before(ctx, CommandGetRange)
 	var r StringCmd
 	if c.ttl > 0 {
-		r = newStringCmd(c.doCache(ctx, c.cmd.B().Getrange().Key(key).Start(start).End(end).Cache()))
+		r = newStringCmd(c.Do(ctx, c.builder.GetRangeCompleted(key, start, end)))
 	} else {
 		r = c.adapter.GetRange(ctx, key, start, end)
 	}
@@ -313,7 +313,7 @@ func (c *client) GetRange(ctx context.Context, key string, start, end int64) Str
 	return r
 }
 
-func (c *client) GetSet(ctx context.Context, key string, value interface{}) StringCmd {
+func (c *client) GetSet(ctx context.Context, key string, value any) StringCmd {
 	ctx = c.handler.before(ctx, CommandGetSet)
 	r := c.adapter.GetSet(ctx, key, value)
 	c.handler.after(ctx, r.Err())
@@ -348,7 +348,7 @@ func (c *client) MGet(ctx context.Context, keys ...string) SliceCmd {
 	return r
 }
 
-func (c *client) XMGet(ctx context.Context, keys ...string) SliceCmd {
+func (c *client) MGetIgnoreSlot(ctx context.Context, keys ...string) SliceCmd {
 	if len(keys) <= 1 {
 		return c.MGet(ctx, keys...)
 	}
@@ -377,7 +377,7 @@ func (c *client) XMGet(ctx context.Context, keys ...string) SliceCmd {
 	}
 	wg.Wait()
 
-	var res = make([]interface{}, len(keys))
+	var res = make([]any, len(keys))
 	for i, ret := range scs {
 		if err := ret.Err(); err != nil {
 			return newSliceCmdFromSlice(nil, err, keys...)
@@ -390,21 +390,21 @@ func (c *client) XMGet(ctx context.Context, keys ...string) SliceCmd {
 	return newSliceCmdFromSlice(res, nil, keys...)
 }
 
-func (c *client) MSet(ctx context.Context, values ...interface{}) StatusCmd {
+func (c *client) MSet(ctx context.Context, values ...any) StatusCmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandMSet, func() []string { return argsToSliceWithValues(values) })
 	r := c.adapter.MSet(ctx, values...)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
-func (c *client) MSetNX(ctx context.Context, values ...interface{}) BoolCmd {
+func (c *client) MSetNX(ctx context.Context, values ...any) BoolCmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandMSetNX, func() []string { return argsToSliceWithValues(values) })
 	r := c.adapter.MSetNX(ctx, values...)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
-func (c *client) Set(ctx context.Context, key string, value interface{}, expiration time.Duration) StatusCmd {
+func (c *client) Set(ctx context.Context, key string, value any, expiration time.Duration) StatusCmd {
 	if expiration == KeepTTL {
 		ctx = c.handler.before(ctx, CommandSetKeepTTL)
 	} else {
@@ -415,25 +415,25 @@ func (c *client) Set(ctx context.Context, key string, value interface{}, expirat
 	return r
 }
 
-func (c *client) SetEX(ctx context.Context, key string, value interface{}, expiration time.Duration) StatusCmd {
-	ctx = c.handler.before(ctx, CommandSetex)
+func (c *client) SetEX(ctx context.Context, key string, value any, expiration time.Duration) StatusCmd {
+	ctx = c.handler.before(ctx, CommandSetEX)
 	r := c.adapter.SetEX(ctx, key, value, expiration)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
-func (c *client) SetNX(ctx context.Context, key string, value interface{}, expiration time.Duration) BoolCmd {
+func (c *client) SetNX(ctx context.Context, key string, value any, expiration time.Duration) BoolCmd {
 	if expiration == KeepTTL {
 		ctx = c.handler.before(ctx, CommandSetKeepTTL)
 	} else {
-		ctx = c.handler.before(ctx, CommandSetnx)
+		ctx = c.handler.before(ctx, CommandSetNX)
 	}
 	r := c.adapter.SetNX(ctx, key, value, expiration)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
-func (c *client) SetXX(ctx context.Context, key string, value interface{}, expiration time.Duration) BoolCmd {
+func (c *client) SetXX(ctx context.Context, key string, value any, expiration time.Duration) BoolCmd {
 	if expiration == KeepTTL {
 		ctx = c.handler.before(ctx, CommandSetKeepTTL)
 	} else {
@@ -444,24 +444,26 @@ func (c *client) SetXX(ctx context.Context, key string, value interface{}, expir
 	return r
 }
 
-func (c *client) SetArgs(ctx context.Context, key string, value interface{}, a SetArgs) StatusCmd {
-	if a.KeepTTL {
-		ctx = c.handler.before(ctx, CommandSetKeepTTL)
-	} else if !a.ExpireAt.IsZero() {
-		ctx = c.handler.before(ctx, CommandSetEXAT)
-	} else if a.Get {
+func (c *client) SetArgs(ctx context.Context, key string, value any, a SetArgs) StatusCmd {
+	m := strings.ToUpper(a.Mode)
+	if a.Get && m == NX {
+		ctx = c.handler.before(ctx, CommandSetNXGet)
+	} else if a.Get || !a.ExpireAt.IsZero() {
 		ctx = c.handler.before(ctx, CommandSetGet)
-	} else if len(a.Mode) > 0 {
-		if strings.ToUpper(a.Mode) == NX {
-			ctx = c.handler.before(ctx, CommandSetNX)
-		} else {
-			ctx = c.handler.before(ctx, CommandSetXX)
-		}
+	} else if a.KeepTTL {
+		ctx = c.handler.before(ctx, CommandSetKeepTTL)
+	} else if m == NX {
+		ctx = c.handler.before(ctx, CommandSetArgsNX)
+	} else if m == XX {
+		ctx = c.handler.before(ctx, CommandSetXX)
+	} else if a.TTL > 0 {
+		ctx = c.handler.before(ctx, CommandSetArgsEX)
 	} else {
 		ctx = c.handler.before(ctx, CommandSet)
 	}
 	r := c.adapter.SetArgs(ctx, key, value, a)
 	c.handler.after(ctx, r.Err())
+
 	return r
 }
 
@@ -476,7 +478,7 @@ func (c *client) StrLen(ctx context.Context, key string) IntCmd {
 	ctx = c.handler.before(ctx, CommandStrLen)
 	var r IntCmd
 	if c.ttl > 0 {
-		r = newIntCmd(c.doCache(ctx, c.cmd.B().Strlen().Key(key).Cache()))
+		r = newIntCmd(c.Do(ctx, c.builder.StrLenCompleted(key)))
 	} else {
 		r = c.adapter.StrLen(ctx, key)
 	}

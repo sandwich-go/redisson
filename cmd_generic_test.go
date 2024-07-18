@@ -170,7 +170,7 @@ func testExpireAt(ctx context.Context, c Cmdable) []string {
 	return []string{key}
 }
 
-func interfaceSliceEqual(a, b []interface{}) bool {
+func interfaceSliceEqual(a, b []any) bool {
 	if a == nil && b != nil {
 		return false
 	}
@@ -624,13 +624,13 @@ func testSortAndGet(ctx context.Context, c Cmdable) []string {
 			Get: []string{"object_*", "hello_*"},
 		})
 		So(els.Err(), ShouldBeNil)
-		So(interfaceSliceEqual(els.Val(), []interface{}{nil, nil, "value2", nil, nil, "value3"}), ShouldBeTrue)
+		So(interfaceSliceEqual(els.Val(), []any{nil, nil, "value2", nil, nil, "value3"}), ShouldBeTrue)
 
 		els = c.SortInterfaces(ctx, key, Sort{
 			Get: []string{"object_*", "hello_*"},
 		})
 		So(els.Err(), ShouldBeNil)
-		So(interfaceSliceEqual(els.Val(), []interface{}{nil, nil, "value2", nil, nil, "value3"}), ShouldBeTrue)
+		So(interfaceSliceEqual(els.Val(), []any{nil, nil, "value2", nil, nil, "value3"}), ShouldBeTrue)
 	}
 
 	return []string{key, key1, key2}

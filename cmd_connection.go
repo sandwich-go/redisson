@@ -63,6 +63,21 @@ type ConnectionCmdable interface {
 	// See https://redis.io/commands/client-pause/
 	ClientPause(ctx context.Context, dur time.Duration) BoolCmd
 
+	// ClientUnpause
+	// Available since: 6.2.0
+	// Time complexity: O(N) Where N is the number of paused clients
+	// ACL categories: @admin @slow @dangerous @connection
+	// See https://redis.io/commands/client-unpause/
+	ClientUnpause(ctx context.Context) BoolCmd
+
+	// ClientUnblock
+	// Available since: 5.0.0
+	// Time complexity: O(N) Where N is the number of paused clients
+	// ACL categories: @admin @slow @dangerous @connection
+	// See https://redis.io/commands/client-unblock/
+	ClientUnblock(ctx context.Context, id int64) IntCmd
+	ClientUnblockWithError(ctx context.Context, id int64) IntCmd
+
 	// Echo
 	// Available since: 1.0.0
 	// Time complexity: O(1)
@@ -70,7 +85,7 @@ type ConnectionCmdable interface {
 	// Returns message.
 	// Return:
 	//	Bulk string reply
-	Echo(ctx context.Context, message interface{}) StringCmd
+	Echo(ctx context.Context, message any) StringCmd
 
 	// Ping
 	// Available since: 1.0.0
@@ -119,8 +134,10 @@ func (c *client) ClientKillByFilter(ctx context.Context, keys ...string) IntCmd 
 	for i := 0; i < len(keys); i += 2 {
 		opt[strings.ToUpper(keys[i])] = struct{}{}
 	}
-	if _, ok := opt[LADDR]; ok {
-		ctx = c.handler.before(ctx, CommandClientKillByFilterByLAddr)
+	if _, ok := opt[TYPE]; ok {
+		ctx = c.handler.before(ctx, CommandClientKillByFilterWithType)
+	} else if _, ok = opt[LADDR]; ok {
+		ctx = c.handler.before(ctx, CommandClientKillByFilterWithLADDR)
 	} else {
 		ctx = c.handler.before(ctx, CommandClientKillByFilter)
 	}
@@ -143,7 +160,28 @@ func (c *client) ClientPause(ctx context.Context, dur time.Duration) BoolCmd {
 	return r
 }
 
-func (c *client) Echo(ctx context.Context, message interface{}) StringCmd {
+func (c *client) ClientUnpause(ctx context.Context) BoolCmd {
+	ctx = c.handler.before(ctx, CommandClientUnpause)
+	r := c.adapter.ClientUnpause(ctx)
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
+func (c *client) ClientUnblock(ctx context.Context, id int64) IntCmd {
+	ctx = c.handler.before(ctx, CommandClientUnblock)
+	r := c.adapter.ClientUnblock(ctx, id)
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
+func (c *client) ClientUnblockWithError(ctx context.Context, id int64) IntCmd {
+	ctx = c.handler.before(ctx, CommandClientUnblockWithError)
+	r := c.adapter.ClientUnblockWithError(ctx, id)
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
+func (c *client) Echo(ctx context.Context, message any) StringCmd {
 	ctx = c.handler.before(ctx, CommandEcho)
 	r := c.adapter.Echo(ctx, message)
 	c.handler.after(ctx, r.Err())

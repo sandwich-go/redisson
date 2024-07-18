@@ -151,7 +151,7 @@ func serverTestUnits() []TestUnit {
 		{CommandFlushAllAsync, testFlushAllAsync},
 		{CommandFlushDB, testFlushDB},
 		{CommandFlushDBAsync, testFlushDBAsync},
-		{CommandInfos, testInfo},
+		{CommandServerInfo, testInfo},
 		{CommandLastSave, testLastSave},
 		{CommandMemoryUsage, testMemoryUsage},
 		{CommandSave, testSave},
@@ -159,7 +159,7 @@ func serverTestUnits() []TestUnit {
 		{CommandShutdownSave, testShutdownSave},
 		{CommandShutdownNoSave, testShutdownNoSave},
 		{CommandTime, testTime},
-		{CommandDebug, testDebugObject},
+		{CommandDebugObject, testDebugObject},
 	}
 }
 

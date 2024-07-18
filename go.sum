@@ -101,10 +101,11 @@ github.com/prometheus/procfs v0.0.2/go.mod h1:TjEm7ze935MbeOT/UhFTIMYKhuLP4wbCsT
 github.com/prometheus/procfs v0.1.3/go.mod h1:lV6e/gmhEcM9IjHGsFOCxxuZ+z1YqCvr4OA4YeYWdaU=
 github.com/prometheus/procfs v0.6.0 h1:mxy4L2jP6qMonqmq+aTtOx1ifVWUgG/TAmntgbh3xv4=
 github.com/prometheus/procfs v0.6.0/go.mod h1:cz+aTbrPOrUb4q7XlbU9ygM+/jj0fzG6c1xBZuNvfVA=
-github.com/redis/rueidis v1.0.38 h1:ZlEBumHM+ECCMgf/zQZImLfmxb/sxGKnBP0R0AxoH/Y=
-github.com/redis/rueidis v1.0.38/go.mod h1:bnbkk4+CkXZgDPEbUtSos/o55i4RhFYYesJ4DS2zmq0=
-github.com/redis/rueidis/rueidiscompat v1.0.38 h1:JREqnP+y4Gte4p66ZwBB2jT1m9W0RHFr+lRavpaGno4=
-github.com/redis/rueidis/rueidiscompat v1.0.38/go.mod h1:pQaGNQkzKsyxSY0BP/r5lrzP4kUdfWXb/gsquXhbDtA=
+github.com/redis/rueidis v1.0.41 h1:Ls5Dto11Tknh8CFbaMTSBD0fgMlTqJWq8/Df4LPaeQ0=
+github.com/redis/rueidis v1.0.41/go.mod h1:bnbkk4+CkXZgDPEbUtSos/o55i4RhFYYesJ4DS2zmq0=
+github.com/redis/rueidis/mock v1.0.41 h1:tNuP1RT4Xqk8TlGTaBkwE6oh00mMmrKoXsIVP56Ansc=
+github.com/redis/rueidis/rueidiscompat v1.0.41 h1:jfI53rVDH9trklTQY5R/jbGJpAcoabh+J5q6x+IZ0Uo=
+github.com/redis/rueidis/rueidiscompat v1.0.41/go.mod h1:x7By3oT8E/l+4SVKGXPA0r4el+4f9Ig7Ahet5y4QXbA=
 github.com/sandwich-go/funnel v0.0.1 h1:iAQQv2NhsqK6pmb+k81h14qSrE1VazR3DZ8BqxUyP/8=
 github.com/sandwich-go/funnel v0.0.1/go.mod h1:i+Ic0l78rwAqFV2CxdrK9FZNk2JU73jamUFfk/wogGM=
 github.com/sirupsen/logrus v1.2.0/go.mod h1:LxeOpSwHxABJmUn/MG1IvRgCAasNZTLOkJPxbbu5VWo=
@@ -121,6 +122,7 @@ github.com/stretchr/testify v1.3.0/go.mod h1:M5WIy9Dh21IEIfnGCwXGc5bZfKNJtfHm1UV
 github.com/stretchr/testify v1.4.0/go.mod h1:j7eGeouHqKxXV5pUuKE4zz7dFj8WfuZ+81PSLYec5m4=
 github.com/yuin/gopher-lua v1.1.0 h1:BojcDhfyDWgU2f2TOzYK/g5p2gxMrku8oupLDqlnSqE=
 github.com/yuin/gopher-lua v1.1.0/go.mod h1:GBR0iDaNXjAgGg9zfCvksxSRnQx76gclCIb7kdAd1Pw=
+go.uber.org/mock v0.3.0 h1:3mUxI1No2/60yUYax92Pt8eNOEecx2D3lcXZh2NEZJo=
 golang.org/x/crypto v0.0.0-20180904163835-0709b304e793/go.mod h1:6SG95UA2DQfeDnfUPMdvaQW0Q7yPrPDi9nlGo2tz2b4=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=
 golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9/go.mod h1:LzIPMQfyMNhhGPhUkYOs5KpL4U8rLKemX1yGLhDgUto=

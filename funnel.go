@@ -13,11 +13,11 @@ func (s funnelScriptBuilder) Build(src string) funnel.RedisScript {
 	return funnelScript{s: s.c.CreateScript(src)}
 }
 
-func (s funnelScript) EvalSha(ctx context.Context, keys []string, args ...interface{}) ([]interface{}, error) {
+func (s funnelScript) EvalSha(ctx context.Context, keys []string, args ...any) ([]any, error) {
 	return s.s.EvalSha(ctx, keys, args...).Slice()
 }
 
-func (s funnelScript) Eval(ctx context.Context, keys []string, args ...interface{}) ([]interface{}, error) {
+func (s funnelScript) Eval(ctx context.Context, keys []string, args ...any) ([]any, error) {
 	return s.s.Eval(ctx, keys, args...).Slice()
 }
 

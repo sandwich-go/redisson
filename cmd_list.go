@@ -2,7 +2,6 @@ package redisson
 
 import (
 	"context"
-	"strconv"
 	"time"
 )
 
@@ -22,6 +21,14 @@ type ListWriter interface {
 	// Return:
 	//	Bulk string reply: the element being popped from source and pushed to destination. If timeout is reached, a Null reply is returned.
 	BLMove(ctx context.Context, source, destination, srcpos, destpos string, timeout time.Duration) StringCmd
+
+	// BLMPop
+	// Available since: 7.0.0
+	// Time complexity: O(N+M) where N is the number of provided keys and M is the number of elements returned.
+	// ACL categories: @write, @list, @slow, @blocking
+	// BLMPOP is the blocking variant of LMPOP.
+	// When any of the lists contains elements, this command behaves exactly like LMPOP. When used inside a MULTI/EXEC block, this command behaves exactly like LMPOP. When all lists are empty, Redis will block the connection until another client pushes to it or until the timeout (a double value specifying the maximum number of seconds to block) elapses. A timeout of zero can be used to block indefinitely.
+	BLMPop(ctx context.Context, timeout time.Duration, direction string, count int64, keys ...string) KeyValuesCmd
 
 	// BLPop
 	// Available since: 2.0.0
@@ -62,19 +69,19 @@ type ListWriter interface {
 	// An error is returned when key exists but does not hold a list value.
 	// Return:
 	// 	Integer reply: the length of the list after the insert operation, or -1 when the value pivot was not found.
-	LInsert(ctx context.Context, key, op string, pivot, value interface{}) IntCmd
+	LInsert(ctx context.Context, key, op string, pivot, value any) IntCmd
 
 	// LInsertBefore
 	// Available since: 2.2.0
 	// Time complexity: O(N) where N is the number of elements to traverse before seeing the value pivot. This means that inserting somewhere on the left end on the list (head) can be considered O(1) and inserting somewhere on the right end (tail) is O(N).
 	// ACL categories: @write @list @slow
-	LInsertBefore(ctx context.Context, key string, pivot, value interface{}) IntCmd
+	LInsertBefore(ctx context.Context, key string, pivot, value any) IntCmd
 
 	// LInsertAfter
 	// Available since: 2.2.0
 	// Time complexity: O(N) where N is the number of elements to traverse before seeing the value pivot. This means that inserting somewhere on the left end on the list (head) can be considered O(1) and inserting somewhere on the right end (tail) is O(N).
 	// ACL categories: @write @list @slow
-	LInsertAfter(ctx context.Context, key string, pivot, value interface{}) IntCmd
+	LInsertAfter(ctx context.Context, key string, pivot, value any) IntCmd
 
 	// LMove
 	// Available since: 6.2.0
@@ -101,6 +108,12 @@ type ListWriter interface {
 	// 	Array reply: list of popped elements, or nil when key does not exist.
 	LPop(ctx context.Context, key string) StringCmd
 
+	// LMPop
+	// Available since: 7.0.0
+	// Time complexity: O(N+M) where N is the number of provided keys and M is the number of elements returned.
+	// ACL categories: @write, @list, @slow
+	LMPop(ctx context.Context, direction string, count int64, keys ...string) KeyValuesCmd
+
 	// LPopCount
 	// Available since: 1.0.0
 	// Time complexity: O(N) where N is the number of elements returned
@@ -122,7 +135,7 @@ type ListWriter interface {
 	// It is possible to push multiple elements using a single command call just specifying multiple arguments at the end of the command. Elements are inserted one after the other to the head of the list, from the leftmost element to the rightmost element. So for instance the command LPUSH mylist a b c will result into a list containing c as first element, b as second element and a as third element.
 	// Return:
 	// 	Integer reply: the length of the list after the push operations.
-	LPush(ctx context.Context, key string, values ...interface{}) IntCmd
+	LPush(ctx context.Context, key string, values ...any) IntCmd
 
 	// LPushX
 	// Available since: 2.2.0
@@ -131,7 +144,7 @@ type ListWriter interface {
 	// Inserts specified values at the head of the list stored at key, only if key already exists and holds a list. In contrary to LPUSH, no operation will be performed when key does not yet exist.
 	// Return:
 	// 	Integer reply: the length of the list after the push operation.
-	LPushX(ctx context.Context, key string, values ...interface{}) IntCmd
+	LPushX(ctx context.Context, key string, values ...any) IntCmd
 
 	// LRem
 	// Available since: 1.0.0
@@ -145,7 +158,7 @@ type ListWriter interface {
 	// Note that non-existing keys are treated like empty lists, so when key does not exist, the command will always return 0.
 	// Return:
 	// 	Integer reply: the number of removed elements.
-	LRem(ctx context.Context, key string, count int64, value interface{}) IntCmd
+	LRem(ctx context.Context, key string, count int64, value any) IntCmd
 
 	// LSet
 	// Available since: 1.0.0
@@ -155,7 +168,7 @@ type ListWriter interface {
 	// An error is returned for out of range indexes.
 	// Return:
 	// 	Simple string reply
-	LSet(ctx context.Context, key string, index int64, value interface{}) StatusCmd
+	LSet(ctx context.Context, key string, index int64, value any) StatusCmd
 
 	// LTrim
 	// Available since: 1.0.0
@@ -214,7 +227,7 @@ type ListWriter interface {
 	// It is possible to push multiple elements using a single command call just specifying multiple arguments at the end of the command. Elements are inserted one after the other to the tail of the list, from the leftmost element to the rightmost element. So for instance the command RPUSH mylist a b c will result into a list containing a as first element, b as second element and c as third element.
 	// Return:
 	// 	Integer reply: the length of the list after the push operation.
-	RPush(ctx context.Context, key string, values ...interface{}) IntCmd
+	RPush(ctx context.Context, key string, values ...any) IntCmd
 
 	// RPushX
 	// Available since: 2.2.0
@@ -223,7 +236,7 @@ type ListWriter interface {
 	// Inserts specified values at the tail of the list stored at key, only if key already exists and holds a list. In contrary to RPUSH, no operation will be performed when key does not yet exist.
 	// Return:
 	// 	Integer reply: the length of the list after the push operation.
-	RPushX(ctx context.Context, key string, values ...interface{}) IntCmd
+	RPushX(ctx context.Context, key string, values ...any) IntCmd
 }
 
 type ListReader interface {
@@ -284,6 +297,13 @@ func (c *client) BLMove(ctx context.Context, source, destination, srcpos, destpo
 	return r
 }
 
+func (c *client) BLMPop(ctx context.Context, timeout time.Duration, direction string, count int64, keys ...string) KeyValuesCmd {
+	ctx = c.handler.beforeWithKeys(ctx, CommandBLMPop, func() []string { return keys })
+	r := c.adapter.BLMPop(ctx, timeout, direction, count, keys...)
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
 func (c *client) BLPop(ctx context.Context, timeout time.Duration, keys ...string) StringSliceCmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandBLPop, func() []string { return keys })
 	r := c.adapter.BLPop(ctx, timeout, keys...)
@@ -309,7 +329,7 @@ func (c *client) LIndex(ctx context.Context, key string, index int64) StringCmd 
 	ctx = c.handler.before(ctx, CommandLIndex)
 	var r StringCmd
 	if c.ttl > 0 {
-		r = newStringCmd(c.doCache(ctx, c.cmd.B().Lindex().Key(key).Index(index).Cache()))
+		r = newStringCmd(c.Do(ctx, c.builder.LIndexCompleted(key, index)))
 	} else {
 		r = c.adapter.LIndex(ctx, key, index)
 	}
@@ -317,21 +337,21 @@ func (c *client) LIndex(ctx context.Context, key string, index int64) StringCmd 
 	return r
 }
 
-func (c *client) LInsert(ctx context.Context, key, op string, pivot, value interface{}) IntCmd {
+func (c *client) LInsert(ctx context.Context, key, op string, pivot, value any) IntCmd {
 	ctx = c.handler.before(ctx, CommandLInsert)
 	r := c.adapter.LInsert(ctx, key, op, pivot, value)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
-func (c *client) LInsertBefore(ctx context.Context, key string, pivot, value interface{}) IntCmd {
+func (c *client) LInsertBefore(ctx context.Context, key string, pivot, value any) IntCmd {
 	ctx = c.handler.before(ctx, CommandLInsert)
 	r := c.adapter.LInsertBefore(ctx, key, pivot, value)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
-func (c *client) LInsertAfter(ctx context.Context, key string, pivot, value interface{}) IntCmd {
+func (c *client) LInsertAfter(ctx context.Context, key string, pivot, value any) IntCmd {
 	ctx = c.handler.before(ctx, CommandLInsert)
 	r := c.adapter.LInsertAfter(ctx, key, pivot, value)
 	c.handler.after(ctx, r.Err())
@@ -342,7 +362,7 @@ func (c *client) LLen(ctx context.Context, key string) IntCmd {
 	ctx = c.handler.before(ctx, CommandLLen)
 	var r IntCmd
 	if c.ttl > 0 {
-		r = newIntCmd(c.doCache(ctx, c.cmd.B().Llen().Key(key).Cache()))
+		r = newIntCmd(c.Do(ctx, c.builder.LLenCompleted(key)))
 	} else {
 		r = c.adapter.LLen(ctx, key)
 	}
@@ -364,6 +384,13 @@ func (c *client) LPop(ctx context.Context, key string) StringCmd {
 	return r
 }
 
+func (c *client) LMPop(ctx context.Context, direction string, count int64, keys ...string) KeyValuesCmd {
+	ctx = c.handler.before(ctx, CommandLMPop)
+	r := c.adapter.LMPop(ctx, direction, count, keys...)
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
 func (c *client) LPopCount(ctx context.Context, key string, count int64) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandLPopCount)
 	r := c.adapter.LPopCount(ctx, key, count)
@@ -375,14 +402,7 @@ func (c *client) LPos(ctx context.Context, key string, value string, args LPosAr
 	ctx = c.handler.before(ctx, CommandLPos)
 	var r IntCmd
 	if c.ttl > 0 {
-		cmd := c.cmd.B().Arbitrary(LPOS).Keys(key).Args(value)
-		if args.Rank != 0 {
-			cmd = cmd.Args(RANK, strconv.FormatInt(args.Rank, 10))
-		}
-		if args.MaxLen != 0 {
-			cmd = cmd.Args(MAXLEN, strconv.FormatInt(args.MaxLen, 10))
-		}
-		r = newIntCmd(c.Do(ctx, cmd.Build()))
+		r = newIntCmd(c.Do(ctx, c.builder.LPosCompleted(key, value, args)))
 	} else {
 		r = c.adapter.LPos(ctx, key, value, args)
 	}
@@ -391,15 +411,15 @@ func (c *client) LPos(ctx context.Context, key string, value string, args LPosAr
 }
 
 func (c *client) LPosCount(ctx context.Context, key string, value string, count int64, args LPosArgs) IntSliceCmd {
-	ctx = c.handler.before(ctx, CommandLPos)
+	ctx = c.handler.before(ctx, CommandLPosCount)
 	r := c.adapter.LPosCount(ctx, key, value, count, args)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
-func (c *client) LPush(ctx context.Context, key string, values ...interface{}) IntCmd {
+func (c *client) LPush(ctx context.Context, key string, values ...any) IntCmd {
 	if len(values) > 1 {
-		ctx = c.handler.before(ctx, CommandLPushMultiple)
+		ctx = c.handler.before(ctx, CommandLMPush)
 	} else {
 		ctx = c.handler.before(ctx, CommandLPush)
 	}
@@ -408,9 +428,9 @@ func (c *client) LPush(ctx context.Context, key string, values ...interface{}) I
 	return r
 }
 
-func (c *client) LPushX(ctx context.Context, key string, values ...interface{}) IntCmd {
+func (c *client) LPushX(ctx context.Context, key string, values ...any) IntCmd {
 	if len(values) > 1 {
-		ctx = c.handler.before(ctx, CommandLPushXMultiple)
+		ctx = c.handler.before(ctx, CommandLMPushX)
 	} else {
 		ctx = c.handler.before(ctx, CommandLPushX)
 	}
@@ -423,7 +443,7 @@ func (c *client) LRange(ctx context.Context, key string, start, stop int64) Stri
 	ctx = c.handler.before(ctx, CommandLRange)
 	var r StringSliceCmd
 	if c.ttl > 0 {
-		r = newStringSliceCmd(c.doCache(ctx, c.cmd.B().Lrange().Key(key).Start(start).Stop(stop).Cache()))
+		r = newStringSliceCmd(c.Do(ctx, c.builder.LRangeCompleted(key, start, stop)))
 	} else {
 		r = c.adapter.LRange(ctx, key, start, stop)
 	}
@@ -431,14 +451,14 @@ func (c *client) LRange(ctx context.Context, key string, start, stop int64) Stri
 	return r
 }
 
-func (c *client) LRem(ctx context.Context, key string, count int64, value interface{}) IntCmd {
+func (c *client) LRem(ctx context.Context, key string, count int64, value any) IntCmd {
 	ctx = c.handler.before(ctx, CommandLRem)
 	r := c.adapter.LRem(ctx, key, count, value)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
-func (c *client) LSet(ctx context.Context, key string, index int64, value interface{}) StatusCmd {
+func (c *client) LSet(ctx context.Context, key string, index int64, value any) StatusCmd {
 	ctx = c.handler.before(ctx, CommandLSet)
 	r := c.adapter.LSet(ctx, key, index, value)
 	c.handler.after(ctx, r.Err())
@@ -473,9 +493,9 @@ func (c *client) RPopLPush(ctx context.Context, source, destination string) Stri
 	return r
 }
 
-func (c *client) RPush(ctx context.Context, key string, values ...interface{}) IntCmd {
+func (c *client) RPush(ctx context.Context, key string, values ...any) IntCmd {
 	if len(values) > 1 {
-		ctx = c.handler.before(ctx, CommandRPushMultiple)
+		ctx = c.handler.before(ctx, CommandRMPush)
 	} else {
 		ctx = c.handler.before(ctx, CommandRPush)
 	}
@@ -484,9 +504,9 @@ func (c *client) RPush(ctx context.Context, key string, values ...interface{}) I
 	return r
 }
 
-func (c *client) RPushX(ctx context.Context, key string, values ...interface{}) IntCmd {
+func (c *client) RPushX(ctx context.Context, key string, values ...any) IntCmd {
 	if len(values) > 1 {
-		ctx = c.handler.before(ctx, CommandRPushXMultiple)
+		ctx = c.handler.before(ctx, CommandRMPushX)
 	} else {
 		ctx = c.handler.before(ctx, CommandRPushX)
 	}

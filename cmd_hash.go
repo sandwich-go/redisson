@@ -2,6 +2,7 @@ package redisson
 
 import (
 	"context"
+	"time"
 )
 
 type HashCmdable interface {
@@ -50,7 +51,7 @@ type HashWriter interface {
 	// Sets the specified fields to their respective values in the hash stored at key. This command overwrites any specified fields already existing in the hash. If key does not exist, a new key holding a hash is created.
 	// Return:
 	//	Simple string reply
-	HMSet(ctx context.Context, key string, values ...interface{}) BoolCmd
+	HMSet(ctx context.Context, key string, values ...any) BoolCmd
 
 	// HSet
 	// Available since: 2.0.0
@@ -59,7 +60,7 @@ type HashWriter interface {
 	// Sets field in the hash stored at key to value. If key does not exist, a new key holding a hash is created. If field already exists in the hash, it is overwritten.
 	// Return:
 	// 	Integer reply: The number of fields that were added.
-	HSet(ctx context.Context, key string, values ...interface{}) IntCmd
+	HSet(ctx context.Context, key string, values ...any) IntCmd
 
 	// HSetNX
 	// Available since: 2.0.0
@@ -70,7 +71,52 @@ type HashWriter interface {
 	// Integer reply, specifically:
 	//	1 if field is a new field in the hash and value was set.
 	//	0 if field already exists in the hash and no operation was performed.
-	HSetNX(ctx context.Context, key, field string, value interface{}) BoolCmd
+	HSetNX(ctx context.Context, key, field string, value any) BoolCmd
+
+	// HExpire
+	// Available since: 7.4.0
+	// Time complexity: O(N) where N is the number of arguments to the command
+	// ACL categories: @write @hash @fast
+	// Set an expiration (TTL or time to live) on one or more fields of a given hash key. You must specify at least one field. Field(s) will automatically be deleted from the hash key when their TTLs expire.
+	HExpire(ctx context.Context, key string, seconds time.Duration, fields ...string) IntSliceCmd
+	HExpireNX(ctx context.Context, key string, seconds time.Duration, fields ...string) IntSliceCmd
+	HExpireXX(ctx context.Context, key string, seconds time.Duration, fields ...string) IntSliceCmd
+	HExpireGT(ctx context.Context, key string, seconds time.Duration, fields ...string) IntSliceCmd
+	HExpireLT(ctx context.Context, key string, seconds time.Duration, fields ...string) IntSliceCmd
+
+	// HExpireAt
+	// Available since: 7.4.0
+	// Time complexity: O(N) where N is the number of arguments to the command
+	// ACL categories: @write @hash @fast
+	// HEXPIREAT has the same effect and semantics as HEXPIRE, but instead of specifying the number of seconds for the TTL (time to live),
+	// it takes an absolute Unix timestamp in seconds since Unix epoch. A timestamp in the past will delete the field immediately.
+	HExpireAt(ctx context.Context, key string, tm time.Time, fields ...string) IntSliceCmd
+	HExpireAtNX(ctx context.Context, key string, tm time.Time, fields ...string) IntSliceCmd
+	HExpireAtXX(ctx context.Context, key string, tm time.Time, fields ...string) IntSliceCmd
+	HExpireAtGT(ctx context.Context, key string, tm time.Time, fields ...string) IntSliceCmd
+	HExpireAtLT(ctx context.Context, key string, tm time.Time, fields ...string) IntSliceCmd
+
+	// HPExpire
+	// Available since: 7.4.0
+	// Time complexity: O(N) where N is the number of arguments to the command
+	// ACL categories: @write @hash @fast
+	// This command works like HEXPIRE, but the expiration of a field is specified in milliseconds instead of seconds.
+	HPExpire(ctx context.Context, key string, seconds time.Duration, fields ...string) IntSliceCmd
+	HPExpireNX(ctx context.Context, key string, seconds time.Duration, fields ...string) IntSliceCmd
+	HPExpireXX(ctx context.Context, key string, seconds time.Duration, fields ...string) IntSliceCmd
+	HPExpireGT(ctx context.Context, key string, seconds time.Duration, fields ...string) IntSliceCmd
+	HPExpireLT(ctx context.Context, key string, seconds time.Duration, fields ...string) IntSliceCmd
+
+	// HPExpireAt
+	// Available since: 7.4.0
+	// Time complexity: O(N) where N is the number of arguments to the command
+	// ACL categories: @write @hash @fast
+	// HPEXPIREAT has the same effect and semantics as HEXPIREAT, but the Unix time at which the field will expire is specified in milliseconds since Unix epoch instead of seconds.
+	HPExpireAt(ctx context.Context, key string, tm time.Time, fields ...string) IntSliceCmd
+	HPExpireAtNX(ctx context.Context, key string, tm time.Time, fields ...string) IntSliceCmd
+	HPExpireAtXX(ctx context.Context, key string, tm time.Time, fields ...string) IntSliceCmd
+	HPExpireAtGT(ctx context.Context, key string, tm time.Time, fields ...string) IntSliceCmd
+	HPExpireAtLT(ctx context.Context, key string, tm time.Time, fields ...string) IntSliceCmd
 }
 
 type HashReader interface {
@@ -94,6 +140,43 @@ type HashReader interface {
 	// ACL categories: @read @hash @slow
 	// See https://redis.io/commands/scan/
 	HScan(ctx context.Context, key string, cursor uint64, match string, count int64) ScanCmd
+
+	// HExpireTime
+	// Available since: 7.4.0
+	// Time complexity: O(N) where N is the number of arguments to the command
+	// ACL categories: @read, @hash, @fast
+	// Returns the absolute Unix timestamp in seconds since Unix epoch at which the given key's field(s) will expire.
+	HExpireTime(ctx context.Context, key string, fields ...string) DurationSliceCmd
+
+	// HPersist
+	// Available since: 7.4.0
+	// Time complexity: O(N) where N is the number of arguments to the command
+	// ACL categories: @read, @hash, @fast
+	// Remove the existing expiration on a hash key's field(s),
+	// turning the field(s) from volatile (a field with expiration set) to persistent (a field that will never expire as no TTL (time to live) is associated).
+	HPersist(ctx context.Context, key string, fields ...string) IntSliceCmd
+
+	// HPExpireTime
+	// Available since: 7.4.0
+	// Time complexity: O(N) where N is the number of arguments to the command
+	// ACL categories: @read, @hash, @fast
+	// HPEXPIRETIME has the same semantics as HEXPIRETIME, but returns the absolute Unix expiration timestamp in milliseconds since Unix epoch instead of seconds.
+	HPExpireTime(ctx context.Context, key string, fields ...string) DurationSliceCmd
+
+	// HTTL
+	// Available since: 7.4.0
+	// Time complexity: O(N) where N is the number of arguments to the command
+	// ACL categories: @read, @hash, @fast
+	// Returns the remaining TTL (time to live) of a hash key's field(s) that have a set expiration.
+	// This introspection capability allows you to check how many seconds a given hash field will continue to be part of the hash key.
+	HTTL(ctx context.Context, key string, fields ...string) DurationSliceCmd
+
+	// HPTTL
+	// Available since: 7.4.0
+	// Time complexity: O(N) where N is the number of arguments to the command
+	// ACL categories: @read, @hash, @fast
+	// Like HTTL, this command returns the remaining TTL (time to live) of a field that has an expiration set, but in milliseconds instead of seconds.
+	HPTTL(ctx context.Context, key string, fields ...string) DurationSliceCmd
 }
 
 type HashCacheCmdable interface {
@@ -162,11 +245,18 @@ type HashCacheCmdable interface {
 	// Return:
 	// 	Array reply: list of values in the hash, or an empty list when key does not exist.
 	HVals(ctx context.Context, key string) StringSliceCmd
+
+	// HStrLen
+	// Available since: 3.2.0
+	// Time complexity: O(1)
+	// ACL categories: @read, @hash, @fast
+	// Returns the string length of the value associated with field in the hash stored at key. If the key or the field do not exist, 0 is returned.
+	HStrLen(ctx context.Context, key, field string) IntCmd
 }
 
 func (c *client) HDel(ctx context.Context, key string, fields ...string) IntCmd {
 	if len(fields) > 1 {
-		ctx = c.handler.before(ctx, CommandHDelMultiple)
+		ctx = c.handler.before(ctx, CommandHMDel)
 	} else {
 		ctx = c.handler.before(ctx, CommandHDel)
 	}
@@ -179,10 +269,87 @@ func (c *client) HExists(ctx context.Context, key, field string) BoolCmd {
 	ctx = c.handler.before(ctx, CommandHExists)
 	var r BoolCmd
 	if c.ttl > 0 {
-		r = newBoolCmd(c.doCache(ctx, c.cmd.B().Hexists().Key(key).Field(field).Cache()))
+		r = newBoolCmd(c.Do(ctx, c.builder.HExistsCompleted(key, field)))
 	} else {
 		r = c.adapter.HExists(ctx, key, field)
 	}
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
+func (c *client) HExpire(ctx context.Context, key string, seconds time.Duration, fields ...string) IntSliceCmd {
+	ctx = c.handler.before(ctx, CommandHExpire)
+	r := newIntSliceCmd(c.Do(ctx, c.builder.HExpireCompleted(key, seconds, fields...)))
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
+func (c *client) HExpireNX(ctx context.Context, key string, seconds time.Duration, fields ...string) IntSliceCmd {
+	ctx = c.handler.before(ctx, CommandHExpireNX)
+	r := newIntSliceCmd(c.Do(ctx, c.builder.HExpireNXCompleted(key, seconds, fields...)))
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
+func (c *client) HExpireXX(ctx context.Context, key string, seconds time.Duration, fields ...string) IntSliceCmd {
+	ctx = c.handler.before(ctx, CommandHExpireXX)
+	r := newIntSliceCmd(c.Do(ctx, c.builder.HExpireXXCompleted(key, seconds, fields...)))
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
+func (c *client) HExpireGT(ctx context.Context, key string, seconds time.Duration, fields ...string) IntSliceCmd {
+	ctx = c.handler.before(ctx, CommandHExpireGT)
+	r := newIntSliceCmd(c.Do(ctx, c.builder.HExpireGTCompleted(key, seconds, fields...)))
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
+func (c *client) HExpireLT(ctx context.Context, key string, seconds time.Duration, fields ...string) IntSliceCmd {
+	ctx = c.handler.before(ctx, CommandHExpireLT)
+	r := newIntSliceCmd(c.Do(ctx, c.builder.HExpireLTCompleted(key, seconds, fields...)))
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
+func (c *client) HExpireAt(ctx context.Context, key string, tm time.Time, fields ...string) IntSliceCmd {
+	ctx = c.handler.before(ctx, CommandHExpireAt)
+	r := newIntSliceCmd(c.Do(ctx, c.builder.HExpireAtCompleted(key, tm, fields...)))
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
+func (c *client) HExpireAtNX(ctx context.Context, key string, tm time.Time, fields ...string) IntSliceCmd {
+	ctx = c.handler.before(ctx, CommandHExpireAtNX)
+	r := newIntSliceCmd(c.Do(ctx, c.builder.HExpireAtNXCompleted(key, tm, fields...)))
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
+func (c *client) HExpireAtXX(ctx context.Context, key string, tm time.Time, fields ...string) IntSliceCmd {
+	ctx = c.handler.before(ctx, CommandHExpireAtXX)
+	r := newIntSliceCmd(c.Do(ctx, c.builder.HExpireAtXXCompleted(key, tm, fields...)))
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
+func (c *client) HExpireAtGT(ctx context.Context, key string, tm time.Time, fields ...string) IntSliceCmd {
+	ctx = c.handler.before(ctx, CommandHExpireAtGT)
+	r := newIntSliceCmd(c.Do(ctx, c.builder.HExpireAtGTCompleted(key, tm, fields...)))
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
+func (c *client) HExpireAtLT(ctx context.Context, key string, tm time.Time, fields ...string) IntSliceCmd {
+	ctx = c.handler.before(ctx, CommandHExpireAtLT)
+	r := newIntSliceCmd(c.Do(ctx, c.builder.HExpireAtLTCompleted(key, tm, fields...)))
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
+func (c *client) HExpireTime(ctx context.Context, key string, fields ...string) DurationSliceCmd {
+	ctx = c.handler.before(ctx, CommandHExpireTime)
+	r := newDurationSliceCmd(c.Do(ctx, c.builder.HExpireTimeCompleted(key, fields...)), time.Second)
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -191,7 +358,7 @@ func (c *client) HGet(ctx context.Context, key, field string) StringCmd {
 	ctx = c.handler.before(ctx, CommandHGet)
 	var r StringCmd
 	if c.ttl > 0 {
-		r = newStringCmd(c.doCache(ctx, c.cmd.B().Hget().Key(key).Field(field).Cache()))
+		r = newStringCmd(c.Do(ctx, c.builder.HGetCompleted(key, field)))
 	} else {
 		r = c.adapter.HGet(ctx, key, field)
 	}
@@ -203,7 +370,7 @@ func (c *client) HGetAll(ctx context.Context, key string) StringStringMapCmd {
 	ctx = c.handler.before(ctx, CommandHGetAll)
 	var r StringStringMapCmd
 	if c.ttl > 0 {
-		r = newStringStringMapCmd(c.doCache(ctx, c.cmd.B().Hgetall().Key(key).Cache()))
+		r = newStringStringMapCmd(c.Do(ctx, c.builder.HGetAllCompleted(key)))
 	} else {
 		r = c.adapter.HGetAll(ctx, key)
 	}
@@ -229,7 +396,7 @@ func (c *client) HKeys(ctx context.Context, key string) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandHKeys)
 	var r StringSliceCmd
 	if c.ttl > 0 {
-		r = newStringSliceCmd(c.doCache(ctx, c.cmd.B().Hkeys().Key(key).Cache()))
+		r = newStringSliceCmd(c.Do(ctx, c.builder.HKeysCompleted(key)))
 	} else {
 		r = c.adapter.HKeys(ctx, key)
 	}
@@ -241,7 +408,7 @@ func (c *client) HLen(ctx context.Context, key string) IntCmd {
 	ctx = c.handler.before(ctx, CommandHLen)
 	var r IntCmd
 	if c.ttl > 0 {
-		r = newIntCmd(c.doCache(ctx, c.cmd.B().Hlen().Key(key).Cache()))
+		r = newIntCmd(c.Do(ctx, c.builder.HLenCompleted(key)))
 	} else {
 		r = c.adapter.HLen(ctx, key)
 	}
@@ -253,7 +420,7 @@ func (c *client) HMGet(ctx context.Context, key string, fields ...string) SliceC
 	ctx = c.handler.before(ctx, CommandHMGet)
 	var r SliceCmd
 	if c.ttl > 0 {
-		r = newSliceCmd(c.doCache(ctx, c.cmd.B().Hmget().Key(key).Field(fields...).Cache()), false, fields...)
+		r = newSliceCmd(c.Do(ctx, c.builder.HMGetCompleted(key, fields...)), false, fields...)
 	} else {
 		r = c.adapter.HMGet(ctx, key, fields...)
 	}
@@ -261,9 +428,107 @@ func (c *client) HMGet(ctx context.Context, key string, fields ...string) SliceC
 	return r
 }
 
-func (c *client) HMSet(ctx context.Context, key string, values ...interface{}) BoolCmd {
+func (c *client) HMSet(ctx context.Context, key string, values ...any) BoolCmd {
 	ctx = c.handler.before(ctx, CommandHMSet)
 	r := c.adapter.HMSet(ctx, key, values...)
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
+func (c *client) HPersist(ctx context.Context, key string, fields ...string) IntSliceCmd {
+	ctx = c.handler.before(ctx, CommandHPersist)
+	r := newIntSliceCmd(c.Do(ctx, c.builder.HPersistCompleted(key, fields...)))
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
+func (c *client) HPExpire(ctx context.Context, key string, milliseconds time.Duration, fields ...string) IntSliceCmd {
+	ctx = c.handler.before(ctx, CommandHPExpire)
+	r := newIntSliceCmd(c.Do(ctx, c.builder.HPExpireCompleted(key, milliseconds, fields...)))
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
+func (c *client) HPExpireNX(ctx context.Context, key string, milliseconds time.Duration, fields ...string) IntSliceCmd {
+	ctx = c.handler.before(ctx, CommandHPExpireNX)
+	r := newIntSliceCmd(c.Do(ctx, c.builder.HPExpireNXCompleted(key, milliseconds, fields...)))
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
+func (c *client) HPExpireXX(ctx context.Context, key string, milliseconds time.Duration, fields ...string) IntSliceCmd {
+	ctx = c.handler.before(ctx, CommandHPExpireXX)
+	r := newIntSliceCmd(c.Do(ctx, c.builder.HPExpireXXCompleted(key, milliseconds, fields...)))
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
+func (c *client) HPExpireGT(ctx context.Context, key string, milliseconds time.Duration, fields ...string) IntSliceCmd {
+	ctx = c.handler.before(ctx, CommandHPExpireGT)
+	r := newIntSliceCmd(c.Do(ctx, c.builder.HPExpireGTCompleted(key, milliseconds, fields...)))
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
+func (c *client) HPExpireLT(ctx context.Context, key string, milliseconds time.Duration, fields ...string) IntSliceCmd {
+	ctx = c.handler.before(ctx, CommandHPExpireLT)
+	r := newIntSliceCmd(c.Do(ctx, c.builder.HPExpireLTCompleted(key, milliseconds, fields...)))
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
+func (c *client) HPExpireAt(ctx context.Context, key string, tm time.Time, fields ...string) IntSliceCmd {
+	ctx = c.handler.before(ctx, CommandHPExpireAt)
+	r := newIntSliceCmd(c.Do(ctx, c.builder.HPExpireAtCompleted(key, tm, fields...)))
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
+func (c *client) HPExpireAtNX(ctx context.Context, key string, tm time.Time, fields ...string) IntSliceCmd {
+	ctx = c.handler.before(ctx, CommandHPExpireAtNX)
+	r := newIntSliceCmd(c.Do(ctx, c.builder.HPExpireAtNXCompleted(key, tm, fields...)))
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
+func (c *client) HPExpireAtXX(ctx context.Context, key string, tm time.Time, fields ...string) IntSliceCmd {
+	ctx = c.handler.before(ctx, CommandHPExpireAtXX)
+	r := newIntSliceCmd(c.Do(ctx, c.builder.HPExpireAtXXCompleted(key, tm, fields...)))
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
+func (c *client) HPExpireAtGT(ctx context.Context, key string, tm time.Time, fields ...string) IntSliceCmd {
+	ctx = c.handler.before(ctx, CommandHPExpireAtGT)
+	r := newIntSliceCmd(c.Do(ctx, c.builder.HPExpireAtGTCompleted(key, tm, fields...)))
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
+func (c *client) HPExpireAtLT(ctx context.Context, key string, tm time.Time, fields ...string) IntSliceCmd {
+	ctx = c.handler.before(ctx, CommandHPExpireAtLT)
+	r := newIntSliceCmd(c.Do(ctx, c.builder.HPExpireAtLTCompleted(key, tm, fields...)))
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
+func (c *client) HPExpireTime(ctx context.Context, key string, fields ...string) DurationSliceCmd {
+	ctx = c.handler.before(ctx, CommandHPExpireTime)
+	r := newDurationSliceCmd(c.Do(ctx, c.builder.HPExpireTimeCompleted(key, fields...)), time.Millisecond)
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
+func (c *client) HTTL(ctx context.Context, key string, fields ...string) DurationSliceCmd {
+	ctx = c.handler.before(ctx, CommandHTTL)
+	r := newDurationSliceCmd(c.Do(ctx, c.builder.HTTLCompleted(key, fields...)), time.Second)
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
+func (c *client) HPTTL(ctx context.Context, key string, fields ...string) DurationSliceCmd {
+	ctx = c.handler.before(ctx, CommandHPTTL)
+	r := newDurationSliceCmd(c.Do(ctx, c.builder.HPTTLCompleted(key, fields...)), time.Millisecond)
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -276,7 +541,7 @@ func (c *client) HRandField(ctx context.Context, key string, count int64) String
 }
 
 func (c *client) HRandFieldWithValues(ctx context.Context, key string, count int64) KeyValueSliceCmd {
-	ctx = c.handler.before(ctx, CommandHRandField)
+	ctx = c.handler.before(ctx, CommandHRandFieldWithValues)
 	r := c.adapter.HRandFieldWithValues(ctx, key, count)
 	c.handler.after(ctx, r.Err())
 	return r
@@ -289,9 +554,9 @@ func (c *client) HScan(ctx context.Context, key string, cursor uint64, match str
 	return r
 }
 
-func (c *client) HSet(ctx context.Context, key string, values ...interface{}) IntCmd {
+func (c *client) HSet(ctx context.Context, key string, values ...any) IntCmd {
 	if len(values) > 2 {
-		ctx = c.handler.before(ctx, CommandHSetMultiple)
+		ctx = c.handler.before(ctx, CommandHMSetX)
 	} else {
 		ctx = c.handler.before(ctx, CommandHSet)
 	}
@@ -300,7 +565,7 @@ func (c *client) HSet(ctx context.Context, key string, values ...interface{}) In
 	return r
 }
 
-func (c *client) HSetNX(ctx context.Context, key, field string, value interface{}) BoolCmd {
+func (c *client) HSetNX(ctx context.Context, key, field string, value any) BoolCmd {
 	ctx = c.handler.before(ctx, CommandHSetNX)
 	r := c.adapter.HSetNX(ctx, key, field, value)
 	c.handler.after(ctx, r.Err())
@@ -311,10 +576,18 @@ func (c *client) HVals(ctx context.Context, key string) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandHVals)
 	var r StringSliceCmd
 	if c.ttl > 0 {
-		r = newStringSliceCmd(c.doCache(ctx, c.cmd.B().Hvals().Key(key).Cache()))
+		r = newStringSliceCmd(c.Do(ctx, c.builder.HValsCompleted(key)))
 	} else {
 		r = c.adapter.HVals(ctx, key)
 	}
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
+func (c *client) HStrLen(ctx context.Context, key, field string) IntCmd {
+	ctx = c.handler.before(ctx, CommandHStrLen)
+	var r IntCmd
+	r = newIntCmd(c.Do(ctx, c.builder.HStrLenCompleted(key, field)))
 	c.handler.after(ctx, r.Err())
 	return r
 }

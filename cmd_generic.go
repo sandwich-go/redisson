@@ -59,7 +59,11 @@ type GenericWriter interface {
 	// Integer reply, specifically:
 	//	1 if the timeout was set.
 	//	0 if the timeout was not set. e.g. key doesn't exist, or operation skipped due to the provided arguments.
-	Expire(ctx context.Context, key string, expiration time.Duration) BoolCmd
+	Expire(ctx context.Context, key string, seconds time.Duration) BoolCmd
+	ExpireNX(ctx context.Context, key string, seconds time.Duration) BoolCmd
+	ExpireXX(ctx context.Context, key string, seconds time.Duration) BoolCmd
+	ExpireGT(ctx context.Context, key string, seconds time.Duration) BoolCmd
+	ExpireLT(ctx context.Context, key string, seconds time.Duration) BoolCmd
 
 	// ExpireAt
 	// Available since: 1.2.0
@@ -81,6 +85,10 @@ type GenericWriter interface {
 	//	1 if the timeout was set.
 	//	0 if the timeout was not set. e.g. key doesn't exist, or operation skipped due to the provided arguments.
 	ExpireAt(ctx context.Context, key string, tm time.Time) BoolCmd
+	ExpireAtNX(ctx context.Context, key string, tm time.Time) BoolCmd
+	ExpireAtXX(ctx context.Context, key string, tm time.Time) BoolCmd
+	ExpireAtGT(ctx context.Context, key string, tm time.Time) BoolCmd
+	ExpireAtLT(ctx context.Context, key string, tm time.Time) BoolCmd
 
 	// Migrate
 	// Available since: 2.6.0
@@ -128,6 +136,10 @@ type GenericWriter interface {
 	//	1 if the timeout was set.
 	//	0 if the timeout was not set. e.g. key doesn't exist, or operation skipped due to the provided arguments.
 	PExpire(ctx context.Context, key string, expiration time.Duration) BoolCmd
+	PExpireNX(ctx context.Context, key string, expiration time.Duration) BoolCmd
+	PExpireXX(ctx context.Context, key string, expiration time.Duration) BoolCmd
+	PExpireGT(ctx context.Context, key string, expiration time.Duration) BoolCmd
+	PExpireLT(ctx context.Context, key string, expiration time.Duration) BoolCmd
 
 	// PExpireAt
 	// Available since: 2.6.0
@@ -146,6 +158,10 @@ type GenericWriter interface {
 	//	1 if the timeout was set.
 	//	0 if the timeout was not set. e.g. key doesn't exist, or operation skipped due to the provided arguments.
 	PExpireAt(ctx context.Context, key string, tm time.Time) BoolCmd
+	PExpireAtNX(ctx context.Context, key string, tm time.Time) BoolCmd
+	PExpireAtXX(ctx context.Context, key string, tm time.Time) BoolCmd
+	PExpireAtGT(ctx context.Context, key string, tm time.Time) BoolCmd
+	PExpireAtLT(ctx context.Context, key string, tm time.Time) BoolCmd
 
 	// Rename
 	// Available since: 1.0.0
@@ -204,9 +220,37 @@ type GenericWriter interface {
 	// Return:
 	//	Integer reply: The number of keys that were unlinked.
 	Unlink(ctx context.Context, keys ...string) IntCmd
+
+	// Sort
+	// Available since: 1.0.0
+	// Time complexity: O(N+M*log(M)) where N is the number of elements in the list or set to sort, and M the number of returned elements. When the elements are not sorted, complexity is O(N).
+	// ACL categories: @write @set @sortedset @list @slow @dangerous
+	// See https://redis.io/commands/sort/
+	Sort(ctx context.Context, key string, sort Sort) StringSliceCmd
+
+	// SortInterfaces
+	// Available since: 1.0.0
+	// Time complexity: O(N+M*log(M)) where N is the number of elements in the list or set to sort, and M the number of returned elements. When the elements are not sorted, complexity is O(N).
+	// ACL categories: @write @set @sortedset @list @slow @dangerous
+	// See https://redis.io/commands/sort/
+	SortInterfaces(ctx context.Context, key string, sort Sort) SliceCmd
 }
 
 type GenericReader interface {
+	// ExpireTime
+	// Available since: 7.0.0
+	// Time complexity: O(1)
+	// ACL categories: @keyspace @read @fast
+	// Returns the absolute Unix timestamp (since January 1, 1970) in seconds at which the given key will expire.
+	ExpireTime(ctx context.Context, key string) DurationCmd
+
+	// PExpireTime
+	// Available since: 7.0.0
+	// Time complexity: O(1)
+	// ACL categories: @keyspace @read @fast
+	// PEXPIRETIME has the same semantic as EXPIRETIME, but returns the absolute Unix expiration timestamp in milliseconds instead of seconds.
+	PExpireTime(ctx context.Context, key string) DurationCmd
+
 	// Dump
 	// Available since: 2.6.0
 	// Time complexity: O(1) to access the key and additional O(NM) to serialize it, where N is the number of Redis objects composing the value and M their average size. For small string values the time complexity is thus O(1)+O(1M) where M is small, so simply O(1).
@@ -322,19 +366,12 @@ type GenericReader interface {
 	//	Integer reply: The number of keys that were touched.
 	Touch(ctx context.Context, keys ...string) IntCmd
 
-	// Sort
-	// Available since: 1.0.0
+	// SortRO
+	// Available since: 7.0.0
 	// Time complexity: O(N+M*log(M)) where N is the number of elements in the list or set to sort, and M the number of returned elements. When the elements are not sorted, complexity is O(N).
-	// ACL categories: @write @set @sortedset @list @slow @dangerous
+	// ACL categories: @read, @set, @sortedset, @list, @slow, @dangerous
 	// See https://redis.io/commands/sort/
-	Sort(ctx context.Context, key string, sort Sort) StringSliceCmd
-
-	// SortInterfaces
-	// Available since: 1.0.0
-	// Time complexity: O(N+M*log(M)) where N is the number of elements in the list or set to sort, and M the number of returned elements. When the elements are not sorted, complexity is O(N).
-	// ACL categories: @write @set @sortedset @list @slow @dangerous
-	// See https://redis.io/commands/sort/
-	SortInterfaces(ctx context.Context, key string, sort Sort) SliceCmd
+	SortRO(ctx context.Context, key string, sort Sort) StringSliceCmd
 }
 
 type GenericCacheCmdable interface {
@@ -398,7 +435,7 @@ func (c *client) Dump(ctx context.Context, key string) StringCmd {
 
 func (c *client) Exists(ctx context.Context, keys ...string) IntCmd {
 	if len(keys) > 1 {
-		ctx = c.handler.beforeWithKeys(ctx, CommandExistsMultipleKeys, func() []string { return keys })
+		ctx = c.handler.beforeWithKeys(ctx, CommandMExists, func() []string { return keys })
 	} else {
 		ctx = c.handler.before(ctx, CommandExists)
 	}
@@ -407,9 +444,37 @@ func (c *client) Exists(ctx context.Context, keys ...string) IntCmd {
 	return r
 }
 
-func (c *client) Expire(ctx context.Context, key string, expiration time.Duration) BoolCmd {
+func (c *client) Expire(ctx context.Context, key string, seconds time.Duration) BoolCmd {
 	ctx = c.handler.before(ctx, CommandExpire)
-	r := c.adapter.Expire(ctx, key, expiration)
+	r := c.adapter.Expire(ctx, key, seconds)
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
+func (c *client) ExpireNX(ctx context.Context, key string, seconds time.Duration) BoolCmd {
+	ctx = c.handler.before(ctx, CommandExpireNX)
+	r := c.adapter.ExpireNX(ctx, key, seconds)
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
+func (c *client) ExpireXX(ctx context.Context, key string, seconds time.Duration) BoolCmd {
+	ctx = c.handler.before(ctx, CommandExpireXX)
+	r := c.adapter.ExpireXX(ctx, key, seconds)
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
+func (c *client) ExpireGT(ctx context.Context, key string, seconds time.Duration) BoolCmd {
+	ctx = c.handler.before(ctx, CommandExpireGT)
+	r := c.adapter.ExpireGT(ctx, key, seconds)
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
+func (c *client) ExpireLT(ctx context.Context, key string, seconds time.Duration) BoolCmd {
+	ctx = c.handler.before(ctx, CommandExpireLT)
+	r := c.adapter.ExpireLT(ctx, key, seconds)
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -417,6 +482,41 @@ func (c *client) Expire(ctx context.Context, key string, expiration time.Duratio
 func (c *client) ExpireAt(ctx context.Context, key string, tm time.Time) BoolCmd {
 	ctx = c.handler.before(ctx, CommandExpireAt)
 	r := c.adapter.ExpireAt(ctx, key, tm)
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
+func (c *client) ExpireAtNX(ctx context.Context, key string, tm time.Time) BoolCmd {
+	ctx = c.handler.before(ctx, CommandExpireAtNX)
+	r := newBoolCmd(c.Do(ctx, c.builder.ExpireAtNXCompleted(key, tm)))
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
+func (c *client) ExpireAtXX(ctx context.Context, key string, tm time.Time) BoolCmd {
+	ctx = c.handler.before(ctx, CommandExpireAtXX)
+	r := newBoolCmd(c.Do(ctx, c.builder.ExpireAtXXCompleted(key, tm)))
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
+func (c *client) ExpireAtGT(ctx context.Context, key string, tm time.Time) BoolCmd {
+	ctx = c.handler.before(ctx, CommandExpireAtGT)
+	r := newBoolCmd(c.Do(ctx, c.builder.ExpireAtGTCompleted(key, tm)))
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
+func (c *client) ExpireAtLT(ctx context.Context, key string, tm time.Time) BoolCmd {
+	ctx = c.handler.before(ctx, CommandExpireAtLT)
+	r := newBoolCmd(c.Do(ctx, c.builder.ExpireAtLTCompleted(key, tm)))
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
+func (c *client) ExpireTime(ctx context.Context, key string) DurationCmd {
+	ctx = c.handler.before(ctx, CommandExpireTime)
+	r := c.adapter.ExpireTime(ctx, key)
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -470,9 +570,37 @@ func (c *client) Persist(ctx context.Context, key string) BoolCmd {
 	return r
 }
 
-func (c *client) PExpire(ctx context.Context, key string, expiration time.Duration) BoolCmd {
+func (c *client) PExpire(ctx context.Context, key string, milliseconds time.Duration) BoolCmd {
 	ctx = c.handler.before(ctx, CommandPExpire)
-	r := c.adapter.PExpire(ctx, key, expiration)
+	r := c.adapter.PExpire(ctx, key, milliseconds)
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
+func (c *client) PExpireNX(ctx context.Context, key string, milliseconds time.Duration) BoolCmd {
+	ctx = c.handler.before(ctx, CommandPExpireNX)
+	r := newBoolCmd(c.Do(ctx, c.builder.PExpireNXCompleted(key, milliseconds)))
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
+func (c *client) PExpireXX(ctx context.Context, key string, milliseconds time.Duration) BoolCmd {
+	ctx = c.handler.before(ctx, CommandPExpireXX)
+	r := newBoolCmd(c.Do(ctx, c.builder.PExpireXXCompleted(key, milliseconds)))
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
+func (c *client) PExpireGT(ctx context.Context, key string, milliseconds time.Duration) BoolCmd {
+	ctx = c.handler.before(ctx, CommandPExpireGT)
+	r := newBoolCmd(c.Do(ctx, c.builder.PExpireGTCompleted(key, milliseconds)))
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
+func (c *client) PExpireLT(ctx context.Context, key string, milliseconds time.Duration) BoolCmd {
+	ctx = c.handler.before(ctx, CommandPExpireLT)
+	r := newBoolCmd(c.Do(ctx, c.builder.PExpireLTCompleted(key, milliseconds)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -484,11 +612,46 @@ func (c *client) PExpireAt(ctx context.Context, key string, tm time.Time) BoolCm
 	return r
 }
 
+func (c *client) PExpireAtNX(ctx context.Context, key string, tm time.Time) BoolCmd {
+	ctx = c.handler.before(ctx, CommandPExpireAtNX)
+	r := newBoolCmd(c.Do(ctx, c.builder.PExpireAtNXCompleted(key, tm)))
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
+func (c *client) PExpireAtXX(ctx context.Context, key string, tm time.Time) BoolCmd {
+	ctx = c.handler.before(ctx, CommandPExpireAtXX)
+	r := newBoolCmd(c.Do(ctx, c.builder.PExpireAtXXCompleted(key, tm)))
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
+func (c *client) PExpireAtGT(ctx context.Context, key string, tm time.Time) BoolCmd {
+	ctx = c.handler.before(ctx, CommandPExpireAtGT)
+	r := newBoolCmd(c.Do(ctx, c.builder.PExpireAtGTCompleted(key, tm)))
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
+func (c *client) PExpireAtLT(ctx context.Context, key string, tm time.Time) BoolCmd {
+	ctx = c.handler.before(ctx, CommandPExpireAtLT)
+	r := newBoolCmd(c.Do(ctx, c.builder.PExpireAtLTCompleted(key, tm)))
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
+func (c *client) PExpireTime(ctx context.Context, key string) DurationCmd {
+	ctx = c.handler.before(ctx, CommandPExpireAt)
+	r := c.adapter.PExpireTime(ctx, key)
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
 func (c *client) PTTL(ctx context.Context, key string) DurationCmd {
 	ctx = c.handler.before(ctx, CommandPTTL)
 	var r DurationCmd
 	if c.ttl > 0 {
-		r = newDurationCmd(c.doCache(ctx, c.cmd.B().Pttl().Key(key).Cache()), time.Millisecond)
+		r = newDurationCmd(c.Do(ctx, c.builder.PTTLCompleted(key)), time.Millisecond)
 	} else {
 		r = c.adapter.PTTL(ctx, key)
 	}
@@ -539,11 +702,7 @@ func (c *client) Scan(ctx context.Context, cursor uint64, match string, count in
 }
 
 func (c *client) ScanType(ctx context.Context, cursor uint64, match string, count int64, keyType string) ScanCmd {
-	if len(keyType) > 0 {
-		ctx = c.handler.before(ctx, CommandScanType)
-	} else {
-		ctx = c.handler.before(ctx, CommandScan)
-	}
+	ctx = c.handler.before(ctx, CommandScanType)
 	r := c.adapter.ScanType(ctx, cursor, match, count, keyType)
 	c.handler.after(ctx, r.Err())
 	return r
@@ -557,7 +716,7 @@ func (c *client) Sort(ctx context.Context, key string, sort Sort) StringSliceCmd
 }
 
 func (c *client) SortStore(ctx context.Context, key, store string, sort Sort) IntCmd {
-	ctx = c.handler.beforeWithKeys(ctx, CommandSort, func() []string { return appendString(key, store) })
+	ctx = c.handler.beforeWithKeys(ctx, CommandSortStore, func() []string { return appendString(key, store) })
 	r := c.adapter.SortStore(ctx, key, store, sort)
 	c.handler.after(ctx, r.Err())
 	return r
@@ -566,6 +725,13 @@ func (c *client) SortStore(ctx context.Context, key, store string, sort Sort) In
 func (c *client) SortInterfaces(ctx context.Context, key string, sort Sort) SliceCmd {
 	ctx = c.handler.before(ctx, CommandSort)
 	r := c.adapter.SortInterfaces(ctx, key, sort)
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
+func (c *client) SortRO(ctx context.Context, key string, sort Sort) StringSliceCmd {
+	ctx = c.handler.before(ctx, CommandSortRO)
+	r := c.adapter.SortRO(ctx, key, sort)
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -581,7 +747,7 @@ func (c *client) TTL(ctx context.Context, key string) DurationCmd {
 	ctx = c.handler.before(ctx, CommandTTL)
 	var r DurationCmd
 	if c.ttl > 0 {
-		r = newDurationCmd(c.doCache(ctx, c.cmd.B().Ttl().Key(key).Cache()), time.Second)
+		r = newDurationCmd(c.Do(ctx, c.builder.TTLCompleted(key)), time.Second)
 	} else {
 		r = c.adapter.TTL(ctx, key)
 	}
@@ -593,7 +759,7 @@ func (c *client) Type(ctx context.Context, key string) StatusCmd {
 	ctx = c.handler.before(ctx, CommandType)
 	var r StatusCmd
 	if c.ttl > 0 {
-		r = newStatusCmd(c.doCache(ctx, c.cmd.B().Type().Key(key).Cache()))
+		r = newStatusCmd(c.Do(ctx, c.builder.TypeCompleted(key)))
 	} else {
 		r = c.adapter.Type(ctx, key)
 	}

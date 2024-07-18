@@ -191,7 +191,7 @@ func testMSet(ctx context.Context, c Cmdable) []string {
 
 	mGet := c.MGet(ctx, key, key1, "_")
 	So(mGet.Err(), ShouldBeNil)
-	So(interfaceSliceEqual(mGet.Val(), []interface{}{"hello1", "hello2", nil}), ShouldBeTrue)
+	So(interfaceSliceEqual(mGet.Val(), []any{"hello1", "hello2", nil}), ShouldBeTrue)
 
 	return []string{key, key1}
 }
@@ -679,7 +679,7 @@ func testMGet(ctx context.Context, c Cmdable) []string {
 
 	mGet := c.MGet(ctx, key1, key2, "_")
 	So(mGet.Err(), ShouldBeNil)
-	So(interfaceSliceEqual(mGet.Val(), []interface{}{value1, value2, nil}), ShouldBeTrue)
+	So(interfaceSliceEqual(mGet.Val(), []any{value1, value2, nil}), ShouldBeTrue)
 
 	return []string{key1, key2}
 }
@@ -738,7 +738,7 @@ func stringTestUnits() []TestUnit {
 		{CommandDecr, testDecr},
 		{CommandDecrBy, testDecrBy},
 		{CommandGetDel, testGetDel},
-		{CommandGetEX, testGetEX},
+		{CommandGetEx, testGetEX},
 		{CommandGetSet, testGetSet},
 		{CommandIncr, testIncr},
 		{CommandIncrBy, testIncrBy},

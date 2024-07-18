@@ -50,7 +50,16 @@ type (
 	GeoRadiusQuery             = rueidiscompat.GeoRadiusQuery
 	ClusterNode                = rueidiscompat.ClusterNode
 	ClusterSlot                = rueidiscompat.ClusterSlot
+	ClusterShard               = rueidiscompat.ClusterShard
+	Library                    = rueidiscompat.Library
+	FunctionListQuery          = rueidiscompat.FunctionListQuery
+	FilterBy                   = rueidiscompat.FilterBy
+	KeyFlags                   = rueidiscompat.KeyFlags
 	Message                    = rueidis.PubSubMessage
+	Completed                  = rueidis.Completed
+	Builder                    = rueidis.Builder
+	RedisResult                = rueidis.RedisResult
+	KeyValues                  = rueidis.KeyValues
 )
 
 type baseCmd[T any] struct {
@@ -285,6 +294,27 @@ func newDurationCmd(res rueidis.RedisResult, precision time.Duration) DurationCm
 	return cmd
 }
 
+type KeyValuesCmd interface {
+	Val() (string, []string)
+	Err() error
+	Result() (string, []string, error)
+}
+
+type FunctionListCmd interface {
+	BaseCmd
+	Val() []Library
+	Err() error
+	Result() ([]Library, error)
+	First() (*Library, error)
+}
+
+type KeyFlagsCmd interface {
+	BaseCmd
+	Val() []KeyFlags
+	Err() error
+	Result() ([]KeyFlags, error)
+}
+
 type ScanCmd interface {
 	BaseCmd
 	Val() (keys []string, cursor uint64)
@@ -340,7 +370,7 @@ func newSliceCmd(res rueidis.RedisResult, isJSONObjKeys bool, keys ...string) Sl
 	return cmd
 }
 
-func newSliceCmdFromSlice(res []interface{}, err error, keys ...string) *sliceCmd {
+func newSliceCmdFromSlice(res []any, err error, keys ...string) *sliceCmd {
 	cmd := &sliceCmd{keys: keys}
 	if err != nil {
 		cmd.SetErr(err)
@@ -361,6 +391,18 @@ type IntSliceCmd interface {
 	BaseCmd
 	Val() []int64
 	Result() ([]int64, error)
+}
+
+type intSliceCmd struct {
+	baseCmd[[]int64]
+}
+
+func newIntSliceCmd(res rueidis.RedisResult) IntSliceCmd {
+	cmd := &intSliceCmd{}
+	val, err := res.AsIntSlice()
+	cmd.SetErr(err)
+	cmd.SetVal(val)
+	return cmd
 }
 
 type FloatSliceCmd interface {
@@ -399,6 +441,35 @@ func newStringSliceCmd(res rueidis.RedisResult) StringSliceCmd {
 	return cmd
 }
 
+type DurationSliceCmd interface {
+	BaseCmd
+	Val() []time.Duration
+	Result() ([]time.Duration, error)
+}
+
+type durationSliceCmd struct {
+	baseCmd[[]time.Duration]
+}
+
+func newDurationSliceCmd(res rueidis.RedisResult, precision time.Duration) DurationSliceCmd {
+	cmd := &durationSliceCmd{}
+	ints, err := res.AsIntSlice()
+	if err != nil {
+		cmd.SetErr(err)
+		return cmd
+	}
+	val := make([]time.Duration, 0, len(ints))
+	for _, i := range ints {
+		if i > 0 {
+			val = append(val, time.Duration(i)*precision)
+		} else {
+			val = append(val, time.Duration(i))
+		}
+	}
+	cmd.SetVal(val)
+	return cmd
+}
+
 type BoolSliceCmd interface {
 	BaseCmd
 	Val() []bool
@@ -428,7 +499,7 @@ type StringStringMapCmd interface {
 	BaseCmd
 	Val() map[string]string
 	Result() (map[string]string, error)
-	Scan(dest interface{}) error
+	Scan(dest any) error
 }
 
 type stringStringMapCmd struct {
@@ -445,7 +516,7 @@ func newStringStringMapCmd(res rueidis.RedisResult) StringStringMapCmd {
 
 // Scan scans the results from the map into a destination struct. The map keys
 // are matched in the Redis struct fields by the `redis:"field"` tag.
-func (c *stringStringMapCmd) Scan(dest interface{}) error {
+func (c *stringStringMapCmd) Scan(dest any) error {
 	if c.Err() != nil {
 		return c.Err()
 	}
@@ -480,6 +551,12 @@ type ClusterSlotsCmd interface {
 	BaseCmd
 	Val() []ClusterSlot
 	Result() ([]ClusterSlot, error)
+}
+
+type ClusterShardsCmd interface {
+	BaseCmd
+	Val() []ClusterShard
+	Result() ([]ClusterShard, error)
 }
 
 type GeoPosCmd interface {
@@ -565,6 +642,12 @@ type CommandsInfoCmd interface {
 	BaseCmd
 	Val() map[string]CommandInfo
 	Result() (map[string]CommandInfo, error)
+}
+
+type ZSliceWithKeyCmd interface {
+	BaseCmd
+	Val() (string, []Z)
+	Result() (string, []Z, error)
 }
 
 type ZWithKeyCmd interface {

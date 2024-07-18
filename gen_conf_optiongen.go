@@ -247,7 +247,7 @@ func newDefaultConf() *Conf {
 }
 
 // AtomicSetFunc used for XConf
-func (cc *Conf) AtomicSetFunc() func(interface{}) { return AtomicConfSet }
+func (cc *Conf) AtomicSetFunc() func(any) { return AtomicConfSet }
 
 // atomicConf global *Conf holder
 var atomicConf unsafe.Pointer
@@ -261,7 +261,7 @@ var onAtomicConfSet func(cc ConfInterface) bool
 func InstallCallbackOnAtomicConfSet(callback func(cc ConfInterface) bool) { onAtomicConfSet = callback }
 
 // AtomicConfSet atomic setter for *Conf
-func AtomicConfSet(update interface{}) {
+func AtomicConfSet(update any) {
 	cc := update.(*Conf)
 	if onAtomicConfSet != nil && !onAtomicConfSet(cc) {
 		return

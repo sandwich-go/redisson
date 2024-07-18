@@ -5,6 +5,14 @@ import (
 )
 
 type ServerCmdable interface {
+	// ACLDryRun
+	// Available since: 7.0.0
+	// Time complexity: O(1)
+	// ACL categories: @admin @slow @dangerous
+	// Simulate the execution of a given command by a given user.
+	// This command can be used to test the permissions of a given user without having to enable the user or cause the side effects of running the command.
+	ACLDryRun(ctx context.Context, username string, command ...any) StringCmd
+
 	// BgRewriteAOF
 	// Available since: 1.0.0
 	// Time complexity: O(1)
@@ -46,6 +54,27 @@ type ServerCmdable interface {
 	// COMMAND also has several subcommands. Please refer to its subcommands for further details.
 	// See https://redis.io/commands/command/
 	Command(ctx context.Context) CommandsInfoCmd
+
+	// CommandList
+	// Available since: 7.0.0
+	// Time complexity: O(N) where N is the total number of Redis commands
+	// ACL categories: @slow @connection
+	// Return an array of the server's command names.
+	CommandList(ctx context.Context, filter FilterBy) StringSliceCmd
+
+	// CommandGetKeys
+	// Available since: 2.8.13
+	// Time complexity: O(N) where N is the total number of Redis commands
+	// ACL categories: @slow @connection
+	// Returns Array reply of keys from a full Redis command.
+	CommandGetKeys(ctx context.Context, commands ...any) StringSliceCmd
+
+	// CommandGetKeysAndFlags
+	// Available since: 7.0.0
+	// Time complexity: O(N) where N is the total number of Redis commands
+	// ACL categories: @slow @connection
+	// Returns Array reply of keys from a full Redis command and their usage flags.
+	CommandGetKeysAndFlags(ctx context.Context, commands ...any) KeyFlagsCmd
 
 	// ConfigGet
 	// Available since: 2.0.0
@@ -291,6 +320,13 @@ type ServerCmdable interface {
 	DebugObject(ctx context.Context, key string) StringCmd
 }
 
+func (c *client) ACLDryRun(ctx context.Context, username string, command ...any) StringCmd {
+	ctx = c.handler.before(ctx, CommandACLDryRun)
+	r := c.adapter.ACLDryRun(ctx, username, command...)
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
 func (c *client) BgRewriteAOF(ctx context.Context) StatusCmd {
 	ctx = c.handler.before(ctx, CommandBgRewriteAOF)
 	r := c.adapter.BgRewriteAOF(ctx)
@@ -308,6 +344,27 @@ func (c *client) BgSave(ctx context.Context) StatusCmd {
 func (c *client) Command(ctx context.Context) CommandsInfoCmd {
 	ctx = c.handler.before(ctx, CommandCommand)
 	r := c.adapter.Command(ctx)
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
+func (c *client) CommandList(ctx context.Context, filter FilterBy) StringSliceCmd {
+	ctx = c.handler.before(ctx, CommandCommandList)
+	r := c.adapter.CommandList(ctx, filter)
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
+func (c *client) CommandGetKeys(ctx context.Context, commands ...any) StringSliceCmd {
+	ctx = c.handler.before(ctx, CommandCommandGetKeys)
+	r := c.adapter.CommandGetKeys(ctx, commands...)
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
+func (c *client) CommandGetKeysAndFlags(ctx context.Context, commands ...any) KeyFlagsCmd {
+	ctx = c.handler.before(ctx, CommandCommandGetKeysAndFlags)
+	r := c.adapter.CommandGetKeysAndFlags(ctx, commands...)
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -377,9 +434,9 @@ func (c *client) FlushDBAsync(ctx context.Context) StatusCmd {
 
 func (c *client) Info(ctx context.Context, section ...string) StringCmd {
 	if len(section) > 1 {
-		ctx = c.handler.before(ctx, CommandInfoMultiple)
+		ctx = c.handler.before(ctx, CommandMServerInfo)
 	} else {
-		ctx = c.handler.before(ctx, CommandInfos)
+		ctx = c.handler.before(ctx, CommandServerInfo)
 	}
 	r := c.adapter.Info(ctx, section...)
 	c.handler.after(ctx, r.Err())
@@ -436,7 +493,7 @@ func (c *client) Time(ctx context.Context) TimeCmd {
 }
 
 func (c *client) DebugObject(ctx context.Context, key string) StringCmd {
-	ctx = c.handler.before(ctx, CommandDebug)
+	ctx = c.handler.before(ctx, CommandDebugObject)
 	r := c.adapter.DebugObject(ctx, key)
 	c.handler.after(ctx, r.Err())
 	return r

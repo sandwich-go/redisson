@@ -11,16 +11,16 @@ func beforeStream(ctx context.Context, key string, c Cmdable) {
 	id := c.XAdd(ctx, XAddArgs{
 		Stream: key,
 		ID:     "1-0",
-		Values: map[string]interface{}{"uno": "un"},
+		Values: map[string]any{"uno": "un"},
 	})
 	So(id.Err(), ShouldBeNil)
 	So(id.Val(), ShouldEqual, "1-0")
 
-	// Values supports []interface{}.
+	// Values supports []any.
 	id = c.XAdd(ctx, XAddArgs{
 		Stream: key,
 		ID:     "2-0",
-		Values: []interface{}{"dos", "deux"},
+		Values: []any{"dos", "deux"},
 	})
 	So(id.Err(), ShouldBeNil)
 	So(id.Val(), ShouldEqual, "2-0")
@@ -40,7 +40,7 @@ func testXAdd(ctx context.Context, c Cmdable) []string {
 	id := c.XAdd(ctx, XAddArgs{
 		Stream: key,
 		ID:     "1-0",
-		Values: map[string]interface{}{"uno": "un"},
+		Values: map[string]any{"uno": "un"},
 	})
 	So(id.Err(), ShouldBeNil)
 	So(id.Val(), ShouldEqual, "1-0")
@@ -141,17 +141,17 @@ func testXRange(ctx context.Context, c Cmdable) []string {
 	So(xrange.Err(), ShouldBeNil)
 	So(len(xrange.Val()), ShouldEqual, 3)
 	So(xMessagesEqual(xrange.Val(), []XMessage{
-		{ID: "1-0", Values: map[string]interface{}{"uno": "un"}},
-		{ID: "2-0", Values: map[string]interface{}{"dos": "deux"}},
-		{ID: "3-0", Values: map[string]interface{}{"tres": "troix"}},
+		{ID: "1-0", Values: map[string]any{"uno": "un"}},
+		{ID: "2-0", Values: map[string]any{"dos": "deux"}},
+		{ID: "3-0", Values: map[string]any{"tres": "troix"}},
 	}), ShouldBeTrue)
 
 	xrange = c.XRange(ctx, key, "1-0", "2-0")
 	So(xrange.Err(), ShouldBeNil)
 	So(len(xrange.Val()), ShouldEqual, 2)
 	So(xMessagesEqual(xrange.Val(), []XMessage{
-		{ID: "1-0", Values: map[string]interface{}{"uno": "un"}},
-		{ID: "2-0", Values: map[string]interface{}{"dos": "deux"}},
+		{ID: "1-0", Values: map[string]any{"uno": "un"}},
+		{ID: "2-0", Values: map[string]any{"dos": "deux"}},
 	}), ShouldBeTrue)
 
 	return []string{key}
@@ -170,15 +170,15 @@ func testXRangeN(ctx context.Context, c Cmdable) []string {
 	So(xrange.Err(), ShouldBeNil)
 	So(len(xrange.Val()), ShouldEqual, 2)
 	So(xMessagesEqual(xrange.Val(), []XMessage{
-		{ID: "1-0", Values: map[string]interface{}{"uno": "un"}},
-		{ID: "2-0", Values: map[string]interface{}{"dos": "deux"}},
+		{ID: "1-0", Values: map[string]any{"uno": "un"}},
+		{ID: "2-0", Values: map[string]any{"dos": "deux"}},
 	}), ShouldBeTrue)
 
 	xrange = c.XRangeN(ctx, key, "1-0", "2-0", 1)
 	So(xrange.Err(), ShouldBeNil)
 	So(len(xrange.Val()), ShouldEqual, 1)
 	So(xMessagesEqual(xrange.Val(), []XMessage{
-		{ID: "1-0", Values: map[string]interface{}{"uno": "un"}},
+		{ID: "1-0", Values: map[string]any{"uno": "un"}},
 	}), ShouldBeTrue)
 
 	return []string{key}
@@ -197,17 +197,17 @@ func testXRevRange(ctx context.Context, c Cmdable) []string {
 	So(xrange.Err(), ShouldBeNil)
 	So(len(xrange.Val()), ShouldEqual, 3)
 	So(xMessagesEqual(xrange.Val(), []XMessage{
-		{ID: "3-0", Values: map[string]interface{}{"tres": "troix"}},
-		{ID: "2-0", Values: map[string]interface{}{"dos": "deux"}},
-		{ID: "1-0", Values: map[string]interface{}{"uno": "un"}},
+		{ID: "3-0", Values: map[string]any{"tres": "troix"}},
+		{ID: "2-0", Values: map[string]any{"dos": "deux"}},
+		{ID: "1-0", Values: map[string]any{"uno": "un"}},
 	}), ShouldBeTrue)
 
 	xrange = c.XRevRange(ctx, key, "2-0", "1-0")
 	So(xrange.Err(), ShouldBeNil)
 	So(len(xrange.Val()), ShouldEqual, 2)
 	So(xMessagesEqual(xrange.Val(), []XMessage{
-		{ID: "2-0", Values: map[string]interface{}{"dos": "deux"}},
-		{ID: "1-0", Values: map[string]interface{}{"uno": "un"}},
+		{ID: "2-0", Values: map[string]any{"dos": "deux"}},
+		{ID: "1-0", Values: map[string]any{"uno": "un"}},
 	}), ShouldBeTrue)
 
 	return []string{key}
@@ -226,15 +226,15 @@ func testXRevRangeN(ctx context.Context, c Cmdable) []string {
 	So(xrange.Err(), ShouldBeNil)
 	So(len(xrange.Val()), ShouldEqual, 2)
 	So(xMessagesEqual(xrange.Val(), []XMessage{
-		{ID: "3-0", Values: map[string]interface{}{"tres": "troix"}},
-		{ID: "2-0", Values: map[string]interface{}{"dos": "deux"}},
+		{ID: "3-0", Values: map[string]any{"tres": "troix"}},
+		{ID: "2-0", Values: map[string]any{"dos": "deux"}},
 	}), ShouldBeTrue)
 
 	xrange = c.XRevRangeN(ctx, key, "2-0", "1-0", 1)
 	So(xrange.Err(), ShouldBeNil)
 	So(len(xrange.Val()), ShouldEqual, 1)
 	So(xMessagesEqual(xrange.Val(), []XMessage{
-		{ID: "2-0", Values: map[string]interface{}{"dos": "deux"}},
+		{ID: "2-0", Values: map[string]any{"dos": "deux"}},
 	}), ShouldBeTrue)
 
 	return []string{key}
@@ -284,10 +284,10 @@ func testXAutoClaim(ctx context.Context, c Cmdable) []string {
 	So(start, ShouldEqual, "3-0")
 	So(xMessagesEqual(msgs, []XMessage{{
 		ID:     "1-0",
-		Values: map[string]interface{}{"uno": "un"},
+		Values: map[string]any{"uno": "un"},
 	}, {
 		ID:     "2-0",
-		Values: map[string]interface{}{"dos": "deux"},
+		Values: map[string]any{"dos": "deux"},
 	}}), ShouldBeTrue)
 
 	xca.Start = start
@@ -296,7 +296,7 @@ func testXAutoClaim(ctx context.Context, c Cmdable) []string {
 	So(start, ShouldEqual, "0-0")
 	So(xMessagesEqual(msgs, []XMessage{{
 		ID:     "3-0",
-		Values: map[string]interface{}{"tres": "troix"},
+		Values: map[string]any{"tres": "troix"},
 	}}), ShouldBeTrue)
 
 	ids, start1, err1 := c.XAutoClaimJustID(ctx, xca).Result()
@@ -332,13 +332,13 @@ func testXClaim(ctx context.Context, c Cmdable) []string {
 	So(err1, ShouldBeNil)
 	So(xMessagesEqual(msgs, []XMessage{{
 		ID:     "1-0",
-		Values: map[string]interface{}{"uno": "un"},
+		Values: map[string]any{"uno": "un"},
 	}, {
 		ID:     "2-0",
-		Values: map[string]interface{}{"dos": "deux"},
+		Values: map[string]any{"dos": "deux"},
 	}, {
 		ID:     "3-0",
-		Values: map[string]interface{}{"tres": "troix"},
+		Values: map[string]any{"tres": "troix"},
 	}}), ShouldBeTrue)
 
 	ids, err2 := c.XClaimJustID(ctx, XClaimArgs{
@@ -363,7 +363,7 @@ func testXGroupCreate(ctx context.Context, c Cmdable) []string {
 		Stream:     key,
 		NoMkStream: false,
 		ID:         "1-0",
-		Values:     map[string]interface{}{"uno": "un"},
+		Values:     map[string]any{"uno": "un"},
 	})
 	So(xadd.Err(), ShouldBeNil)
 	So(xadd.Val(), ShouldEqual, "1-0")
@@ -470,7 +470,7 @@ func testXGroupSetID(ctx context.Context, c Cmdable) []string {
 	So(len(xReadGroup.Val()), ShouldEqual, 1)
 	So(xMessagesEqual(xReadGroup.Val()[0].Messages, []XMessage{{
 		ID:     "3-0",
-		Values: map[string]interface{}{"tres": "troix"},
+		Values: map[string]any{"tres": "troix"},
 	}}), ShouldBeTrue)
 
 	return []string{key}
@@ -494,13 +494,13 @@ func testXReadGroup(ctx context.Context, c Cmdable) []string {
 	So(len(xReadGroup.Val()), ShouldEqual, 1)
 	So(xMessagesEqual(xReadGroup.Val()[0].Messages, []XMessage{{
 		ID:     "1-0",
-		Values: map[string]interface{}{"uno": "un"},
+		Values: map[string]any{"uno": "un"},
 	}, {
 		ID:     "2-0",
-		Values: map[string]interface{}{"dos": "deux"},
+		Values: map[string]any{"dos": "deux"},
 	}, {
 		ID:     "3-0",
-		Values: map[string]interface{}{"tres": "troix"},
+		Values: map[string]any{"tres": "troix"},
 	}}), ShouldBeTrue)
 
 	return []string{key}
@@ -520,13 +520,13 @@ func testXRead(ctx context.Context, c Cmdable) []string {
 	So(len(xread.Val()), ShouldEqual, 1)
 	So(xMessagesEqual(xread.Val()[0].Messages, []XMessage{{
 		ID:     "1-0",
-		Values: map[string]interface{}{"uno": "un"},
+		Values: map[string]any{"uno": "un"},
 	}, {
 		ID:     "2-0",
-		Values: map[string]interface{}{"dos": "deux"},
+		Values: map[string]any{"dos": "deux"},
 	}, {
 		ID:     "3-0",
-		Values: map[string]interface{}{"tres": "troix"},
+		Values: map[string]any{"tres": "troix"},
 	}}), ShouldBeTrue)
 
 	return []string{key}
@@ -543,13 +543,13 @@ func testXReadStreams(ctx context.Context, c Cmdable) []string {
 	So(len(xread.Val()), ShouldEqual, 1)
 	So(xMessagesEqual(xread.Val()[0].Messages, []XMessage{{
 		ID:     "1-0",
-		Values: map[string]interface{}{"uno": "un"},
+		Values: map[string]any{"uno": "un"},
 	}, {
 		ID:     "2-0",
-		Values: map[string]interface{}{"dos": "deux"},
+		Values: map[string]any{"dos": "deux"},
 	}, {
 		ID:     "3-0",
-		Values: map[string]interface{}{"tres": "troix"},
+		Values: map[string]any{"tres": "troix"},
 	}}), ShouldBeTrue)
 
 	return []string{key}

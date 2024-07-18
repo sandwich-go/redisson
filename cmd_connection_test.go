@@ -7,19 +7,6 @@ import (
 	"time"
 )
 
-func testClientGetName(ctx context.Context, c Cmdable) []string {
-	pipe := c.Pipeline()
-	_ = pipe.Put(ctx, CommandClientSetName, nil, "theclientname")
-	_, err := pipe.Exec(ctx)
-	So(err, ShouldBeNil)
-
-	get := c.ClientGetName(ctx)
-	So(get.Err(), ShouldBeNil)
-	So(get.Val(), ShouldEqual, "theclientname")
-
-	return nil
-}
-
 func testClientID(ctx context.Context, c Cmdable) []string {
 	cc := c.ClientID(ctx)
 	So(cc.Err(), ShouldBeNil)
@@ -86,7 +73,6 @@ func testQuit(_ context.Context, _ Cmdable) []string {
 
 func connectionTestUnits() []TestUnit {
 	return []TestUnit{
-		{CommandClientGetName, testClientGetName},
 		{CommandClientID, testClientID},
 		{CommandClientKill, testClientKill},
 		{CommandClientKillByFilter, testClientKillByFilter},

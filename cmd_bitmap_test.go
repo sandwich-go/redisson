@@ -48,15 +48,15 @@ func testBitField(ctx context.Context, c Cmdable) []string {
 	var keys = []string{"mykey:{1}", "mystring:{1}"}
 	for _, v := range []struct {
 		key      string
-		args     []interface{}
+		args     []any
 		expected []int64
 	}{
-		{keys[0], []interface{}{"INCRBY", "i5", 100, 1, "GET", "u4", 0}, []int64{1, 0}},
-		{keys[1], []interface{}{"SET", "i8", "#0", 100, "SET", "i8", "#1", 200}, []int64{0, 0}},
-		{keys[0], []interface{}{"incrby", "u2", 100, 1, "OVERFLOW", "SAT", "incrby", "u2", 102, 1}, []int64{1, 1}},
-		{keys[0], []interface{}{"incrby", "u2", 100, 1, "OVERFLOW", "SAT", "incrby", "u2", 102, 1}, []int64{2, 2}},
-		{keys[0], []interface{}{"incrby", "u2", 100, 1, "OVERFLOW", "SAT", "incrby", "u2", 102, 1}, []int64{3, 3}},
-		{keys[0], []interface{}{"incrby", "u2", 100, 1, "OVERFLOW", "SAT", "incrby", "u2", 102, 1}, []int64{0, 3}},
+		{keys[0], []any{"INCRBY", "i5", 100, 1, "GET", "u4", 0}, []int64{1, 0}},
+		{keys[1], []any{"SET", "i8", "#0", 100, "SET", "i8", "#1", 200}, []int64{0, 0}},
+		{keys[0], []any{"incrby", "u2", 100, 1, "OVERFLOW", "SAT", "incrby", "u2", 102, 1}, []int64{1, 1}},
+		{keys[0], []any{"incrby", "u2", 100, 1, "OVERFLOW", "SAT", "incrby", "u2", 102, 1}, []int64{2, 2}},
+		{keys[0], []any{"incrby", "u2", 100, 1, "OVERFLOW", "SAT", "incrby", "u2", 102, 1}, []int64{3, 3}},
+		{keys[0], []any{"incrby", "u2", 100, 1, "OVERFLOW", "SAT", "incrby", "u2", 102, 1}, []int64{0, 3}},
 	} {
 		bc := c.BitField(ctx, v.key, v.args...)
 		So(bc.Err(), ShouldBeNil)
