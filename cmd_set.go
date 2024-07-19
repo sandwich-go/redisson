@@ -117,7 +117,11 @@ type SetReader interface {
 	// Available since: 1.0.0
 	// Time complexity: Without the count argument O(1), otherwise O(N) where N is the absolute value of the passed count.
 	// ACL categories: @read @set @slow
-	// RESP2 / RESP3 Reply:
+	// RESP2 Reply:
+	//	One of the following:
+	//		- Bulk string reply: without the additional count argument, the command returns a randomly selected member, or a Nil reply when key doesn't exist.
+	//		- Array reply: when the optional count argument is passed, the command returns an array of members, or an empty array when key doesn't exist.
+	// RESP3 Reply:
 	//	One of the following:
 	//		- Bulk string reply: without the additional count argument, the command returns a randomly selected member, or a Null reply when key doesn't exist.
 	//		- Array reply: when the optional count argument is passed, the command returns an array of members, or an empty array when key doesn't exist.
