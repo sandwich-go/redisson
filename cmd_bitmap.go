@@ -15,12 +15,22 @@ type BitmapWriter interface {
 	// Available since: 3.2.0
 	// Time complexity: O(1) for each subcommand specified
 	// ACL categories: @write @bitmap @slow
+	// RESP2 Reply:
+	//	One of the following:
+	//		- Array reply: each entry being the corresponding result of the sub-command given at the same position.
+	//		- Nil reply: if OVERFLOW FAIL was given and overflows or underflows are detected.
+	// RESP3 Reply:
+	//	One of the following:
+	//		- Array reply: each entry being the corresponding result of the sub-command given at the same position.
+	//		- Null reply: if OVERFLOW FAIL was given and overflows or underflows are detected.
 	BitField(ctx context.Context, key string, args ...any) IntSliceCmd
 
 	// BitOpAnd
 	// Available since: 2.6.0
 	// Time complexity: O(N)
 	// ACL categories: @write @bitmap @slow
+	// RESP2 / RESP3 Reply:
+	// 	- Integer reply: the size of the string stored in the destination key is equal to the size of the longest input string.
 	BitOpAnd(ctx context.Context, destKey string, keys ...string) IntCmd
 	BitOpOr(ctx context.Context, destKey string, keys ...string) IntCmd
 	BitOpXor(ctx context.Context, destKey string, keys ...string) IntCmd
@@ -30,6 +40,8 @@ type BitmapWriter interface {
 	// Available since: 2.2.0
 	// Time complexity: O(1)
 	// ACL categories: @write @bitmap @slow
+	// RESP2 / RESP3 Reply:
+	// 	- Integer reply: the original bit value stored at offset.
 	SetBit(ctx context.Context, key string, offset int64, value int64) IntCmd
 }
 
@@ -40,12 +52,22 @@ type BitmapCacheCmdable interface {
 	// Available since: 2.6.0
 	// Time complexity: O(N)
 	// ACL categories: @read @bitmap @slow
+	// RESP2 / RESP3 Reply:
+	// 	- Integer reply: the number of bits set to 1.
+	// History:
+	//	- Starting with Redis version 7.0.0: Added the BYTE|BIT option.
 	BitCount(ctx context.Context, key string, bitCount *BitCount) IntCmd
 
 	// BitPos
 	// Available since: 2.8.7
 	// Time complexity: O(N)
 	// ACL categories: @read @bitmap @slow
+	// RESP2 / RESP3 Reply:
+	//	One of the following:
+	// 		- Integer reply: the position of the first bit set to 1 or 0 according to the request
+	//		- Integer reply: -1. In case the bit argument is 1 and the string is empty or composed of just zero bytes
+	// History:
+	//	- Starting with Redis version 7.0.0: Added the BYTE|BIT option.
 	BitPos(ctx context.Context, key string, bit int64, pos ...int64) IntCmd
 	BitPosSpan(ctx context.Context, key string, bit, start, end int64, span string) IntCmd
 
@@ -53,6 +75,9 @@ type BitmapCacheCmdable interface {
 	// Available since: 2.2.0
 	// Time complexity: O(1)
 	// ACL categories: @read @bitmap @fast
+	// RESP2 / RESP3 Reply:
+	// 	- Integer reply: 0.
+	//	- Integer reply: 1.
 	GetBit(ctx context.Context, key string, offset int64) IntCmd
 }
 
