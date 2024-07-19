@@ -62,7 +62,7 @@ type ConnectionCmdable interface {
 	ClientList(ctx context.Context) StringCmd
 
 	// ClientPause
-	// Available since: 2.9.50
+	// Available since: 3.0.0
 	// Time complexity: O(1)
 	// ACL categories: @admin @slow @dangerous @connection
 	// RESP2 / RESP3 Reply:
@@ -81,7 +81,7 @@ type ConnectionCmdable interface {
 
 	// ClientUnblock
 	// Available since: 5.0.0
-	// Time complexity: O(N) Where N is the number of paused clients
+	// Time complexity: O(log N) where N is the number of client connections
 	// ACL categories: @admin @slow @dangerous @connection
 	// RESP2 / RESP3 Reply:
 	//	One of the following:
@@ -103,7 +103,7 @@ type ConnectionCmdable interface {
 	// Time complexity: O(1)
 	// ACL categories: @fast @connection
 	// RESP2 / RESP3 Reply:
-	//	One of the following:
+	//	Any of the following:
 	//		- Simple string reply: PONG when no argument is provided.
 	//		- Bulk string reply: the provided argument.
 	Ping(ctx context.Context) StatusCmd
