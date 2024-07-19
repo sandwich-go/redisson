@@ -65,6 +65,8 @@ type Scripter interface {
 	// Available since: 2.6.0
 	// Time complexity: O(N) with N being the number of scripts to check (so checking a single script is an O(1) operation).
 	// ACL categories: @slow @scripting
+	// RESP2 / RESP3 Reply:
+	// 	- Array reply: an array of integers that correspond to the specified SHA1 digest arguments.
 	Exists(ctx context.Context) BoolSliceCmd
 }
 
