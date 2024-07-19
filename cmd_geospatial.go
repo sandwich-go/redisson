@@ -19,6 +19,7 @@ type GeospatialWriter interface {
 	// 	- CH: Modify the return value from the number of new elements added, to the total number of elements changed (CH is an abbreviation of changed).
 	//		Changed elements are new elements added and elements already existing for which the coordinates was updated. So elements specified in the
 	//		command line having the same score as they had in the past are not counted. Note: normally, the return value of GEOADD only counts the number of new elements added.
+	// Note: The XX and NX options are mutually exclusive.
 	// RESP2 / RESP3 Reply:
 	// 	- Integer reply: When used without optional arguments, the number of elements added to the sorted set (excluding score updates).
 	//		If the CH option is specified, the number of elements that were changed (added or updated).
@@ -78,7 +79,11 @@ type GeospatialCacheCmdable interface {
 	// 	- KM for kilometers.
 	// 	- MI for miles.
 	// 	- FT for feet.
-	// RESP2 / RESP3 Reply:
+	// RESP2 Reply:
+	//	One of the following:
+	//		- Nil reply: one or both of the elements are missing.
+	//		- Bulk string reply: distance as a double (represented as a string) in the specified units.
+	// RESP3 Reply:
 	//	One of the following:
 	//		- Null reply: one or both of the elements are missing.
 	//		- Bulk string reply: distance as a double (represented as a string) in the specified units.
@@ -96,9 +101,12 @@ type GeospatialCacheCmdable interface {
 	// Available since: 3.2.0
 	// Time complexity: O(1) for each member requested.
 	// ACL categories: @read @geo @slow
-	// RESP2 / RESP3 Reply:
+	// RESP2 Reply:
 	// 	- Array reply: An array where each element is a two elements array representing longitude and latitude (x,y) of
 	//		each member name passed as argument to the command. Non-existing elements are reported as Nil reply elements of the array.
+	// RESP3 Reply:
+	// 	- Array reply: An array where each element is a two elements array representing longitude and latitude (x,y) of
+	//		each member name passed as argument to the command. Non-existing elements are reported as Null reply elements of the array.
 	GeoPos(ctx context.Context, key string, members ...string) GeoPosCmd
 
 	// GeoRadius
