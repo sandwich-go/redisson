@@ -6,7 +6,6 @@ import (
 
 type GeospatialCmdable interface {
 	GeospatialWriter
-	GeospatialReader
 }
 
 type GeospatialWriter interface {
@@ -31,6 +30,7 @@ type GeospatialWriter interface {
 	// Available since: 3.2.0
 	// Time complexity: O(N+log(M)) where N is the number of elements inside the bounding box of the circular area delimited by center and radius and M is the number of items inside the index.
 	// ACL categories: @write @geo @slow
+	// RESP2 / RESP3 Reply:
 	//	One of the following:
 	//		- If no WITH* option is specified, an Array reply of matched member names
 	//		- If WITHCOORD, WITHDIST, or WITHHASH options are specified, the command returns an Array reply of arrays, where each sub-array represents a single item:
@@ -46,6 +46,7 @@ type GeospatialWriter interface {
 	// Available since: 3.2.0
 	// Time complexity: O(N+log(M)) where N is the number of elements inside the bounding box of the circular area delimited by center and radius and M is the number of items inside the index.
 	// ACL categories: @write @geo @slow
+	// RESP2 / RESP3 Reply:
 	//	One of the following:
 	//		- If no WITH* option is specified, an Array reply of matched member names
 	//		- If WITHCOORD, WITHDIST, or WITHHASH options are specified, the command returns an Array reply of arrays, where each sub-array represents a single item:
@@ -67,52 +68,82 @@ type GeospatialWriter interface {
 	GeoSearchStore(ctx context.Context, key, store string, q GeoSearchStoreQuery) IntCmd
 }
 
-type GeospatialReader interface {
-	// GeoSearchLocation
-	// Available since: 6.2.0
-	// Time complexity: O(N+log(M)) where N is the number of elements in the grid-aligned bounding box area around the shape provided as the filter and M is the number of items inside the shape
-	// ACL categories: @read @geo @slow
-	GeoSearchLocation(ctx context.Context, key string, q GeoSearchLocationQuery) GeoSearchLocationCmd
-}
-
 type GeospatialCacheCmdable interface {
 	// GeoDist
 	// Available since: 3.2.0
-	// Time complexity: O(log(N))
+	// Time complexity: O(1)
 	// ACL categories: @read @geo @slow
+	// Options
+	// 	- M for meters.
+	// 	- KM for kilometers.
+	// 	- MI for miles.
+	// 	- FT for feet.
 	// RESP2 / RESP3 Reply:
-	// 	- Integer reply: the number of elements in the resulting set
+	//	One of the following:
+	//		- Null reply: one or both of the elements are missing.
+	//		- Bulk string reply: distance as a double (represented as a string) in the specified units.
 	GeoDist(ctx context.Context, key string, member1, member2, unit string) FloatCmd
 
 	// GeoHash
 	// Available since: 3.2.0
-	// Time complexity: O(log(N)) for each member requested, where N is the number of elements in the sorted set.
+	// Time complexity: O(1) for each member requested.
 	// ACL categories: @read @geo @slow
+	// RESP2 / RESP3 Reply:
+	// 	- Array reply: an array where each element is the Geohash corresponding to each member name passed as an argument to the command.
 	GeoHash(ctx context.Context, key string, members ...string) StringSliceCmd
 
 	// GeoPos
 	// Available since: 3.2.0
-	// Time complexity: O(N) where N is the number of members requested.
+	// Time complexity: O(1) for each member requested.
 	// ACL categories: @read @geo @slow
+	// RESP2 / RESP3 Reply:
+	// 	- Array reply: An array where each element is a two elements array representing longitude and latitude (x,y) of
+	//		each member name passed as argument to the command. Non-existing elements are reported as Nil reply elements of the array.
 	GeoPos(ctx context.Context, key string, members ...string) GeoPosCmd
 
 	// GeoRadius
 	// Available since: 3.2.10
 	// Time complexity: O(N+log(M)) where N is the number of elements inside the bounding box of the circular area delimited by center and radius and M is the number of items inside the index.
 	// ACL categories: @read @geo @slow
+	// RESP2 / RESP3 Reply:
+	//	One of the following:
+	//		- If no WITH* option is specified, an Array reply of matched member names
+	//		- If WITHCOORD, WITHDIST, or WITHHASH options are specified, the command returns an Array reply of arrays, where each sub-array represents a single item:
+	//			1. The distance from the center as a floating point number, in the same unit specified in the radius.
+	//			2. The Geohash integer.
+	//			3. The coordinates as a two items x,y array (longitude,latitude).
+	// History:
+	//	- Starting with Redis version 6.2.0: Added the ANY option for COUNT.
 	GeoRadius(ctx context.Context, key string, longitude, latitude float64, query GeoRadiusQuery) GeoLocationCmd
 
 	// GeoRadiusByMember
 	// Available since: 3.2.10
 	// Time complexity: O(N+log(M)) where N is the number of elements inside the bounding box of the circular area delimited by center and radius and M is the number of items inside the index.
 	// ACL categories: @read @geo @slow
+	// RESP2 / RESP3 Reply:
+	//	One of the following:
+	//		- If no WITH* option is specified, an Array reply of matched member names
+	//		- If WITHCOORD, WITHDIST, or WITHHASH options are specified, the command returns an Array reply of arrays, where each sub-array represents a single item:
+	//			1. The distance from the center as a floating point number, in the same unit specified in the radius.
+	//			2. The Geohash integer.
+	//			3. The coordinates as a two items x,y array (longitude,latitude).
 	GeoRadiusByMember(ctx context.Context, key, member string, query GeoRadiusQuery) GeoLocationCmd
 
 	// GeoSearch
 	// Available since: 6.2.0
 	// Time complexity: O(N+log(M)) where N is the number of elements in the grid-aligned bounding box area around the shape provided as the filter and M is the number of items inside the shape
 	// ACL categories: @read @geo @slow
+	// RESP2 / RESP3 Reply:
+	//	One of the following:
+	//		- If no WITH* option is specified, an Array reply of matched member names
+	//		- If WITHCOORD, WITHDIST, or WITHHASH options are specified, the command returns an Array reply of arrays, where each sub-array represents a single item:
+	//			1. The distance from the center as a floating point number, in the same unit specified in the radius.
+	//			2. The Geohash integer.
+	//			3. The coordinates as a two items x,y array (longitude,latitude).
+	// History:
+	//	- Starting with Redis version 7.0.0: Added support for uppercase unit names.
 	GeoSearch(ctx context.Context, key string, q GeoSearchQuery) StringSliceCmd
+	GeoSearchLocation(ctx context.Context, key string, q GeoSearchLocationQuery) GeoSearchLocationCmd
 }
 
 func (c *client) GeoAdd(ctx context.Context, key string, geoLocation ...GeoLocation) IntCmd {
