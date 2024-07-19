@@ -10,24 +10,36 @@ type PubSub interface {
 	// Available since: 2.0.0
 	// Time complexity: O(N) where N is the number of channels to subscribe to.
 	// ACL categories: @pubsub @slow
+	// RESP2 / RESP3 Reply:
+	// 	- When successful, this command doesn't return anything.
+	//		Instead, for each pattern, one message with the first element being the string psubscribe is pushed as a confirmation that the command succeeded.
 	Subscribe(ctx context.Context, channels ...string) error
 
 	// Unsubscribe
 	// Available since: 2.0.0
 	// Time complexity: O(N) where N is the number of clients already subscribed to a channel.
 	// ACL categories: @pubsub @slow
+	// RESP2 / RESP3 Reply:
+	// 	- When successful, this command doesn't return anything.
+	//		Instead, for each channel, one message with the first element being the string unsubscribe is pushed as a confirmation that the command succeeded.
 	Unsubscribe(ctx context.Context, channels ...string) error
 
 	// PSubscribe
 	// Available since: 2.0.0
 	// Time complexity: O(N) where N is the number of patterns the client is already subscribed to.
 	// ACL categories: @pubsub @slow
+	// RESP2 / RESP3 Reply:
+	// 	- When successful, this command doesn't return anything.
+	//		Instead, for each pattern, one message with the first element being the string psubscribe is pushed as a confirmation that the command succeeded.
 	PSubscribe(ctx context.Context, patterns ...string) error
 
 	// PUnsubscribe
 	// Available since: 2.0.0
-	// Time complexity: O(N+M) where N is the number of patterns the client is already subscribed and M is the number of total patterns subscribed in the system (by any client).
+	// Time complexity: O(N) where N is the number of patterns to unsubscribe.
 	// ACL categories: @pubsub @slow
+	// RESP2 / RESP3 Reply:
+	// 	- When successful, this command doesn't return anything.
+	//		Instead, for each pattern, one message with the first element being the string punsubscribe is pushed as a confirmation that the command succeeded.
 	PUnsubscribe(ctx context.Context, patterns ...string) error
 
 	// Channel
@@ -44,48 +56,67 @@ type PubSubCmdable interface {
 	// Available since: 2.0.0
 	// Time complexity: O(N+M) where N is the number of clients subscribed to the receiving channel and M is the total number of subscribed patterns (by any client).
 	// ACL categories: @pubsub @fast
+	// RESP2 / RESP3 Reply:
+	// 	- Integer reply: the number of clients that the message was sent to.
+	//		Note that in a Redis Cluster, only clients that are connected to the same node as the publishing client are included in the count.
 	Publish(ctx context.Context, channel string, message any) IntCmd
 
 	// SPublish
 	// Available since: 7.0.0
 	// Time complexity: O(N) where N is the number of clients subscribed to the receiving shard channel.
 	// ACL categories: @pubsub @fast
+	// RESP2 / RESP3 Reply:
+	// 	- Integer reply: the number of clients that the message was sent to. Note that in a Redis Cluster,
+	//		only clients that are connected to the same node as the publishing client are included in the count
 	SPublish(ctx context.Context, channel string, message any) IntCmd
 
 	// PubSubChannels
 	// Available since: 2.8.0
 	// Time complexity: O(N) where N is the number of active channels, and assuming constant time pattern matching (relatively short channels and patterns)
 	// ACL categories: @pubsub @slow
+	// RESP2 / RESP3 Reply:
+	// 	- Array reply: a list of active channels, optionally matching the specified pattern.
 	PubSubChannels(ctx context.Context, pattern string) StringSliceCmd
 
 	// PubSubNumPat
 	// Available since: 2.8.0
 	// Time complexity: O(1)
 	// ACL categories: @pubsub @slow
+	// RESP2 / RESP3 Reply:
+	// 	- Integer reply: the number of patterns all the clients are subscribed to.
 	PubSubNumPat(ctx context.Context) IntCmd
 
 	// PubSubNumSub
 	// Available since: 2.8.0
 	// Time complexity: O(N) for the NUMSUB subcommand, where N is the number of requested channels
 	// ACL categories: @pubsub @slow
+	// RESP2 / RESP3 Reply:
+	// 	- Array reply: the number of subscribers per channel, each even element (including the 0th) is channel name, each odd element is the number of subscribers
 	PubSubNumSub(ctx context.Context, channels ...string) StringIntMapCmd
 
 	// Subscribe
 	// Available since: 2.0.0
 	// Time complexity: O(N) where N is the number of channels to subscribe to.
 	// ACL categories: @pubsub @slow
+	// RESP2 / RESP3 Reply:
+	// 	- When successful, this command doesn't return anything.
+	//		Instead, for each channel, one message with the first element being the string subscribe is pushed as a confirmation that the command succeeded.
 	Subscribe(ctx context.Context, channels ...string) PubSub
 
 	// PubSubShardChannels
 	// Available since: 7.0.0
 	// Time complexity: O(N) where N is the number of active shard channels, and assuming constant time pattern matching (relatively short shard channels).
 	// ACL categories: @pubsub @slow
+	// RESP2 / RESP3 Reply:
+	// 	- Array reply: a list of active channels, optionally matching the specified pattern.
 	PubSubShardChannels(ctx context.Context, pattern string) StringSliceCmd
 
 	// PubSubShardNumSub
 	// Available since: 7.0.0
 	// Time complexity: O(N) for the SHARDNUMSUB subcommand, where N is the number of requested shard channels
 	// ACL categories: @pubsub @slow
+	// RESP2 / RESP3 Reply:
+	// 	- Array reply: the number of subscribers per shard channel, each even element (including the 0th) is channel name, each odd element is the number of subscribers.
 	PubSubShardNumSub(ctx context.Context, channels ...string) StringIntMapCmd
 }
 
