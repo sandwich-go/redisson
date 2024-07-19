@@ -24,7 +24,8 @@ type GenericWriter interface {
 	// Del
 	// Available since: 1.0.0
 	// Time complexity: O(N) where N is the number of keys that will be removed. When a key to remove holds a value other than a string,
-	//	the individual complexity for this key is O(M) where M is the number of elements in the list, set, sorted set or hash. Removing a single key that holds a string value is O(1).
+	//					the individual complexity for this key is O(M) where M is the number of elements in the list, set, sorted set or hash.
+	//					Removing a single key that holds a string value is O(1).
 	// ACL categories: @keyspace, @write, @slow
 	// RESP2 / RESP3 Reply:
 	// 	- Integer reply: the number of keys that were removed.
@@ -39,6 +40,7 @@ type GenericWriter interface {
 	// 	- XX -- Set expiry only when the key has an existing expiry
 	// 	- GT -- Set expiry only when the new expiry is greater than current one
 	// 	- LT -- Set expiry only when the new expiry is less than current one
+	// A non-volatile key is treated as an infinite TTL for the purpose of GT and LT. The GT, LT and NX options are mutually exclusive.
 	// RESP2 / RESP3 Reply:
 	//	One of the following:
 	//		- Integer reply: 0 if the timeout was not set; for example, the key doesn't exist, or the operation was skipped because of the provided arguments.
@@ -60,6 +62,7 @@ type GenericWriter interface {
 	// 	- XX -- Set expiry only when the key has an existing expiry
 	// 	- GT -- Set expiry only when the new expiry is greater than current one
 	// 	- LT -- Set expiry only when the new expiry is less than current one
+	// A non-volatile key is treated as an infinite TTL for the purpose of GT and LT. The GT, LT and NX options are mutually exclusive.
 	// RESP2 / RESP3 Reply:
 	//	One of the following:
 	//		- Integer reply: 0 if the timeout was not set; for example, the key doesn't exist, or the operation was skipped because of the provided arguments.
@@ -75,7 +78,7 @@ type GenericWriter interface {
 	// Migrate
 	// Available since: 2.6.0
 	// Time complexity: This command actually executes a DUMP+DEL in the source instance, and a RESTORE in the target instance.
-	//	See the pages of these commands for time complexity. Also an O(N) data transfer between the two instances is performed.
+	//					See the pages of these commands for time complexity. Also an O(N) data transfer between the two instances is performed.
 	// ACL categories: @keyspace @write @slow @dangerous
 	// Options
 	// 	- COPY -- Do not remove the key from the local instance.
@@ -123,6 +126,7 @@ type GenericWriter interface {
 	// 	- XX -- Set expiry only when the key has an existing expiry
 	// 	- GT -- Set expiry only when the new expiry is greater than current one
 	// 	- LT -- Set expiry only when the new expiry is less than current one
+	// A non-volatile key is treated as an infinite TTL for the purpose of GT and LT. The GT, LT and NX options are mutually exclusive.
 	// RESP2 / RESP3 Reply:
 	//	One of the following:
 	//		- Integer reply: 0if the timeout was not set. For example, if the key doesn't exist, or the operation skipped because of the provided arguments.
@@ -144,6 +148,7 @@ type GenericWriter interface {
 	// 	- XX -- Set expiry only when the key has an existing expiry
 	// 	- GT -- Set expiry only when the new expiry is greater than current one
 	// 	- LT -- Set expiry only when the new expiry is less than current one
+	// A non-volatile key is treated as an infinite TTL for the purpose of GT and LT. The GT, LT and NX options are mutually exclusive.
 	// RESP2 / RESP3 Reply:
 	//	One of the following:
 	//		- Integer reply: 1 if the timeout was set.
@@ -179,8 +184,8 @@ type GenericWriter interface {
 	// Restore
 	// Available since: 2.6.0
 	// Time complexity: O(1) to create the new key and additional O(NM) to reconstruct the serialized value,
-	//	where N is the number of Redis objects composing the value and M their average size. For small string values the time complexity is thus O(1)+O(1M) where M is small,
-	//	so simply O(1). However for sorted set values the complexity is O(NMlog(N)) because inserting values into sorted sets is O(log(N)).
+	//					where N is the number of Redis objects composing the value and M their average size. For small string values the time complexity is thus O(1)+O(1M) where M is small,
+	//					so simply O(1). However for sorted set values the complexity is O(NMlog(N)) because inserting values into sorted sets is O(log(N)).
 	// ACL categories: @keyspace @write @slow @dangerous
 	// RESP2 / RESP3 Reply:
 	// 	- Simple string reply: OK.
@@ -194,7 +199,7 @@ type GenericWriter interface {
 	// Sort
 	// Available since: 1.0.0
 	// Time complexity: O(N+M*log(M)) where N is the number of elements in the list or set to sort,
-	//	and M the number of returned elements. When the elements are not sorted, complexity is O(N).
+	//					and M the number of returned elements. When the elements are not sorted, complexity is O(N).
 	// ACL categories: @write @set @sortedset @list @slow @dangerous
 	// RESP2 / RESP3 Reply:
 	// 	- Array reply: without passing the STORE option, the command returns a list of sorted elements.
@@ -206,7 +211,7 @@ type GenericWriter interface {
 	// Unlink
 	// Available since: 4.0.0
 	// Time complexity: O(1) for each key removed regardless of its size.
-	//	Then the command does O(N) work in a different thread in order to reclaim memory, where N is the number of allocations the deleted objects where composed of.
+	//					Then the command does O(N) work in a different thread in order to reclaim memory, where N is the number of allocations the deleted objects where composed of.
 	// ACL categories: @keyspace @write @fast
 	// RESP2 / RESP3 Reply:
 	// 	- Integer reply: the number of keys that were unlinked.
@@ -239,7 +244,8 @@ type GenericReader interface {
 	// Dump
 	// Available since: 2.6.0
 	// Time complexity: O(1) to access the key and additional O(NM) to serialize it,
-	//	where N is the number of Redis objects composing the value and M their average size. For small string values the time complexity is thus O(1)+O(1M) where M is small, so simply O(1).
+	//					where N is the number of Redis objects composing the value and M their average size.
+	//					For small string values the time complexity is thus O(1)+O(1M) where M is small, so simply O(1).
 	// ACL categories: @keyspace @read @slow
 	// RESP2 Reply:
 	//	One of the following:
@@ -274,7 +280,11 @@ type GenericReader interface {
 	// Available since: 2.2.3
 	// Time complexity: O(1)
 	// ACL categories: @keyspace @read @slow
-	// RESP2 / RESP3 Reply:
+	// RESP2 Reply:
+	//	One of the following:
+	//		- Integer reply: the number of references.
+	//		- Nil reply: if key doesn't exist
+	// RESP3 Reply:
 	//	One of the following:
 	//		- Integer reply: the number of references.
 	//		- Null reply: if key doesn't exist.
@@ -284,9 +294,13 @@ type GenericReader interface {
 	// Available since: 2.2.3
 	// Time complexity: O(1)
 	// ACL categories: @keyspace @read @slow
-	// RESP2 / RESP3 Reply:
+	// RESP2 Reply:
 	//	One of the following:
 	//		- Nil reply: if the key doesn't exist.
+	//		- Bulk string reply: the encoding of the object.
+	// RESP3 Reply:
+	//	One of the following:
+	//		- Null reply: if the key doesn't exist.
 	//		- Bulk string reply: the encoding of the object.
 	ObjectEncoding(ctx context.Context, key string) StringCmd
 
@@ -294,7 +308,11 @@ type GenericReader interface {
 	// Available since: 2.2.3
 	// Time complexity: O(1)
 	// ACL categories: @keyspace @read @slow
-	// RESP2 / RESP3 Reply:
+	// RESP2 Reply:
+	//	One of the following:
+	//		- Integer reply: the idle time in seconds.
+	//		- Nil reply: if key doesn't exist
+	// RESP3 Reply:
 	//	One of the following:
 	//		- Integer reply: the idle time in seconds.
 	//		- Null reply: if key doesn't exist.
@@ -304,7 +322,11 @@ type GenericReader interface {
 	// Available since: 1.0.0
 	// Time complexity: O(1)
 	// ACL categories: @keyspace @read @slow
-	// RESP2 / RESP3 Reply:
+	// RESP2 Reply:
+	//	One of the following:
+	//		- Nil reply: when the database is empty.
+	//		- Bulk string reply: a random key in the database.
+	// RESP3 Reply:
 	//	One of the following:
 	//		- Null reply: when the database is empty.
 	//		- Bulk string reply: a random key in the database.
@@ -312,7 +334,8 @@ type GenericReader interface {
 
 	// Scan
 	// Available since: 2.8.0
-	// Time complexity: O(1) for every call. O(N) for a complete iteration, including enough command calls for the cursor to return back to 0. N is the number of elements inside the collection.
+	// Time complexity: O(1) for every call. O(N) for a complete iteration, including enough command calls for the cursor to return back to 0.
+	//					N is the number of elements inside the collection.
 	// ACL categories: @keyspace @read @slow
 	// RESP2 / RESP3 Reply:
 	//	Array reply: specifically, an array with two elements.
@@ -333,7 +356,8 @@ type GenericReader interface {
 
 	// SortRO
 	// Available since: 7.0.0
-	// Time complexity: O(N+M*log(M)) where N is the number of elements in the list or set to sort, and M the number of returned elements. When the elements are not sorted, complexity is O(N).
+	// Time complexity: O(N+M*log(M)) where N is the number of elements in the list or set to sort,
+	//					and M the number of returned elements. When the elements are not sorted, complexity is O(N).
 	// ACL categories: @read, @set, @sortedset, @list, @slow, @dangerous
 	// RESP2 / RESP3 Reply:
 	// 	- Array reply: a list of sorted elements.
