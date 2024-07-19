@@ -11,48 +11,82 @@ type ConnectionCmdable interface {
 	// Available since: 2.6.9
 	// Time complexity: O(1)
 	// ACL categories: @slow @connection
+	// RESP2 Reply:
+	//	One of the following:
+	//		- Bulk string reply: the connection name of the current connection.
+	//		- Nil reply: the connection name was not set.
+	// RESP3 Reply:
+	//	One of the following:
+	//		- Bulk string reply: the connection name of the current connection.
+	//		- Null reply: the connection name was not set.
 	ClientGetName(ctx context.Context) StringCmd
 
 	// ClientID
 	// Available since: 5.0.0
 	// Time complexity: O(1)
 	// ACL categories: @slow @connection
+	// RESP2 / RESP3 Reply:
+	// 	- Integer reply: the ID of the client.
 	ClientID(ctx context.Context) IntCmd
 
 	// ClientKill
 	// Available since: 2.4.0
 	// Time complexity: O(N) where N is the number of client connections
 	// ACL categories: @admin @slow @dangerous @connection
+	// RESP2 / RESP3 Reply:
+	//	One of the following:
+	//		- Simple string reply: OK when called in 3 argument format and the connection has been closed.
+	//		- Integer reply: when called in filter/value format, the number of clients killed.
+	// History:
+	//	- Starting with Redis version 2.8.12: Added new filter format.
+	//	- Starting with Redis version 2.8.12: ID option.
+	//	- Starting with Redis version 3.2.0: Added master type in for TYPE option.
+	//	- Starting with Redis version 5.0.0: Replaced slave TYPE with replica. slave still supported for backward compatibility.
+	//	- Starting with Redis version 6.2.0: LADDR option.
 	ClientKill(ctx context.Context, ipPort string) StatusCmd
-
-	// ClientKillByFilter
-	// Available since: 2.4.0
-	// Time complexity: O(N) where N is the number of client connections
-	// ACL categories: @admin @slow @dangerous @connection
 	ClientKillByFilter(ctx context.Context, keys ...string) IntCmd
 
 	// ClientList
 	// Available since: 2.4.0
 	// Time complexity: O(N) where N is the number of client connections
 	// ACL categories: @admin @slow @dangerous @connection
+	// RESP2 / RESP3 Reply:
+	// 	- Bulk string reply: information and statistics about client connections.
+	// History:
+	//	- Starting with Redis version 2.8.12: Added unique client id field.
+	//	- Starting with Redis version 5.0.0: Added optional TYPE filter.
+	//	- Starting with Redis version 6.0.0: Added user field.
+	//	- Starting with Redis version 6.2.0: Added argv-mem, tot-mem, laddr and redir fields and the optional ID filter.
+	//	- Starting with Redis version 7.0.0: Added resp, multi-mem, rbs and rbp fields.
+	//	- Starting with Redis version 7.0.3: Added ssub field.
 	ClientList(ctx context.Context) StringCmd
 
 	// ClientPause
 	// Available since: 2.9.50
 	// Time complexity: O(1)
 	// ACL categories: @admin @slow @dangerous @connection
+	// RESP2 / RESP3 Reply:
+	// 	- Simple string reply: OK or an error if the timeout is invalid.
+	// History:
+	//	- Starting with Redis version 6.2.0: CLIENT PAUSE WRITE mode added along with the mode option.
 	ClientPause(ctx context.Context, dur time.Duration) BoolCmd
 
 	// ClientUnpause
 	// Available since: 6.2.0
 	// Time complexity: O(N) Where N is the number of paused clients
 	// ACL categories: @admin @slow @dangerous @connection
+	// RESP2 / RESP3 Reply:
+	// 	- Simple string reply: OK.
 	ClientUnpause(ctx context.Context) BoolCmd
 
 	// ClientUnblock
 	// Available since: 5.0.0
 	// Time complexity: O(N) Where N is the number of paused clients
 	// ACL categories: @admin @slow @dangerous @connection
+	// RESP2 / RESP3 Reply:
+	//	One of the following:
+	//		- Integer reply: 1 if the client was unblocked successfully.
+	//		- Integer reply: 0 if the client wasn't unblocked.
 	ClientUnblock(ctx context.Context, id int64) IntCmd
 	ClientUnblockWithError(ctx context.Context, id int64) IntCmd
 
@@ -60,18 +94,26 @@ type ConnectionCmdable interface {
 	// Available since: 1.0.0
 	// Time complexity: O(1)
 	// ACL categories: @fast @connection
+	// RESP2 / RESP3 Reply:
+	// 	- Bulk string reply: the given string.
 	Echo(ctx context.Context, message any) StringCmd
 
 	// Ping
 	// Available since: 1.0.0
 	// Time complexity: O(1)
 	// ACL categories: @fast @connection
+	// RESP2 / RESP3 Reply:
+	//	One of the following:
+	//		- Simple string reply: PONG when no argument is provided.
+	//		- Bulk string reply: the provided argument.
 	Ping(ctx context.Context) StatusCmd
 
 	// Quit
 	// Available since: 1.0.0
 	// Time complexity: O(1)
 	// ACL categories: @fast @connection
+	// RESP2 / RESP3 Reply:
+	// 	- Simple string reply: OK.
 	Quit(ctx context.Context) StatusCmd
 }
 
