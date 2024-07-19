@@ -10,9 +10,7 @@ const (
 	commandQuitWarning                       = "As of Redis version 7.2.0, this command is regarded as deprecated.It can be replaced by just closing the connection when migrating or writing new code."
 	commandKeysWarning                       = "consider KEYS as a command that should only be used in production environments with extreme care. It may ruin performance when it is executed against large databases. This command is intended for debugging and special operations, such as changing your keyspace layout. Don't use KEYS in your regular application code. If you're looking for a way to find keys in a subset of your keyspace, consider using SCAN or sets."
 	commandGeoRadiusROWarning                = "As of Redis version 6.2.0, this command is regarded as deprecated.It can be replaced by GEOSEARCH with the BYRADIUS argument when migrating or writing new code."
-	commandGeoRadiusROCountWarning           = "As of Redis version 6.2.0, this command is regarded as deprecated.It can be replaced by GEOSEARCH with the BYRADIUS argument when migrating or writing new code."
 	commandGeoRadiusStoreWarning             = "As of Redis version 6.2.0, this command is regarded as deprecated.It can be replaced by GEOSEARCH and GEOSEARCHSTORE with the BYRADIUS argument when migrating or writing new code."
-	commandGeoRadiusStoreCountWarning        = "As of Redis version 6.2.0, this command is regarded as deprecated.It can be replaced by GEOSEARCH and GEOSEARCHSTORE with the BYRADIUS argument when migrating or writing new code."
 	commandGeoRadiusByMemberROWarning        = "As of Redis version 6.2.0, this command is regarded as deprecated.It can be replaced by GEOSEARCH and GEOSEARCHSTORE with the BYRADIUS and FROMMEMBER arguments when migrating or writing new code."
 	commandGeoRadiusByMemberStoreWarning     = "As of Redis version 6.2.0, this command is regarded as deprecated.It can be replaced by GEOSEARCH with the BYRADIUS and FROMMEMBER arguments when migrating or writing new code."
 	commandHMSetWarning                      = "As of Redis version 4.0.0, this command is regarded as deprecated.It can be replaced by HSET with multiple field-value pairs when migrating or writing new code."
@@ -488,7 +486,7 @@ var CommandClientID commandClientID
 
 type commandClientID string
 
-func (commandClientID) String() string         { return "CLIENT GETNAME" }
+func (commandClientID) String() string         { return "CLIENT ID" }
 func (commandClientID) Class() string          { return "Connection" }
 func (commandClientID) RequireVersion() string { return "5.0.0" }
 func (commandClientID) Forbid() bool           { return false }
@@ -1444,17 +1442,6 @@ func (commandGeoRadiusRO) Forbid() bool           { return false }
 func (commandGeoRadiusRO) WarnVersion() string    { return "6.2.0" }
 func (commandGeoRadiusRO) Warning() string        { return commandGeoRadiusROWarning }
 
-var CommandGeoRadiusROCount commandGeoRadiusROCount
-
-type commandGeoRadiusROCount string
-
-func (commandGeoRadiusROCount) String() string         { return "GEORADIUSROCOUNT" }
-func (commandGeoRadiusROCount) Class() string          { return "Geospatial" }
-func (commandGeoRadiusROCount) RequireVersion() string { return "6.2.0" }
-func (commandGeoRadiusROCount) Forbid() bool           { return false }
-func (commandGeoRadiusROCount) WarnVersion() string    { return "6.2.0" }
-func (commandGeoRadiusROCount) Warning() string        { return commandGeoRadiusROCountWarning }
-
 var CommandGeoRadiusStore commandGeoRadiusStore
 
 type commandGeoRadiusStore string
@@ -1465,17 +1452,6 @@ func (commandGeoRadiusStore) RequireVersion() string { return "3.2.0" }
 func (commandGeoRadiusStore) Forbid() bool           { return false }
 func (commandGeoRadiusStore) WarnVersion() string    { return "6.2.0" }
 func (commandGeoRadiusStore) Warning() string        { return commandGeoRadiusStoreWarning }
-
-var CommandGeoRadiusStoreCount commandGeoRadiusStoreCount
-
-type commandGeoRadiusStoreCount string
-
-func (commandGeoRadiusStoreCount) String() string         { return "GEORADIUSSTORECOUNT" }
-func (commandGeoRadiusStoreCount) Class() string          { return "Geospatial" }
-func (commandGeoRadiusStoreCount) RequireVersion() string { return "6.2.0" }
-func (commandGeoRadiusStoreCount) Forbid() bool           { return false }
-func (commandGeoRadiusStoreCount) WarnVersion() string    { return "6.2.0" }
-func (commandGeoRadiusStoreCount) Warning() string        { return commandGeoRadiusStoreCountWarning }
 
 var CommandGeoRadiusByMemberRO commandGeoRadiusByMemberRO
 

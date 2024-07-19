@@ -14,24 +14,56 @@ type GeospatialWriter interface {
 	// Available since: 3.2.0
 	// Time complexity: O(log(N)) for each item added, where N is the number of elements in the sorted set.
 	// ACL categories: @write @geo @slow
+	// Options
+	// 	- XX: Only update elements that already exist. Never add elements.
+	// 	- NX: Don't update already existing elements. Always add new elements.
+	// 	- CH: Modify the return value from the number of new elements added, to the total number of elements changed (CH is an abbreviation of changed).
+	//		Changed elements are new elements added and elements already existing for which the coordinates was updated. So elements specified in the
+	//		command line having the same score as they had in the past are not counted. Note: normally, the return value of GEOADD only counts the number of new elements added.
+	// RESP2 / RESP3 Reply:
+	// 	- Integer reply: When used without optional arguments, the number of elements added to the sorted set (excluding score updates).
+	//		If the CH option is specified, the number of elements that were changed (added or updated).
+	// History:
+	//	- Starting with Redis version 6.2.0: Added the CH, NX and XX options.
 	GeoAdd(ctx context.Context, key string, geoLocation ...GeoLocation) IntCmd
 
 	// GeoRadiusStore
 	// Available since: 3.2.0
 	// Time complexity: O(N+log(M)) where N is the number of elements inside the bounding box of the circular area delimited by center and radius and M is the number of items inside the index.
 	// ACL categories: @write @geo @slow
+	//	One of the following:
+	//		- If no WITH* option is specified, an Array reply of matched member names
+	//		- If WITHCOORD, WITHDIST, or WITHHASH options are specified, the command returns an Array reply of arrays, where each sub-array represents a single item:
+	//			1. The distance from the center as a floating point number, in the same unit specified in the radius.
+	//			2. The Geohash integer.
+	//			3. The coordinates as a two items x,y array (longitude,latitude).
+	// History:
+	//	- Starting with Redis version 6.2.0: Added the ANY option for COUNT.
+	//	- Starting with Redis version 7.0.0: Added support for uppercase unit names.
 	GeoRadiusStore(ctx context.Context, key string, longitude, latitude float64, query GeoRadiusQuery) IntCmd
 
 	// GeoRadiusByMemberStore
 	// Available since: 3.2.0
 	// Time complexity: O(N+log(M)) where N is the number of elements inside the bounding box of the circular area delimited by center and radius and M is the number of items inside the index.
 	// ACL categories: @write @geo @slow
+	//	One of the following:
+	//		- If no WITH* option is specified, an Array reply of matched member names
+	//		- If WITHCOORD, WITHDIST, or WITHHASH options are specified, the command returns an Array reply of arrays, where each sub-array represents a single item:
+	//			1. The distance from the center as a floating point number, in the same unit specified in the radius.
+	//			2. The Geohash integer.
+	//			3. The coordinates as a two items x,y array (longitude,latitude).
+	// History:
+	//	- Starting with Redis version 7.0.0: Added support for uppercase unit names.
 	GeoRadiusByMemberStore(ctx context.Context, key, member string, query GeoRadiusQuery) IntCmd
 
 	// GeoSearchStore
 	// Available since: 6.2.0
 	// Time complexity: O(N+log(M)) where N is the number of elements in the grid-aligned bounding box area around the shape provided as the filter and M is the number of items inside the shape
 	// ACL categories: @write @geo @slow
+	// RESP2 / RESP3 Reply:
+	// 	- Integer reply: the number of elements in the resulting set
+	// History:
+	//	- Starting with Redis version 7.0.0: Added support for uppercase unit names.
 	GeoSearchStore(ctx context.Context, key, store string, q GeoSearchStoreQuery) IntCmd
 }
 
@@ -48,6 +80,8 @@ type GeospatialCacheCmdable interface {
 	// Available since: 3.2.0
 	// Time complexity: O(log(N))
 	// ACL categories: @read @geo @slow
+	// RESP2 / RESP3 Reply:
+	// 	- Integer reply: the number of elements in the resulting set
 	GeoDist(ctx context.Context, key string, member1, member2, unit string) FloatCmd
 
 	// GeoHash
@@ -125,11 +159,7 @@ func (c *client) GeoPos(ctx context.Context, key string, members ...string) GeoP
 }
 
 func (c *client) GeoRadius(ctx context.Context, key string, longitude, latitude float64, query GeoRadiusQuery) GeoLocationCmd {
-	if query.Count > 0 {
-		ctx = c.handler.before(ctx, CommandGeoRadiusROCount)
-	} else {
-		ctx = c.handler.before(ctx, CommandGeoRadiusRO)
-	}
+	ctx = c.handler.before(ctx, CommandGeoRadiusRO)
 	var r GeoLocationCmd
 	if c.ttl > 0 {
 		r = newGeoLocationCmd(c.Do(ctx, c.builder.GeoRadiusCompleted(key, longitude, latitude, query)))
@@ -151,11 +181,7 @@ func (c *client) GeoRadiusStore(ctx context.Context, key string, longitude, lati
 		}
 		return nil
 	}
-	if query.Count > 0 {
-		ctx = c.handler.beforeWithKeys(ctx, CommandGeoRadiusStoreCount, f)
-	} else {
-		ctx = c.handler.beforeWithKeys(ctx, CommandGeoRadiusStore, f)
-	}
+	ctx = c.handler.beforeWithKeys(ctx, CommandGeoRadiusStore, f)
 	r := c.adapter.GeoRadiusStore(ctx, key, longitude, latitude, query)
 	c.handler.after(ctx, r.Err())
 	return r
