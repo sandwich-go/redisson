@@ -13,10 +13,52 @@ type Scripter interface {
 	// Return SHA1 digest of script.
 	Hash() string
 
+	// Eval
+	// Available since: 2.6.0
+	// Time complexity: Depends on the script that is executed.
+	// ACL categories: @slow @scripting
+	// RESP2 / RESP3 Reply:
+	// 	- The return value depends on the script that was executed.
+	Eval(ctx context.Context, keys []string, args ...any) Cmd
+
+	// EvalRO
+	// Available since: 7.0.0
+	// Time complexity: Depends on the script that is executed.
+	// ACL categories: @slow @scripting
+	// RESP2 / RESP3 Reply:
+	// 	- The return value depends on the script that was executed.
+	EvalRO(ctx context.Context, keys []string, args ...any) Cmd
+
+	// EvalSha
+	// Available since: 2.6.0
+	// Time complexity: Depends on the script that is executed.
+	// ACL categories: @slow @scripting
+	// RESP2 / RESP3 Reply:
+	// 	- The return value depends on the script that was executed.
+	EvalSha(ctx context.Context, keys []string, args ...any) Cmd
+
+	// EvalShaRO
+	// Available since: 7.0.0
+	// Time complexity: Depends on the script that is executed.
+	// ACL categories: @slow @scripting
+	// RESP2 / RESP3 Reply:
+	// 	- The return value depends on the script that was executed.
+	EvalShaRO(ctx context.Context, keys []string, args ...any) Cmd
+
+	// Run optimistically uses EVALSHA to run the script. If script does not exist
+	// it is retried using EVAL.
+	Run(ctx context.Context, keys []string, args ...any) Cmd
+
+	// RunRO optimistically uses EVALSHA_RO to run the script. If script does not exist
+	// it is retried using EVAL_RO.
+	RunRO(ctx context.Context, keys []string, args ...any) Cmd
+
 	// Load
 	// Available since: 2.6.0
 	// Time complexity: O(N) with N being the length in bytes of the script body.
 	// ACL categories: @slow @scripting
+	// RESP2 / RESP3 Reply:
+	// 	- Bulk string reply: the SHA1 digest of the script added into the script cache.
 	Load(ctx context.Context) StringCmd
 
 	// Exists
@@ -24,22 +66,6 @@ type Scripter interface {
 	// Time complexity: O(N) with N being the number of scripts to check (so checking a single script is an O(1) operation).
 	// ACL categories: @slow @scripting
 	Exists(ctx context.Context) BoolSliceCmd
-
-	// Eval
-	// Available since: 2.6.0
-	// Time complexity: Depends on the script that is executed.
-	// ACL categories: @slow @scripting
-	Eval(ctx context.Context, keys []string, args ...any) Cmd
-
-	// EvalSha
-	// Available since: 2.6.0
-	// Time complexity: Depends on the script that is executed.
-	// ACL categories: @slow @scripting
-	EvalSha(ctx context.Context, keys []string, args ...any) Cmd
-
-	// Run optimistically uses EVALSHA to run the script. If script does not exist
-	// it is retried using EVAL.
-	Run(ctx context.Context, keys []string, args ...any) Cmd
 }
 
 type ScriptCmdable interface {
@@ -49,54 +75,72 @@ type ScriptCmdable interface {
 	// Available since: 2.6.0
 	// Time complexity: Depends on the script that is executed.
 	// ACL categories: @slow @scripting
+	// RESP2 / RESP3 Reply:
+	// 	- The return value depends on the script that was executed.
 	Eval(ctx context.Context, script string, keys []string, args ...any) Cmd
 
 	// EvalRO
 	// Available since: 7.0.0
 	// Time complexity: Depends on the script that is executed.
 	// ACL categories: @slow @scripting
+	// RESP2 / RESP3 Reply:
+	// 	- The return value depends on the script that was executed.
 	EvalRO(ctx context.Context, script string, keys []string, args ...any) Cmd
 
 	// EvalSha
 	// Available since: 2.6.0
 	// Time complexity: Depends on the script that is executed.
 	// ACL categories: @slow @scripting
+	// RESP2 / RESP3 Reply:
+	// 	- The return value depends on the script that was executed.
 	EvalSha(ctx context.Context, sha1 string, keys []string, args ...any) Cmd
 
 	// EvalShaRO
 	// Available since: 7.0.0
 	// Time complexity: Depends on the script that is executed.
 	// ACL categories: @slow @scripting
+	// RESP2 / RESP3 Reply:
+	// 	- The return value depends on the script that was executed.
 	EvalShaRO(ctx context.Context, sha1 string, keys []string, args ...any) Cmd
 
 	// FCall
 	// Available since: 7.0.0
 	// Time complexity: Depends on the script that is executed.
 	// ACL categories: @slow @scripting
+	// RESP2 / RESP3 Reply:
+	// 	- The return value depends on the script that was executed.
 	FCall(ctx context.Context, function string, keys []string, args ...any) Cmd
 
 	// FCallRO
 	// Available since: 7.0.0
 	// Time complexity: Depends on the script that is executed.
 	// ACL categories: @slow @scripting
+	// RESP2 / RESP3 Reply:
+	// 	- The return value depends on the script that was executed.
 	FCallRO(ctx context.Context, function string, keys []string, args ...any) Cmd
 
 	// FunctionDelete
 	// Available since: 7.0.0
 	// Time complexity: Depends on the script that is executed.
 	// ACL categories: @write, @slow, @scripting
+	// RESP2 / RESP3 Reply:
+	// 	- Simple string reply: OK.
 	FunctionDelete(ctx context.Context, libName string) StringCmd
 
 	// FunctionDump
 	// Available since: 7.0.0
 	// Time complexity: Depends on the script that is executed.
 	// ACL categories: @slow @scripting
+	// RESP2 / RESP3 Reply:
+	// 	- Bulk string reply: the serialized payload
 	FunctionDump(ctx context.Context) StringCmd
 
 	// FunctionFlush
 	// Available since: 7.0.0
 	// Time complexity: Depends on the script that is executed.
 	// ACL categories: @write, @slow, @scripting
+	// RESP2 / RESP3 Reply:
+	// 	- Simple string reply: OK.
 	FunctionFlush(ctx context.Context) StringCmd
 	FunctionFlushAsync(ctx context.Context) StringCmd
 
@@ -104,18 +148,24 @@ type ScriptCmdable interface {
 	// Available since: 7.0.0
 	// Time complexity: Depends on the script that is executed.
 	// ACL categories: @slow @scripting
+	// RESP2 / RESP3 Reply:
+	// 	- Simple string reply: OK.
 	FunctionKill(ctx context.Context) StringCmd
 
 	// FunctionList
 	// Available since: 7.0.0
 	// Time complexity: Depends on the script that is executed.
 	// ACL categories: @slow @scripting
+	// RESP2 / RESP3 Reply:
+	// 	- Array reply: information about functions and libraries.
 	FunctionList(ctx context.Context, q FunctionListQuery) FunctionListCmd
 
 	// FunctionLoad
 	// Available since: 7.0.0
 	// Time complexity: Depends on the script that is executed.
 	// ACL categories: @write, @slow, @scripting
+	// RESP2 / RESP3 Reply:
+	// 	- Bulk string reply: the library name that was loaded.
 	FunctionLoad(ctx context.Context, code string) StringCmd
 	FunctionLoadReplace(ctx context.Context, code string) StringCmd
 
@@ -123,30 +173,42 @@ type ScriptCmdable interface {
 	// Available since: 7.0.0
 	// Time complexity: Depends on the script that is executed.
 	// ACL categories: @write, @slow, @scripting
+	// RESP2 / RESP3 Reply:
+	// 	- Simple string reply: OK.
 	FunctionRestore(ctx context.Context, libDump string) StringCmd
 
 	// ScriptExists
 	// Available since: 2.6.0
 	// Time complexity: O(N) with N being the number of scripts to check (so checking a single script is an O(1) operation).
 	// ACL categories: @slow @scripting
+	// RESP2 / RESP3 Reply:
+	// 	- Array reply: an array of integers that correspond to the specified SHA1 digest arguments.
 	ScriptExists(ctx context.Context, hashes ...string) BoolSliceCmd
 
 	// ScriptFlush
 	// Available since: 2.6.0
 	// Time complexity: O(N) with N being the number of scripts in cache
 	// ACL categories: @slow @scripting
+	// RESP2 / RESP3 Reply:
+	// 	- Simple string reply: OK.
+	// History:
+	//	- Starting with Redis version 6.2.0: Added the ASYNC and SYNC flushing mode modifiers
 	ScriptFlush(ctx context.Context) StatusCmd
 
 	// ScriptKill
 	// Available since: 2.6.0
 	// Time complexity: O(1)
 	// ACL categories: @slow @scripting
+	// RESP2 / RESP3 Reply:
+	// 	- Simple string reply: OK.
 	ScriptKill(ctx context.Context) StatusCmd
 
 	// ScriptLoad
 	// Available since: 2.6.0
 	// Time complexity: O(N) with N being the length in bytes of the script body.
 	// ACL categories: @slow @scripting
+	// RESP2 / RESP3 Reply:
+	// 	- Bulk string reply: the SHA1 digest of the script added into the script cache.
 	ScriptLoad(ctx context.Context, script string) StringCmd
 }
 
@@ -306,15 +368,29 @@ func (s *script) Exists(ctx context.Context) BoolSliceCmd { return s.ScriptExist
 func (s *script) Eval(ctx context.Context, keys []string, args ...any) Cmd {
 	return s.ScriptCmdable.Eval(ctx, s.src, keys, args...)
 }
+func (s *script) EvalRO(ctx context.Context, keys []string, args ...any) Cmd {
+	return s.ScriptCmdable.EvalRO(ctx, s.src, keys, args...)
+}
 
 func (s *script) EvalSha(ctx context.Context, keys []string, args ...any) Cmd {
 	return s.ScriptCmdable.EvalSha(ctx, s.hash, keys, args...)
+}
+func (s *script) EvalShaRO(ctx context.Context, keys []string, args ...any) Cmd {
+	return s.ScriptCmdable.EvalShaRO(ctx, s.src, keys, args...)
 }
 
 func (s *script) Run(ctx context.Context, keys []string, args ...any) Cmd {
 	r := s.EvalSha(ctx, keys, args...)
 	if err := r.Err(); err != nil && strings.HasPrefix(err.Error(), "NOSCRIPT ") {
 		return s.Eval(ctx, keys, args...)
+	}
+	return r
+}
+
+func (s *script) RunRO(ctx context.Context, keys []string, args ...any) Cmd {
+	r := s.EvalShaRO(ctx, keys, args...)
+	if err := r.Err(); err != nil && strings.HasPrefix(err.Error(), "NOSCRIPT ") {
+		return s.EvalRO(ctx, keys, args...)
 	}
 	return r
 }
