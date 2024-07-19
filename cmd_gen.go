@@ -1470,7 +1470,7 @@ type commandGeoRadiusByMemberStore string
 
 func (commandGeoRadiusByMemberStore) String() string         { return "GEORADIUSBYMEMBER" }
 func (commandGeoRadiusByMemberStore) Class() string          { return "Geospatial" }
-func (commandGeoRadiusByMemberStore) RequireVersion() string { return "6.2.0" }
+func (commandGeoRadiusByMemberStore) RequireVersion() string { return "3.2.0" }
 func (commandGeoRadiusByMemberStore) Forbid() bool           { return false }
 func (commandGeoRadiusByMemberStore) WarnVersion() string    { return "6.2.0" }
 func (commandGeoRadiusByMemberStore) Warning() string        { return commandGeoRadiusByMemberStoreWarning }
@@ -2275,7 +2275,7 @@ type commandBLPop string
 
 func (commandBLPop) String() string         { return "BLPOP" }
 func (commandBLPop) Class() string          { return "List" }
-func (commandBLPop) RequireVersion() string { return "7.0.0" }
+func (commandBLPop) RequireVersion() string { return "2.0.0" }
 func (commandBLPop) Forbid() bool           { return false }
 func (commandBLPop) WarnVersion() string    { return "0.0.0" }
 func (commandBLPop) Warning() string        { return "" }
@@ -2655,7 +2655,7 @@ type commandRPushXP struct{ Pipeliner }
 
 func (commandRPushX) String() string               { return "RPUSHX" }
 func (commandRPushX) Class() string                { return "List" }
-func (commandRPushX) RequireVersion() string       { return "6.2.0" }
+func (commandRPushX) RequireVersion() string       { return "2.2.0" }
 func (commandRPushX) Forbid() bool                 { return false }
 func (commandRPushX) WarnVersion() string          { return "0.0.0" }
 func (commandRPushX) Warning() string              { return "" }
@@ -2671,7 +2671,7 @@ type commandRMPushXP struct{ Pipeliner }
 
 func (commandRMPushX) String() string                { return "RPUSHX" }
 func (commandRMPushX) Class() string                 { return "List" }
-func (commandRMPushX) RequireVersion() string        { return "6.2.0" }
+func (commandRMPushX) RequireVersion() string        { return "4.0.0" }
 func (commandRMPushX) Forbid() bool                  { return false }
 func (commandRMPushX) WarnVersion() string           { return "0.0.0" }
 func (commandRMPushX) Warning() string               { return "" }
@@ -3190,7 +3190,7 @@ var CommandServerInfo commandServerInfo
 
 type commandServerInfo string
 
-func (commandServerInfo) String() string         { return "SERVERINFO" }
+func (commandServerInfo) String() string         { return "INFO" }
 func (commandServerInfo) Class() string          { return "Server" }
 func (commandServerInfo) RequireVersion() string { return "1.0.0" }
 func (commandServerInfo) Forbid() bool           { return false }
@@ -3215,7 +3215,7 @@ type commandLastSave string
 func (commandLastSave) String() string         { return "LASTSAVE" }
 func (commandLastSave) Class() string          { return "Server" }
 func (commandLastSave) RequireVersion() string { return "1.0.0" }
-func (commandLastSave) Forbid() bool           { return false }
+func (commandLastSave) Forbid() bool           { return true }
 func (commandLastSave) WarnVersion() string    { return "0.0.0" }
 func (commandLastSave) Warning() string        { return "" }
 
@@ -3502,7 +3502,7 @@ var CommandSPopN commandSPopN
 type commandSPopN string
 type commandSPopNP struct{ Pipeliner }
 
-func (commandSPopN) String() string              { return "SPOPN" }
+func (commandSPopN) String() string              { return "SPOP" }
 func (commandSPopN) Class() string               { return "Set" }
 func (commandSPopN) RequireVersion() string      { return "3.2.0" }
 func (commandSPopN) Forbid() bool                { return false }
@@ -3532,7 +3532,7 @@ var CommandSRandMemberN commandSRandMemberN
 type commandSRandMemberN string
 type commandSRandMemberNP struct{ Pipeliner }
 
-func (commandSRandMemberN) String() string                     { return "SRANDMEMBERN" }
+func (commandSRandMemberN) String() string                     { return "SRANDMEMBER" }
 func (commandSRandMemberN) Class() string                      { return "Set" }
 func (commandSRandMemberN) RequireVersion() string             { return "2.6.0" }
 func (commandSRandMemberN) Forbid() bool                       { return false }
@@ -3564,7 +3564,7 @@ var CommandSMRem commandSMRem
 type commandSMRem string
 type commandSMRemP struct{ Pipeliner }
 
-func (commandSMRem) String() string              { return "SMREM" }
+func (commandSMRem) String() string              { return "SREM" }
 func (commandSMRem) Class() string               { return "Set" }
 func (commandSMRem) RequireVersion() string      { return "2.4.0" }
 func (commandSMRem) Forbid() bool                { return false }
@@ -3675,7 +3675,7 @@ var CommandZAddArgs commandZAddArgs
 type commandZAddArgs string
 type commandZAddArgsP struct{ Pipeliner }
 
-func (commandZAddArgs) String() string                 { return "ZAddArgs" }
+func (commandZAddArgs) String() string                 { return "ZADD" }
 func (commandZAddArgs) Class() string                  { return "SortedSet" }
 func (commandZAddArgs) RequireVersion() string         { return "6.2.0" }
 func (commandZAddArgs) Forbid() bool                   { return false }
@@ -3931,7 +3931,7 @@ type commandZInterStoreP struct{ Pipeliner }
 
 func (commandZInterStore) String() string                    { return "ZINTERSTORE" }
 func (commandZInterStore) Class() string                     { return "SortedSet" }
-func (commandZInterStore) RequireVersion() string            { return "6.2.0" }
+func (commandZInterStore) RequireVersion() string            { return "2.0.0" }
 func (commandZInterStore) Forbid() bool                      { return false }
 func (commandZInterStore) WarnVersion() string               { return "0.0.0" }
 func (commandZInterStore) Warning() string                   { return "" }
@@ -4057,7 +4057,7 @@ var CommandZRandMemberWithScores commandZRandMemberWithScores
 type commandZRandMemberWithScores string
 type commandZRandMemberWithScoresP struct{ Pipeliner }
 
-func (commandZRandMemberWithScores) String() string         { return "ZRANDMEMBERWITHSCORES" }
+func (commandZRandMemberWithScores) String() string         { return "ZRANDMEMBER WITHSCORES" }
 func (commandZRandMemberWithScores) Class() string          { return "SortedSet" }
 func (commandZRandMemberWithScores) RequireVersion() string { return "6.2.0" }
 func (commandZRandMemberWithScores) Forbid() bool           { return false }
@@ -4089,7 +4089,7 @@ var CommandZUnionWithScores commandZUnionWithScores
 type commandZUnionWithScores string
 type commandZUnionWithScoresP struct{ Pipeliner }
 
-func (commandZUnionWithScores) String() string         { return "ZUNIONWITHSCORES" }
+func (commandZUnionWithScores) String() string         { return "ZUNION WITHSCORES" }
 func (commandZUnionWithScores) Class() string          { return "SortedSet" }
 func (commandZUnionWithScores) RequireVersion() string { return "6.2.0" }
 func (commandZUnionWithScores) Forbid() bool           { return false }
@@ -4337,7 +4337,7 @@ var CommandZRangeWithScores commandZRangeWithScores
 type commandZRangeWithScores string
 type commandZRangeWithScoresP struct{ Pipeliner }
 
-func (commandZRangeWithScores) String() string         { return "ZRANGEWITHSCORES" }
+func (commandZRangeWithScores) String() string         { return "ZRANGE WITHSCORE" }
 func (commandZRangeWithScores) Class() string          { return "SortedSet" }
 func (commandZRangeWithScores) RequireVersion() string { return "1.2.0" }
 func (commandZRangeWithScores) Forbid() bool           { return false }
@@ -4355,7 +4355,7 @@ var CommandZRevRangeWithScores commandZRevRangeWithScores
 type commandZRevRangeWithScores string
 type commandZRevRangeWithScoresP struct{ Pipeliner }
 
-func (commandZRevRangeWithScores) String() string         { return "ZREVRANGEWITHSCORES" }
+func (commandZRevRangeWithScores) String() string         { return "ZREVRANGE WITHSCORE" }
 func (commandZRevRangeWithScores) Class() string          { return "SortedSet" }
 func (commandZRevRangeWithScores) RequireVersion() string { return "1.2.0" }
 func (commandZRevRangeWithScores) Forbid() bool           { return false }
@@ -4439,7 +4439,7 @@ var CommandZRangeByScoreWithScores commandZRangeByScoreWithScores
 type commandZRangeByScoreWithScores string
 type commandZRangeByScoreWithScoresP struct{ Pipeliner }
 
-func (commandZRangeByScoreWithScores) String() string         { return "ZRANGEBYSCOREWITHSCORES" }
+func (commandZRangeByScoreWithScores) String() string         { return "ZRANGEBYSCORE WITHSCORE" }
 func (commandZRangeByScoreWithScores) Class() string          { return "SortedSet" }
 func (commandZRangeByScoreWithScores) RequireVersion() string { return "2.0.0" }
 func (commandZRangeByScoreWithScores) Forbid() bool           { return false }
@@ -4457,7 +4457,7 @@ var CommandZRevRangeByScoreWithScores commandZRevRangeByScoreWithScores
 type commandZRevRangeByScoreWithScores string
 type commandZRevRangeByScoreWithScoresP struct{ Pipeliner }
 
-func (commandZRevRangeByScoreWithScores) String() string         { return "ZREVRANGEBYSCOREWITHSCORES" }
+func (commandZRevRangeByScoreWithScores) String() string         { return "ZREVRANGEBYSCORE WITHSCORE" }
 func (commandZRevRangeByScoreWithScores) Class() string          { return "SortedSet" }
 func (commandZRevRangeByScoreWithScores) RequireVersion() string { return "2.2.0" }
 func (commandZRevRangeByScoreWithScores) Forbid() bool           { return false }
@@ -5337,7 +5337,7 @@ var CommandSetArgsEX commandSetArgsEX
 type commandSetArgsEX string
 type commandSetArgsEXP struct{ Pipeliner }
 
-func (commandSetArgsEX) String() string                  { return "SETARGSEX" }
+func (commandSetArgsEX) String() string                  { return "SET" }
 func (commandSetArgsEX) Class() string                   { return "String" }
 func (commandSetArgsEX) RequireVersion() string          { return "2.0.0" }
 func (commandSetArgsEX) Forbid() bool                    { return false }
@@ -5369,7 +5369,7 @@ var CommandSetArgsNX commandSetArgsNX
 type commandSetArgsNX string
 type commandSetArgsNXP struct{ Pipeliner }
 
-func (commandSetArgsNX) String() string                  { return "SETARGSNX" }
+func (commandSetArgsNX) String() string                  { return "SET" }
 func (commandSetArgsNX) Class() string                   { return "String" }
 func (commandSetArgsNX) RequireVersion() string          { return "1.0.0" }
 func (commandSetArgsNX) Forbid() bool                    { return false }
@@ -5401,7 +5401,7 @@ var CommandSetNXGet commandSetNXGet
 type commandSetNXGet string
 type commandSetNXGetP struct{ Pipeliner }
 
-func (commandSetNXGet) String() string                 { return "SETNXGET" }
+func (commandSetNXGet) String() string                 { return "SET" }
 func (commandSetNXGet) Class() string                  { return "String" }
 func (commandSetNXGet) RequireVersion() string         { return "7.0.0" }
 func (commandSetNXGet) Forbid() bool                   { return false }
@@ -5417,7 +5417,7 @@ var CommandSetGet commandSetGet
 type commandSetGet string
 type commandSetGetP struct{ Pipeliner }
 
-func (commandSetGet) String() string               { return "SETGET" }
+func (commandSetGet) String() string               { return "SET" }
 func (commandSetGet) Class() string                { return "String" }
 func (commandSetGet) RequireVersion() string       { return "6.2.0" }
 func (commandSetGet) Forbid() bool                 { return false }
