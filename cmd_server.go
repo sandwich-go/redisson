@@ -66,7 +66,7 @@ type ServerCmdable interface {
 
 	// CommandGetKeysAndFlags
 	// Available since: 7.0.0
-	// Time complexity: O(N) where N is the total number of Redis commands
+	// Time complexity: O(N) where N is the number of arguments to the command
 	// ACL categories: @slow @connection
 	// RESP2 / RESP3 Reply:
 	// 	- Array reply: a list of keys from the given command and their usage flags.
@@ -164,10 +164,14 @@ type ServerCmdable interface {
 	// Available since: 4.0.0
 	// Time complexity: O(N) where N is the number of samples.
 	// ACL categories: @read @slow
-	// RESP2 / RESP3 Reply:
+	// RESP2 Reply:
 	//	One of the following:
 	//		- Integer reply: the memory usage in bytes.
 	//		- Nil reply: if the key does not exist.
+	// RESP3 Reply:
+	//	One of the following:
+	//		- Integer reply: the memory usage in bytes.
+	//		- Null reply: if the key does not exist.
 	MemoryUsage(ctx context.Context, key string, samples ...int64) IntCmd
 
 	// Save
