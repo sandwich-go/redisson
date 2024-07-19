@@ -17,7 +17,7 @@ type PubSub interface {
 
 	// Unsubscribe
 	// Available since: 2.0.0
-	// Time complexity: O(N) where N is the number of clients already subscribed to a channel.
+	// Time complexity: O(N) where N is the number of channels to unsubscribe.
 	// ACL categories: @pubsub @slow
 	// RESP2 / RESP3 Reply:
 	// 	- When successful, this command doesn't return anything.
