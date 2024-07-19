@@ -102,8 +102,6 @@ type GenericWriter interface {
 	//	One of the following:
 	//		- Integer reply: 1 if key was moved.
 	//		- Integer reply: 0 if key wasn't moved.
-	// RESP2 / RESP3 Reply:
-	// 	- Simple string reply: OK.
 	Move(ctx context.Context, key string, db int64) BoolCmd
 
 	// Persist
