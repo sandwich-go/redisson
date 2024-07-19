@@ -76,8 +76,9 @@ type BitmapCacheCmdable interface {
 	// Time complexity: O(1)
 	// ACL categories: @read @bitmap @fast
 	// RESP2 / RESP3 Reply:
-	// 	- Integer reply: 0.
-	//	- Integer reply: 1.
+	//	The bit value stored at offset, one of the following:
+	// 		- Integer reply: 0.
+	//		- Integer reply: 1.
 	GetBit(ctx context.Context, key string, offset int64) IntCmd
 }
 
