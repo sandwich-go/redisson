@@ -15,17 +15,25 @@ type ListWriter interface {
 	// Available since: 6.2.0
 	// Time complexity: O(1)
 	// ACL categories: @write @list @slow @blocking
-	// RESP2 / RESP3 Reply:
+	// RESP2 Reply:
 	//	One of the following:
 	//		- Bulk string reply: the element being popped from the source and pushed to the destination.
 	//		- Nil reply: the operation timed-out
+	// RESP3 Reply:
+	//	One of the following:
+	//		- Bulk string reply: the element being popped from the source and pushed to the destination.
+	//		- Null reply: the operation timed-out
 	BLMove(ctx context.Context, source, destination, srcpos, destpos string, timeout time.Duration) StringCmd
 
 	// BLMPop
 	// Available since: 7.0.0
 	// Time complexity: O(N+M) where N is the number of provided keys and M is the number of elements returned.
 	// ACL categories: @write, @list, @slow, @blocking
-	// RESP2 / RESP3 Reply:
+	// RESP2 Reply:
+	//	One of the following:
+	//		- Nil reply: when no element could be popped and the timeout is reached.
+	//		- Array reply: a two-element array with the first element being the name of the key from which elements were popped, and the second element being an array of the popped elements.
+	// RESP3 Reply:
 	//	One of the following:
 	//		- Null reply: when no element could be popped and the timeout is reached.
 	//		- Array reply: a two-element array with the first element being the name of the key from which elements were popped, and the second element being an array of the popped elements.
@@ -35,7 +43,11 @@ type ListWriter interface {
 	// Available since: 2.0.0
 	// Time complexity: O(N) where N is the number of provided keys.
 	// ACL categories: @write @list @slow @blocking
-	// RESP2 / RESP3 Reply:
+	// RESP2 Reply:
+	//	One of the following:
+	//		- Nil reply: no element could be popped and the timeout expired
+	//		- Array reply: the key from which the element was popped and the value of the popped element.
+	// RESP3 Reply:
 	//	One of the following:
 	//		- Null reply: no element could be popped and the timeout expired
 	//		- Array reply: the key from which the element was popped and the value of the popped element.
@@ -47,9 +59,13 @@ type ListWriter interface {
 	// Available since: 2.0.0
 	// Time complexity: O(N) where N is the number of provided keys.
 	// ACL categories: @write @list @slow @blocking
-	// RESP2 / RESP3 Reply:
+	// RESP2 Reply:
 	//	One of the following:
 	//		- Nil reply: no element could be popped and the timeout expired.
+	//		- Array reply: the key from which the element was popped and the value of the popped element
+	// RESP3 Reply:
+	//	One of the following:
+	//		- Null reply: no element could be popped and the timeout expired.
 	//		- Array reply: the key from which the element was popped and the value of the popped element
 	// History:
 	//	- Starting with Redis version 6.0.0: timeout is interpreted as a double instead of an integer.
@@ -59,7 +75,11 @@ type ListWriter interface {
 	// Available since: 2.2.0
 	// Time complexity: O(1)
 	// ACL categories: @write @list @slow @blocking
-	// RESP2 / RESP3 Reply:
+	// RESP2 Reply:
+	//	One of the following:
+	//		- Bulk string reply: the element being popped from source and pushed to destination.
+	//		- Nil reply: the timeout is reached.
+	// RESP3 Reply:
 	//	One of the following:
 	//		- Bulk string reply: the element being popped from source and pushed to destination.
 	//		- Null reply: the timeout is reached.
@@ -69,7 +89,8 @@ type ListWriter interface {
 
 	// LInsert
 	// Available since: 2.2.0
-	// Time complexity: O(N) where N is the number of elements to traverse before seeing the value pivot. This means that inserting somewhere on the left end on the list (head) can be considered O(1) and inserting somewhere on the right end (tail) is O(N).
+	// Time complexity: O(N) where N is the number of elements to traverse before seeing the value pivot.
+	//					This means that inserting somewhere on the left end on the list (head) can be considered O(1) and inserting somewhere on the right end (tail) is O(N).
 	// ACL categories: @write @list @slow
 	// RESP2 / RESP3 Reply:
 	//	One of the following:
@@ -92,9 +113,14 @@ type ListWriter interface {
 	// Available since: 1.0.0
 	// Time complexity: O(N) where N is the number of elements returned
 	// ACL categories: @write @list @fast
-	// RESP2 / RESP3 Reply:
+	// RESP2 Reply:
 	//	One of the following:
 	//		- Nil reply: if the key does not exist.
+	//		- Bulk string reply: when called without the count argument, the value of the first element.
+	//		- Array reply: when called with the count argument, a list of popped elements.
+	// RESP3 Reply:
+	//	One of the following:
+	//		- Null reply: if the key does not exist.
 	//		- Bulk string reply: when called without the count argument, the value of the first element.
 	//		- Array reply: when called with the count argument, a list of popped elements.
 	// History:
@@ -106,7 +132,11 @@ type ListWriter interface {
 	// Available since: 7.0.0
 	// Time complexity: O(N+M) where N is the number of provided keys and M is the number of elements returned.
 	// ACL categories: @write, @list, @slow
-	// RESP2 / RESP3 Reply:
+	// RESP2 Reply:
+	//	One of the following:
+	//		- Nil reply: if no element could be popped.
+	//		- Array reply: a two-element array with the first element being the name of the key from which elements were popped and the second element being an array of elements.
+	// RESP3 Reply:
 	//	One of the following:
 	//		- Null reply: if no element could be popped.
 	//		- Array reply: a two-element array with the first element being the name of the key from which elements were popped and the second element being an array of elements.
@@ -160,9 +190,14 @@ type ListWriter interface {
 	// Available since: 1.0.0
 	// Time complexity: O(N) where N is the number of elements returned
 	// ACL categories: @write @list @fast
-	// RESP2 / RESP3 Reply:
+	// RESP2 Reply:
 	//	One of the following:
 	//		- Nil reply: if the key does not exist.
+	//		- Bulk string reply: when called without the count argument, the value of the last element.
+	//		- Array reply: when called with the count argument, a list of popped elements.
+	// RESP3 Reply:
+	//	One of the following:
+	//		- Null reply: if the key does not exist.
 	//		- Bulk string reply: when called without the count argument, the value of the last element.
 	//		- Array reply: when called with the count argument, a list of popped elements.
 	// History:
@@ -174,10 +209,14 @@ type ListWriter interface {
 	// Available since: 1.2.0
 	// Time complexity: O(1)
 	// ACL categories: @write @list @slow
-	// RESP2 / RESP3 Reply:
+	// RESP2 Reply:
 	//	One of the following:
 	//		- Bulk string reply: the element being popped and pushed.
 	//		- Nil reply: if the source list is empty.
+	// RESP3 Reply:
+	//	One of the following:
+	//		- Bulk string reply: the element being popped and pushed.
+	//		- Null reply: if the source list is empty.
 	RPopLPush(ctx context.Context, source, destination string) StringCmd
 
 	// RPush
@@ -204,10 +243,16 @@ type ListWriter interface {
 type ListReader interface {
 	// LPosCount
 	// vailable since: 6.0.6
-	// Time complexity: O(N) where N is the number of elements in the list, for the average case. When searching for elements near the head or the tail of the list, or when the MAXLEN option is provided, the command may run in constant time.
+	// Time complexity: O(N) where N is the number of elements in the list, for the average case. When searching for elements near the head or the tail of the list,
+	//					or when the MAXLEN option is provided, the command may run in constant time.
 	// ACL categories: @read @list @slow
-	// RESP2 / RESP3 Reply:
-	//	One of the following:
+	// RESP2 Reply:
+	//	Any of the following:
+	//		- nil reply: if there is no matching element.
+	//		- Integer reply: an integer representing the matching element.
+	//		- Array reply: If the COUNT option is given, an array of integers representing the matching elements (or an empty array if there are no matches).
+	// RESP3 Reply:
+	//	Any of the following:
 	//		- Null reply: if there is no matching element.
 	//		- Integer reply: an integer representing the matching element.
 	//		- Array reply: If the COUNT option is given, an array of integers representing the matching elements (or an empty array if there are no matches).
@@ -219,9 +264,13 @@ type ListCacheCmdable interface {
 	// Available since: 1.0.0
 	// Time complexity: O(N) where N is the number of elements to traverse to get to the element at index. This makes asking for the first or the last element of the list O(1).
 	// ACL categories: @read @list @slow
-	// RESP2 / RESP3 Reply:
+	// RESP2 Reply:
 	//	One of the following:
 	//		- Nil reply: when index is out of range.
+	//		- Bulk string reply: the requested element.
+	// RESP3 Reply:
+	//	One of the following:
+	//		- Null reply: when index is out of range.
 	//		- Bulk string reply: the requested element.
 	LIndex(ctx context.Context, key string, index int64) StringCmd
 
@@ -235,7 +284,8 @@ type ListCacheCmdable interface {
 
 	// LRange
 	// Available since: 1.0.0
-	// Time complexity: O(S+N) where S is the distance of start offset from HEAD for small lists, from nearest end (HEAD or TAIL) for large lists; and N is the number of elements in the specified range.
+	// Time complexity: O(S+N) where S is the distance of start offset from HEAD for small lists, from nearest end (HEAD or TAIL) for large lists;
+	//					and N is the number of elements in the specified range.
 	// ACL categories: @read @list @slow
 	// RESP2 / RESP3 Reply:
 	// 	- Array reply: a list of elements in the specified range, or an empty array if the key doesn't exist.
@@ -243,9 +293,15 @@ type ListCacheCmdable interface {
 
 	// LPos
 	// vailable since: 6.0.6
-	// Time complexity: O(N) where N is the number of elements in the list, for the average case. When searching for elements near the head or the tail of the list, or when the MAXLEN option is provided, the command may run in constant time.
+	// Time complexity: O(N) where N is the number of elements in the list, for the average case. When searching for elements near the head or the tail of the list,
+	//					or when the MAXLEN option is provided, the command may run in constant time.
 	// ACL categories: @read @list @slow
-	// RESP2 / RESP3 Reply:
+	// RESP2 Reply:
+	//	One of the following:
+	//		- nil reply: if there is no matching element.
+	//		- Integer reply: an integer representing the matching element.
+	//		- Array reply: If the COUNT option is given, an array of integers representing the matching elements (or an empty array if there are no matches).
+	// RESP3 Reply:
 	//	One of the following:
 	//		- Null reply: if there is no matching element.
 	//		- Integer reply: an integer representing the matching element.
