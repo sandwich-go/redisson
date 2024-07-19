@@ -42,10 +42,14 @@ type StringWriter interface {
 	// Available since: 6.2.0
 	// Time complexity: O(1)
 	// ACL categories: @write @string @fast
-	// RESP2 / RESP3 Reply:
+	// RESP2 Reply:
 	//	One of the following:
 	//		- Bulk string reply: the value of the key.
 	//		- Nil reply: if the key does not exist or if the key's value type is not a string.
+	// RESP3 Reply:
+	//	One of the following:
+	//		- Bulk string reply: the value of the key.
+	//		- Null reply: if the key does not exist or if the key's value type is not a string.
 	GetDel(ctx context.Context, key string) StringCmd
 
 	// GetEx
@@ -58,20 +62,28 @@ type StringWriter interface {
 	// 	- EXAT timestamp-seconds -- Set the specified Unix time at which the key will expire, in seconds.
 	// 	- PXAT timestamp-milliseconds -- Set the specified Unix time at which the key will expire, in milliseconds.
 	// 	- PERSIST -- Remove the time to live associated with the key.
-	// RESP2 / RESP3 Reply:
+	// RESP2 Reply:
 	//	One of the following:
 	//		- Bulk string reply: the value of the key.
 	//		- Nil reply: if key does not exist.
+	// RESP3 Reply:
+	//	One of the following:
+	//		- Bulk string reply: the value of the key.
+	//		- Null reply: if key does not exist.
 	GetEx(ctx context.Context, key string, expiration time.Duration) StringCmd
 
 	// GetSet
 	// Available since: 1.0.0
 	// Time complexity: O(1)
 	// ACL categories: @write @string @fast
-	// RESP2 / RESP3 Reply:
+	// RESP2 Reply:
 	//	One of the following:
 	//		- Bulk string reply: the old value stored at the key.
 	//		- Nil reply: if key does not exist.
+	// RESP3 Reply:
+	//	One of the following:
+	//		- Bulk string reply: the old value stored at the key.
+	//		- Null reply: if key does not exist.
 	GetSet(ctx context.Context, key string, value any) StringCmd
 
 	// Incr
@@ -129,6 +141,7 @@ type StringWriter interface {
 	// 	- XX -- Only set the key if it already exists.
 	// 	- KEEPTTL -- Retain the time to live associated with the key.
 	// 	- GET -- Return the old string stored at key, or nil if key did not exist. An error is returned and SET aborted if the value stored at key is not a string.
+	// Note: Since the SET command options can replace SETNX, SETEX, PSETEX, GETSET, it is possible that in future versions of Redis these commands will be deprecated and finally removed.
 	// RESP2 Reply:
 	//	Any of the following:
 	//		- Nil reply: GET not given: Operation was aborted (conflict with one of the XX/NX options).
@@ -193,10 +206,14 @@ type StringCacheCmdable interface {
 	// Available since: 1.0.0
 	// Time complexity: O(1)
 	// ACL categories: @read @string @fast
-	// RESP2 / RESP3 Reply:
+	// RESP2 Reply:
 	//	One of the following:
 	//		- Bulk string reply: the value of the key.
 	//		- Nil reply: if the key does not exist.
+	// RESP3 Reply:
+	//	One of the following:
+	//		- Bulk string reply: the value of the key.
+	//		- Null reply: if the key does not exist.
 	Get(ctx context.Context, key string) StringCmd
 
 	// GetRange
