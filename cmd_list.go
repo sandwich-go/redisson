@@ -15,132 +15,189 @@ type ListWriter interface {
 	// Available since: 6.2.0
 	// Time complexity: O(1)
 	// ACL categories: @write @list @slow @blocking
+	// RESP2 / RESP3 Reply:
+	//	One of the following:
+	//		- Bulk string reply: the element being popped from the source and pushed to the destination.
+	//		- Nil reply: the operation timed-out
 	BLMove(ctx context.Context, source, destination, srcpos, destpos string, timeout time.Duration) StringCmd
 
 	// BLMPop
 	// Available since: 7.0.0
 	// Time complexity: O(N+M) where N is the number of provided keys and M is the number of elements returned.
 	// ACL categories: @write, @list, @slow, @blocking
+	// RESP2 / RESP3 Reply:
+	//	One of the following:
+	//		- Null reply: when no element could be popped and the timeout is reached.
+	//		- Array reply: a two-element array with the first element being the name of the key from which elements were popped, and the second element being an array of the popped elements.
 	BLMPop(ctx context.Context, timeout time.Duration, direction string, count int64, keys ...string) KeyValuesCmd
 
 	// BLPop
 	// Available since: 2.0.0
 	// Time complexity: O(N) where N is the number of provided keys.
 	// ACL categories: @write @list @slow @blocking
+	// RESP2 / RESP3 Reply:
+	//	One of the following:
+	//		- Null reply: no element could be popped and the timeout expired
+	//		- Array reply: the key from which the element was popped and the value of the popped element.
+	// History:
+	//	- Starting with Redis version 6.0.0: timeout is interpreted as a double instead of an integer.
 	BLPop(ctx context.Context, timeout time.Duration, keys ...string) StringSliceCmd
 
 	// BRPop
 	// Available since: 2.0.0
 	// Time complexity: O(N) where N is the number of provided keys.
 	// ACL categories: @write @list @slow @blocking
+	// RESP2 / RESP3 Reply:
+	//	One of the following:
+	//		- Nil reply: no element could be popped and the timeout expired.
+	//		- Array reply: the key from which the element was popped and the value of the popped element
+	// History:
+	//	- Starting with Redis version 6.0.0: timeout is interpreted as a double instead of an integer.
 	BRPop(ctx context.Context, timeout time.Duration, keys ...string) StringSliceCmd
 
 	// BRPopLPush
 	// Available since: 2.2.0
 	// Time complexity: O(1)
 	// ACL categories: @write @list @slow @blocking
+	// RESP2 / RESP3 Reply:
+	//	One of the following:
+	//		- Bulk string reply: the element being popped from source and pushed to destination.
+	//		- Null reply: the timeout is reached.
+	// History:
+	//	- Starting with Redis version 6.0.0: timeout is interpreted as a double instead of an integer.
 	BRPopLPush(ctx context.Context, source, destination string, timeout time.Duration) StringCmd
 
 	// LInsert
 	// Available since: 2.2.0
 	// Time complexity: O(N) where N is the number of elements to traverse before seeing the value pivot. This means that inserting somewhere on the left end on the list (head) can be considered O(1) and inserting somewhere on the right end (tail) is O(N).
 	// ACL categories: @write @list @slow
+	// RESP2 / RESP3 Reply:
+	//	One of the following:
+	//		- Integer reply: the list length after a successful insert operation.
+	//		- Integer reply: 0 when the key doesn't exist.
+	//		- Integer reply: -1 when the pivot wasn't found.
 	LInsert(ctx context.Context, key, op string, pivot, value any) IntCmd
-
-	// LInsertBefore
-	// Available since: 2.2.0
-	// Time complexity: O(N) where N is the number of elements to traverse before seeing the value pivot. This means that inserting somewhere on the left end on the list (head) can be considered O(1) and inserting somewhere on the right end (tail) is O(N).
-	// ACL categories: @write @list @slow
 	LInsertBefore(ctx context.Context, key string, pivot, value any) IntCmd
-
-	// LInsertAfter
-	// Available since: 2.2.0
-	// Time complexity: O(N) where N is the number of elements to traverse before seeing the value pivot. This means that inserting somewhere on the left end on the list (head) can be considered O(1) and inserting somewhere on the right end (tail) is O(N).
-	// ACL categories: @write @list @slow
 	LInsertAfter(ctx context.Context, key string, pivot, value any) IntCmd
 
 	// LMove
 	// Available since: 6.2.0
 	// Time complexity: O(1)
 	// ACL categories: @write @list @slow
+	// RESP2 / RESP3 Reply:
+	// 	- Bulk string reply: the element being popped and pushed.
 	LMove(ctx context.Context, source, destination, srcpos, destpos string) StringCmd
 
 	// LPop
 	// Available since: 1.0.0
 	// Time complexity: O(N) where N is the number of elements returned
 	// ACL categories: @write @list @fast
+	// RESP2 / RESP3 Reply:
+	//	One of the following:
+	//		- Nil reply: if the key does not exist.
+	//		- Bulk string reply: when called without the count argument, the value of the first element.
+	//		- Array reply: when called with the count argument, a list of popped elements.
+	// History:
+	//	- Starting with Redis version 6.2.0: Added the count argument.
 	LPop(ctx context.Context, key string) StringCmd
+	LPopCount(ctx context.Context, key string, count int64) StringSliceCmd
 
 	// LMPop
 	// Available since: 7.0.0
 	// Time complexity: O(N+M) where N is the number of provided keys and M is the number of elements returned.
 	// ACL categories: @write, @list, @slow
+	// RESP2 / RESP3 Reply:
+	//	One of the following:
+	//		- Null reply: if no element could be popped.
+	//		- Array reply: a two-element array with the first element being the name of the key from which elements were popped and the second element being an array of elements.
 	LMPop(ctx context.Context, direction string, count int64, keys ...string) KeyValuesCmd
-
-	// LPopCount
-	// Available since: 1.0.0
-	// Time complexity: O(N) where N is the number of elements returned
-	// ACL categories: @write @list @fast
-	LPopCount(ctx context.Context, key string, count int64) StringSliceCmd
 
 	// LPush
 	// Available since: 1.0.0
 	// Time complexity: O(1) for each element added, so O(N) to add N elements when the command is called with multiple arguments.
 	// ACL categories: @write @list @fast
+	// RESP2 / RESP3 Reply:
+	// 	- Integer reply: the length of the list after the push operation.
+	// History:
+	//	- Starting with Redis version 2.4.0: Accepts multiple element arguments.
 	LPush(ctx context.Context, key string, values ...any) IntCmd
 
 	// LPushX
 	// Available since: 2.2.0
 	// Time complexity: O(1) for each element added, so O(N) to add N elements when the command is called with multiple arguments.
 	// ACL categories: @write @list @fast
+	// RESP2 / RESP3 Reply:
+	// 	- Integer reply: the length of the list after the push operation.
+	// History:
+	//	- Starting with Redis version 4.0.0: Accepts multiple element arguments.
 	LPushX(ctx context.Context, key string, values ...any) IntCmd
 
 	// LRem
 	// Available since: 1.0.0
 	// Time complexity: O(N+M) where N is the length of the list and M is the number of elements removed.
 	// ACL categories: @write @list @slow
+	// RESP2 / RESP3 Reply:
+	// 	- Integer reply: the number of removed elements.
 	LRem(ctx context.Context, key string, count int64, value any) IntCmd
 
 	// LSet
 	// Available since: 1.0.0
 	// Time complexity: O(N) where N is the length of the list. Setting either the first or the last element of the list is O(1).
 	// ACL categories: @write @list @slow
+	// RESP2 / RESP3 Reply:
+	// 	- Simple string reply: OK.
 	LSet(ctx context.Context, key string, index int64, value any) StatusCmd
 
 	// LTrim
 	// Available since: 1.0.0
 	// Time complexity: O(N) where N is the number of elements to be removed by the operation.
 	// ACL categories: @write @list @slow
+	// RESP2 / RESP3 Reply:
+	// 	- Simple string reply: OK.
 	LTrim(ctx context.Context, key string, start, stop int64) StatusCmd
 
 	// RPop
 	// Available since: 1.0.0
 	// Time complexity: O(N) where N is the number of elements returned
 	// ACL categories: @write @list @fast
+	// RESP2 / RESP3 Reply:
+	//	One of the following:
+	//		- Nil reply: if the key does not exist.
+	//		- Bulk string reply: when called without the count argument, the value of the last element.
+	//		- Array reply: when called with the count argument, a list of popped elements.
+	// History:
+	//	- Starting with Redis version 6.2.0: Added the count argument.
 	RPop(ctx context.Context, key string) StringCmd
-
-	// RPopCount
-	// Available since: 6.2.0
-	// Time complexity: O(N) where N is the number of elements returned
-	// ACL categories: @write @list @fast
 	RPopCount(ctx context.Context, key string, count int64) StringSliceCmd
 
 	// RPopLPush
 	// Available since: 1.2.0
 	// Time complexity: O(1)
 	// ACL categories: @write @list @slow
+	// RESP2 / RESP3 Reply:
+	//	One of the following:
+	//		- Bulk string reply: the element being popped and pushed.
+	//		- Nil reply: if the source list is empty.
 	RPopLPush(ctx context.Context, source, destination string) StringCmd
 
 	// RPush
 	// Available since: 1.0.0
 	// Time complexity: O(1) for each element added, so O(N) to add N elements when the command is called with multiple arguments.
 	// ACL categories: @write @list @fast
+	// RESP2 / RESP3 Reply:
+	// 	- Integer reply: the length of the list after the push operation.
+	// History:
+	//	- Starting with Redis version 2.4.0: Accepts multiple element arguments.
 	RPush(ctx context.Context, key string, values ...any) IntCmd
 
 	// RPushX
 	// Available since: 2.2.0
 	// Time complexity: O(1) for each element added, so O(N) to add N elements when the command is called with multiple arguments.
 	// ACL categories: @write @list @fast
+	// RESP2 / RESP3 Reply:
+	// 	- Integer reply: the length of the list after the push operation.
+	// History:
+	//	- Starting with Redis version 4.0.0: Accepts multiple element arguments.
 	RPushX(ctx context.Context, key string, values ...any) IntCmd
 }
 
@@ -149,6 +206,11 @@ type ListReader interface {
 	// vailable since: 6.0.6
 	// Time complexity: O(N) where N is the number of elements in the list, for the average case. When searching for elements near the head or the tail of the list, or when the MAXLEN option is provided, the command may run in constant time.
 	// ACL categories: @read @list @slow
+	// RESP2 / RESP3 Reply:
+	//	One of the following:
+	//		- Null reply: if there is no matching element.
+	//		- Integer reply: an integer representing the matching element.
+	//		- Array reply: If the COUNT option is given, an array of integers representing the matching elements (or an empty array if there are no matches).
 	LPosCount(ctx context.Context, key string, value string, count int64, args LPosArgs) IntSliceCmd
 }
 
@@ -157,24 +219,37 @@ type ListCacheCmdable interface {
 	// Available since: 1.0.0
 	// Time complexity: O(N) where N is the number of elements to traverse to get to the element at index. This makes asking for the first or the last element of the list O(1).
 	// ACL categories: @read @list @slow
+	// RESP2 / RESP3 Reply:
+	//	One of the following:
+	//		- Nil reply: when index is out of range.
+	//		- Bulk string reply: the requested element.
 	LIndex(ctx context.Context, key string, index int64) StringCmd
 
 	// LLen
 	// Available since: 1.0.0
 	// Time complexity: O(1)
 	// ACL categories: @read @list @fast
+	// RESP2 / RESP3 Reply:
+	// 	- Integer reply: the length of the list.
 	LLen(ctx context.Context, key string) IntCmd
 
 	// LRange
 	// Available since: 1.0.0
 	// Time complexity: O(S+N) where S is the distance of start offset from HEAD for small lists, from nearest end (HEAD or TAIL) for large lists; and N is the number of elements in the specified range.
 	// ACL categories: @read @list @slow
+	// RESP2 / RESP3 Reply:
+	// 	- Array reply: a list of elements in the specified range, or an empty array if the key doesn't exist.
 	LRange(ctx context.Context, key string, start, stop int64) StringSliceCmd
 
 	// LPos
 	// vailable since: 6.0.6
 	// Time complexity: O(N) where N is the number of elements in the list, for the average case. When searching for elements near the head or the tail of the list, or when the MAXLEN option is provided, the command may run in constant time.
 	// ACL categories: @read @list @slow
+	// RESP2 / RESP3 Reply:
+	//	One of the following:
+	//		- Null reply: if there is no matching element.
+	//		- Integer reply: an integer representing the matching element.
+	//		- Array reply: If the COUNT option is given, an array of integers representing the matching elements (or an empty array if there are no matches).
 	LPos(ctx context.Context, key string, value string, args LPosArgs) IntCmd
 }
 

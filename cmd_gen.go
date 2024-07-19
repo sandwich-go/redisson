@@ -1435,7 +1435,7 @@ var CommandGeoRadiusRO commandGeoRadiusRO
 
 type commandGeoRadiusRO string
 
-func (commandGeoRadiusRO) String() string         { return "GEORADIUSRO" }
+func (commandGeoRadiusRO) String() string         { return "GEORADIUS_RO" }
 func (commandGeoRadiusRO) Class() string          { return "Geospatial" }
 func (commandGeoRadiusRO) RequireVersion() string { return "3.2.10" }
 func (commandGeoRadiusRO) Forbid() bool           { return false }
@@ -1446,7 +1446,7 @@ var CommandGeoRadiusStore commandGeoRadiusStore
 
 type commandGeoRadiusStore string
 
-func (commandGeoRadiusStore) String() string         { return "GEORADIUSSTORE" }
+func (commandGeoRadiusStore) String() string         { return "GEORADIUS" }
 func (commandGeoRadiusStore) Class() string          { return "Geospatial" }
 func (commandGeoRadiusStore) RequireVersion() string { return "3.2.0" }
 func (commandGeoRadiusStore) Forbid() bool           { return false }
@@ -1457,7 +1457,7 @@ var CommandGeoRadiusByMemberRO commandGeoRadiusByMemberRO
 
 type commandGeoRadiusByMemberRO string
 
-func (commandGeoRadiusByMemberRO) String() string         { return "GEORADIUSBYMEMBERRO" }
+func (commandGeoRadiusByMemberRO) String() string         { return "GEORADIUSBYMEMBER_RO" }
 func (commandGeoRadiusByMemberRO) Class() string          { return "Geospatial" }
 func (commandGeoRadiusByMemberRO) RequireVersion() string { return "3.2.10" }
 func (commandGeoRadiusByMemberRO) Forbid() bool           { return false }
@@ -1468,7 +1468,7 @@ var CommandGeoRadiusByMemberStore commandGeoRadiusByMemberStore
 
 type commandGeoRadiusByMemberStore string
 
-func (commandGeoRadiusByMemberStore) String() string         { return "GEORADIUSBYMEMBERSTORE" }
+func (commandGeoRadiusByMemberStore) String() string         { return "GEORADIUSBYMEMBER" }
 func (commandGeoRadiusByMemberStore) Class() string          { return "Geospatial" }
 func (commandGeoRadiusByMemberStore) RequireVersion() string { return "6.2.0" }
 func (commandGeoRadiusByMemberStore) Forbid() bool           { return false }
@@ -2383,7 +2383,7 @@ var CommandLPopCount commandLPopCount
 type commandLPopCount string
 type commandLPopCountP struct{ Pipeliner }
 
-func (commandLPopCount) String() string                  { return "LPOP" }
+func (commandLPopCount) String() string                  { return "LPOP COUNT" }
 func (commandLPopCount) Class() string                   { return "List" }
 func (commandLPopCount) RequireVersion() string          { return "6.2.0" }
 func (commandLPopCount) Forbid() bool                    { return false }
