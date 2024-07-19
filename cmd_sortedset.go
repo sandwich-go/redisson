@@ -15,9 +15,14 @@ type SortedSetWriter interface {
 	// Available since: 7.0.0
 	// Time complexity: O(K) + O(M*log(N)) where K is the number of provided keys, N being the number of elements in the sorted set, and M being the number of elements popped.
 	// ACL categories: @write, @sortedset, @slow, @blocking
-	// RESP2 / RESP3 Reply:
+	// RESP2 Reply:
 	//	One of the following:
 	//		- Nil reply: when no element could be popped.
+	//		- Array reply: a two-element array with the first element being the name of the key from which elements were popped,
+	//			and the second element is an array of the popped elements. Every entry in the elements array is also an array that contains the member and its score.
+	// RESP3 Reply:
+	//	One of the following:
+	//		- Null reply: when no element could be popped.
 	//		- Array reply: a two-element array with the first element being the name of the key from which elements were popped,
 	//			and the second element is an array of the popped elements. Every entry in the elements array is also an array that contains the member and its score.
 	BZMPop(ctx context.Context, timeout time.Duration, order string, count int64, keys ...string) ZSliceWithKeyCmd
@@ -26,9 +31,13 @@ type SortedSetWriter interface {
 	// Available since: 5.0.0
 	// Time complexity: O(log(N)) with N being the number of elements in the sorted set.
 	// ACL categories: @write @sortedset @fast @blocking
-	// RESP2 / RESP3 Reply:
+	// RESP2 Reply:
 	//	One of the following:
 	//		- Nil reply: when no element could be popped and the timeout expired.
+	//		- Array reply: the keyname, popped member, and its score.
+	// RESP3 Reply:
+	//	One of the following:
+	//		- Null reply: when no element could be popped and the timeout expired.
 	//		- Array reply: the keyname, popped member, and its score.
 	// History:
 	//	- Starting with Redis version 6.0.0: timeout is interpreted as a double instead of an integer.
@@ -38,9 +47,13 @@ type SortedSetWriter interface {
 	// Available since: 5.0.0
 	// Time complexity: O(log(N)) with N being the number of elements in the sorted set.
 	// ACL categories: @write @sortedset @fast @blocking
-	// RESP2 / RESP3 Reply:
+	// RESP2 Reply:
 	//	One of the following:
 	//		- Nil reply: when no element could be popped and the timeout expired.
+	//		- Array reply: the keyname, popped member, and its score.
+	// RESP3 Reply:
+	//	One of the following:
+	//		- Null reply: when no element could be popped and the timeout expired.
 	//		- Array reply: the keyname, popped member, and its score.
 	// History:
 	//	- Starting with Redis version 6.0.0: timeout is interpreted as a double instead of an integer.
@@ -59,6 +72,7 @@ type SortedSetWriter interface {
 	//		Changed elements are new elements added and elements already existing for which the score was updated. So elements specified in the command
 	//		line having the same score as they had in the past are not counted. Note: normally the return value of ZADD only counts the number of new elements added.
 	// 	- INCR: When this option is specified ZADD acts like ZINCRBY. Only one score-element pair can be specified in this mode.
+	// Note: The GT, LT and NX options are mutually exclusive.
 	// RESP2 Reply:
 	//	One of the following:
 	//		- Nil reply: if the operation was aborted because of a conflict with one of the XX/NX/LT/GT options.
@@ -103,7 +117,8 @@ type SortedSetWriter interface {
 
 	// ZInterStore
 	// Available since: 2.0.0
-	// Time complexity: O(NK)+O(Mlog(M)) worst case with N being the smallest input sorted set, K being the number of input sorted sets and M being the number of elements in the resulting sorted set.
+	// Time complexity: O(N*K)+O(M*log(M)) worst case with N being the smallest input sorted set,
+	//					K being the number of input sorted sets and M being the number of elements in the resulting sorted set.
 	// ACL categories: @write @sortedset @slow
 	// RESP2 / RESP3 Reply:
 	// 	- Integer reply: the number of members in the resulting sorted set at the destination.
@@ -113,9 +128,14 @@ type SortedSetWriter interface {
 	// Available since: 7.0.0
 	// Time complexity: O(K) + O(M*log(N)) where K is the number of provided keys, N being the number of elements in the sorted set, and M being the number of elements popped.
 	// ACL categories: @write @sortedset @slow
-	// RESP2 / RESP3 Reply:
+	// RESP2 Reply:
 	//	One of the following:
 	//		- Nil reply: when no element could be popped.
+	//		- Array reply: A two-element array with the first element being the name of the key from which elements were popped,
+	//			and the second element is an array of the popped elements. Every entry in the elements array is also an array that contains the member and its score.
+	// RESP3 Reply:
+	//	One of the following:
+	//		- Null reply: when no element could be popped.
 	//		- Array reply: A two-element array with the first element being the name of the key from which elements were popped,
 	//			and the second element is an array of the popped elements. Every entry in the elements array is also an array that contains the member and its score.
 	ZMPop(ctx context.Context, order string, count int64, keys ...string) ZSliceWithKeyCmd
@@ -180,7 +200,7 @@ type SortedSetWriter interface {
 
 	// ZUnionStore
 	// Available since: 2.0.0
-	// Time complexity: O(N)+O(M log(M)) with N being the sum of the sizes of the input sorted sets, and M being the number of elements in the resulting sorted set.
+	// Time complexity: O(N)+O(M*log(M)) with N being the sum of the sizes of the input sorted sets, and M being the number of elements in the resulting sorted set.
 	// ACL categories: @write @sortedset @slow
 	// RESP2 / RESP3 Reply:
 	// 	- Integer reply: the number of elements in the resulting sorted set.
@@ -190,7 +210,8 @@ type SortedSetWriter interface {
 type SortedSetReader interface {
 	// ZInter
 	// Available since: 6.2.0
-	// Time complexity: O(NK)+O(Mlog(M)) worst case with N being the smallest input sorted set, K being the number of input sorted sets and M being the number of elements in the resulting sorted set.
+	// Time complexity: O(N*K)+O(M*log(M)) worst case with N being the smallest input sorted set,
+	//					K being the number of input sorted sets and M being the number of elements in the resulting sorted set.
 	// ACL categories: @read @sortedset @slow
 	// RESP2 / RESP3 Reply:
 	// 	- Array reply: the result of the intersection including, optionally, scores when the WITHSCORES option is used.
@@ -212,6 +233,11 @@ type SortedSetReader interface {
 	// RESP2 / RESP3 Reply:
 	//	One of the following:
 	//		- Bulk string reply: without the additional count argument, the command returns a randomly selected member
+	//		- Nil reply when key doesn't exist
+	//		- Array reply: when the additional count argument is passed, the command returns an array of members, or an empty array when key doesn't exist.
+	//			If the WITHSCORES modifier is used, the reply is a list of members and their scores from the sorted set.
+	//	One of the following:
+	//		- Bulk string reply: without the additional count argument, the command returns a randomly selected member
 	//		- Null reply when key doesn't exist
 	//		- Array reply: when the additional count argument is passed, the command returns an array of members, or an empty array when key doesn't exist.
 	//			If the WITHSCORES modifier is used, the reply is a list of members and their scores from the sorted set.
@@ -221,7 +247,7 @@ type SortedSetReader interface {
 	// ZScan
 	// Available since: 2.8.0
 	// Time complexity: O(1) for every call. O(N) for a complete iteration, including enough command calls for the cursor to return back to 0.
-	//	N is the number of elements inside the collection.
+	//					N is the number of elements inside the collection.
 	// ACL categories: @read @sortedset @slow
 	// RESP2 / RESP3 Reply:
 	// 	- Array reply: cursor and scan response in array form.
@@ -299,7 +325,7 @@ type SortedSetCacheCmdable interface {
 	// ZRangeByLex
 	// Available since: 2.8.9
 	// Time complexity: O(log(N)+M) with N being the number of elements in the sorted set and M the number of elements being returned.
-	//	If M is constant (e.g. always asking for the first 10 elements with LIMIT), you can consider it O(log(N)).
+	//					If M is constant (e.g. always asking for the first 10 elements with LIMIT), you can consider it O(log(N)).
 	// ACL categories: @read @sortedset @slow
 	// RESP2 / RESP3 Reply:
 	// 	- Array reply: a list of elements in the specified score range.
@@ -308,7 +334,7 @@ type SortedSetCacheCmdable interface {
 	// ZRangeByScore
 	// Available since: 1.0.5
 	// Time complexity: O(log(N)+M) with N being the number of elements in the sorted set and M the number of elements being returned.
-	//	If M is constant (e.g. always asking for the first 10 elements with LIMIT), you can consider it O(log(N)).
+	//					If M is constant (e.g. always asking for the first 10 elements with LIMIT), you can consider it O(log(N)).
 	// ACL categories: @read @sortedset @slow
 	// RESP2 / RESP3 Reply:
 	// 	- Array reply: a list of the members with, optionally, their scores in the specified score range.
@@ -321,7 +347,12 @@ type SortedSetCacheCmdable interface {
 	// Available since: 2.0.0
 	// Time complexity: O(log(N))
 	// ACL categories: @read @sortedset @fast
-	// RESP2 / RESP3 Reply:
+	// RESP2 Reply:
+	//	One of the following:
+	//		- Nil reply: if the key does not exist or the member does not exist in the sorted set.
+	//		-Integer reply: the rank of the member when WITHSCORE is not used.
+	//		-Array reply: the rank and score of the member when WITHSCORE is used.
+	// RESP3 Reply:
 	//	One of the following:
 	//		- Null reply: if the key does not exist or the member does not exist in the sorted set.
 	//		-Integer reply: the rank of the member when WITHSCORE is not used.
@@ -338,17 +369,12 @@ type SortedSetCacheCmdable interface {
 	// RESP2 / RESP3 Reply:
 	// 	- Array reply: a list of members in the specified range, optionally with their scores if WITHSCORE was used.
 	ZRevRange(ctx context.Context, key string, start, stop int64) StringSliceCmd
-
-	// ZRevRangeWithScores
-	// Available since: 1.2.0
-	// Time complexity: O(log(N)+M) with N being the number of elements in the sorted set and M the number of elements returned.
-	// ACL categories: @read @sortedset @slow
 	ZRevRangeWithScores(ctx context.Context, key string, start, stop int64) ZSliceCmd
 
 	// ZRevRangeByLex
 	// Available since: 2.8.9
 	// Time complexity: O(log(N)+M) with N being the number of elements in the sorted set and M the number of elements being returned.
-	//	If M is constant (e.g. always asking for the first 10 elements with LIMIT), you can consider it O(log(N)).
+	//					If M is constant (e.g. always asking for the first 10 elements with LIMIT), you can consider it O(log(N)).
 	// ACL categories: @read @sortedset @slow
 	// RESP2 / RESP3 Reply:
 	// 	- Array reply: a list of members in the specified score range.
@@ -357,7 +383,7 @@ type SortedSetCacheCmdable interface {
 	// ZRevRangeByScore
 	// Available since: 2.2.0
 	// Time complexity: O(log(N)+M) with N being the number of elements in the sorted set and M the number of elements being returned.
-	//	If M is constant (e.g. always asking for the first 10 elements with LIMIT), you can consider it O(log(N)).
+	//					If M is constant (e.g. always asking for the first 10 elements with LIMIT), you can consider it O(log(N)).
 	// ACL categories: @read @sortedset @slow
 	// RESP2 / RESP3 Reply:
 	// 	- Array reply: a list of the members and, optionally, their scores in the specified score range.
@@ -370,7 +396,12 @@ type SortedSetCacheCmdable interface {
 	// Available since: 2.0.0
 	// Time complexity: O(log(N))
 	// ACL categories: @read @sortedset @fast
-	// RESP2 / RESP3 Reply:
+	// RESP2 Reply:
+	//	One of the following:
+	//		- Nil reply: if the key does not exist or the member does not exist in the sorted set.
+	//		- Integer reply: The rank of the member when WITHSCORE is not used.
+	//		- Array reply: The rank and score of the member when WITHSCORE is used.
+	// RESP3 Reply:
 	//	One of the following:
 	//		- Null reply: if the key does not exist or the member does not exist in the sorted set.
 	//		- Integer reply: The rank of the member when WITHSCORE is not used.
