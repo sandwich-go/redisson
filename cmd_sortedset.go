@@ -15,134 +15,175 @@ type SortedSetWriter interface {
 	// Available since: 7.0.0
 	// Time complexity: O(K) + O(M*log(N)) where K is the number of provided keys, N being the number of elements in the sorted set, and M being the number of elements popped.
 	// ACL categories: @write, @sortedset, @slow, @blocking
+	// RESP2 / RESP3 Reply:
+	//	One of the following:
+	//		- Nil reply: when no element could be popped.
+	//		- Array reply: a two-element array with the first element being the name of the key from which elements were popped,
+	//			and the second element is an array of the popped elements. Every entry in the elements array is also an array that contains the member and its score.
 	BZMPop(ctx context.Context, timeout time.Duration, order string, count int64, keys ...string) ZSliceWithKeyCmd
 
 	// BZPopMax
 	// Available since: 5.0.0
 	// Time complexity: O(log(N)) with N being the number of elements in the sorted set.
 	// ACL categories: @write @sortedset @fast @blocking
+	// RESP2 / RESP3 Reply:
+	//	One of the following:
+	//		- Nil reply: when no element could be popped and the timeout expired.
+	//		- Array reply: the keyname, popped member, and its score.
+	// History:
+	//	- Starting with Redis version 6.0.0: timeout is interpreted as a double instead of an integer.
 	BZPopMax(ctx context.Context, timeout time.Duration, keys ...string) ZWithKeyCmd
 
 	// BZPopMin
 	// Available since: 5.0.0
 	// Time complexity: O(log(N)) with N being the number of elements in the sorted set.
 	// ACL categories: @write @sortedset @fast @blocking
+	// RESP2 / RESP3 Reply:
+	//	One of the following:
+	//		- Nil reply: when no element could be popped and the timeout expired.
+	//		- Array reply: the keyname, popped member, and its score.
+	// History:
+	//	- Starting with Redis version 6.0.0: timeout is interpreted as a double instead of an integer.
 	BZPopMin(ctx context.Context, timeout time.Duration, keys ...string) ZWithKeyCmd
 
 	// ZAdd
 	// Available since: 1.2.0
 	// Time complexity: O(log(N)) for each item added, where N is the number of elements in the sorted set.
 	// ACL categories: @write @sortedset @fast
+	// Options
+	// 	- XX: Only update elements that already exist. Don't add new elements.
+	// 	- NX: Only add new elements. Don't update already existing elements.
+	// 	- LT: Only update existing elements if the new score is less than the current score. This flag doesn't prevent adding new elements.
+	// 	- GT: Only update existing elements if the new score is greater than the current score. This flag doesn't prevent adding new elements.
+	// 	- CH: Modify the return value from the number of new elements added, to the total number of elements changed (CH is an abbreviation of changed).
+	//		Changed elements are new elements added and elements already existing for which the score was updated. So elements specified in the command
+	//		line having the same score as they had in the past are not counted. Note: normally the return value of ZADD only counts the number of new elements added.
+	// 	- INCR: When this option is specified ZADD acts like ZINCRBY. Only one score-element pair can be specified in this mode.
+	// RESP2 Reply:
+	//	One of the following:
+	//		- Nil reply: if the operation was aborted because of a conflict with one of the XX/NX/LT/GT options.
+	//		- Integer reply: the number of new members when the CH option is not used.
+	//		- Integer reply: the number of new or updated members when the CH option is used.
+	//		- Bulk string reply: the updated score of the member when the INCR option is used.
+	// RESP3 Reply:
+	//	One of the following:
+	//		- Null reply: if the operation was aborted because of a conflict with one of the XX/NX/LT/GT options.
+	//		- Integer reply: the number of new members when the CH option is not used.
+	//		- Integer reply: the number of new or updated members when the CH option is used.
+	//		- Double reply: the updated score of the member when the INCR option is used.
+	// History:
+	//	- Starting with Redis version 2.4.0: Accepts multiple elements.
+	//	- Starting with Redis version 3.0.2: Added the XX, NX, CH and INCR options.
+	//	- Starting with Redis version 6.2.0: Added the GT and LT options.
 	ZAdd(ctx context.Context, key string, members ...Z) IntCmd
-
-	// ZAddNX
-	// Available since: 3.0.2
-	// Time complexity: O(log(N)) for each item added, where N is the number of elements in the sorted set.
-	// ACL categories: @write @sortedset @fast
 	ZAddNX(ctx context.Context, key string, members ...Z) IntCmd
-
-	// ZAddXX
-	// Available since: 3.0.2
-	// Time complexity: O(log(N)) for each item added, where N is the number of elements in the sorted set.
-	// ACL categories: @write @sortedset @fast
 	ZAddXX(ctx context.Context, key string, members ...Z) IntCmd
-
-	// ZAddLT
-	// Available since:3.0.2
-	// Time complexity: O(log(N)) for each item added, where N is the number of elements in the sorted set.
-	// ACL categories: @write @sortedset @fast
 	ZAddLT(ctx context.Context, key string, members ...Z) IntCmd
-
-	// ZAddGT
-	// Available since: 3.0.2
-	// Time complexity: O(log(N)) for each item added, where N is the number of elements in the sorted set.
-	// ACL categories: @write @sortedset @fast
 	ZAddGT(ctx context.Context, key string, members ...Z) IntCmd
-
-	// ZAddArgs
-	// Available since: 3.0.2
-	// Time complexity: O(log(N)) for each item added, where N is the number of elements in the sorted set.
-	// ACL categories: @write @sortedset @fast
-	// Starting with Redis version 6.2.0: Added the GT and LT options.
-	ZAddArgs(ctx context.Context, key string, args ZAddArgs) IntCmd
-
-	// ZAddArgsIncr
-	// Available since: 3.0.2
-	// Time complexity: O(log(N)) for each item added, where N is the number of elements in the sorted set.
-	// ACL categories: @write @sortedset @fast
-	// Starting with Redis version 6.2.0: Added the GT and LT options.
 	ZAddArgsIncr(ctx context.Context, key string, args ZAddArgs) FloatCmd
+	ZAddArgs(ctx context.Context, key string, args ZAddArgs) IntCmd
 
 	// ZDiffStore
 	// Available since: 6.2.0
 	// Time complexity: O(L + (N-K)log(N)) worst case where L is the total number of elements in all the sets, N is the size of the first set, and K is the size of the result set.
 	// ACL categories: @write @sortedset @slow
+	// RESP2 / RESP3 Reply:
+	// 	- Integer reply: the number of members in the resulting sorted set at destination.
 	ZDiffStore(ctx context.Context, destination string, keys ...string) IntCmd
 
 	// ZIncrBy
 	// Available since: 1.2.0
 	// Time complexity: O(log(N)) where N is the number of elements in the sorted set.
 	// ACL categories: @write @sortedset @fast
+	// RESP2 Reply:
+	// 	- Bulk string reply: the new score of member as a double precision floating point number.
+	// RESP3 Reply:
+	// 	- Double reply: the new score of member.
 	ZIncrBy(ctx context.Context, key string, increment float64, member string) FloatCmd
 
 	// ZInterStore
 	// Available since: 2.0.0
 	// Time complexity: O(NK)+O(Mlog(M)) worst case with N being the smallest input sorted set, K being the number of input sorted sets and M being the number of elements in the resulting sorted set.
 	// ACL categories: @write @sortedset @slow
+	// RESP2 / RESP3 Reply:
+	// 	- Integer reply: the number of members in the resulting sorted set at the destination.
 	ZInterStore(ctx context.Context, destination string, store ZStore) IntCmd
 
 	// ZMPop
 	// Available since: 7.0.0
 	// Time complexity: O(K) + O(M*log(N)) where K is the number of provided keys, N being the number of elements in the sorted set, and M being the number of elements popped.
 	// ACL categories: @write @sortedset @slow
+	// RESP2 / RESP3 Reply:
+	//	One of the following:
+	//		- Nil reply: when no element could be popped.
+	//		- Array reply: A two-element array with the first element being the name of the key from which elements were popped,
+	//			and the second element is an array of the popped elements. Every entry in the elements array is also an array that contains the member and its score.
 	ZMPop(ctx context.Context, order string, count int64, keys ...string) ZSliceWithKeyCmd
 
 	// ZPopMax
 	// Available since: 5.0.0
 	// Time complexity: O(log(N)*M) with N being the number of elements in the sorted set, and M being the number of elements popped.
 	// ACL categories: @write @sortedset @fast
+	// RESP2 / RESP3 Reply:
+	// 	- Array reply: a list of popped elements and scores.
 	ZPopMax(ctx context.Context, key string, count ...int64) ZSliceCmd
 
 	// ZPopMin
 	// Available since: 5.0.0
 	// Time complexity: O(log(N)*M) with N being the number of elements in the sorted set, and M being the number of elements popped.
 	// ACL categories: @write @sortedset @fast
+	// RESP2 / RESP3 Reply:
+	// 	- Array reply: a list of popped elements and scores.
 	ZPopMin(ctx context.Context, key string, count ...int64) ZSliceCmd
 
 	// ZRangeStore
 	// Available since: 6.2.0
 	// Time complexity: O(log(N)+M) with N being the number of elements in the sorted set and M the number of elements stored into the destination key.
 	// ACL categories: @write @sortedset @slow
+	// RESP2 / RESP3 Reply:
+	// 	- Integer reply: the number of elements in the resulting sorted set.
 	ZRangeStore(ctx context.Context, dst string, z ZRangeArgs) IntCmd
 
 	// ZRem
 	// Available since: 1.2.0
 	// Time complexity: O(M*log(N)) with N being the number of elements in the sorted set and M the number of elements to be removed.
 	// ACL categories: @write @sortedset @fast
+	// RESP2 / RESP3 Reply:
+	// 	- Integer reply: the number of members removed from the sorted set, not including non-existing members.
+	// History:
+	//	- Starting with Redis version 2.4.0: Accepts multiple elements.
 	ZRem(ctx context.Context, key string, members ...any) IntCmd
 
 	// ZRemRangeByLex
 	// Available since: 2.8.9
 	// Time complexity: O(log(N)+M) with N being the number of elements in the sorted set and M the number of elements removed by the operation.
 	// ACL categories: @write @sortedset @slow
+	// RESP2 / RESP3 Reply:
+	// 	- Integer reply: the number of members removed.
 	ZRemRangeByLex(ctx context.Context, key, min, max string) IntCmd
 
 	// ZRemRangeByRank
 	// Available since: 2.0.0
 	// Time complexity: O(log(N)+M) with N being the number of elements in the sorted set and M the number of elements removed by the operation.
 	// ACL categories: @write @sortedset @slow
+	// RESP2 / RESP3 Reply:
+	// 	- Integer reply: the number of members removed.
 	ZRemRangeByRank(ctx context.Context, key string, start, stop int64) IntCmd
 
 	// ZRemRangeByScore
 	// Available since: 1.2.0
 	// Time complexity: O(log(N)+M) with N being the number of elements in the sorted set and M the number of elements removed by the operation.
 	// ACL categories: @write @sortedset @slow
+	// RESP2 / RESP3 Reply:
+	// 	- Integer reply: the number of members removed.
 	ZRemRangeByScore(ctx context.Context, key, min, max string) IntCmd
 
 	// ZUnionStore
 	// Available since: 2.0.0
 	// Time complexity: O(N)+O(M log(M)) with N being the sum of the sizes of the input sorted sets, and M being the number of elements in the resulting sorted set.
 	// ACL categories: @write @sortedset @slow
+	// RESP2 / RESP3 Reply:
+	// 	- Integer reply: the number of elements in the resulting sorted set.
 	ZUnionStore(ctx context.Context, dest string, store ZStore) IntCmd
 }
 
@@ -151,55 +192,57 @@ type SortedSetReader interface {
 	// Available since: 6.2.0
 	// Time complexity: O(NK)+O(Mlog(M)) worst case with N being the smallest input sorted set, K being the number of input sorted sets and M being the number of elements in the resulting sorted set.
 	// ACL categories: @read @sortedset @slow
+	// RESP2 / RESP3 Reply:
+	// 	- Array reply: the result of the intersection including, optionally, scores when the WITHSCORES option is used.
 	ZInter(ctx context.Context, store ZStore) StringSliceCmd
-
-	// ZInterWithScores
-	// Available since: 6.2.0
-	// Time complexity: O(NK)+O(Mlog(M)) worst case with N being the smallest input sorted set, K being the number of input sorted sets and M being the number of elements in the resulting sorted set.
-	// ACL categories: @read @sortedset @slow
 	ZInterWithScores(ctx context.Context, store ZStore) ZSliceCmd
 
 	// ZInterCard
 	// Available since: 7.0.0
 	// Time complexity: O(N*K) worst case with N being the smallest input sorted set, K being the number of input sorted sets.
 	// ACL categories: @read @sortedset @slow
+	// RESP2 / RESP3 Reply:
+	// 	- Integer reply: the number of members in the resulting intersection.
 	ZInterCard(ctx context.Context, limit int64, keys ...string) IntCmd
 
 	// ZRandMember
 	// Available since: 6.2.0
 	// Time complexity: O(N) where N is the number of elements returned
 	// ACL categories: @read @sortedset @slow
+	// RESP2 / RESP3 Reply:
+	//	One of the following:
+	//		- Bulk string reply: without the additional count argument, the command returns a randomly selected member
+	//		- Null reply when key doesn't exist
+	//		- Array reply: when the additional count argument is passed, the command returns an array of members, or an empty array when key doesn't exist.
+	//			If the WITHSCORES modifier is used, the reply is a list of members and their scores from the sorted set.
 	ZRandMember(ctx context.Context, key string, count int64) StringSliceCmd
 	ZRandMemberWithScores(ctx context.Context, key string, count int64) ZSliceCmd
 
 	// ZScan
 	// Available since: 2.8.0
-	// Time complexity: O(1) for every call. O(N) for a complete iteration, including enough command calls for the cursor to return back to 0. N is the number of elements inside the collection..
+	// Time complexity: O(1) for every call. O(N) for a complete iteration, including enough command calls for the cursor to return back to 0.
+	//	N is the number of elements inside the collection.
 	// ACL categories: @read @sortedset @slow
+	// RESP2 / RESP3 Reply:
+	// 	- Array reply: cursor and scan response in array form.
 	ZScan(ctx context.Context, key string, cursor uint64, match string, count int64) ScanCmd
 
 	// ZDiff
 	// Available since: 6.2.0
 	// Time complexity: O(L + (N-K)log(N)) worst case where L is the total number of elements in all the sets, N is the size of the first set, and K is the size of the result set.
 	// ACL categories: @read @sortedset @slow
+	// RESP2 / RESP3 Reply:
+	// 	- Array reply: the result of the difference including, optionally, scores when the WITHSCORES option is used.
 	ZDiff(ctx context.Context, keys ...string) StringSliceCmd
-
-	// ZDiffWithScores
-	// Available since: 6.2.0
-	// Time complexity: O(L + (N-K)log(N)) worst case where L is the total number of elements in all the sets, N is the size of the first set, and K is the size of the result set.
-	// ACL categories: @read @sortedset @slow
 	ZDiffWithScores(ctx context.Context, keys ...string) ZSliceCmd
 
 	// ZUnion
 	// Available since: 6.2.0
 	// Time complexity: O(N)+O(M*log(M)) with N being the sum of the sizes of the input sorted sets, and M being the number of elements in the resulting sorted set.
 	// ACL categories: @read @sortedset @slow
+	// RESP2 / RESP3 Reply:
+	// 	- Array reply: the result of the union with, optionally, their scores when WITHSCORES is used.
 	ZUnion(ctx context.Context, store ZStore) StringSliceCmd
-
-	// ZUnionWithScores
-	// Available since: 6.2.0
-	// Time complexity: O(N)+O(M*log(M)) with N being the sum of the sizes of the input sorted sets, and M being the number of elements in the resulting sorted set.
-	// ACL categories: @read @sortedset @slow
 	ZUnionWithScores(ctx context.Context, store ZStore) ZSliceCmd
 }
 
@@ -208,72 +251,83 @@ type SortedSetCacheCmdable interface {
 	// Available since: 1.2.0
 	// Time complexity: O(1)
 	// ACL categories: @read @sortedset @fast
+	// RESP2 / RESP3 Reply:
+	// 	- Integer reply: the cardinality (number of members) of the sorted set, or 0 if the key doesn't exist.
 	ZCard(ctx context.Context, key string) IntCmd
 
 	// ZCount
 	// Available since: 2.0.0
 	// Time complexity: O(log(N)) with N being the number of elements in the sorted set.
 	// ACL categories: @read @sortedset @fast
+	// RESP2 / RESP3 Reply:
+	// 	- Integer reply: the number of members in the specified score range.
 	ZCount(ctx context.Context, key, min, max string) IntCmd
 
 	// ZLexCount
 	// Available since: 2.8.9
 	// Time complexity: O(log(N)) with N being the number of elements in the sorted set.
 	// ACL categories: @read @sortedset @fast
+	// RESP2 / RESP3 Reply:
+	// 	- Integer reply: the number of members in the specified score range.
 	ZLexCount(ctx context.Context, key, min, max string) IntCmd
 
 	// ZMScore
 	// Available since: 6.2.0
 	// Time complexity: O(N) where N is the number of members being requested.
 	// ACL categories: @read @sortedset @fast
+	// RESP2 Reply:
+	// 	- Nil reply: if the member does not exist in the sorted set.
+	// 	- Array reply: a list of Bulk string reply member scores as double-precision floating point numbers.
+	// RESP3 Reply:
+	// 	- Null reply: if the member does not exist in the sorted set.
+	// 	- Array reply: a list of Double reply member scores as double-precision floating point numbers.
 	ZMScore(ctx context.Context, key string, members ...string) FloatSliceCmd
 
 	// ZRange
 	// Available since: 1.2.0
 	// Time complexity: O(log(N)+M) with N being the number of elements in the sorted set and M the number of elements returned.
 	// ACL categories: @read @sortedset @slow
+	// RESP2 / RESP3 Reply:
+	// 	- Array reply: a list of members in the specified range with, optionally, their scores when the WITHSCORES option is given.
+	// History:
+	//	- Starting with Redis version 6.2.0: Added the REV, BYSCORE, BYLEX and LIMIT options.
 	ZRange(ctx context.Context, key string, start, stop int64) StringSliceCmd
-
-	// ZRangeArgs
-	// Available since: 1.2.0
-	// Time complexity: O(log(N)+M) with N being the number of elements in the sorted set and M the number of elements returned.
-	// ACL categories: @read @sortedset @slow
 	ZRangeArgs(ctx context.Context, z ZRangeArgs) StringSliceCmd
-
-	// ZRangeArgsWithScores
-	// Available since: 1.2.0
-	// Time complexity: O(log(N)+M) with N being the number of elements in the sorted set and M the number of elements returned.
-	// ACL categories: @read @sortedset @slow
 	ZRangeArgsWithScores(ctx context.Context, z ZRangeArgs) ZSliceCmd
-
-	// ZRangeWithScores
-	// Available since: 1.2.0
-	// Time complexity: O(log(N)+M) with N being the number of elements in the sorted set and M the number of elements returned.
-	// ACL categories: @read @sortedset @slow
 	ZRangeWithScores(ctx context.Context, key string, start, stop int64) ZSliceCmd
 
 	// ZRangeByLex
 	// Available since: 2.8.9
-	// Time complexity: O(log(N)+M) with N being the number of elements in the sorted set and M the number of elements being returned. If M is constant (e.g. always asking for the first 10 elements with LIMIT), you can consider it O(log(N)).
+	// Time complexity: O(log(N)+M) with N being the number of elements in the sorted set and M the number of elements being returned.
+	//	If M is constant (e.g. always asking for the first 10 elements with LIMIT), you can consider it O(log(N)).
 	// ACL categories: @read @sortedset @slow
+	// RESP2 / RESP3 Reply:
+	// 	- Array reply: a list of elements in the specified score range.
 	ZRangeByLex(ctx context.Context, key string, opt ZRangeBy) StringSliceCmd
 
 	// ZRangeByScore
 	// Available since: 1.0.5
-	// Time complexity: O(log(N)+M) with N being the number of elements in the sorted set and M the number of elements being returned. If M is constant (e.g. always asking for the first 10 elements with LIMIT), you can consider it O(log(N)).
+	// Time complexity: O(log(N)+M) with N being the number of elements in the sorted set and M the number of elements being returned.
+	//	If M is constant (e.g. always asking for the first 10 elements with LIMIT), you can consider it O(log(N)).
 	// ACL categories: @read @sortedset @slow
+	// RESP2 / RESP3 Reply:
+	// 	- Array reply: a list of the members with, optionally, their scores in the specified score range.
+	// History:
+	//	- Starting with Redis version 2.0.0: Added the WITHSCORES modifier.
 	ZRangeByScore(ctx context.Context, key string, opt ZRangeBy) StringSliceCmd
-
-	// ZRangeByScoreWithScores
-	// Available since: 1.0.5
-	// Time complexity: O(log(N)+M) with N being the number of elements in the sorted set and M the number of elements being returned. If M is constant (e.g. always asking for the first 10 elements with LIMIT), you can consider it O(log(N)).
-	// ACL categories: @read @sortedset @slow
 	ZRangeByScoreWithScores(ctx context.Context, key string, opt ZRangeBy) ZSliceCmd
 
 	// ZRank
 	// Available since: 2.0.0
 	// Time complexity: O(log(N))
 	// ACL categories: @read @sortedset @fast
+	// RESP2 / RESP3 Reply:
+	//	One of the following:
+	//		- Null reply: if the key does not exist or the member does not exist in the sorted set.
+	//		-Integer reply: the rank of the member when WITHSCORE is not used.
+	//		-Array reply: the rank and score of the member when WITHSCORE is used.
+	// History:
+	//	- Starting with Redis version 7.2.0: Added the optional WITHSCORE argument.
 	ZRank(ctx context.Context, key, member string) IntCmd
 	ZRankWithScore(ctx context.Context, key, member string) RankWithScoreCmd
 
@@ -281,6 +335,8 @@ type SortedSetCacheCmdable interface {
 	// Available since: 1.2.0
 	// Time complexity: O(log(N)+M) with N being the number of elements in the sorted set and M the number of elements returned.
 	// ACL categories: @read @sortedset @slow
+	// RESP2 / RESP3 Reply:
+	// 	- Array reply: a list of members in the specified range, optionally with their scores if WITHSCORE was used.
 	ZRevRange(ctx context.Context, key string, start, stop int64) StringSliceCmd
 
 	// ZRevRangeWithScores
@@ -291,26 +347,36 @@ type SortedSetCacheCmdable interface {
 
 	// ZRevRangeByLex
 	// Available since: 2.8.9
-	// Time complexity: O(log(N)+M) with N being the number of elements in the sorted set and M the number of elements being returned. If M is constant (e.g. always asking for the first 10 elements with LIMIT), you can consider it O(log(N)).
+	// Time complexity: O(log(N)+M) with N being the number of elements in the sorted set and M the number of elements being returned.
+	//	If M is constant (e.g. always asking for the first 10 elements with LIMIT), you can consider it O(log(N)).
 	// ACL categories: @read @sortedset @slow
+	// RESP2 / RESP3 Reply:
+	// 	- Array reply: a list of members in the specified score range.
 	ZRevRangeByLex(ctx context.Context, key string, opt ZRangeBy) StringSliceCmd
 
 	// ZRevRangeByScore
 	// Available since: 2.2.0
-	// Time complexity: O(log(N)+M) with N being the number of elements in the sorted set and M the number of elements being returned. If M is constant (e.g. always asking for the first 10 elements with LIMIT), you can consider it O(log(N)).
+	// Time complexity: O(log(N)+M) with N being the number of elements in the sorted set and M the number of elements being returned.
+	//	If M is constant (e.g. always asking for the first 10 elements with LIMIT), you can consider it O(log(N)).
 	// ACL categories: @read @sortedset @slow
+	// RESP2 / RESP3 Reply:
+	// 	- Array reply: a list of the members and, optionally, their scores in the specified score range.
+	// History:
+	//	- Starting with Redis version 2.1.6: min and max can be exclusive.
 	ZRevRangeByScore(ctx context.Context, key string, opt ZRangeBy) StringSliceCmd
-
-	// ZRevRangeByScoreWithScores
-	// Available since: 2.2.0
-	// Time complexity: O(log(N)+M) with N being the number of elements in the sorted set and M the number of elements being returned. If M is constant (e.g. always asking for the first 10 elements with LIMIT), you can consider it O(log(N)).
-	// ACL categories: @read @sortedset @slow
 	ZRevRangeByScoreWithScores(ctx context.Context, key string, opt ZRangeBy) ZSliceCmd
 
 	// ZRevRank
 	// Available since: 2.0.0
 	// Time complexity: O(log(N))
 	// ACL categories: @read @sortedset @fast
+	// RESP2 / RESP3 Reply:
+	//	One of the following:
+	//		- Null reply: if the key does not exist or the member does not exist in the sorted set.
+	//		- Integer reply: The rank of the member when WITHSCORE is not used.
+	//		- Array reply: The rank and score of the member when WITHSCORE is used.
+	// History:
+	//	- Starting with Redis version 7.2.0: Added the optional WITHSCORE argument.
 	ZRevRank(ctx context.Context, key, member string) IntCmd
 	ZRevRankWithScore(ctx context.Context, key, member string) RankWithScoreCmd
 
@@ -318,6 +384,14 @@ type SortedSetCacheCmdable interface {
 	// Available since: 1.2.0
 	// Time complexity: O(1)
 	// ACL categories: @read @sortedset @fast
+	// RESP2 Reply:
+	//	One of the following:
+	//		- Bulk string reply: the score of the member (a double-precision floating point number), represented as a string.
+	//		- Nil reply: if member does not exist in the sorted set, or the key does not exist.
+	// RESP3 Reply:
+	//	One of the following:
+	//		- Double reply: the score of the member (a double-precision floating point number).
+	//		- Nil reply: if member does not exist in the sorted set, or the key does not exist.
 	ZScore(ctx context.Context, key, member string) FloatCmd
 }
 
