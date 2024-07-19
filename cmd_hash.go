@@ -74,6 +74,7 @@ type HashWriter interface {
 	// 	- XX -- For each specified field, set expiration only when the field has an existing expiration.
 	// 	- GT -- For each specified field, set expiration only when the new expiration is greater than current one.
 	// 	- LT -- For each specified field, set expiration only when the new expiration is less than current one.
+	// A non-volatile field is treated as an infinite TTL for the purpose of GT and LT. The NX, XX, GT, and LT options are mutually exclusive.
 	// RESP2 / RESP3 Reply:
 	//	One of the following:
 	//		- Array reply. For each field:
@@ -99,6 +100,7 @@ type HashWriter interface {
 	// 	- XX -- For each specified field, set expiration only when the field has an existing expiration.
 	// 	- GT -- For each specified field, set expiration only when the new expiration is greater than current one.
 	// 	- LT -- For each specified field, set expiration only when the new expiration is less than current one.
+	// A non-volatile key is treated as an infinite TTL for the purposes of GT and LT. The NX, XX, GT, and LT options are mutually exclusive.
 	// RESP2 / RESP3 Reply:
 	//	One of the following:
 	//		- Array reply. For each field:
@@ -124,6 +126,7 @@ type HashWriter interface {
 	// 	- XX -- For each specified field, set expiration only when the field has an existing expiration.
 	// 	- GT -- For each specified field, set expiration only when the new expiration is greater than current one.
 	// 	- LT -- For each specified field, set expiration only when the new expiration is less than current one.
+	// A non-volatile key is treated as an infinite TTL for the purposes of GT and LT. The NX, XX, GT, and LT options are mutually exclusive.
 	// RESP2 / RESP3 Reply:
 	//	One of the following:
 	//		- Array reply. For each field:
@@ -149,6 +152,7 @@ type HashWriter interface {
 	// 	- XX -- For each specified field, set expiration only when the field has an existing expiration.
 	// 	- GT -- For each specified field, set expiration only when the new expiration is greater than current one.
 	// 	- LT -- For each specified field, set expiration only when the new expiration is less than current one.
+	// A non-volatile key is treated as an infinite TTL for the purposes of GT and LT. The NX, XX, GT, and LT options are mutually exclusive.
 	// RESP2 / RESP3 Reply:
 	//	One of the following:
 	//		- Array reply. For each field:
@@ -171,9 +175,15 @@ type HashReader interface {
 	// Available since: 6.2.0
 	// Time complexity: O(N) where N is the number of fields returned
 	// ACL categories: @read @hash @slow
-	// RESP2 / RESP3 Reply:
-	//	One of the following:
+	// RESP2 Reply:
+	//	Any of the following:
 	//		- Nil reply: if the key doesn't exist
+	//		- Bulk string reply: a single, randomly selected field when the count option is not used
+	//		- Array reply: a list containing count fields when the count option is used, or an empty array if the key does not exists.
+	//		- Array reply: a list of fields and their values when count and WITHVALUES were both used.
+	// RESP3 Reply:
+	//	Any of the following:
+	//		- Null reply: if the key doesn't exist
 	//		- Bulk string reply: a single, randomly selected field when the count option is not used
 	//		- Array reply: a list containing count fields when the count option is used, or an empty array if the key does not exists.
 	//		- Array reply: a list of fields and their values when count and WITHVALUES were both used.
@@ -261,7 +271,11 @@ type HashCacheCmdable interface {
 	// Available since: 2.0.0
 	// Time complexity: O(1)
 	// ACL categories: @read @hash @fast
-	// RESP2 / RESP3 Reply:
+	// RESP2 Reply:
+	//	One of the following:
+	//		- Bulk string reply: The value associated with the field.
+	//		- Nil reply: If the field is not present in the hash or key does not exist.
+	// RESP3 Reply:
 	//	One of the following:
 	//		- Bulk string reply: The value associated with the field.
 	//		- Null reply: If the field is not present in the hash or key does not exist.
