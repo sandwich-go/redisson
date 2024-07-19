@@ -70,7 +70,7 @@ type ClusterCmdable interface {
 
 	// ClusterGetKeysInSlot
 	// Available since: 3.0.0
-	// Time complexity: O(log(N)) where N is the number of requested keys
+	// Time complexity: O(N) where N is the number of requested keys
 	// ACL categories: @slow
 	// RESP2 / RESP3 Reply:
 	// 	- Array reply: an array with up to count elements.
