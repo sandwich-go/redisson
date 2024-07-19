@@ -24,12 +24,12 @@ type StreamWriter interface {
 	// Available since: 5.0.0
 	// Time complexity: O(1) when adding a new entry, O(N) when trimming where N being the number of entries evicted.
 	// ACL categories: @write @stream @fast
-	// RESP2 / RESP3 Reply:
+	// RESP2 Reply:
 	//	One of the following:
 	//		- Bulk string reply: The ID of the added entry. The ID is the one automatically generated if an asterisk (*) is passed as the id argument,
 	//			otherwise the command just returns the same ID specified by the user during insertion.
 	//		- Nil reply: if the NOMKSTREAM option is given and the key doesn't exist.
-	// RESP2 / RESP3 Reply:
+	// RESP3 Reply:
 	//	One of the following:
 	//		- Bulk string reply: The ID of the added entry. The ID is the one automatically generated if an asterisk (*) is passed as the id argument,
 	//			otherwise the command just returns the same ID specified by the user during insertion.
