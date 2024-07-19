@@ -105,23 +105,23 @@ type ScriptCmdable interface {
 
 	// FCall
 	// Available since: 7.0.0
-	// Time complexity: Depends on the script that is executed.
+	// Time complexity: Depends on the function that is executed.
 	// ACL categories: @slow @scripting
 	// RESP2 / RESP3 Reply:
-	// 	- The return value depends on the script that was executed.
+	// 	- The return value depends on the function that was executed.
 	FCall(ctx context.Context, function string, keys []string, args ...any) Cmd
 
 	// FCallRO
 	// Available since: 7.0.0
-	// Time complexity: Depends on the script that is executed.
+	// Time complexity: Depends on the function that is executed.
 	// ACL categories: @slow @scripting
 	// RESP2 / RESP3 Reply:
-	// 	- The return value depends on the script that was executed.
+	// 	- The return value depends on the function that was executed.
 	FCallRO(ctx context.Context, function string, keys []string, args ...any) Cmd
 
 	// FunctionDelete
 	// Available since: 7.0.0
-	// Time complexity: Depends on the script that is executed.
+	// Time complexity: O(1)
 	// ACL categories: @write, @slow, @scripting
 	// RESP2 / RESP3 Reply:
 	// 	- Simple string reply: OK.
@@ -129,7 +129,7 @@ type ScriptCmdable interface {
 
 	// FunctionDump
 	// Available since: 7.0.0
-	// Time complexity: Depends on the script that is executed.
+	// Time complexity: O(N) where N is the number of functions
 	// ACL categories: @slow @scripting
 	// RESP2 / RESP3 Reply:
 	// 	- Bulk string reply: the serialized payload
@@ -137,7 +137,7 @@ type ScriptCmdable interface {
 
 	// FunctionFlush
 	// Available since: 7.0.0
-	// Time complexity: Depends on the script that is executed.
+	// Time complexity: O(N) where N is the number of functions deleted
 	// ACL categories: @write, @slow, @scripting
 	// RESP2 / RESP3 Reply:
 	// 	- Simple string reply: OK.
@@ -146,7 +146,7 @@ type ScriptCmdable interface {
 
 	// FunctionKill
 	// Available since: 7.0.0
-	// Time complexity: Depends on the script that is executed.
+	// Time complexity: O(1)
 	// ACL categories: @slow @scripting
 	// RESP2 / RESP3 Reply:
 	// 	- Simple string reply: OK.
@@ -154,7 +154,7 @@ type ScriptCmdable interface {
 
 	// FunctionList
 	// Available since: 7.0.0
-	// Time complexity: Depends on the script that is executed.
+	// Time complexity: O(N) where N is the number of functions
 	// ACL categories: @slow @scripting
 	// RESP2 / RESP3 Reply:
 	// 	- Array reply: information about functions and libraries.
@@ -162,7 +162,7 @@ type ScriptCmdable interface {
 
 	// FunctionLoad
 	// Available since: 7.0.0
-	// Time complexity: Depends on the script that is executed.
+	// Time complexity: O(1) (considering compilation time is redundant)
 	// ACL categories: @write, @slow, @scripting
 	// RESP2 / RESP3 Reply:
 	// 	- Bulk string reply: the library name that was loaded.
@@ -171,7 +171,7 @@ type ScriptCmdable interface {
 
 	// FunctionRestore
 	// Available since: 7.0.0
-	// Time complexity: Depends on the script that is executed.
+	// Time complexity: O(N) where N is the number of functions on the payload
 	// ACL categories: @write, @slow, @scripting
 	// RESP2 / RESP3 Reply:
 	// 	- Simple string reply: OK.
