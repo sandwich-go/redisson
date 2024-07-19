@@ -33,7 +33,7 @@ type HyperLogReader interface {
 	// PFCount
 	// Available since: 2.8.9
 	// Time complexity: O(1) with a very small average constant time when called with a single key.
-	//	O(N) with N being the number of keys, and much bigger constant times, when called with multiple keys.
+	//					O(N) with N being the number of keys, and much bigger constant times, when called with multiple keys.
 	// ACL categories: @read @hyperloglog @slow
 	// RESP2 / RESP3 Reply:
 	// 	- Integer reply: the approximated number of unique elements observed via PFADD
