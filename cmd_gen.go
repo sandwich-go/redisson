@@ -40,7 +40,7 @@ type Command interface {
 var CommandBitCount commandBitCount
 
 type commandBitCount string
-type commandBitCountP struct{ Pipeliner }
+type commandBitCountP struct{ p Pipeliner }
 
 func (commandBitCount) String() string                 { return "BITCOUNT" }
 func (commandBitCount) Class() string                  { return "Bitmap" }
@@ -50,13 +50,13 @@ func (commandBitCount) WarnVersion() string            { return "0.0.0" }
 func (commandBitCount) Warning() string                { return "" }
 func (commandBitCount) P(p Pipeliner) commandBitCountP { return commandBitCountP{p} }
 func (b commandBitCountP) Cmd(key string, bc *BitCount) {
-	b.Pipeliner.Cmd(b.builder().BitCountCompleted(key, bc))
+	b.p.Cmd(b.p.builder().BitCountCompleted(key, bc))
 }
 
 var CommandBitCountByte commandBitCountByte
 
 type commandBitCountByte string
-type commandBitCountByteP struct{ Pipeliner }
+type commandBitCountByteP struct{ p Pipeliner }
 
 func (commandBitCountByte) String() string                     { return "BITCOUNT BYTE" }
 func (commandBitCountByte) Class() string                      { return "Bitmap" }
@@ -66,13 +66,13 @@ func (commandBitCountByte) WarnVersion() string                { return "0.0.0" 
 func (commandBitCountByte) Warning() string                    { return "" }
 func (commandBitCountByte) P(p Pipeliner) commandBitCountByteP { return commandBitCountByteP{p} }
 func (b commandBitCountByteP) Cmd(key string, bc *BitCount) {
-	b.Pipeliner.Cmd(b.builder().BitCountCompleted(key, bc))
+	b.p.Cmd(b.p.builder().BitCountCompleted(key, bc))
 }
 
 var CommandBitCountBit commandBitCountBit
 
 type commandBitCountBit string
-type commandBitCountBitP struct{ Pipeliner }
+type commandBitCountBitP struct{ p Pipeliner }
 
 func (commandBitCountBit) String() string                    { return "BITCOUNT BIT" }
 func (commandBitCountBit) Class() string                     { return "Bitmap" }
@@ -82,13 +82,13 @@ func (commandBitCountBit) WarnVersion() string               { return "0.0.0" }
 func (commandBitCountBit) Warning() string                   { return "" }
 func (commandBitCountBit) P(p Pipeliner) commandBitCountBitP { return commandBitCountBitP{p} }
 func (b commandBitCountBitP) Cmd(key string, bc *BitCount) {
-	b.Pipeliner.Cmd(b.builder().BitCountCompleted(key, bc))
+	b.p.Cmd(b.p.builder().BitCountCompleted(key, bc))
 }
 
 var CommandBitField commandBitField
 
 type commandBitField string
-type commandBitFieldP struct{ Pipeliner }
+type commandBitFieldP struct{ p Pipeliner }
 
 func (commandBitField) String() string                 { return "BITFIELD" }
 func (commandBitField) Class() string                  { return "Bitmap" }
@@ -98,13 +98,13 @@ func (commandBitField) WarnVersion() string            { return "0.0.0" }
 func (commandBitField) Warning() string                { return "" }
 func (commandBitField) P(p Pipeliner) commandBitFieldP { return commandBitFieldP{p} }
 func (b commandBitFieldP) Cmd(key string, args ...any) {
-	b.Pipeliner.Cmd(b.builder().BitFieldCompleted(key, args...))
+	b.p.Cmd(b.p.builder().BitFieldCompleted(key, args...))
 }
 
 var CommandBitOpAnd commandBitOpAnd
 
 type commandBitOpAnd string
-type commandBitOpAndP struct{ Pipeliner }
+type commandBitOpAndP struct{ p Pipeliner }
 
 func (commandBitOpAnd) String() string                 { return "BITOP AND" }
 func (commandBitOpAnd) Class() string                  { return "Bitmap" }
@@ -114,13 +114,13 @@ func (commandBitOpAnd) WarnVersion() string            { return "0.0.0" }
 func (commandBitOpAnd) Warning() string                { return "" }
 func (commandBitOpAnd) P(p Pipeliner) commandBitOpAndP { return commandBitOpAndP{p} }
 func (b commandBitOpAndP) Cmd(destKey string, keys ...string) {
-	b.Pipeliner.Cmd(b.builder().BitOpAndCompleted(destKey, keys...))
+	b.p.Cmd(b.p.builder().BitOpAndCompleted(destKey, keys...))
 }
 
 var CommandBitOpOr commandBitOpOr
 
 type commandBitOpOr string
-type commandBitOpOrP struct{ Pipeliner }
+type commandBitOpOrP struct{ p Pipeliner }
 
 func (commandBitOpOr) String() string                { return "BITOP OR" }
 func (commandBitOpOr) Class() string                 { return "Bitmap" }
@@ -130,13 +130,13 @@ func (commandBitOpOr) WarnVersion() string           { return "0.0.0" }
 func (commandBitOpOr) Warning() string               { return "" }
 func (commandBitOpOr) P(p Pipeliner) commandBitOpOrP { return commandBitOpOrP{p} }
 func (b commandBitOpOrP) Cmd(destKey string, keys ...string) {
-	b.Pipeliner.Cmd(b.builder().BitOpOrCompleted(destKey, keys...))
+	b.p.Cmd(b.p.builder().BitOpOrCompleted(destKey, keys...))
 }
 
 var CommandBitOpXor commandBitOpXor
 
 type commandBitOpXor string
-type commandBitOpXorP struct{ Pipeliner }
+type commandBitOpXorP struct{ p Pipeliner }
 
 func (commandBitOpXor) String() string                 { return "BITOP XOR" }
 func (commandBitOpXor) Class() string                  { return "Bitmap" }
@@ -146,13 +146,13 @@ func (commandBitOpXor) WarnVersion() string            { return "0.0.0" }
 func (commandBitOpXor) Warning() string                { return "" }
 func (commandBitOpXor) P(p Pipeliner) commandBitOpXorP { return commandBitOpXorP{p} }
 func (b commandBitOpXorP) Cmd(destKey string, keys ...string) {
-	b.Pipeliner.Cmd(b.builder().BitOpXorCompleted(destKey, keys...))
+	b.p.Cmd(b.p.builder().BitOpXorCompleted(destKey, keys...))
 }
 
 var CommandBitOpNot commandBitOpNot
 
 type commandBitOpNot string
-type commandBitOpNotP struct{ Pipeliner }
+type commandBitOpNotP struct{ p Pipeliner }
 
 func (commandBitOpNot) String() string                 { return "BITOP NOT" }
 func (commandBitOpNot) Class() string                  { return "Bitmap" }
@@ -162,13 +162,13 @@ func (commandBitOpNot) WarnVersion() string            { return "0.0.0" }
 func (commandBitOpNot) Warning() string                { return "" }
 func (commandBitOpNot) P(p Pipeliner) commandBitOpNotP { return commandBitOpNotP{p} }
 func (b commandBitOpNotP) Cmd(destKey string, key string) {
-	b.Pipeliner.Cmd(b.builder().BitOpNotCompleted(destKey, key))
+	b.p.Cmd(b.p.builder().BitOpNotCompleted(destKey, key))
 }
 
 var CommandBitPos commandBitPos
 
 type commandBitPos string
-type commandBitPosP struct{ Pipeliner }
+type commandBitPosP struct{ p Pipeliner }
 
 func (commandBitPos) String() string               { return "BITPOS" }
 func (commandBitPos) Class() string                { return "Bitmap" }
@@ -178,13 +178,13 @@ func (commandBitPos) WarnVersion() string          { return "0.0.0" }
 func (commandBitPos) Warning() string              { return "" }
 func (commandBitPos) P(p Pipeliner) commandBitPosP { return commandBitPosP{p} }
 func (b commandBitPosP) Cmd(key string, bit int64, pos ...int64) {
-	b.Pipeliner.Cmd(b.builder().BitPosCompleted(key, bit, pos...))
+	b.p.Cmd(b.p.builder().BitPosCompleted(key, bit, pos...))
 }
 
 var CommandBitPosSpan commandBitPosSpan
 
 type commandBitPosSpan string
-type commandBitPosSpanP struct{ Pipeliner }
+type commandBitPosSpanP struct{ p Pipeliner }
 
 func (commandBitPosSpan) String() string                   { return "BITPOS BYTE/BIT" }
 func (commandBitPosSpan) Class() string                    { return "Bitmap" }
@@ -194,13 +194,13 @@ func (commandBitPosSpan) WarnVersion() string              { return "0.0.0" }
 func (commandBitPosSpan) Warning() string                  { return "" }
 func (commandBitPosSpan) P(p Pipeliner) commandBitPosSpanP { return commandBitPosSpanP{p} }
 func (b commandBitPosSpanP) Cmd(key string, bit, start, end int64, span string) {
-	b.Pipeliner.Cmd(b.builder().BitPosSpanCompleted(key, bit, start, end, span))
+	b.p.Cmd(b.p.builder().BitPosSpanCompleted(key, bit, start, end, span))
 }
 
 var CommandGetBit commandGetBit
 
 type commandGetBit string
-type commandGetBitP struct{ Pipeliner }
+type commandGetBitP struct{ p Pipeliner }
 
 func (commandGetBit) String() string               { return "GETBIT" }
 func (commandGetBit) Class() string                { return "Bitmap" }
@@ -210,13 +210,13 @@ func (commandGetBit) WarnVersion() string          { return "0.0.0" }
 func (commandGetBit) Warning() string              { return "" }
 func (commandGetBit) P(p Pipeliner) commandGetBitP { return commandGetBitP{p} }
 func (b commandGetBitP) Cmd(key string, offset int64) {
-	b.Pipeliner.Cmd(b.builder().GetBitCompleted(key, offset))
+	b.p.Cmd(b.p.builder().GetBitCompleted(key, offset))
 }
 
 var CommandSetBit commandSetBit
 
 type commandSetBit string
-type commandSetBitP struct{ Pipeliner }
+type commandSetBitP struct{ p Pipeliner }
 
 func (commandSetBit) String() string               { return "SETBIT" }
 func (commandSetBit) Class() string                { return "Bitmap" }
@@ -226,7 +226,7 @@ func (commandSetBit) WarnVersion() string          { return "0.0.0" }
 func (commandSetBit) Warning() string              { return commandSetBitWarning }
 func (commandSetBit) P(p Pipeliner) commandSetBitP { return commandSetBitP{p} }
 func (b commandSetBitP) Cmd(key string, offset int64, value int64) {
-	b.Pipeliner.Cmd(b.builder().SetBitCompleted(key, offset, value))
+	b.p.Cmd(b.p.builder().SetBitCompleted(key, offset, value))
 }
 
 var CommandClusterAddSlots commandClusterAddSlots
@@ -595,7 +595,7 @@ func (commandClientUnblockWithError) Warning() string        { return "" }
 var CommandEcho commandEcho
 
 type commandEcho string
-type commandEchoP struct{ Pipeliner }
+type commandEchoP struct{ p Pipeliner }
 
 func (commandEcho) String() string             { return "ECHO" }
 func (commandEcho) Class() string              { return "Connection" }
@@ -604,12 +604,12 @@ func (commandEcho) Forbid() bool               { return false }
 func (commandEcho) WarnVersion() string        { return "0.0.0" }
 func (commandEcho) Warning() string            { return "" }
 func (commandEcho) P(p Pipeliner) commandEchoP { return commandEchoP{p} }
-func (b commandEchoP) Cmd(message any)         { b.Pipeliner.Cmd(b.builder().EchoCompleted(message)) }
+func (b commandEchoP) Cmd(message any)         { b.p.Cmd(b.p.builder().EchoCompleted(message)) }
 
 var CommandPing commandPing
 
 type commandPing string
-type commandPingP struct{ Pipeliner }
+type commandPingP struct{ p Pipeliner }
 
 func (commandPing) String() string             { return "PING" }
 func (commandPing) Class() string              { return "Connection" }
@@ -618,7 +618,7 @@ func (commandPing) Forbid() bool               { return false }
 func (commandPing) WarnVersion() string        { return "0.0.0" }
 func (commandPing) Warning() string            { return "" }
 func (commandPing) P(p Pipeliner) commandPingP { return commandPingP{p} }
-func (b commandPingP) Cmd()                    { b.Pipeliner.Cmd(b.builder().PingCompleted()) }
+func (b commandPingP) Cmd()                    { b.p.Cmd(b.p.builder().PingCompleted()) }
 
 var CommandQuit commandQuit
 
@@ -634,7 +634,7 @@ func (commandQuit) Warning() string        { return commandQuitWarning }
 var CommandCopy commandCopy
 
 type commandCopy string
-type commandCopyP struct{ Pipeliner }
+type commandCopyP struct{ p Pipeliner }
 
 func (commandCopy) String() string             { return "COPY" }
 func (commandCopy) Class() string              { return "Generic" }
@@ -644,13 +644,13 @@ func (commandCopy) WarnVersion() string        { return "0.0.0" }
 func (commandCopy) Warning() string            { return "" }
 func (commandCopy) P(p Pipeliner) commandCopyP { return commandCopyP{p} }
 func (b commandCopyP) Cmd(source string, destination string, db int64, replace bool) {
-	b.Pipeliner.Cmd(b.builder().CopyCompleted(source, destination, db, replace))
+	b.p.Cmd(b.p.builder().CopyCompleted(source, destination, db, replace))
 }
 
 var CommandDel commandDel
 
 type commandDel string
-type commandDelP struct{ Pipeliner }
+type commandDelP struct{ p Pipeliner }
 
 func (commandDel) String() string            { return "DEL" }
 func (commandDel) Class() string             { return "Generic" }
@@ -659,12 +659,12 @@ func (commandDel) Forbid() bool              { return false }
 func (commandDel) WarnVersion() string       { return "0.0.0" }
 func (commandDel) Warning() string           { return "" }
 func (commandDel) P(p Pipeliner) commandDelP { return commandDelP{p} }
-func (b commandDelP) Cmd(keys ...string)     { b.Pipeliner.Cmd(b.builder().DelCompleted(keys...)) }
+func (b commandDelP) Cmd(keys ...string)     { b.p.Cmd(b.p.builder().DelCompleted(keys...)) }
 
 var CommandDump commandDump
 
 type commandDump string
-type commandDumpP struct{ Pipeliner }
+type commandDumpP struct{ p Pipeliner }
 
 func (commandDump) String() string             { return "DUMP" }
 func (commandDump) Class() string              { return "Generic" }
@@ -673,12 +673,12 @@ func (commandDump) Forbid() bool               { return false }
 func (commandDump) WarnVersion() string        { return "0.0.0" }
 func (commandDump) Warning() string            { return "" }
 func (commandDump) P(p Pipeliner) commandDumpP { return commandDumpP{p} }
-func (b commandDumpP) Cmd(key string)          { b.Pipeliner.Cmd(b.builder().DumpCompleted(key)) }
+func (b commandDumpP) Cmd(key string)          { b.p.Cmd(b.p.builder().DumpCompleted(key)) }
 
 var CommandExists commandExists
 
 type commandExists string
-type commandExistsP struct{ Pipeliner }
+type commandExistsP struct{ p Pipeliner }
 
 func (commandExists) String() string               { return "EXISTS" }
 func (commandExists) Class() string                { return "Generic" }
@@ -687,12 +687,12 @@ func (commandExists) Forbid() bool                 { return false }
 func (commandExists) WarnVersion() string          { return "0.0.0" }
 func (commandExists) Warning() string              { return "" }
 func (commandExists) P(p Pipeliner) commandExistsP { return commandExistsP{p} }
-func (b commandExistsP) Cmd(key string)            { b.Pipeliner.Cmd(b.builder().ExistsCompleted(key)) }
+func (b commandExistsP) Cmd(key string)            { b.p.Cmd(b.p.builder().ExistsCompleted(key)) }
 
 var CommandMExists commandMExists
 
 type commandMExists string
-type commandMExistsP struct{ Pipeliner }
+type commandMExistsP struct{ p Pipeliner }
 
 func (commandMExists) String() string                { return "EXISTS" }
 func (commandMExists) Class() string                 { return "Generic" }
@@ -701,12 +701,12 @@ func (commandMExists) Forbid() bool                  { return false }
 func (commandMExists) WarnVersion() string           { return "0.0.0" }
 func (commandMExists) Warning() string               { return "" }
 func (commandMExists) P(p Pipeliner) commandMExistsP { return commandMExistsP{p} }
-func (b commandMExistsP) Cmd(keys ...string)         { b.Pipeliner.Cmd(b.builder().ExistsCompleted(keys...)) }
+func (b commandMExistsP) Cmd(keys ...string)         { b.p.Cmd(b.p.builder().ExistsCompleted(keys...)) }
 
 var CommandExpire commandExpire
 
 type commandExpire string
-type commandExpireP struct{ Pipeliner }
+type commandExpireP struct{ p Pipeliner }
 
 func (commandExpire) String() string               { return "EXPIRE" }
 func (commandExpire) Class() string                { return "Generic" }
@@ -716,13 +716,13 @@ func (commandExpire) WarnVersion() string          { return "0.0.0" }
 func (commandExpire) Warning() string              { return "" }
 func (commandExpire) P(p Pipeliner) commandExpireP { return commandExpireP{p} }
 func (b commandExpireP) Cmd(key string, seconds time.Duration) {
-	b.Pipeliner.Cmd(b.builder().ExpireCompleted(key, seconds))
+	b.p.Cmd(b.p.builder().ExpireCompleted(key, seconds))
 }
 
 var CommandExpireNX commandExpireNX
 
 type commandExpireNX string
-type commandExpireNXP struct{ Pipeliner }
+type commandExpireNXP struct{ p Pipeliner }
 
 func (commandExpireNX) String() string                 { return "EXPIRE NX" }
 func (commandExpireNX) Class() string                  { return "Generic" }
@@ -732,13 +732,13 @@ func (commandExpireNX) WarnVersion() string            { return "0.0.0" }
 func (commandExpireNX) Warning() string                { return "" }
 func (commandExpireNX) P(p Pipeliner) commandExpireNXP { return commandExpireNXP{p} }
 func (b commandExpireNXP) Cmd(key string, seconds time.Duration) {
-	b.Pipeliner.Cmd(b.builder().ExpireNXCompleted(key, seconds))
+	b.p.Cmd(b.p.builder().ExpireNXCompleted(key, seconds))
 }
 
 var CommandExpireXX commandExpireXX
 
 type commandExpireXX string
-type commandExpireXXP struct{ Pipeliner }
+type commandExpireXXP struct{ p Pipeliner }
 
 func (commandExpireXX) String() string                 { return "EXPIRE XX" }
 func (commandExpireXX) Class() string                  { return "Generic" }
@@ -748,13 +748,13 @@ func (commandExpireXX) WarnVersion() string            { return "0.0.0" }
 func (commandExpireXX) Warning() string                { return "" }
 func (commandExpireXX) P(p Pipeliner) commandExpireXXP { return commandExpireXXP{p} }
 func (b commandExpireXXP) Cmd(key string, seconds time.Duration) {
-	b.Pipeliner.Cmd(b.builder().ExpireXXCompleted(key, seconds))
+	b.p.Cmd(b.p.builder().ExpireXXCompleted(key, seconds))
 }
 
 var CommandExpireGT commandExpireGT
 
 type commandExpireGT string
-type commandExpireGTP struct{ Pipeliner }
+type commandExpireGTP struct{ p Pipeliner }
 
 func (commandExpireGT) String() string                 { return "EXPIRE GT" }
 func (commandExpireGT) Class() string                  { return "Generic" }
@@ -764,13 +764,13 @@ func (commandExpireGT) WarnVersion() string            { return "0.0.0" }
 func (commandExpireGT) Warning() string                { return "" }
 func (commandExpireGT) P(p Pipeliner) commandExpireGTP { return commandExpireGTP{p} }
 func (b commandExpireGTP) Cmd(key string, seconds time.Duration) {
-	b.Pipeliner.Cmd(b.builder().ExpireGTCompleted(key, seconds))
+	b.p.Cmd(b.p.builder().ExpireGTCompleted(key, seconds))
 }
 
 var CommandExpireLT commandExpireLT
 
 type commandExpireLT string
-type commandExpireLTP struct{ Pipeliner }
+type commandExpireLTP struct{ p Pipeliner }
 
 func (commandExpireLT) String() string                 { return "EXPIRE LT" }
 func (commandExpireLT) Class() string                  { return "Generic" }
@@ -780,13 +780,13 @@ func (commandExpireLT) WarnVersion() string            { return "0.0.0" }
 func (commandExpireLT) Warning() string                { return "" }
 func (commandExpireLT) P(p Pipeliner) commandExpireLTP { return commandExpireLTP{p} }
 func (b commandExpireLTP) Cmd(key string, seconds time.Duration) {
-	b.Pipeliner.Cmd(b.builder().ExpireLTCompleted(key, seconds))
+	b.p.Cmd(b.p.builder().ExpireLTCompleted(key, seconds))
 }
 
 var CommandExpireAt commandExpireAt
 
 type commandExpireAt string
-type commandExpireAtP struct{ Pipeliner }
+type commandExpireAtP struct{ p Pipeliner }
 
 func (commandExpireAt) String() string                 { return "EXPIREAT" }
 func (commandExpireAt) Class() string                  { return "Generic" }
@@ -796,13 +796,13 @@ func (commandExpireAt) WarnVersion() string            { return "0.0.0" }
 func (commandExpireAt) Warning() string                { return "" }
 func (commandExpireAt) P(p Pipeliner) commandExpireAtP { return commandExpireAtP{p} }
 func (b commandExpireAtP) Cmd(key string, timestamp time.Time) {
-	b.Pipeliner.Cmd(b.builder().ExpireAtCompleted(key, timestamp))
+	b.p.Cmd(b.p.builder().ExpireAtCompleted(key, timestamp))
 }
 
 var CommandExpireAtNX commandExpireAtNX
 
 type commandExpireAtNX string
-type commandExpireAtNXP struct{ Pipeliner }
+type commandExpireAtNXP struct{ p Pipeliner }
 
 func (commandExpireAtNX) String() string                   { return "EXPIREAT NX" }
 func (commandExpireAtNX) Class() string                    { return "Generic" }
@@ -812,13 +812,13 @@ func (commandExpireAtNX) WarnVersion() string              { return "0.0.0" }
 func (commandExpireAtNX) Warning() string                  { return "" }
 func (commandExpireAtNX) P(p Pipeliner) commandExpireAtNXP { return commandExpireAtNXP{p} }
 func (b commandExpireAtNXP) Cmd(key string, timestamp time.Time) {
-	b.Pipeliner.Cmd(b.builder().ExpireAtNXCompleted(key, timestamp))
+	b.p.Cmd(b.p.builder().ExpireAtNXCompleted(key, timestamp))
 }
 
 var CommandExpireAtXX commandExpireAtXX
 
 type commandExpireAtXX string
-type commandExpireAtXXP struct{ Pipeliner }
+type commandExpireAtXXP struct{ p Pipeliner }
 
 func (commandExpireAtXX) String() string                   { return "EXPIREAT XX" }
 func (commandExpireAtXX) Class() string                    { return "Generic" }
@@ -828,13 +828,13 @@ func (commandExpireAtXX) WarnVersion() string              { return "0.0.0" }
 func (commandExpireAtXX) Warning() string                  { return "" }
 func (commandExpireAtXX) P(p Pipeliner) commandExpireAtXXP { return commandExpireAtXXP{p} }
 func (b commandExpireAtXXP) Cmd(key string, timestamp time.Time) {
-	b.Pipeliner.Cmd(b.builder().ExpireAtXXCompleted(key, timestamp))
+	b.p.Cmd(b.p.builder().ExpireAtXXCompleted(key, timestamp))
 }
 
 var CommandExpireAtGT commandExpireAtGT
 
 type commandExpireAtGT string
-type commandExpireAtGTP struct{ Pipeliner }
+type commandExpireAtGTP struct{ p Pipeliner }
 
 func (commandExpireAtGT) String() string                   { return "EXPIREAT GT" }
 func (commandExpireAtGT) Class() string                    { return "Generic" }
@@ -844,13 +844,13 @@ func (commandExpireAtGT) WarnVersion() string              { return "0.0.0" }
 func (commandExpireAtGT) Warning() string                  { return "" }
 func (commandExpireAtGT) P(p Pipeliner) commandExpireAtGTP { return commandExpireAtGTP{p} }
 func (b commandExpireAtGTP) Cmd(key string, timestamp time.Time) {
-	b.Pipeliner.Cmd(b.builder().ExpireAtGTCompleted(key, timestamp))
+	b.p.Cmd(b.p.builder().ExpireAtGTCompleted(key, timestamp))
 }
 
 var CommandExpireAtLT commandExpireAtLT
 
 type commandExpireAtLT string
-type commandExpireAtLTP struct{ Pipeliner }
+type commandExpireAtLTP struct{ p Pipeliner }
 
 func (commandExpireAtLT) String() string                   { return "EXPIREAT LT" }
 func (commandExpireAtLT) Class() string                    { return "Generic" }
@@ -860,13 +860,13 @@ func (commandExpireAtLT) WarnVersion() string              { return "0.0.0" }
 func (commandExpireAtLT) Warning() string                  { return "" }
 func (commandExpireAtLT) P(p Pipeliner) commandExpireAtLTP { return commandExpireAtLTP{p} }
 func (b commandExpireAtLTP) Cmd(key string, timestamp time.Time) {
-	b.Pipeliner.Cmd(b.builder().ExpireAtLTCompleted(key, timestamp))
+	b.p.Cmd(b.p.builder().ExpireAtLTCompleted(key, timestamp))
 }
 
 var CommandExpireTime commandExpireTime
 
 type commandExpireTime string
-type commandExpireTimeP struct{ Pipeliner }
+type commandExpireTimeP struct{ p Pipeliner }
 
 func (commandExpireTime) String() string                   { return "EXPIRETIME" }
 func (commandExpireTime) Class() string                    { return "Generic" }
@@ -875,7 +875,7 @@ func (commandExpireTime) Forbid() bool                     { return false }
 func (commandExpireTime) WarnVersion() string              { return "0.0.0" }
 func (commandExpireTime) Warning() string                  { return "" }
 func (commandExpireTime) P(p Pipeliner) commandExpireTimeP { return commandExpireTimeP{p} }
-func (b commandExpireTimeP) Cmd(key string)                { b.Pipeliner.Cmd(b.builder().ExpireTimeCompleted(key)) }
+func (b commandExpireTimeP) Cmd(key string)                { b.p.Cmd(b.p.builder().ExpireTimeCompleted(key)) }
 
 var CommandKeys commandKeys
 
@@ -891,7 +891,7 @@ func (commandKeys) Warning() string        { return commandKeysWarning }
 var CommandMigrate commandMigrate
 
 type commandMigrate string
-type commandMigrateP struct{ Pipeliner }
+type commandMigrateP struct{ p Pipeliner }
 
 func (commandMigrate) String() string                { return "MIGRATE" }
 func (commandMigrate) Class() string                 { return "Generic" }
@@ -901,13 +901,13 @@ func (commandMigrate) WarnVersion() string           { return "0.0.0" }
 func (commandMigrate) Warning() string               { return "" }
 func (commandMigrate) P(p Pipeliner) commandMigrateP { return commandMigrateP{p} }
 func (b commandMigrateP) Cmd(host string, port int64, key string, db int64, timeout time.Duration) {
-	b.Pipeliner.Cmd(b.builder().MigrateCompleted(host, port, key, db, timeout))
+	b.p.Cmd(b.p.builder().MigrateCompleted(host, port, key, db, timeout))
 }
 
 var CommandMove commandMove
 
 type commandMove string
-type commandMoveP struct{ Pipeliner }
+type commandMoveP struct{ p Pipeliner }
 
 func (commandMove) String() string              { return "MOVE" }
 func (commandMove) Class() string               { return "Generic" }
@@ -916,12 +916,12 @@ func (commandMove) Forbid() bool                { return false }
 func (commandMove) WarnVersion() string         { return "0.0.0" }
 func (commandMove) Warning() string             { return "" }
 func (commandMove) P(p Pipeliner) commandMoveP  { return commandMoveP{p} }
-func (b commandMoveP) Cmd(key string, db int64) { b.Pipeliner.Cmd(b.builder().MoveCompleted(key, db)) }
+func (b commandMoveP) Cmd(key string, db int64) { b.p.Cmd(b.p.builder().MoveCompleted(key, db)) }
 
 var CommandObjectEncoding commandObjectEncoding
 
 type commandObjectEncoding string
-type commandObjectEncodingP struct{ Pipeliner }
+type commandObjectEncodingP struct{ p Pipeliner }
 
 func (commandObjectEncoding) String() string                       { return "OBJECT ENCODING" }
 func (commandObjectEncoding) Class() string                        { return "Generic" }
@@ -930,14 +930,12 @@ func (commandObjectEncoding) Forbid() bool                         { return fals
 func (commandObjectEncoding) WarnVersion() string                  { return "0.0.0" }
 func (commandObjectEncoding) Warning() string                      { return "" }
 func (commandObjectEncoding) P(p Pipeliner) commandObjectEncodingP { return commandObjectEncodingP{p} }
-func (b commandObjectEncodingP) Cmd(key string) {
-	b.Pipeliner.Cmd(b.builder().ObjectEncodingCompleted(key))
-}
+func (b commandObjectEncodingP) Cmd(key string)                    { b.p.Cmd(b.p.builder().ObjectEncodingCompleted(key)) }
 
 var CommandObjectIdleTime commandObjectIdleTime
 
 type commandObjectIdleTime string
-type commandObjectIdleTimeP struct{ Pipeliner }
+type commandObjectIdleTimeP struct{ p Pipeliner }
 
 func (commandObjectIdleTime) String() string                       { return "OBJECT IDLETIME" }
 func (commandObjectIdleTime) Class() string                        { return "Generic" }
@@ -946,14 +944,12 @@ func (commandObjectIdleTime) Forbid() bool                         { return fals
 func (commandObjectIdleTime) WarnVersion() string                  { return "0.0.0" }
 func (commandObjectIdleTime) Warning() string                      { return "" }
 func (commandObjectIdleTime) P(p Pipeliner) commandObjectIdleTimeP { return commandObjectIdleTimeP{p} }
-func (b commandObjectIdleTimeP) Cmd(key string) {
-	b.Pipeliner.Cmd(b.builder().ObjectIdleTimeCompleted(key))
-}
+func (b commandObjectIdleTimeP) Cmd(key string)                    { b.p.Cmd(b.p.builder().ObjectIdleTimeCompleted(key)) }
 
 var CommandObjectRefCount commandObjectRefCount
 
 type commandObjectRefCount string
-type commandObjectRefCountP struct{ Pipeliner }
+type commandObjectRefCountP struct{ p Pipeliner }
 
 func (commandObjectRefCount) String() string                       { return "OBJECT REFCOUNT" }
 func (commandObjectRefCount) Class() string                        { return "Generic" }
@@ -962,14 +958,12 @@ func (commandObjectRefCount) Forbid() bool                         { return fals
 func (commandObjectRefCount) WarnVersion() string                  { return "0.0.0" }
 func (commandObjectRefCount) Warning() string                      { return "" }
 func (commandObjectRefCount) P(p Pipeliner) commandObjectRefCountP { return commandObjectRefCountP{p} }
-func (b commandObjectRefCountP) Cmd(key string) {
-	b.Pipeliner.Cmd(b.builder().ObjectRefCountCompleted(key))
-}
+func (b commandObjectRefCountP) Cmd(key string)                    { b.p.Cmd(b.p.builder().ObjectRefCountCompleted(key)) }
 
 var CommandPersist commandPersist
 
 type commandPersist string
-type commandPersistP struct{ Pipeliner }
+type commandPersistP struct{ p Pipeliner }
 
 func (commandPersist) String() string                { return "PERSIST" }
 func (commandPersist) Class() string                 { return "Generic" }
@@ -978,12 +972,12 @@ func (commandPersist) Forbid() bool                  { return false }
 func (commandPersist) WarnVersion() string           { return "0.0.0" }
 func (commandPersist) Warning() string               { return "" }
 func (commandPersist) P(p Pipeliner) commandPersistP { return commandPersistP{p} }
-func (b commandPersistP) Cmd(key string)             { b.Pipeliner.Cmd(b.builder().PersistCompleted(key)) }
+func (b commandPersistP) Cmd(key string)             { b.p.Cmd(b.p.builder().PersistCompleted(key)) }
 
 var CommandPExpire commandPExpire
 
 type commandPExpire string
-type commandPExpireP struct{ Pipeliner }
+type commandPExpireP struct{ p Pipeliner }
 
 func (commandPExpire) String() string                { return "PEXPIRE" }
 func (commandPExpire) Class() string                 { return "Generic" }
@@ -993,13 +987,13 @@ func (commandPExpire) WarnVersion() string           { return "0.0.0" }
 func (commandPExpire) Warning() string               { return "" }
 func (commandPExpire) P(p Pipeliner) commandPExpireP { return commandPExpireP{p} }
 func (b commandPExpireP) Cmd(key string, milliseconds time.Duration) {
-	b.Pipeliner.Cmd(b.builder().PExpireCompleted(key, milliseconds))
+	b.p.Cmd(b.p.builder().PExpireCompleted(key, milliseconds))
 }
 
 var CommandPExpireNX commandPExpireNX
 
 type commandPExpireNX string
-type commandPExpireNXP struct{ Pipeliner }
+type commandPExpireNXP struct{ p Pipeliner }
 
 func (commandPExpireNX) String() string                  { return "PEXPIRE NX" }
 func (commandPExpireNX) Class() string                   { return "Generic" }
@@ -1009,13 +1003,13 @@ func (commandPExpireNX) WarnVersion() string             { return "0.0.0" }
 func (commandPExpireNX) Warning() string                 { return "" }
 func (commandPExpireNX) P(p Pipeliner) commandPExpireNXP { return commandPExpireNXP{p} }
 func (b commandPExpireNXP) Cmd(key string, milliseconds time.Duration) {
-	b.Pipeliner.Cmd(b.builder().PExpireNXCompleted(key, milliseconds))
+	b.p.Cmd(b.p.builder().PExpireNXCompleted(key, milliseconds))
 }
 
 var CommandPExpireXX commandPExpireXX
 
 type commandPExpireXX string
-type commandPExpireXXP struct{ Pipeliner }
+type commandPExpireXXP struct{ p Pipeliner }
 
 func (commandPExpireXX) String() string                  { return "PEXPIRE XX" }
 func (commandPExpireXX) Class() string                   { return "Generic" }
@@ -1025,13 +1019,13 @@ func (commandPExpireXX) WarnVersion() string             { return "0.0.0" }
 func (commandPExpireXX) Warning() string                 { return "" }
 func (commandPExpireXX) P(p Pipeliner) commandPExpireXXP { return commandPExpireXXP{p} }
 func (b commandPExpireXXP) Cmd(key string, milliseconds time.Duration) {
-	b.Pipeliner.Cmd(b.builder().PExpireXXCompleted(key, milliseconds))
+	b.p.Cmd(b.p.builder().PExpireXXCompleted(key, milliseconds))
 }
 
 var CommandPExpireGT commandPExpireGT
 
 type commandPExpireGT string
-type commandPExpireGTP struct{ Pipeliner }
+type commandPExpireGTP struct{ p Pipeliner }
 
 func (commandPExpireGT) String() string                  { return "PEXPIRE GT" }
 func (commandPExpireGT) Class() string                   { return "Generic" }
@@ -1041,13 +1035,13 @@ func (commandPExpireGT) WarnVersion() string             { return "0.0.0" }
 func (commandPExpireGT) Warning() string                 { return "" }
 func (commandPExpireGT) P(p Pipeliner) commandPExpireGTP { return commandPExpireGTP{p} }
 func (b commandPExpireGTP) Cmd(key string, milliseconds time.Duration) {
-	b.Pipeliner.Cmd(b.builder().PExpireGTCompleted(key, milliseconds))
+	b.p.Cmd(b.p.builder().PExpireGTCompleted(key, milliseconds))
 }
 
 var CommandPExpireLT commandPExpireLT
 
 type commandPExpireLT string
-type commandPExpireLTP struct{ Pipeliner }
+type commandPExpireLTP struct{ p Pipeliner }
 
 func (commandPExpireLT) String() string                  { return "PEXPIRE LT" }
 func (commandPExpireLT) Class() string                   { return "Generic" }
@@ -1057,13 +1051,13 @@ func (commandPExpireLT) WarnVersion() string             { return "0.0.0" }
 func (commandPExpireLT) Warning() string                 { return "" }
 func (commandPExpireLT) P(p Pipeliner) commandPExpireLTP { return commandPExpireLTP{p} }
 func (b commandPExpireLTP) Cmd(key string, milliseconds time.Duration) {
-	b.Pipeliner.Cmd(b.builder().PExpireLTCompleted(key, milliseconds))
+	b.p.Cmd(b.p.builder().PExpireLTCompleted(key, milliseconds))
 }
 
 var CommandPExpireAt commandPExpireAt
 
 type commandPExpireAt string
-type commandPExpireAtP struct{ Pipeliner }
+type commandPExpireAtP struct{ p Pipeliner }
 
 func (commandPExpireAt) String() string                  { return "PEXPIREAT" }
 func (commandPExpireAt) Class() string                   { return "Generic" }
@@ -1073,13 +1067,13 @@ func (commandPExpireAt) WarnVersion() string             { return "0.0.0" }
 func (commandPExpireAt) Warning() string                 { return "" }
 func (commandPExpireAt) P(p Pipeliner) commandPExpireAtP { return commandPExpireAtP{p} }
 func (b commandPExpireAtP) Cmd(key string, millisecondsTimestamp time.Time) {
-	b.Pipeliner.Cmd(b.builder().PExpireAtCompleted(key, millisecondsTimestamp))
+	b.p.Cmd(b.p.builder().PExpireAtCompleted(key, millisecondsTimestamp))
 }
 
 var CommandPExpireAtNX commandPExpireAtNX
 
 type commandPExpireAtNX string
-type commandPExpireAtNXP struct{ Pipeliner }
+type commandPExpireAtNXP struct{ p Pipeliner }
 
 func (commandPExpireAtNX) String() string                    { return "PEXPIREAT NX" }
 func (commandPExpireAtNX) Class() string                     { return "Generic" }
@@ -1089,13 +1083,13 @@ func (commandPExpireAtNX) WarnVersion() string               { return "0.0.0" }
 func (commandPExpireAtNX) Warning() string                   { return "" }
 func (commandPExpireAtNX) P(p Pipeliner) commandPExpireAtNXP { return commandPExpireAtNXP{p} }
 func (b commandPExpireAtNXP) Cmd(key string, millisecondsTimestamp time.Time) {
-	b.Pipeliner.Cmd(b.builder().PExpireAtNXCompleted(key, millisecondsTimestamp))
+	b.p.Cmd(b.p.builder().PExpireAtNXCompleted(key, millisecondsTimestamp))
 }
 
 var CommandPExpireAtXX commandPExpireAtXX
 
 type commandPExpireAtXX string
-type commandPExpireAtXXP struct{ Pipeliner }
+type commandPExpireAtXXP struct{ p Pipeliner }
 
 func (commandPExpireAtXX) String() string                    { return "PEXPIREAT XX" }
 func (commandPExpireAtXX) Class() string                     { return "Generic" }
@@ -1105,13 +1099,13 @@ func (commandPExpireAtXX) WarnVersion() string               { return "0.0.0" }
 func (commandPExpireAtXX) Warning() string                   { return "" }
 func (commandPExpireAtXX) P(p Pipeliner) commandPExpireAtXXP { return commandPExpireAtXXP{p} }
 func (b commandPExpireAtXXP) Cmd(key string, millisecondsTimestamp time.Time) {
-	b.Pipeliner.Cmd(b.builder().PExpireAtXXCompleted(key, millisecondsTimestamp))
+	b.p.Cmd(b.p.builder().PExpireAtXXCompleted(key, millisecondsTimestamp))
 }
 
 var CommandPExpireAtGT commandPExpireAtGT
 
 type commandPExpireAtGT string
-type commandPExpireAtGTP struct{ Pipeliner }
+type commandPExpireAtGTP struct{ p Pipeliner }
 
 func (commandPExpireAtGT) String() string                    { return "PEXPIREAT GT" }
 func (commandPExpireAtGT) Class() string                     { return "Generic" }
@@ -1121,13 +1115,13 @@ func (commandPExpireAtGT) WarnVersion() string               { return "0.0.0" }
 func (commandPExpireAtGT) Warning() string                   { return "" }
 func (commandPExpireAtGT) P(p Pipeliner) commandPExpireAtGTP { return commandPExpireAtGTP{p} }
 func (b commandPExpireAtGTP) Cmd(key string, millisecondsTimestamp time.Time) {
-	b.Pipeliner.Cmd(b.builder().PExpireAtGTCompleted(key, millisecondsTimestamp))
+	b.p.Cmd(b.p.builder().PExpireAtGTCompleted(key, millisecondsTimestamp))
 }
 
 var CommandPExpireAtLT commandPExpireAtLT
 
 type commandPExpireAtLT string
-type commandPExpireAtLTP struct{ Pipeliner }
+type commandPExpireAtLTP struct{ p Pipeliner }
 
 func (commandPExpireAtLT) String() string                    { return "PEXPIREAT LT" }
 func (commandPExpireAtLT) Class() string                     { return "Generic" }
@@ -1137,13 +1131,13 @@ func (commandPExpireAtLT) WarnVersion() string               { return "0.0.0" }
 func (commandPExpireAtLT) Warning() string                   { return "" }
 func (commandPExpireAtLT) P(p Pipeliner) commandPExpireAtLTP { return commandPExpireAtLTP{p} }
 func (b commandPExpireAtLTP) Cmd(key string, millisecondsTimestamp time.Time) {
-	b.Pipeliner.Cmd(b.builder().PExpireAtLTCompleted(key, millisecondsTimestamp))
+	b.p.Cmd(b.p.builder().PExpireAtLTCompleted(key, millisecondsTimestamp))
 }
 
 var CommandPExpireTime commandPExpireTime
 
 type commandPExpireTime string
-type commandPExpireTimeP struct{ Pipeliner }
+type commandPExpireTimeP struct{ p Pipeliner }
 
 func (commandPExpireTime) String() string                    { return "PEXPIRETIME" }
 func (commandPExpireTime) Class() string                     { return "Generic" }
@@ -1152,12 +1146,12 @@ func (commandPExpireTime) Forbid() bool                      { return false }
 func (commandPExpireTime) WarnVersion() string               { return "0.0.0" }
 func (commandPExpireTime) Warning() string                   { return "" }
 func (commandPExpireTime) P(p Pipeliner) commandPExpireTimeP { return commandPExpireTimeP{p} }
-func (b commandPExpireTimeP) Cmd(key string)                 { b.Pipeliner.Cmd(b.builder().PExpireTimeCompleted(key)) }
+func (b commandPExpireTimeP) Cmd(key string)                 { b.p.Cmd(b.p.builder().PExpireTimeCompleted(key)) }
 
 var CommandPTTL commandPTTL
 
 type commandPTTL string
-type commandPTTLP struct{ Pipeliner }
+type commandPTTLP struct{ p Pipeliner }
 
 func (commandPTTL) String() string             { return "PTTL" }
 func (commandPTTL) Class() string              { return "Generic" }
@@ -1166,12 +1160,12 @@ func (commandPTTL) Forbid() bool               { return false }
 func (commandPTTL) WarnVersion() string        { return "0.0.0" }
 func (commandPTTL) Warning() string            { return "" }
 func (commandPTTL) P(p Pipeliner) commandPTTLP { return commandPTTLP{p} }
-func (b commandPTTLP) Cmd(key string)          { b.Pipeliner.Cmd(b.builder().PTTLCompleted(key)) }
+func (b commandPTTLP) Cmd(key string)          { b.p.Cmd(b.p.builder().PTTLCompleted(key)) }
 
 var CommandRandomKey commandRandomKey
 
 type commandRandomKey string
-type commandRandomKeyP struct{ Pipeliner }
+type commandRandomKeyP struct{ p Pipeliner }
 
 func (commandRandomKey) String() string                  { return "RANDOMKEY" }
 func (commandRandomKey) Class() string                   { return "Generic" }
@@ -1180,12 +1174,12 @@ func (commandRandomKey) Forbid() bool                    { return false }
 func (commandRandomKey) WarnVersion() string             { return "0.0.0" }
 func (commandRandomKey) Warning() string                 { return "" }
 func (commandRandomKey) P(p Pipeliner) commandRandomKeyP { return commandRandomKeyP{p} }
-func (b commandRandomKeyP) Cmd()                         { b.Pipeliner.Cmd(b.builder().RandomKeyCompleted()) }
+func (b commandRandomKeyP) Cmd()                         { b.p.Cmd(b.p.builder().RandomKeyCompleted()) }
 
 var CommandRename commandRename
 
 type commandRename string
-type commandRenameP struct{ Pipeliner }
+type commandRenameP struct{ p Pipeliner }
 
 func (commandRename) String() string               { return "RENAME" }
 func (commandRename) Class() string                { return "Generic" }
@@ -1194,14 +1188,12 @@ func (commandRename) Forbid() bool                 { return false }
 func (commandRename) WarnVersion() string          { return "0.0.0" }
 func (commandRename) Warning() string              { return "" }
 func (commandRename) P(p Pipeliner) commandRenameP { return commandRenameP{p} }
-func (b commandRenameP) Cmd(key, newkey string) {
-	b.Pipeliner.Cmd(b.builder().RenameCompleted(key, newkey))
-}
+func (b commandRenameP) Cmd(key, newkey string)    { b.p.Cmd(b.p.builder().RenameCompleted(key, newkey)) }
 
 var CommandRenameNX commandRenameNX
 
 type commandRenameNX string
-type commandRenameNXP struct{ Pipeliner }
+type commandRenameNXP struct{ p Pipeliner }
 
 func (commandRenameNX) String() string                 { return "RENAMENX" }
 func (commandRenameNX) Class() string                  { return "Generic" }
@@ -1211,13 +1203,13 @@ func (commandRenameNX) WarnVersion() string            { return "0.0.0" }
 func (commandRenameNX) Warning() string                { return "" }
 func (commandRenameNX) P(p Pipeliner) commandRenameNXP { return commandRenameNXP{p} }
 func (b commandRenameNXP) Cmd(key, newkey string) {
-	b.Pipeliner.Cmd(b.builder().RenameNXCompleted(key, newkey))
+	b.p.Cmd(b.p.builder().RenameNXCompleted(key, newkey))
 }
 
 var CommandRestore commandRestore
 
 type commandRestore string
-type commandRestoreP struct{ Pipeliner }
+type commandRestoreP struct{ p Pipeliner }
 
 func (commandRestore) String() string                { return "RESTORE" }
 func (commandRestore) Class() string                 { return "Generic" }
@@ -1227,13 +1219,13 @@ func (commandRestore) WarnVersion() string           { return "0.0.0" }
 func (commandRestore) Warning() string               { return "" }
 func (commandRestore) P(p Pipeliner) commandRestoreP { return commandRestoreP{p} }
 func (b commandRestoreP) Cmd(key string, ttl time.Duration, serializedValue string) {
-	b.Pipeliner.Cmd(b.builder().RestoreCompleted(key, ttl, serializedValue))
+	b.p.Cmd(b.p.builder().RestoreCompleted(key, ttl, serializedValue))
 }
 
 var CommandRestoreReplace commandRestoreReplace
 
 type commandRestoreReplace string
-type commandRestoreReplaceP struct{ Pipeliner }
+type commandRestoreReplaceP struct{ p Pipeliner }
 
 func (commandRestoreReplace) String() string                       { return "RESTORE REPLACE" }
 func (commandRestoreReplace) Class() string                        { return "Generic" }
@@ -1243,13 +1235,13 @@ func (commandRestoreReplace) WarnVersion() string                  { return "0.0
 func (commandRestoreReplace) Warning() string                      { return "" }
 func (commandRestoreReplace) P(p Pipeliner) commandRestoreReplaceP { return commandRestoreReplaceP{p} }
 func (b commandRestoreReplaceP) Cmd(key string, ttl time.Duration, serializedValue string) {
-	b.Pipeliner.Cmd(b.builder().RestoreReplaceCompleted(key, ttl, serializedValue))
+	b.p.Cmd(b.p.builder().RestoreReplaceCompleted(key, ttl, serializedValue))
 }
 
 var CommandScan commandScan
 
 type commandScan string
-type commandScanP struct{ Pipeliner }
+type commandScanP struct{ p Pipeliner }
 
 func (commandScan) String() string             { return "SCAN" }
 func (commandScan) Class() string              { return "Generic" }
@@ -1259,13 +1251,13 @@ func (commandScan) WarnVersion() string        { return "0.0.0" }
 func (commandScan) Warning() string            { return "" }
 func (commandScan) P(p Pipeliner) commandScanP { return commandScanP{p} }
 func (b commandScanP) Cmd(cursor uint64, match string, count int64) {
-	b.Pipeliner.Cmd(b.builder().ScanCompleted(cursor, match, count))
+	b.p.Cmd(b.p.builder().ScanCompleted(cursor, match, count))
 }
 
 var CommandScanType commandScanType
 
 type commandScanType string
-type commandScanTypeP struct{ Pipeliner }
+type commandScanTypeP struct{ p Pipeliner }
 
 func (commandScanType) String() string                 { return "SCAN TYPE" }
 func (commandScanType) Class() string                  { return "Generic" }
@@ -1275,7 +1267,7 @@ func (commandScanType) WarnVersion() string            { return "0.0.0" }
 func (commandScanType) Warning() string                { return "" }
 func (commandScanType) P(p Pipeliner) commandScanTypeP { return commandScanTypeP{p} }
 func (b commandScanTypeP) Cmd(cursor uint64, match string, count int64, keyType string) {
-	b.Pipeliner.Cmd(b.builder().ScanTypeCompleted(cursor, match, count, keyType))
+	b.p.Cmd(b.p.builder().ScanTypeCompleted(cursor, match, count, keyType))
 }
 
 var CommandSort commandSort
@@ -1314,7 +1306,7 @@ func (commandSortRO) Warning() string        { return "" }
 var CommandTouch commandTouch
 
 type commandTouch string
-type commandTouchP struct{ Pipeliner }
+type commandTouchP struct{ p Pipeliner }
 
 func (commandTouch) String() string              { return "TOUCH" }
 func (commandTouch) Class() string               { return "Generic" }
@@ -1323,12 +1315,12 @@ func (commandTouch) Forbid() bool                { return false }
 func (commandTouch) WarnVersion() string         { return "0.0.0" }
 func (commandTouch) Warning() string             { return "" }
 func (commandTouch) P(p Pipeliner) commandTouchP { return commandTouchP{p} }
-func (b commandTouchP) Cmd(keys ...string)       { b.Pipeliner.Cmd(b.builder().TouchCompleted(keys...)) }
+func (b commandTouchP) Cmd(keys ...string)       { b.p.Cmd(b.p.builder().TouchCompleted(keys...)) }
 
 var CommandTTL commandTTL
 
 type commandTTL string
-type commandTTLP struct{ Pipeliner }
+type commandTTLP struct{ p Pipeliner }
 
 func (commandTTL) String() string            { return "TTL" }
 func (commandTTL) Class() string             { return "Generic" }
@@ -1337,12 +1329,12 @@ func (commandTTL) Forbid() bool              { return false }
 func (commandTTL) WarnVersion() string       { return "0.0.0" }
 func (commandTTL) Warning() string           { return "" }
 func (commandTTL) P(p Pipeliner) commandTTLP { return commandTTLP{p} }
-func (b commandTTLP) Cmd(key string)         { b.Pipeliner.Cmd(b.builder().TTLCompleted(key)) }
+func (b commandTTLP) Cmd(key string)         { b.p.Cmd(b.p.builder().TTLCompleted(key)) }
 
 var CommandType commandType
 
 type commandType string
-type commandTypeP struct{ Pipeliner }
+type commandTypeP struct{ p Pipeliner }
 
 func (commandType) String() string             { return "TYPE" }
 func (commandType) Class() string              { return "Generic" }
@@ -1351,12 +1343,12 @@ func (commandType) Forbid() bool               { return false }
 func (commandType) WarnVersion() string        { return "0.0.0" }
 func (commandType) Warning() string            { return "" }
 func (commandType) P(p Pipeliner) commandTypeP { return commandTypeP{p} }
-func (b commandTypeP) Cmd(key string)          { b.Pipeliner.Cmd(b.builder().TypeCompleted(key)) }
+func (b commandTypeP) Cmd(key string)          { b.p.Cmd(b.p.builder().TypeCompleted(key)) }
 
 var CommandUnlink commandUnlink
 
 type commandUnlink string
-type commandUnlinkP struct{ Pipeliner }
+type commandUnlinkP struct{ p Pipeliner }
 
 func (commandUnlink) String() string               { return "UNLINK" }
 func (commandUnlink) Class() string                { return "Generic" }
@@ -1365,12 +1357,12 @@ func (commandUnlink) Forbid() bool                 { return false }
 func (commandUnlink) WarnVersion() string          { return "0.0.0" }
 func (commandUnlink) Warning() string              { return "" }
 func (commandUnlink) P(p Pipeliner) commandUnlinkP { return commandUnlinkP{p} }
-func (b commandUnlinkP) Cmd(keys ...string)        { b.Pipeliner.Cmd(b.builder().UnlinkCompleted(keys...)) }
+func (b commandUnlinkP) Cmd(keys ...string)        { b.p.Cmd(b.p.builder().UnlinkCompleted(keys...)) }
 
 var CommandGeoAdd commandGeoAdd
 
 type commandGeoAdd string
-type commandGeoAddP struct{ Pipeliner }
+type commandGeoAddP struct{ p Pipeliner }
 
 func (commandGeoAdd) String() string               { return "GEOADD" }
 func (commandGeoAdd) Class() string                { return "Geospatial" }
@@ -1380,13 +1372,13 @@ func (commandGeoAdd) WarnVersion() string          { return "0.0.0" }
 func (commandGeoAdd) Warning() string              { return "" }
 func (commandGeoAdd) P(p Pipeliner) commandGeoAddP { return commandGeoAddP{p} }
 func (b commandGeoAddP) Cmd(key string, geoLocation ...GeoLocation) {
-	b.Pipeliner.Cmd(b.builder().GeoAddCompleted(key, geoLocation...))
+	b.p.Cmd(b.p.builder().GeoAddCompleted(key, geoLocation...))
 }
 
 var CommandGeoDist commandGeoDist
 
 type commandGeoDist string
-type commandGeoDistP struct{ Pipeliner }
+type commandGeoDistP struct{ p Pipeliner }
 
 func (commandGeoDist) String() string                { return "GEODIST" }
 func (commandGeoDist) Class() string                 { return "Geospatial" }
@@ -1396,13 +1388,13 @@ func (commandGeoDist) WarnVersion() string           { return "0.0.0" }
 func (commandGeoDist) Warning() string               { return "" }
 func (commandGeoDist) P(p Pipeliner) commandGeoDistP { return commandGeoDistP{p} }
 func (b commandGeoDistP) Cmd(key, member1, member2, unit string) {
-	b.Pipeliner.Cmd(b.builder().GeoDistCompleted(key, member1, member2, unit))
+	b.p.Cmd(b.p.builder().GeoDistCompleted(key, member1, member2, unit))
 }
 
 var CommandGeoHash commandGeoHash
 
 type commandGeoHash string
-type commandGeoHashP struct{ Pipeliner }
+type commandGeoHashP struct{ p Pipeliner }
 
 func (commandGeoHash) String() string                { return "GEOHASH" }
 func (commandGeoHash) Class() string                 { return "Geospatial" }
@@ -1412,13 +1404,13 @@ func (commandGeoHash) WarnVersion() string           { return "0.0.0" }
 func (commandGeoHash) Warning() string               { return "" }
 func (commandGeoHash) P(p Pipeliner) commandGeoHashP { return commandGeoHashP{p} }
 func (b commandGeoHashP) Cmd(key string, members ...string) {
-	b.Pipeliner.Cmd(b.builder().GeoHashCompleted(key, members...))
+	b.p.Cmd(b.p.builder().GeoHashCompleted(key, members...))
 }
 
 var CommandGeoPos commandGeoPos
 
 type commandGeoPos string
-type commandGeoPosP struct{ Pipeliner }
+type commandGeoPosP struct{ p Pipeliner }
 
 func (commandGeoPos) String() string               { return "GEOPOS" }
 func (commandGeoPos) Class() string                { return "Geospatial" }
@@ -1428,13 +1420,13 @@ func (commandGeoPos) WarnVersion() string          { return "0.0.0" }
 func (commandGeoPos) Warning() string              { return "" }
 func (commandGeoPos) P(p Pipeliner) commandGeoPosP { return commandGeoPosP{p} }
 func (b commandGeoPosP) Cmd(key string, members ...string) {
-	b.Pipeliner.Cmd(b.builder().GeoPosCompleted(key, members...))
+	b.p.Cmd(b.p.builder().GeoPosCompleted(key, members...))
 }
 
 var CommandGeoRadiusRO commandGeoRadiusRO
 
 type commandGeoRadiusRO string
-type commandGeoRadiusROP struct{ Pipeliner }
+type commandGeoRadiusROP struct{ p Pipeliner }
 
 func (commandGeoRadiusRO) String() string                    { return "GEORADIUS_RO" }
 func (commandGeoRadiusRO) Class() string                     { return "Geospatial" }
@@ -1444,13 +1436,13 @@ func (commandGeoRadiusRO) WarnVersion() string               { return "6.2.0" }
 func (commandGeoRadiusRO) Warning() string                   { return commandGeoRadiusROWarning }
 func (commandGeoRadiusRO) P(p Pipeliner) commandGeoRadiusROP { return commandGeoRadiusROP{p} }
 func (b commandGeoRadiusROP) Cmd(key string, longitude, latitude float64, query GeoRadiusQuery) {
-	b.Pipeliner.Cmd(b.builder().GeoRadiusCompleted(key, longitude, latitude, query))
+	b.p.Cmd(b.p.builder().GeoRadiusCompleted(key, longitude, latitude, query))
 }
 
 var CommandGeoRadiusStore commandGeoRadiusStore
 
 type commandGeoRadiusStore string
-type commandGeoRadiusStoreP struct{ Pipeliner }
+type commandGeoRadiusStoreP struct{ p Pipeliner }
 
 func (commandGeoRadiusStore) String() string                       { return "GEORADIUS" }
 func (commandGeoRadiusStore) Class() string                        { return "Geospatial" }
@@ -1460,13 +1452,13 @@ func (commandGeoRadiusStore) WarnVersion() string                  { return "6.2
 func (commandGeoRadiusStore) Warning() string                      { return commandGeoRadiusStoreWarning }
 func (commandGeoRadiusStore) P(p Pipeliner) commandGeoRadiusStoreP { return commandGeoRadiusStoreP{p} }
 func (b commandGeoRadiusStoreP) Cmd(key string, longitude, latitude float64, query GeoRadiusQuery) {
-	b.Pipeliner.Cmd(b.builder().GeoRadiusStoreCompleted(key, longitude, latitude, query))
+	b.p.Cmd(b.p.builder().GeoRadiusStoreCompleted(key, longitude, latitude, query))
 }
 
 var CommandGeoRadiusByMemberRO commandGeoRadiusByMemberRO
 
 type commandGeoRadiusByMemberRO string
-type commandGeoRadiusByMemberROP struct{ Pipeliner }
+type commandGeoRadiusByMemberROP struct{ p Pipeliner }
 
 func (commandGeoRadiusByMemberRO) String() string         { return "GEORADIUSBYMEMBER_RO" }
 func (commandGeoRadiusByMemberRO) Class() string          { return "Geospatial" }
@@ -1478,13 +1470,13 @@ func (commandGeoRadiusByMemberRO) P(p Pipeliner) commandGeoRadiusByMemberROP {
 	return commandGeoRadiusByMemberROP{p}
 }
 func (b commandGeoRadiusByMemberROP) Cmd(key, member string, query GeoRadiusQuery) {
-	b.Pipeliner.Cmd(b.builder().GeoRadiusByMemberCompleted(key, member, query))
+	b.p.Cmd(b.p.builder().GeoRadiusByMemberCompleted(key, member, query))
 }
 
 var CommandGeoRadiusByMemberStore commandGeoRadiusByMemberStore
 
 type commandGeoRadiusByMemberStore string
-type commandGeoRadiusByMemberStoreP struct{ Pipeliner }
+type commandGeoRadiusByMemberStoreP struct{ p Pipeliner }
 
 func (commandGeoRadiusByMemberStore) String() string         { return "GEORADIUSBYMEMBER" }
 func (commandGeoRadiusByMemberStore) Class() string          { return "Geospatial" }
@@ -1496,13 +1488,13 @@ func (commandGeoRadiusByMemberStore) P(p Pipeliner) commandGeoRadiusByMemberStor
 	return commandGeoRadiusByMemberStoreP{p}
 }
 func (b commandGeoRadiusByMemberStoreP) Cmd(key, member string, query GeoRadiusQuery) {
-	b.Pipeliner.Cmd(b.builder().GeoRadiusByMemberStoreCompleted(key, member, query))
+	b.p.Cmd(b.p.builder().GeoRadiusByMemberStoreCompleted(key, member, query))
 }
 
 var CommandGeoSearch commandGeoSearch
 
 type commandGeoSearch string
-type commandGeoSearchP struct{ Pipeliner }
+type commandGeoSearchP struct{ p Pipeliner }
 
 func (commandGeoSearch) String() string                  { return "GEOSEARCH" }
 func (commandGeoSearch) Class() string                   { return "Geospatial" }
@@ -1512,13 +1504,13 @@ func (commandGeoSearch) WarnVersion() string             { return "0.0.0" }
 func (commandGeoSearch) Warning() string                 { return "" }
 func (commandGeoSearch) P(p Pipeliner) commandGeoSearchP { return commandGeoSearchP{p} }
 func (b commandGeoSearchP) Cmd(key string, q GeoSearchQuery) {
-	b.Pipeliner.Cmd(b.builder().GeoSearchCompleted(key, q))
+	b.p.Cmd(b.p.builder().GeoSearchCompleted(key, q))
 }
 
 var CommandGeoSearchStore commandGeoSearchStore
 
 type commandGeoSearchStore string
-type commandGeoSearchStoreP struct{ Pipeliner }
+type commandGeoSearchStoreP struct{ p Pipeliner }
 
 func (commandGeoSearchStore) String() string                       { return "GEOSEARCHSTORE" }
 func (commandGeoSearchStore) Class() string                        { return "Geospatial" }
@@ -1528,13 +1520,13 @@ func (commandGeoSearchStore) WarnVersion() string                  { return "0.0
 func (commandGeoSearchStore) Warning() string                      { return "" }
 func (commandGeoSearchStore) P(p Pipeliner) commandGeoSearchStoreP { return commandGeoSearchStoreP{p} }
 func (b commandGeoSearchStoreP) Cmd(src, dest string, q GeoSearchStoreQuery) {
-	b.Pipeliner.Cmd(b.builder().GeoSearchStoreCompleted(src, dest, q))
+	b.p.Cmd(b.p.builder().GeoSearchStoreCompleted(src, dest, q))
 }
 
 var CommandHDel commandHDel
 
 type commandHDel string
-type commandHDelP struct{ Pipeliner }
+type commandHDelP struct{ p Pipeliner }
 
 func (commandHDel) String() string             { return "HDEL" }
 func (commandHDel) Class() string              { return "Hash" }
@@ -1543,12 +1535,12 @@ func (commandHDel) Forbid() bool               { return false }
 func (commandHDel) WarnVersion() string        { return "0.0.0" }
 func (commandHDel) Warning() string            { return "" }
 func (commandHDel) P(p Pipeliner) commandHDelP { return commandHDelP{p} }
-func (b commandHDelP) Cmd(key, field string)   { b.Pipeliner.Cmd(b.builder().HDelCompleted(key, field)) }
+func (b commandHDelP) Cmd(key, field string)   { b.p.Cmd(b.p.builder().HDelCompleted(key, field)) }
 
 var CommandHMDel commandHMDel
 
 type commandHMDel string
-type commandHMDelP struct{ Pipeliner }
+type commandHMDelP struct{ p Pipeliner }
 
 func (commandHMDel) String() string              { return "HDEL" }
 func (commandHMDel) Class() string               { return "Hash" }
@@ -1558,13 +1550,13 @@ func (commandHMDel) WarnVersion() string         { return "0.0.0" }
 func (commandHMDel) Warning() string             { return "" }
 func (commandHMDel) P(p Pipeliner) commandHMDelP { return commandHMDelP{p} }
 func (b commandHMDelP) Cmd(key string, fields ...string) {
-	b.Pipeliner.Cmd(b.builder().HDelCompleted(key, fields...))
+	b.p.Cmd(b.p.builder().HDelCompleted(key, fields...))
 }
 
 var CommandHExists commandHExists
 
 type commandHExists string
-type commandHExistsP struct{ Pipeliner }
+type commandHExistsP struct{ p Pipeliner }
 
 func (commandHExists) String() string                { return "HEXISTS" }
 func (commandHExists) Class() string                 { return "Hash" }
@@ -1573,14 +1565,12 @@ func (commandHExists) Forbid() bool                  { return false }
 func (commandHExists) WarnVersion() string           { return "0.0.0" }
 func (commandHExists) Warning() string               { return "" }
 func (commandHExists) P(p Pipeliner) commandHExistsP { return commandHExistsP{p} }
-func (b commandHExistsP) Cmd(key, field string) {
-	b.Pipeliner.Cmd(b.builder().HExistsCompleted(key, field))
-}
+func (b commandHExistsP) Cmd(key, field string)      { b.p.Cmd(b.p.builder().HExistsCompleted(key, field)) }
 
 var CommandHExpire commandHExpire
 
 type commandHExpire string
-type commandHExpireP struct{ Pipeliner }
+type commandHExpireP struct{ p Pipeliner }
 
 func (commandHExpire) String() string                { return "HEXPIRE" }
 func (commandHExpire) Class() string                 { return "Hash" }
@@ -1590,13 +1580,13 @@ func (commandHExpire) WarnVersion() string           { return "0.0.0" }
 func (commandHExpire) Warning() string               { return "" }
 func (commandHExpire) P(p Pipeliner) commandHExpireP { return commandHExpireP{p} }
 func (b commandHExpireP) Cmd(key string, seconds time.Duration, fields ...string) {
-	b.Pipeliner.Cmd(b.builder().HExpireCompleted(key, seconds, fields...))
+	b.p.Cmd(b.p.builder().HExpireCompleted(key, seconds, fields...))
 }
 
 var CommandHExpireNX commandHExpireNX
 
 type commandHExpireNX string
-type commandHExpireNXP struct{ Pipeliner }
+type commandHExpireNXP struct{ p Pipeliner }
 
 func (commandHExpireNX) String() string                  { return "HEXPIRE NX" }
 func (commandHExpireNX) Class() string                   { return "Hash" }
@@ -1606,13 +1596,13 @@ func (commandHExpireNX) WarnVersion() string             { return "0.0.0" }
 func (commandHExpireNX) Warning() string                 { return "" }
 func (commandHExpireNX) P(p Pipeliner) commandHExpireNXP { return commandHExpireNXP{p} }
 func (b commandHExpireNXP) Cmd(key string, seconds time.Duration, fields ...string) {
-	b.Pipeliner.Cmd(b.builder().HExpireNXCompleted(key, seconds, fields...))
+	b.p.Cmd(b.p.builder().HExpireNXCompleted(key, seconds, fields...))
 }
 
 var CommandHExpireXX commandHExpireXX
 
 type commandHExpireXX string
-type commandHExpireXXP struct{ Pipeliner }
+type commandHExpireXXP struct{ p Pipeliner }
 
 func (commandHExpireXX) String() string                  { return "HEXPIRE XX" }
 func (commandHExpireXX) Class() string                   { return "Hash" }
@@ -1622,13 +1612,13 @@ func (commandHExpireXX) WarnVersion() string             { return "0.0.0" }
 func (commandHExpireXX) Warning() string                 { return "" }
 func (commandHExpireXX) P(p Pipeliner) commandHExpireXXP { return commandHExpireXXP{p} }
 func (b commandHExpireXXP) Cmd(key string, seconds time.Duration, fields ...string) {
-	b.Pipeliner.Cmd(b.builder().HExpireXXCompleted(key, seconds, fields...))
+	b.p.Cmd(b.p.builder().HExpireXXCompleted(key, seconds, fields...))
 }
 
 var CommandHExpireGT commandHExpireGT
 
 type commandHExpireGT string
-type commandHExpireGTP struct{ Pipeliner }
+type commandHExpireGTP struct{ p Pipeliner }
 
 func (commandHExpireGT) String() string                  { return "HEXPIRE GT" }
 func (commandHExpireGT) Class() string                   { return "Hash" }
@@ -1638,13 +1628,13 @@ func (commandHExpireGT) WarnVersion() string             { return "0.0.0" }
 func (commandHExpireGT) Warning() string                 { return "" }
 func (commandHExpireGT) P(p Pipeliner) commandHExpireGTP { return commandHExpireGTP{p} }
 func (b commandHExpireGTP) Cmd(key string, seconds time.Duration, fields ...string) {
-	b.Pipeliner.Cmd(b.builder().HExpireGTCompleted(key, seconds, fields...))
+	b.p.Cmd(b.p.builder().HExpireGTCompleted(key, seconds, fields...))
 }
 
 var CommandHExpireLT commandHExpireLT
 
 type commandHExpireLT string
-type commandHExpireLTP struct{ Pipeliner }
+type commandHExpireLTP struct{ p Pipeliner }
 
 func (commandHExpireLT) String() string                  { return "HEXPIRE LT" }
 func (commandHExpireLT) Class() string                   { return "Hash" }
@@ -1654,13 +1644,13 @@ func (commandHExpireLT) WarnVersion() string             { return "0.0.0" }
 func (commandHExpireLT) Warning() string                 { return "" }
 func (commandHExpireLT) P(p Pipeliner) commandHExpireLTP { return commandHExpireLTP{p} }
 func (b commandHExpireLTP) Cmd(key string, seconds time.Duration, fields ...string) {
-	b.Pipeliner.Cmd(b.builder().HExpireLTCompleted(key, seconds, fields...))
+	b.p.Cmd(b.p.builder().HExpireLTCompleted(key, seconds, fields...))
 }
 
 var CommandHExpireAt commandHExpireAt
 
 type commandHExpireAt string
-type commandHExpireAtP struct{ Pipeliner }
+type commandHExpireAtP struct{ p Pipeliner }
 
 func (commandHExpireAt) String() string                  { return "HEXPIREAT" }
 func (commandHExpireAt) Class() string                   { return "Hash" }
@@ -1670,13 +1660,13 @@ func (commandHExpireAt) WarnVersion() string             { return "0.0.0" }
 func (commandHExpireAt) Warning() string                 { return "" }
 func (commandHExpireAt) P(p Pipeliner) commandHExpireAtP { return commandHExpireAtP{p} }
 func (b commandHExpireAtP) Cmd(key string, tm time.Time, fields ...string) {
-	b.Pipeliner.Cmd(b.builder().HExpireAtCompleted(key, tm, fields...))
+	b.p.Cmd(b.p.builder().HExpireAtCompleted(key, tm, fields...))
 }
 
 var CommandHExpireAtNX commandHExpireAtNX
 
 type commandHExpireAtNX string
-type commandHExpireAtNXP struct{ Pipeliner }
+type commandHExpireAtNXP struct{ p Pipeliner }
 
 func (commandHExpireAtNX) String() string                    { return "HEXPIREAT NX" }
 func (commandHExpireAtNX) Class() string                     { return "Hash" }
@@ -1686,13 +1676,13 @@ func (commandHExpireAtNX) WarnVersion() string               { return "0.0.0" }
 func (commandHExpireAtNX) Warning() string                   { return "" }
 func (commandHExpireAtNX) P(p Pipeliner) commandHExpireAtNXP { return commandHExpireAtNXP{p} }
 func (b commandHExpireAtNXP) Cmd(key string, tm time.Time, fields ...string) {
-	b.Pipeliner.Cmd(b.builder().HExpireAtNXCompleted(key, tm, fields...))
+	b.p.Cmd(b.p.builder().HExpireAtNXCompleted(key, tm, fields...))
 }
 
 var CommandHExpireAtXX commandHExpireAtXX
 
 type commandHExpireAtXX string
-type commandHExpireAtXXP struct{ Pipeliner }
+type commandHExpireAtXXP struct{ p Pipeliner }
 
 func (commandHExpireAtXX) String() string                    { return "HEXPIREAT XX" }
 func (commandHExpireAtXX) Class() string                     { return "Hash" }
@@ -1702,13 +1692,13 @@ func (commandHExpireAtXX) WarnVersion() string               { return "0.0.0" }
 func (commandHExpireAtXX) Warning() string                   { return "" }
 func (commandHExpireAtXX) P(p Pipeliner) commandHExpireAtXXP { return commandHExpireAtXXP{p} }
 func (b commandHExpireAtXXP) Cmd(key string, tm time.Time, fields ...string) {
-	b.Pipeliner.Cmd(b.builder().HExpireAtXXCompleted(key, tm, fields...))
+	b.p.Cmd(b.p.builder().HExpireAtXXCompleted(key, tm, fields...))
 }
 
 var CommandHExpireAtGT commandHExpireAtGT
 
 type commandHExpireAtGT string
-type commandHExpireAtGTP struct{ Pipeliner }
+type commandHExpireAtGTP struct{ p Pipeliner }
 
 func (commandHExpireAtGT) String() string                    { return "HEXPIREAT GT" }
 func (commandHExpireAtGT) Class() string                     { return "Hash" }
@@ -1718,13 +1708,13 @@ func (commandHExpireAtGT) WarnVersion() string               { return "0.0.0" }
 func (commandHExpireAtGT) Warning() string                   { return "" }
 func (commandHExpireAtGT) P(p Pipeliner) commandHExpireAtGTP { return commandHExpireAtGTP{p} }
 func (b commandHExpireAtGTP) Cmd(key string, tm time.Time, fields ...string) {
-	b.Pipeliner.Cmd(b.builder().HExpireAtGTCompleted(key, tm, fields...))
+	b.p.Cmd(b.p.builder().HExpireAtGTCompleted(key, tm, fields...))
 }
 
 var CommandHExpireAtLT commandHExpireAtLT
 
 type commandHExpireAtLT string
-type commandHExpireAtLTP struct{ Pipeliner }
+type commandHExpireAtLTP struct{ p Pipeliner }
 
 func (commandHExpireAtLT) String() string                    { return "HEXPIREAT LT" }
 func (commandHExpireAtLT) Class() string                     { return "Hash" }
@@ -1734,13 +1724,13 @@ func (commandHExpireAtLT) WarnVersion() string               { return "0.0.0" }
 func (commandHExpireAtLT) Warning() string                   { return "" }
 func (commandHExpireAtLT) P(p Pipeliner) commandHExpireAtLTP { return commandHExpireAtLTP{p} }
 func (b commandHExpireAtLTP) Cmd(key string, tm time.Time, fields ...string) {
-	b.Pipeliner.Cmd(b.builder().HExpireAtLTCompleted(key, tm, fields...))
+	b.p.Cmd(b.p.builder().HExpireAtLTCompleted(key, tm, fields...))
 }
 
 var CommandHExpireTime commandHExpireTime
 
 type commandHExpireTime string
-type commandHExpireTimeP struct{ Pipeliner }
+type commandHExpireTimeP struct{ p Pipeliner }
 
 func (commandHExpireTime) String() string                    { return "HEXPIRETIME" }
 func (commandHExpireTime) Class() string                     { return "Hash" }
@@ -1750,13 +1740,13 @@ func (commandHExpireTime) WarnVersion() string               { return "0.0.0" }
 func (commandHExpireTime) Warning() string                   { return "" }
 func (commandHExpireTime) P(p Pipeliner) commandHExpireTimeP { return commandHExpireTimeP{p} }
 func (b commandHExpireTimeP) Cmd(key string, fields ...string) {
-	b.Pipeliner.Cmd(b.builder().HExpireTimeCompleted(key, fields...))
+	b.p.Cmd(b.p.builder().HExpireTimeCompleted(key, fields...))
 }
 
 var CommandHGet commandHGet
 
 type commandHGet string
-type commandHGetP struct{ Pipeliner }
+type commandHGetP struct{ p Pipeliner }
 
 func (commandHGet) String() string             { return "HGET" }
 func (commandHGet) Class() string              { return "Hash" }
@@ -1765,12 +1755,12 @@ func (commandHGet) Forbid() bool               { return false }
 func (commandHGet) WarnVersion() string        { return "0.0.0" }
 func (commandHGet) Warning() string            { return "" }
 func (commandHGet) P(p Pipeliner) commandHGetP { return commandHGetP{p} }
-func (b commandHGetP) Cmd(key, field string)   { b.Pipeliner.Cmd(b.builder().HGetCompleted(key, field)) }
+func (b commandHGetP) Cmd(key, field string)   { b.p.Cmd(b.p.builder().HGetCompleted(key, field)) }
 
 var CommandHGetAll commandHGetAll
 
 type commandHGetAll string
-type commandHGetAllP struct{ Pipeliner }
+type commandHGetAllP struct{ p Pipeliner }
 
 func (commandHGetAll) String() string                { return "HGETALL" }
 func (commandHGetAll) Class() string                 { return "Hash" }
@@ -1779,12 +1769,12 @@ func (commandHGetAll) Forbid() bool                  { return false }
 func (commandHGetAll) WarnVersion() string           { return "0.0.0" }
 func (commandHGetAll) Warning() string               { return "" }
 func (commandHGetAll) P(p Pipeliner) commandHGetAllP { return commandHGetAllP{p} }
-func (b commandHGetAllP) Cmd(key string)             { b.Pipeliner.Cmd(b.builder().HGetAllCompleted(key)) }
+func (b commandHGetAllP) Cmd(key string)             { b.p.Cmd(b.p.builder().HGetAllCompleted(key)) }
 
 var CommandHIncrBy commandHIncrBy
 
 type commandHIncrBy string
-type commandHIncrByP struct{ Pipeliner }
+type commandHIncrByP struct{ p Pipeliner }
 
 func (commandHIncrBy) String() string                { return "HINCRBY" }
 func (commandHIncrBy) Class() string                 { return "Hash" }
@@ -1794,13 +1784,13 @@ func (commandHIncrBy) WarnVersion() string           { return "0.0.0" }
 func (commandHIncrBy) Warning() string               { return "" }
 func (commandHIncrBy) P(p Pipeliner) commandHIncrByP { return commandHIncrByP{p} }
 func (b commandHIncrByP) Cmd(key, field string, incr int64) {
-	b.Pipeliner.Cmd(b.builder().HIncrByCompleted(key, field, incr))
+	b.p.Cmd(b.p.builder().HIncrByCompleted(key, field, incr))
 }
 
 var CommandHIncrByFloat commandHIncrByFloat
 
 type commandHIncrByFloat string
-type commandHIncrByFloatP struct{ Pipeliner }
+type commandHIncrByFloatP struct{ p Pipeliner }
 
 func (commandHIncrByFloat) String() string                     { return "HINCRBYFLOAT" }
 func (commandHIncrByFloat) Class() string                      { return "Hash" }
@@ -1810,13 +1800,13 @@ func (commandHIncrByFloat) WarnVersion() string                { return "0.0.0" 
 func (commandHIncrByFloat) Warning() string                    { return "" }
 func (commandHIncrByFloat) P(p Pipeliner) commandHIncrByFloatP { return commandHIncrByFloatP{p} }
 func (b commandHIncrByFloatP) Cmd(key, field string, incr float64) {
-	b.Pipeliner.Cmd(b.builder().HIncrByFloatCompleted(key, field, incr))
+	b.p.Cmd(b.p.builder().HIncrByFloatCompleted(key, field, incr))
 }
 
 var CommandHKeys commandHKeys
 
 type commandHKeys string
-type commandHKeysP struct{ Pipeliner }
+type commandHKeysP struct{ p Pipeliner }
 
 func (commandHKeys) String() string              { return "HKEYS" }
 func (commandHKeys) Class() string               { return "Hash" }
@@ -1825,12 +1815,12 @@ func (commandHKeys) Forbid() bool                { return false }
 func (commandHKeys) WarnVersion() string         { return "0.0.0" }
 func (commandHKeys) Warning() string             { return "" }
 func (commandHKeys) P(p Pipeliner) commandHKeysP { return commandHKeysP{p} }
-func (b commandHKeysP) Cmd(key string)           { b.Pipeliner.Cmd(b.builder().HKeysCompleted(key)) }
+func (b commandHKeysP) Cmd(key string)           { b.p.Cmd(b.p.builder().HKeysCompleted(key)) }
 
 var CommandHLen commandHLen
 
 type commandHLen string
-type commandHLenP struct{ Pipeliner }
+type commandHLenP struct{ p Pipeliner }
 
 func (commandHLen) String() string             { return "HLEN" }
 func (commandHLen) Class() string              { return "Hash" }
@@ -1839,12 +1829,12 @@ func (commandHLen) Forbid() bool               { return false }
 func (commandHLen) WarnVersion() string        { return "0.0.0" }
 func (commandHLen) Warning() string            { return "" }
 func (commandHLen) P(p Pipeliner) commandHLenP { return commandHLenP{p} }
-func (b commandHLenP) Cmd(key string)          { b.Pipeliner.Cmd(b.builder().HLenCompleted(key)) }
+func (b commandHLenP) Cmd(key string)          { b.p.Cmd(b.p.builder().HLenCompleted(key)) }
 
 var CommandHMGet commandHMGet
 
 type commandHMGet string
-type commandHMGetP struct{ Pipeliner }
+type commandHMGetP struct{ p Pipeliner }
 
 func (commandHMGet) String() string              { return "HMGET" }
 func (commandHMGet) Class() string               { return "Hash" }
@@ -1854,13 +1844,13 @@ func (commandHMGet) WarnVersion() string         { return "0.0.0" }
 func (commandHMGet) Warning() string             { return "" }
 func (commandHMGet) P(p Pipeliner) commandHMGetP { return commandHMGetP{p} }
 func (b commandHMGetP) Cmd(key string, fields ...string) {
-	b.Pipeliner.Cmd(b.builder().HMGetCompleted(key, fields...))
+	b.p.Cmd(b.p.builder().HMGetCompleted(key, fields...))
 }
 
 var CommandHMSet commandHMSet
 
 type commandHMSet string
-type commandHMSetP struct{ Pipeliner }
+type commandHMSetP struct{ p Pipeliner }
 
 func (commandHMSet) String() string              { return "HMSET" }
 func (commandHMSet) Class() string               { return "Hash" }
@@ -1870,13 +1860,13 @@ func (commandHMSet) WarnVersion() string         { return "4.0.0" }
 func (commandHMSet) Warning() string             { return commandHMSetWarning }
 func (commandHMSet) P(p Pipeliner) commandHMSetP { return commandHMSetP{p} }
 func (b commandHMSetP) Cmd(key string, values ...any) {
-	b.Pipeliner.Cmd(b.builder().HMSetCompleted(key, values...))
+	b.p.Cmd(b.p.builder().HMSetCompleted(key, values...))
 }
 
 var CommandHPersist commandHPersist
 
 type commandHPersist string
-type commandHPersistP struct{ Pipeliner }
+type commandHPersistP struct{ p Pipeliner }
 
 func (commandHPersist) String() string                 { return "HPERSIST" }
 func (commandHPersist) Class() string                  { return "Hash" }
@@ -1886,13 +1876,13 @@ func (commandHPersist) WarnVersion() string            { return "0.0.0" }
 func (commandHPersist) Warning() string                { return "" }
 func (commandHPersist) P(p Pipeliner) commandHPersistP { return commandHPersistP{p} }
 func (b commandHPersistP) Cmd(key string, fields ...string) {
-	b.Pipeliner.Cmd(b.builder().HPersistCompleted(key, fields...))
+	b.p.Cmd(b.p.builder().HPersistCompleted(key, fields...))
 }
 
 var CommandHPExpire commandHPExpire
 
 type commandHPExpire string
-type commandHPExpireP struct{ Pipeliner }
+type commandHPExpireP struct{ p Pipeliner }
 
 func (commandHPExpire) String() string                 { return "HPEXPIRE" }
 func (commandHPExpire) Class() string                  { return "Hash" }
@@ -1902,13 +1892,13 @@ func (commandHPExpire) WarnVersion() string            { return "0.0.0" }
 func (commandHPExpire) Warning() string                { return "" }
 func (commandHPExpire) P(p Pipeliner) commandHPExpireP { return commandHPExpireP{p} }
 func (b commandHPExpireP) Cmd(key string, milliseconds time.Duration, fields ...string) {
-	b.Pipeliner.Cmd(b.builder().HPExpireCompleted(key, milliseconds, fields...))
+	b.p.Cmd(b.p.builder().HPExpireCompleted(key, milliseconds, fields...))
 }
 
 var CommandHPExpireNX commandHPExpireNX
 
 type commandHPExpireNX string
-type commandHPExpireNXP struct{ Pipeliner }
+type commandHPExpireNXP struct{ p Pipeliner }
 
 func (commandHPExpireNX) String() string                   { return "HPEXPIRE NX" }
 func (commandHPExpireNX) Class() string                    { return "Hash" }
@@ -1918,13 +1908,13 @@ func (commandHPExpireNX) WarnVersion() string              { return "0.0.0" }
 func (commandHPExpireNX) Warning() string                  { return "" }
 func (commandHPExpireNX) P(p Pipeliner) commandHPExpireNXP { return commandHPExpireNXP{p} }
 func (b commandHPExpireNXP) Cmd(key string, milliseconds time.Duration, fields ...string) {
-	b.Pipeliner.Cmd(b.builder().HPExpireNXCompleted(key, milliseconds, fields...))
+	b.p.Cmd(b.p.builder().HPExpireNXCompleted(key, milliseconds, fields...))
 }
 
 var CommandHPExpireXX commandHPExpireXX
 
 type commandHPExpireXX string
-type commandHPExpireXXP struct{ Pipeliner }
+type commandHPExpireXXP struct{ p Pipeliner }
 
 func (commandHPExpireXX) String() string                   { return "HPEXPIRE XX" }
 func (commandHPExpireXX) Class() string                    { return "Hash" }
@@ -1934,13 +1924,13 @@ func (commandHPExpireXX) WarnVersion() string              { return "0.0.0" }
 func (commandHPExpireXX) Warning() string                  { return "" }
 func (commandHPExpireXX) P(p Pipeliner) commandHPExpireXXP { return commandHPExpireXXP{p} }
 func (b commandHPExpireXXP) Cmd(key string, milliseconds time.Duration, fields ...string) {
-	b.Pipeliner.Cmd(b.builder().HPExpireXXCompleted(key, milliseconds, fields...))
+	b.p.Cmd(b.p.builder().HPExpireXXCompleted(key, milliseconds, fields...))
 }
 
 var CommandHPExpireGT commandHPExpireGT
 
 type commandHPExpireGT string
-type commandHPExpireGTP struct{ Pipeliner }
+type commandHPExpireGTP struct{ p Pipeliner }
 
 func (commandHPExpireGT) String() string                   { return "HPEXPIRE GT" }
 func (commandHPExpireGT) Class() string                    { return "Hash" }
@@ -1950,13 +1940,13 @@ func (commandHPExpireGT) WarnVersion() string              { return "0.0.0" }
 func (commandHPExpireGT) Warning() string                  { return "" }
 func (commandHPExpireGT) P(p Pipeliner) commandHPExpireGTP { return commandHPExpireGTP{p} }
 func (b commandHPExpireGTP) Cmd(key string, milliseconds time.Duration, fields ...string) {
-	b.Pipeliner.Cmd(b.builder().HPExpireGTCompleted(key, milliseconds, fields...))
+	b.p.Cmd(b.p.builder().HPExpireGTCompleted(key, milliseconds, fields...))
 }
 
 var CommandHPExpireLT commandHPExpireLT
 
 type commandHPExpireLT string
-type commandHPExpireLTP struct{ Pipeliner }
+type commandHPExpireLTP struct{ p Pipeliner }
 
 func (commandHPExpireLT) String() string                   { return "HPEXPIRE LT" }
 func (commandHPExpireLT) Class() string                    { return "Hash" }
@@ -1966,13 +1956,13 @@ func (commandHPExpireLT) WarnVersion() string              { return "0.0.0" }
 func (commandHPExpireLT) Warning() string                  { return "" }
 func (commandHPExpireLT) P(p Pipeliner) commandHPExpireLTP { return commandHPExpireLTP{p} }
 func (b commandHPExpireLTP) Cmd(key string, milliseconds time.Duration, fields ...string) {
-	b.Pipeliner.Cmd(b.builder().HPExpireLTCompleted(key, milliseconds, fields...))
+	b.p.Cmd(b.p.builder().HPExpireLTCompleted(key, milliseconds, fields...))
 }
 
 var CommandHPExpireAt commandHPExpireAt
 
 type commandHPExpireAt string
-type commandHPExpireAtP struct{ Pipeliner }
+type commandHPExpireAtP struct{ p Pipeliner }
 
 func (commandHPExpireAt) String() string                   { return "HPEXPIREAT" }
 func (commandHPExpireAt) Class() string                    { return "Hash" }
@@ -1982,13 +1972,13 @@ func (commandHPExpireAt) WarnVersion() string              { return "0.0.0" }
 func (commandHPExpireAt) Warning() string                  { return "" }
 func (commandHPExpireAt) P(p Pipeliner) commandHPExpireAtP { return commandHPExpireAtP{p} }
 func (b commandHPExpireAtP) Cmd(key string, tm time.Time, fields ...string) {
-	b.Pipeliner.Cmd(b.builder().HPExpireAtCompleted(key, tm, fields...))
+	b.p.Cmd(b.p.builder().HPExpireAtCompleted(key, tm, fields...))
 }
 
 var CommandHPExpireAtNX commandHPExpireAtNX
 
 type commandHPExpireAtNX string
-type commandHPExpireAtNXP struct{ Pipeliner }
+type commandHPExpireAtNXP struct{ p Pipeliner }
 
 func (commandHPExpireAtNX) String() string                     { return "HPEXPIREAT NX" }
 func (commandHPExpireAtNX) Class() string                      { return "Hash" }
@@ -1998,13 +1988,13 @@ func (commandHPExpireAtNX) WarnVersion() string                { return "0.0.0" 
 func (commandHPExpireAtNX) Warning() string                    { return "" }
 func (commandHPExpireAtNX) P(p Pipeliner) commandHPExpireAtNXP { return commandHPExpireAtNXP{p} }
 func (b commandHPExpireAtNXP) Cmd(key string, tm time.Time, fields ...string) {
-	b.Pipeliner.Cmd(b.builder().HPExpireAtNXCompleted(key, tm, fields...))
+	b.p.Cmd(b.p.builder().HPExpireAtNXCompleted(key, tm, fields...))
 }
 
 var CommandHPExpireAtXX commandHPExpireAtXX
 
 type commandHPExpireAtXX string
-type commandHPExpireAtXXP struct{ Pipeliner }
+type commandHPExpireAtXXP struct{ p Pipeliner }
 
 func (commandHPExpireAtXX) String() string                     { return "HPEXPIREAT XX" }
 func (commandHPExpireAtXX) Class() string                      { return "Hash" }
@@ -2014,13 +2004,13 @@ func (commandHPExpireAtXX) WarnVersion() string                { return "0.0.0" 
 func (commandHPExpireAtXX) Warning() string                    { return "" }
 func (commandHPExpireAtXX) P(p Pipeliner) commandHPExpireAtXXP { return commandHPExpireAtXXP{p} }
 func (b commandHPExpireAtXXP) Cmd(key string, tm time.Time, fields ...string) {
-	b.Pipeliner.Cmd(b.builder().HPExpireAtXXCompleted(key, tm, fields...))
+	b.p.Cmd(b.p.builder().HPExpireAtXXCompleted(key, tm, fields...))
 }
 
 var CommandHPExpireAtGT commandHPExpireAtGT
 
 type commandHPExpireAtGT string
-type commandHPExpireAtGTP struct{ Pipeliner }
+type commandHPExpireAtGTP struct{ p Pipeliner }
 
 func (commandHPExpireAtGT) String() string                     { return "HPEXPIREAT GT" }
 func (commandHPExpireAtGT) Class() string                      { return "Hash" }
@@ -2030,13 +2020,13 @@ func (commandHPExpireAtGT) WarnVersion() string                { return "0.0.0" 
 func (commandHPExpireAtGT) Warning() string                    { return "" }
 func (commandHPExpireAtGT) P(p Pipeliner) commandHPExpireAtGTP { return commandHPExpireAtGTP{p} }
 func (b commandHPExpireAtGTP) Cmd(key string, tm time.Time, fields ...string) {
-	b.Pipeliner.Cmd(b.builder().HPExpireAtGTCompleted(key, tm, fields...))
+	b.p.Cmd(b.p.builder().HPExpireAtGTCompleted(key, tm, fields...))
 }
 
 var CommandHPExpireAtLT commandHPExpireAtLT
 
 type commandHPExpireAtLT string
-type commandHPExpireAtLTP struct{ Pipeliner }
+type commandHPExpireAtLTP struct{ p Pipeliner }
 
 func (commandHPExpireAtLT) String() string                     { return "HPEXPIREAT LT" }
 func (commandHPExpireAtLT) Class() string                      { return "Hash" }
@@ -2046,13 +2036,13 @@ func (commandHPExpireAtLT) WarnVersion() string                { return "0.0.0" 
 func (commandHPExpireAtLT) Warning() string                    { return "" }
 func (commandHPExpireAtLT) P(p Pipeliner) commandHPExpireAtLTP { return commandHPExpireAtLTP{p} }
 func (b commandHPExpireAtLTP) Cmd(key string, tm time.Time, fields ...string) {
-	b.Pipeliner.Cmd(b.builder().HPExpireAtLTCompleted(key, tm, fields...))
+	b.p.Cmd(b.p.builder().HPExpireAtLTCompleted(key, tm, fields...))
 }
 
 var CommandHPExpireTime commandHPExpireTime
 
 type commandHPExpireTime string
-type commandHPExpireTimeP struct{ Pipeliner }
+type commandHPExpireTimeP struct{ p Pipeliner }
 
 func (commandHPExpireTime) String() string                     { return "HPEXPIRETIME" }
 func (commandHPExpireTime) Class() string                      { return "Hash" }
@@ -2062,13 +2052,13 @@ func (commandHPExpireTime) WarnVersion() string                { return "0.0.0" 
 func (commandHPExpireTime) Warning() string                    { return "" }
 func (commandHPExpireTime) P(p Pipeliner) commandHPExpireTimeP { return commandHPExpireTimeP{p} }
 func (b commandHPExpireTimeP) Cmd(key string, fields ...string) {
-	b.Pipeliner.Cmd(b.builder().HPExpireTimeCompleted(key, fields...))
+	b.p.Cmd(b.p.builder().HPExpireTimeCompleted(key, fields...))
 }
 
 var CommandHTTL commandHTTL
 
 type commandHTTL string
-type commandHTTLP struct{ Pipeliner }
+type commandHTTLP struct{ p Pipeliner }
 
 func (commandHTTL) String() string             { return "HTTL" }
 func (commandHTTL) Class() string              { return "Hash" }
@@ -2078,13 +2068,13 @@ func (commandHTTL) WarnVersion() string        { return "0.0.0" }
 func (commandHTTL) Warning() string            { return "" }
 func (commandHTTL) P(p Pipeliner) commandHTTLP { return commandHTTLP{p} }
 func (b commandHTTLP) Cmd(key string, fields ...string) {
-	b.Pipeliner.Cmd(b.builder().HTTLCompleted(key, fields...))
+	b.p.Cmd(b.p.builder().HTTLCompleted(key, fields...))
 }
 
 var CommandHPTTL commandHPTTL
 
 type commandHPTTL string
-type commandHPTTLP struct{ Pipeliner }
+type commandHPTTLP struct{ p Pipeliner }
 
 func (commandHPTTL) String() string              { return "HPTTL" }
 func (commandHPTTL) Class() string               { return "Hash" }
@@ -2094,13 +2084,13 @@ func (commandHPTTL) WarnVersion() string         { return "0.0.0" }
 func (commandHPTTL) Warning() string             { return "" }
 func (commandHPTTL) P(p Pipeliner) commandHPTTLP { return commandHPTTLP{p} }
 func (b commandHPTTLP) Cmd(key string, fields ...string) {
-	b.Pipeliner.Cmd(b.builder().HPTTLCompleted(key, fields...))
+	b.p.Cmd(b.p.builder().HPTTLCompleted(key, fields...))
 }
 
 var CommandHRandField commandHRandField
 
 type commandHRandField string
-type commandHRandFieldP struct{ Pipeliner }
+type commandHRandFieldP struct{ p Pipeliner }
 
 func (commandHRandField) String() string                   { return "HRANDFIELD" }
 func (commandHRandField) Class() string                    { return "Hash" }
@@ -2110,13 +2100,13 @@ func (commandHRandField) WarnVersion() string              { return "0.0.0" }
 func (commandHRandField) Warning() string                  { return "" }
 func (commandHRandField) P(p Pipeliner) commandHRandFieldP { return commandHRandFieldP{p} }
 func (b commandHRandFieldP) Cmd(key string, count int64) {
-	b.Pipeliner.Cmd(b.builder().HRandFieldCompleted(key, count))
+	b.p.Cmd(b.p.builder().HRandFieldCompleted(key, count))
 }
 
 var CommandHRandFieldWithValues commandHRandFieldWithValues
 
 type commandHRandFieldWithValues string
-type commandHRandFieldWithValuesP struct{ Pipeliner }
+type commandHRandFieldWithValuesP struct{ p Pipeliner }
 
 func (commandHRandFieldWithValues) String() string         { return "HRANDFIELD WITHVALUES" }
 func (commandHRandFieldWithValues) Class() string          { return "Hash" }
@@ -2128,13 +2118,13 @@ func (commandHRandFieldWithValues) P(p Pipeliner) commandHRandFieldWithValuesP {
 	return commandHRandFieldWithValuesP{p}
 }
 func (b commandHRandFieldWithValuesP) Cmd(key string, count int64) {
-	b.Pipeliner.Cmd(b.builder().HRandFieldWithValuesCompleted(key, count))
+	b.p.Cmd(b.p.builder().HRandFieldWithValuesCompleted(key, count))
 }
 
 var CommandHScan commandHScan
 
 type commandHScan string
-type commandHScanP struct{ Pipeliner }
+type commandHScanP struct{ p Pipeliner }
 
 func (commandHScan) String() string              { return "HSCAN" }
 func (commandHScan) Class() string               { return "Hash" }
@@ -2144,13 +2134,13 @@ func (commandHScan) WarnVersion() string         { return "0.0.0" }
 func (commandHScan) Warning() string             { return "" }
 func (commandHScan) P(p Pipeliner) commandHScanP { return commandHScanP{p} }
 func (b commandHScanP) Cmd(key string, cursor uint64, match string, count int64) {
-	b.Pipeliner.Cmd(b.builder().HScanCompleted(key, cursor, match, count))
+	b.p.Cmd(b.p.builder().HScanCompleted(key, cursor, match, count))
 }
 
 var CommandHSet commandHSet
 
 type commandHSet string
-type commandHSetP struct{ Pipeliner }
+type commandHSetP struct{ p Pipeliner }
 
 func (commandHSet) String() string             { return "HSET" }
 func (commandHSet) Class() string              { return "Hash" }
@@ -2160,13 +2150,13 @@ func (commandHSet) WarnVersion() string        { return "0.0.0" }
 func (commandHSet) Warning() string            { return "" }
 func (commandHSet) P(p Pipeliner) commandHSetP { return commandHSetP{p} }
 func (b commandHSetP) Cmd(key, field string, value any) {
-	b.Pipeliner.Cmd(b.builder().HSetCompleted(key, field, value))
+	b.p.Cmd(b.p.builder().HSetCompleted(key, field, value))
 }
 
 var CommandHMSetX commandHMSetX
 
 type commandHMSetX string
-type commandHMSetXP struct{ Pipeliner }
+type commandHMSetXP struct{ p Pipeliner }
 
 func (commandHMSetX) String() string               { return "HSET" }
 func (commandHMSetX) Class() string                { return "Hash" }
@@ -2176,13 +2166,13 @@ func (commandHMSetX) WarnVersion() string          { return "0.0.0" }
 func (commandHMSetX) Warning() string              { return "" }
 func (commandHMSetX) P(p Pipeliner) commandHMSetXP { return commandHMSetXP{p} }
 func (b commandHMSetXP) Cmd(key string, values ...any) {
-	b.Pipeliner.Cmd(b.builder().HMSetXCompleted(key, values...))
+	b.p.Cmd(b.p.builder().HMSetXCompleted(key, values...))
 }
 
 var CommandHSetNX commandHSetNX
 
 type commandHSetNX string
-type commandHSetNXP struct{ Pipeliner }
+type commandHSetNXP struct{ p Pipeliner }
 
 func (commandHSetNX) String() string               { return "HSETNX" }
 func (commandHSetNX) Class() string                { return "Hash" }
@@ -2192,13 +2182,13 @@ func (commandHSetNX) WarnVersion() string          { return "0.0.0" }
 func (commandHSetNX) Warning() string              { return "" }
 func (commandHSetNX) P(p Pipeliner) commandHSetNXP { return commandHSetNXP{p} }
 func (b commandHSetNXP) Cmd(key, field string, value any) {
-	b.Pipeliner.Cmd(b.builder().HSetNXCompleted(key, field, value))
+	b.p.Cmd(b.p.builder().HSetNXCompleted(key, field, value))
 }
 
 var CommandHVals commandHVals
 
 type commandHVals string
-type commandHValsP struct{ Pipeliner }
+type commandHValsP struct{ p Pipeliner }
 
 func (commandHVals) String() string              { return "HVALS" }
 func (commandHVals) Class() string               { return "Hash" }
@@ -2207,12 +2197,12 @@ func (commandHVals) Forbid() bool                { return false }
 func (commandHVals) WarnVersion() string         { return "0.0.0" }
 func (commandHVals) Warning() string             { return "" }
 func (commandHVals) P(p Pipeliner) commandHValsP { return commandHValsP{p} }
-func (b commandHValsP) Cmd(key string)           { b.Pipeliner.Cmd(b.builder().HValsCompleted(key)) }
+func (b commandHValsP) Cmd(key string)           { b.p.Cmd(b.p.builder().HValsCompleted(key)) }
 
 var CommandHStrLen commandHStrLen
 
 type commandHStrLen string
-type commandHStrLenP struct{ Pipeliner }
+type commandHStrLenP struct{ p Pipeliner }
 
 func (commandHStrLen) String() string                { return "HSTRLEN" }
 func (commandHStrLen) Class() string                 { return "Hash" }
@@ -2221,14 +2211,12 @@ func (commandHStrLen) Forbid() bool                  { return false }
 func (commandHStrLen) WarnVersion() string           { return "0.0.0" }
 func (commandHStrLen) Warning() string               { return "" }
 func (commandHStrLen) P(p Pipeliner) commandHStrLenP { return commandHStrLenP{p} }
-func (b commandHStrLenP) Cmd(key, field string) {
-	b.Pipeliner.Cmd(b.builder().HStrLenCompleted(key, field))
-}
+func (b commandHStrLenP) Cmd(key, field string)      { b.p.Cmd(b.p.builder().HStrLenCompleted(key, field)) }
 
 var CommandPFAdd commandPFAdd
 
 type commandPFAdd string
-type commandPFAddP struct{ Pipeliner }
+type commandPFAddP struct{ p Pipeliner }
 
 func (commandPFAdd) String() string              { return "PFADD" }
 func (commandPFAdd) Class() string               { return "HyperLog" }
@@ -2238,13 +2226,13 @@ func (commandPFAdd) WarnVersion() string         { return "0.0.0" }
 func (commandPFAdd) Warning() string             { return "" }
 func (commandPFAdd) P(p Pipeliner) commandPFAddP { return commandPFAddP{p} }
 func (b commandPFAddP) Cmd(key string, els ...any) {
-	b.Pipeliner.Cmd(b.builder().PFAddCompleted(key, els...))
+	b.p.Cmd(b.p.builder().PFAddCompleted(key, els...))
 }
 
 var CommandPFCount commandPFCount
 
 type commandPFCount string
-type commandPFCountP struct{ Pipeliner }
+type commandPFCountP struct{ p Pipeliner }
 
 func (commandPFCount) String() string                { return "PFCOUNT" }
 func (commandPFCount) Class() string                 { return "HyperLog" }
@@ -2253,12 +2241,12 @@ func (commandPFCount) Forbid() bool                  { return false }
 func (commandPFCount) WarnVersion() string           { return "0.0.0" }
 func (commandPFCount) Warning() string               { return "" }
 func (commandPFCount) P(p Pipeliner) commandPFCountP { return commandPFCountP{p} }
-func (b commandPFCountP) Cmd(keys ...string)         { b.Pipeliner.Cmd(b.builder().PFCountCompleted(keys...)) }
+func (b commandPFCountP) Cmd(keys ...string)         { b.p.Cmd(b.p.builder().PFCountCompleted(keys...)) }
 
 var CommandPFMerge commandPFMerge
 
 type commandPFMerge string
-type commandPFMergeP struct{ Pipeliner }
+type commandPFMergeP struct{ p Pipeliner }
 
 func (commandPFMerge) String() string                { return "PFMERGE" }
 func (commandPFMerge) Class() string                 { return "HyperLog" }
@@ -2268,7 +2256,7 @@ func (commandPFMerge) WarnVersion() string           { return "0.0.0" }
 func (commandPFMerge) Warning() string               { return "" }
 func (commandPFMerge) P(p Pipeliner) commandPFMergeP { return commandPFMergeP{p} }
 func (b commandPFMergeP) Cmd(dest string, keys ...string) {
-	b.Pipeliner.Cmd(b.builder().PFMergeCompleted(dest, keys...))
+	b.p.Cmd(b.p.builder().PFMergeCompleted(dest, keys...))
 }
 
 var CommandBLMove commandBLMove
@@ -2329,7 +2317,7 @@ func (commandBRPopLPush) Warning() string        { return "" }
 var CommandLIndex commandLIndex
 
 type commandLIndex string
-type commandLIndexP struct{ Pipeliner }
+type commandLIndexP struct{ p Pipeliner }
 
 func (commandLIndex) String() string               { return "LINDEX" }
 func (commandLIndex) Class() string                { return "List" }
@@ -2339,13 +2327,13 @@ func (commandLIndex) WarnVersion() string          { return "0.0.0" }
 func (commandLIndex) Warning() string              { return "" }
 func (commandLIndex) P(p Pipeliner) commandLIndexP { return commandLIndexP{p} }
 func (b commandLIndexP) Cmd(key string, index int64) {
-	b.Pipeliner.Cmd(b.builder().LIndexCompleted(key, index))
+	b.p.Cmd(b.p.builder().LIndexCompleted(key, index))
 }
 
 var CommandLInsert commandLInsert
 
 type commandLInsert string
-type commandLInsertP struct{ Pipeliner }
+type commandLInsertP struct{ p Pipeliner }
 
 func (commandLInsert) String() string                { return "LINSERT" }
 func (commandLInsert) Class() string                 { return "List" }
@@ -2355,13 +2343,13 @@ func (commandLInsert) WarnVersion() string           { return "0.0.0" }
 func (commandLInsert) Warning() string               { return "" }
 func (commandLInsert) P(p Pipeliner) commandLInsertP { return commandLInsertP{p} }
 func (b commandLInsertP) Cmd(key, op string, pivot, element any) {
-	b.Pipeliner.Cmd(b.builder().LInsertCompleted(key, op, pivot, element))
+	b.p.Cmd(b.p.builder().LInsertCompleted(key, op, pivot, element))
 }
 
 var CommandLInsertBefore commandLInsertBefore
 
 type commandLInsertBefore string
-type commandLInsertBeforeP struct{ Pipeliner }
+type commandLInsertBeforeP struct{ p Pipeliner }
 
 func (commandLInsertBefore) String() string                      { return "LINSERT BEFORE" }
 func (commandLInsertBefore) Class() string                       { return "List" }
@@ -2371,13 +2359,13 @@ func (commandLInsertBefore) WarnVersion() string                 { return "0.0.0
 func (commandLInsertBefore) Warning() string                     { return "" }
 func (commandLInsertBefore) P(p Pipeliner) commandLInsertBeforeP { return commandLInsertBeforeP{p} }
 func (b commandLInsertBeforeP) Cmd(key string, pivot, element any) {
-	b.Pipeliner.Cmd(b.builder().LInsertBeforeCompleted(key, pivot, element))
+	b.p.Cmd(b.p.builder().LInsertBeforeCompleted(key, pivot, element))
 }
 
 var CommandLInsertAfter commandLInsertAfter
 
 type commandLInsertAfter string
-type commandLInsertAfterP struct{ Pipeliner }
+type commandLInsertAfterP struct{ p Pipeliner }
 
 func (commandLInsertAfter) String() string                     { return "LINSERT AFTER" }
 func (commandLInsertAfter) Class() string                      { return "List" }
@@ -2387,13 +2375,13 @@ func (commandLInsertAfter) WarnVersion() string                { return "0.0.0" 
 func (commandLInsertAfter) Warning() string                    { return "" }
 func (commandLInsertAfter) P(p Pipeliner) commandLInsertAfterP { return commandLInsertAfterP{p} }
 func (b commandLInsertAfterP) Cmd(key string, pivot, element any) {
-	b.Pipeliner.Cmd(b.builder().LInsertAfterCompleted(key, pivot, element))
+	b.p.Cmd(b.p.builder().LInsertAfterCompleted(key, pivot, element))
 }
 
 var CommandLLen commandLLen
 
 type commandLLen string
-type commandLLenP struct{ Pipeliner }
+type commandLLenP struct{ p Pipeliner }
 
 func (commandLLen) String() string             { return "LLEN" }
 func (commandLLen) Class() string              { return "List" }
@@ -2402,12 +2390,12 @@ func (commandLLen) Forbid() bool               { return false }
 func (commandLLen) WarnVersion() string        { return "0.0.0" }
 func (commandLLen) Warning() string            { return "" }
 func (commandLLen) P(p Pipeliner) commandLLenP { return commandLLenP{p} }
-func (b commandLLenP) Cmd(key string)          { b.Pipeliner.Cmd(b.builder().LLenCompleted(key)) }
+func (b commandLLenP) Cmd(key string)          { b.p.Cmd(b.p.builder().LLenCompleted(key)) }
 
 var CommandLMove commandLMove
 
 type commandLMove string
-type commandLMoveP struct{ Pipeliner }
+type commandLMoveP struct{ p Pipeliner }
 
 func (commandLMove) String() string              { return "LMOVE" }
 func (commandLMove) Class() string               { return "List" }
@@ -2417,13 +2405,13 @@ func (commandLMove) WarnVersion() string         { return "0.0.0" }
 func (commandLMove) Warning() string             { return "" }
 func (commandLMove) P(p Pipeliner) commandLMoveP { return commandLMoveP{p} }
 func (b commandLMoveP) Cmd(source, destination, srcpos, destpos string) {
-	b.Pipeliner.Cmd(b.builder().LMoveCompleted(source, destination, srcpos, destpos))
+	b.p.Cmd(b.p.builder().LMoveCompleted(source, destination, srcpos, destpos))
 }
 
 var CommandLPop commandLPop
 
 type commandLPop string
-type commandLPopP struct{ Pipeliner }
+type commandLPopP struct{ p Pipeliner }
 
 func (commandLPop) String() string             { return "LPOP" }
 func (commandLPop) Class() string              { return "List" }
@@ -2432,12 +2420,12 @@ func (commandLPop) Forbid() bool               { return false }
 func (commandLPop) WarnVersion() string        { return "0.0.0" }
 func (commandLPop) Warning() string            { return "" }
 func (commandLPop) P(p Pipeliner) commandLPopP { return commandLPopP{p} }
-func (b commandLPopP) Cmd(key string)          { b.Pipeliner.Cmd(b.builder().LPopCompleted(key)) }
+func (b commandLPopP) Cmd(key string)          { b.p.Cmd(b.p.builder().LPopCompleted(key)) }
 
 var CommandLPopCount commandLPopCount
 
 type commandLPopCount string
-type commandLPopCountP struct{ Pipeliner }
+type commandLPopCountP struct{ p Pipeliner }
 
 func (commandLPopCount) String() string                  { return "LPOP COUNT" }
 func (commandLPopCount) Class() string                   { return "List" }
@@ -2447,13 +2435,13 @@ func (commandLPopCount) WarnVersion() string             { return "0.0.0" }
 func (commandLPopCount) Warning() string                 { return "" }
 func (commandLPopCount) P(p Pipeliner) commandLPopCountP { return commandLPopCountP{p} }
 func (b commandLPopCountP) Cmd(key string, count int64) {
-	b.Pipeliner.Cmd(b.builder().LPopCountCompleted(key, count))
+	b.p.Cmd(b.p.builder().LPopCountCompleted(key, count))
 }
 
 var CommandLMPop commandLMPop
 
 type commandLMPop string
-type commandLMPopP struct{ Pipeliner }
+type commandLMPopP struct{ p Pipeliner }
 
 func (commandLMPop) String() string              { return "LMPOP" }
 func (commandLMPop) Class() string               { return "List" }
@@ -2463,13 +2451,13 @@ func (commandLMPop) WarnVersion() string         { return "0.0.0" }
 func (commandLMPop) Warning() string             { return "" }
 func (commandLMPop) P(p Pipeliner) commandLMPopP { return commandLMPopP{p} }
 func (b commandLMPopP) Cmd(direction string, count int64, keys ...string) {
-	b.Pipeliner.Cmd(b.builder().LMPopCompleted(direction, count, keys...))
+	b.p.Cmd(b.p.builder().LMPopCompleted(direction, count, keys...))
 }
 
 var CommandLPos commandLPos
 
 type commandLPos string
-type commandLPosP struct{ Pipeliner }
+type commandLPosP struct{ p Pipeliner }
 
 func (commandLPos) String() string             { return "LPOS" }
 func (commandLPos) Class() string              { return "List" }
@@ -2479,13 +2467,13 @@ func (commandLPos) WarnVersion() string        { return "0.0.0" }
 func (commandLPos) Warning() string            { return "" }
 func (commandLPos) P(p Pipeliner) commandLPosP { return commandLPosP{p} }
 func (b commandLPosP) Cmd(key string, element string, a LPosArgs) {
-	b.Pipeliner.Cmd(b.builder().LPosCompleted(key, element, a))
+	b.p.Cmd(b.p.builder().LPosCompleted(key, element, a))
 }
 
 var CommandLPosCount commandLPosCount
 
 type commandLPosCount string
-type commandLPosCountP struct{ Pipeliner }
+type commandLPosCountP struct{ p Pipeliner }
 
 func (commandLPosCount) String() string                  { return "LPOS COUNT" }
 func (commandLPosCount) Class() string                   { return "List" }
@@ -2495,13 +2483,13 @@ func (commandLPosCount) WarnVersion() string             { return "0.0.0" }
 func (commandLPosCount) Warning() string                 { return "" }
 func (commandLPosCount) P(p Pipeliner) commandLPosCountP { return commandLPosCountP{p} }
 func (b commandLPosCountP) Cmd(key string, element string, count int64, a LPosArgs) {
-	b.Pipeliner.Cmd(b.builder().LPosCountCompleted(key, element, count, a))
+	b.p.Cmd(b.p.builder().LPosCountCompleted(key, element, count, a))
 }
 
 var CommandLPush commandLPush
 
 type commandLPush string
-type commandLPushP struct{ Pipeliner }
+type commandLPushP struct{ p Pipeliner }
 
 func (commandLPush) String() string              { return "LPUSH" }
 func (commandLPush) Class() string               { return "List" }
@@ -2511,13 +2499,13 @@ func (commandLPush) WarnVersion() string         { return "0.0.0" }
 func (commandLPush) Warning() string             { return "" }
 func (commandLPush) P(p Pipeliner) commandLPushP { return commandLPushP{p} }
 func (b commandLPushP) Cmd(key string, element any) {
-	b.Pipeliner.Cmd(b.builder().LPushCompleted(key, element))
+	b.p.Cmd(b.p.builder().LPushCompleted(key, element))
 }
 
 var CommandLMPush commandLMPush
 
 type commandLMPush string
-type commandLMPushP struct{ Pipeliner }
+type commandLMPushP struct{ p Pipeliner }
 
 func (commandLMPush) String() string               { return "LPUSH" }
 func (commandLMPush) Class() string                { return "List" }
@@ -2527,13 +2515,13 @@ func (commandLMPush) WarnVersion() string          { return "0.0.0" }
 func (commandLMPush) Warning() string              { return "" }
 func (commandLMPush) P(p Pipeliner) commandLMPushP { return commandLMPushP{p} }
 func (b commandLMPushP) Cmd(key string, elements ...any) {
-	b.Pipeliner.Cmd(b.builder().LMPushCompleted(key, elements...))
+	b.p.Cmd(b.p.builder().LMPushCompleted(key, elements...))
 }
 
 var CommandLPushX commandLPushX
 
 type commandLPushX string
-type commandLPushXP struct{ Pipeliner }
+type commandLPushXP struct{ p Pipeliner }
 
 func (commandLPushX) String() string               { return "LPUSHX" }
 func (commandLPushX) Class() string                { return "List" }
@@ -2543,13 +2531,13 @@ func (commandLPushX) WarnVersion() string          { return "0.0.0" }
 func (commandLPushX) Warning() string              { return "" }
 func (commandLPushX) P(p Pipeliner) commandLPushXP { return commandLPushXP{p} }
 func (b commandLPushXP) Cmd(key string, element any) {
-	b.Pipeliner.Cmd(b.builder().LPushXCompleted(key, element))
+	b.p.Cmd(b.p.builder().LPushXCompleted(key, element))
 }
 
 var CommandLMPushX commandLMPushX
 
 type commandLMPushX string
-type commandLMPushXP struct{ Pipeliner }
+type commandLMPushXP struct{ p Pipeliner }
 
 func (commandLMPushX) String() string                { return "LPUSHX" }
 func (commandLMPushX) Class() string                 { return "List" }
@@ -2559,13 +2547,13 @@ func (commandLMPushX) WarnVersion() string           { return "0.0.0" }
 func (commandLMPushX) Warning() string               { return "" }
 func (commandLMPushX) P(p Pipeliner) commandLMPushXP { return commandLMPushXP{p} }
 func (b commandLMPushXP) Cmd(key string, elements ...any) {
-	b.Pipeliner.Cmd(b.builder().LMPushXCompleted(key, elements...))
+	b.p.Cmd(b.p.builder().LMPushXCompleted(key, elements...))
 }
 
 var CommandLRange commandLRange
 
 type commandLRange string
-type commandLRangeP struct{ Pipeliner }
+type commandLRangeP struct{ p Pipeliner }
 
 func (commandLRange) String() string               { return "LRANGE" }
 func (commandLRange) Class() string                { return "List" }
@@ -2575,13 +2563,13 @@ func (commandLRange) WarnVersion() string          { return "0.0.0" }
 func (commandLRange) Warning() string              { return "" }
 func (commandLRange) P(p Pipeliner) commandLRangeP { return commandLRangeP{p} }
 func (b commandLRangeP) Cmd(key string, start, stop int64) {
-	b.Pipeliner.Cmd(b.builder().LRangeCompleted(key, start, stop))
+	b.p.Cmd(b.p.builder().LRangeCompleted(key, start, stop))
 }
 
 var CommandLRem commandLRem
 
 type commandLRem string
-type commandLRemP struct{ Pipeliner }
+type commandLRemP struct{ p Pipeliner }
 
 func (commandLRem) String() string             { return "LREM" }
 func (commandLRem) Class() string              { return "List" }
@@ -2591,13 +2579,13 @@ func (commandLRem) WarnVersion() string        { return "0.0.0" }
 func (commandLRem) Warning() string            { return "" }
 func (commandLRem) P(p Pipeliner) commandLRemP { return commandLRemP{p} }
 func (b commandLRemP) Cmd(key string, count int64, element any) {
-	b.Pipeliner.Cmd(b.builder().LRemCompleted(key, count, element))
+	b.p.Cmd(b.p.builder().LRemCompleted(key, count, element))
 }
 
 var CommandLSet commandLSet
 
 type commandLSet string
-type commandLSetP struct{ Pipeliner }
+type commandLSetP struct{ p Pipeliner }
 
 func (commandLSet) String() string             { return "LSET" }
 func (commandLSet) Class() string              { return "List" }
@@ -2607,13 +2595,13 @@ func (commandLSet) WarnVersion() string        { return "0.0.0" }
 func (commandLSet) Warning() string            { return "" }
 func (commandLSet) P(p Pipeliner) commandLSetP { return commandLSetP{p} }
 func (b commandLSetP) Cmd(key string, index int64, element any) {
-	b.Pipeliner.Cmd(b.builder().LSetCompleted(key, index, element))
+	b.p.Cmd(b.p.builder().LSetCompleted(key, index, element))
 }
 
 var CommandLTrim commandLTrim
 
 type commandLTrim string
-type commandLTrimP struct{ Pipeliner }
+type commandLTrimP struct{ p Pipeliner }
 
 func (commandLTrim) String() string              { return "LTRIM" }
 func (commandLTrim) Class() string               { return "List" }
@@ -2623,13 +2611,13 @@ func (commandLTrim) WarnVersion() string         { return "0.0.0" }
 func (commandLTrim) Warning() string             { return "" }
 func (commandLTrim) P(p Pipeliner) commandLTrimP { return commandLTrimP{p} }
 func (b commandLTrimP) Cmd(key string, start, stop int64) {
-	b.Pipeliner.Cmd(b.builder().LTrimCompleted(key, start, stop))
+	b.p.Cmd(b.p.builder().LTrimCompleted(key, start, stop))
 }
 
 var CommandRPop commandRPop
 
 type commandRPop string
-type commandRPopP struct{ Pipeliner }
+type commandRPopP struct{ p Pipeliner }
 
 func (commandRPop) String() string             { return "RPOP" }
 func (commandRPop) Class() string              { return "List" }
@@ -2638,12 +2626,12 @@ func (commandRPop) Forbid() bool               { return false }
 func (commandRPop) WarnVersion() string        { return "0.0.0" }
 func (commandRPop) Warning() string            { return "" }
 func (commandRPop) P(p Pipeliner) commandRPopP { return commandRPopP{p} }
-func (b commandRPopP) Cmd(key string)          { b.Pipeliner.Cmd(b.builder().RPopCompleted(key)) }
+func (b commandRPopP) Cmd(key string)          { b.p.Cmd(b.p.builder().RPopCompleted(key)) }
 
 var CommandRPopCount commandRPopCount
 
 type commandRPopCount string
-type commandRPopCountP struct{ Pipeliner }
+type commandRPopCountP struct{ p Pipeliner }
 
 func (commandRPopCount) String() string                  { return "RPOP" }
 func (commandRPopCount) Class() string                   { return "List" }
@@ -2653,13 +2641,13 @@ func (commandRPopCount) WarnVersion() string             { return "0.0.0" }
 func (commandRPopCount) Warning() string                 { return "" }
 func (commandRPopCount) P(p Pipeliner) commandRPopCountP { return commandRPopCountP{p} }
 func (b commandRPopCountP) Cmd(key string, count int64) {
-	b.Pipeliner.Cmd(b.builder().RPopCountCompleted(key, count))
+	b.p.Cmd(b.p.builder().RPopCountCompleted(key, count))
 }
 
 var CommandRPopLPush commandRPopLPush
 
 type commandRPopLPush string
-type commandRPopLPushP struct{ Pipeliner }
+type commandRPopLPushP struct{ p Pipeliner }
 
 func (commandRPopLPush) String() string                  { return "RPOPLPUSH" }
 func (commandRPopLPush) Class() string                   { return "List" }
@@ -2669,13 +2657,13 @@ func (commandRPopLPush) WarnVersion() string             { return "6.2.0" }
 func (commandRPopLPush) Warning() string                 { return commandRPopLPushWarning }
 func (commandRPopLPush) P(p Pipeliner) commandRPopLPushP { return commandRPopLPushP{p} }
 func (b commandRPopLPushP) Cmd(source, destination string) {
-	b.Pipeliner.Cmd(b.builder().RPopLPushCompleted(source, destination))
+	b.p.Cmd(b.p.builder().RPopLPushCompleted(source, destination))
 }
 
 var CommandRPush commandRPush
 
 type commandRPush string
-type commandRPushP struct{ Pipeliner }
+type commandRPushP struct{ p Pipeliner }
 
 func (commandRPush) String() string              { return "RPUSH" }
 func (commandRPush) Class() string               { return "List" }
@@ -2685,13 +2673,13 @@ func (commandRPush) WarnVersion() string         { return "0.0.0" }
 func (commandRPush) Warning() string             { return "" }
 func (commandRPush) P(p Pipeliner) commandRPushP { return commandRPushP{p} }
 func (b commandRPushP) Cmd(key string, element any) {
-	b.Pipeliner.Cmd(b.builder().RPushCompleted(key, element))
+	b.p.Cmd(b.p.builder().RPushCompleted(key, element))
 }
 
 var CommandRMPush commandRMPush
 
 type commandRMPush string
-type commandRMPushP struct{ Pipeliner }
+type commandRMPushP struct{ p Pipeliner }
 
 func (commandRMPush) String() string               { return "RPUSH" }
 func (commandRMPush) Class() string                { return "List" }
@@ -2701,13 +2689,13 @@ func (commandRMPush) WarnVersion() string          { return "0.0.0" }
 func (commandRMPush) Warning() string              { return "" }
 func (commandRMPush) P(p Pipeliner) commandRMPushP { return commandRMPushP{p} }
 func (b commandRMPushP) Cmd(key string, elements ...any) {
-	b.Pipeliner.Cmd(b.builder().RMPushCompleted(key, elements...))
+	b.p.Cmd(b.p.builder().RMPushCompleted(key, elements...))
 }
 
 var CommandRPushX commandRPushX
 
 type commandRPushX string
-type commandRPushXP struct{ Pipeliner }
+type commandRPushXP struct{ p Pipeliner }
 
 func (commandRPushX) String() string               { return "RPUSHX" }
 func (commandRPushX) Class() string                { return "List" }
@@ -2717,13 +2705,13 @@ func (commandRPushX) WarnVersion() string          { return "0.0.0" }
 func (commandRPushX) Warning() string              { return "" }
 func (commandRPushX) P(p Pipeliner) commandRPushXP { return commandRPushXP{p} }
 func (b commandRPushXP) Cmd(key string, element any) {
-	b.Pipeliner.Cmd(b.builder().RPushXCompleted(key, element))
+	b.p.Cmd(b.p.builder().RPushXCompleted(key, element))
 }
 
 var CommandRMPushX commandRMPushX
 
 type commandRMPushX string
-type commandRMPushXP struct{ Pipeliner }
+type commandRMPushXP struct{ p Pipeliner }
 
 func (commandRMPushX) String() string                { return "RPUSHX" }
 func (commandRMPushX) Class() string                 { return "List" }
@@ -2733,7 +2721,7 @@ func (commandRMPushX) WarnVersion() string           { return "0.0.0" }
 func (commandRMPushX) Warning() string               { return "" }
 func (commandRMPushX) P(p Pipeliner) commandRMPushXP { return commandRMPushXP{p} }
 func (b commandRMPushXP) Cmd(key string, elements ...any) {
-	b.Pipeliner.Cmd(b.builder().RMPushXCompleted(key, elements...))
+	b.p.Cmd(b.p.builder().RMPushXCompleted(key, elements...))
 }
 
 var CommandPSubscribe commandPSubscribe
@@ -2750,7 +2738,7 @@ func (commandPSubscribe) Warning() string        { return "" }
 var CommandPublish commandPublish
 
 type commandPublish string
-type commandPublishP struct{ Pipeliner }
+type commandPublishP struct{ p Pipeliner }
 
 func (commandPublish) String() string                { return "PUBLISH" }
 func (commandPublish) Class() string                 { return "PubSub" }
@@ -2760,13 +2748,13 @@ func (commandPublish) WarnVersion() string           { return "0.0.0" }
 func (commandPublish) Warning() string               { return "" }
 func (commandPublish) P(p Pipeliner) commandPublishP { return commandPublishP{p} }
 func (b commandPublishP) Cmd(channel string, message any) {
-	b.Pipeliner.Cmd(b.builder().PublishCompleted(channel, message))
+	b.p.Cmd(b.p.builder().PublishCompleted(channel, message))
 }
 
 var CommandPubSubChannels commandPubSubChannels
 
 type commandPubSubChannels string
-type commandPubSubChannelsP struct{ Pipeliner }
+type commandPubSubChannelsP struct{ p Pipeliner }
 
 func (commandPubSubChannels) String() string                       { return "PUBSUB CHANNELS" }
 func (commandPubSubChannels) Class() string                        { return "PubSub" }
@@ -2776,13 +2764,13 @@ func (commandPubSubChannels) WarnVersion() string                  { return "0.0
 func (commandPubSubChannels) Warning() string                      { return "" }
 func (commandPubSubChannels) P(p Pipeliner) commandPubSubChannelsP { return commandPubSubChannelsP{p} }
 func (b commandPubSubChannelsP) Cmd(pattern string) {
-	b.Pipeliner.Cmd(b.builder().PubSubChannelsCompleted(pattern))
+	b.p.Cmd(b.p.builder().PubSubChannelsCompleted(pattern))
 }
 
 var CommandPubSubNumPat commandPubSubNumPat
 
 type commandPubSubNumPat string
-type commandPubSubNumPatP struct{ Pipeliner }
+type commandPubSubNumPatP struct{ p Pipeliner }
 
 func (commandPubSubNumPat) String() string                     { return "PUBSUB NUMPAT" }
 func (commandPubSubNumPat) Class() string                      { return "PubSub" }
@@ -2791,12 +2779,12 @@ func (commandPubSubNumPat) Forbid() bool                       { return false }
 func (commandPubSubNumPat) WarnVersion() string                { return "0.0.0" }
 func (commandPubSubNumPat) Warning() string                    { return "" }
 func (commandPubSubNumPat) P(p Pipeliner) commandPubSubNumPatP { return commandPubSubNumPatP{p} }
-func (b commandPubSubNumPatP) Cmd()                            { b.Pipeliner.Cmd(b.builder().PubSubNumPatCompleted()) }
+func (b commandPubSubNumPatP) Cmd()                            { b.p.Cmd(b.p.builder().PubSubNumPatCompleted()) }
 
 var CommandPubSubNumSub commandPubSubNumSub
 
 type commandPubSubNumSub string
-type commandPubSubNumSubP struct{ Pipeliner }
+type commandPubSubNumSubP struct{ p Pipeliner }
 
 func (commandPubSubNumSub) String() string                     { return "PUBSUB NUMSUB" }
 func (commandPubSubNumSub) Class() string                      { return "PubSub" }
@@ -2806,13 +2794,13 @@ func (commandPubSubNumSub) WarnVersion() string                { return "0.0.0" 
 func (commandPubSubNumSub) Warning() string                    { return "" }
 func (commandPubSubNumSub) P(p Pipeliner) commandPubSubNumSubP { return commandPubSubNumSubP{p} }
 func (b commandPubSubNumSubP) Cmd(channels ...string) {
-	b.Pipeliner.Cmd(b.builder().PubSubNumSubCompleted(channels...))
+	b.p.Cmd(b.p.builder().PubSubNumSubCompleted(channels...))
 }
 
 var CommandPubSubShardChannels commandPubSubShardChannels
 
 type commandPubSubShardChannels string
-type commandPubSubShardChannelsP struct{ Pipeliner }
+type commandPubSubShardChannelsP struct{ p Pipeliner }
 
 func (commandPubSubShardChannels) String() string         { return "PUBSUB SHARDCHANNELS" }
 func (commandPubSubShardChannels) Class() string          { return "PubSub" }
@@ -2824,13 +2812,13 @@ func (commandPubSubShardChannels) P(p Pipeliner) commandPubSubShardChannelsP {
 	return commandPubSubShardChannelsP{p}
 }
 func (b commandPubSubShardChannelsP) Cmd(pattern string) {
-	b.Pipeliner.Cmd(b.builder().PubSubShardChannelsCompleted(pattern))
+	b.p.Cmd(b.p.builder().PubSubShardChannelsCompleted(pattern))
 }
 
 var CommandPubSubShardNumSub commandPubSubShardNumSub
 
 type commandPubSubShardNumSub string
-type commandPubSubShardNumSubP struct{ Pipeliner }
+type commandPubSubShardNumSubP struct{ p Pipeliner }
 
 func (commandPubSubShardNumSub) String() string         { return "PUBSUB SHARDNUMSUB" }
 func (commandPubSubShardNumSub) Class() string          { return "PubSub" }
@@ -2842,13 +2830,13 @@ func (commandPubSubShardNumSub) P(p Pipeliner) commandPubSubShardNumSubP {
 	return commandPubSubShardNumSubP{p}
 }
 func (b commandPubSubShardNumSubP) Cmd(channels ...string) {
-	b.Pipeliner.Cmd(b.builder().PubSubShardNumSubCompleted(channels...))
+	b.p.Cmd(b.p.builder().PubSubShardNumSubCompleted(channels...))
 }
 
 var CommandSPublish commandSPublish
 
 type commandSPublish string
-type commandSPublishP struct{ Pipeliner }
+type commandSPublishP struct{ p Pipeliner }
 
 func (commandSPublish) String() string                 { return "SPUBLISH" }
 func (commandSPublish) Class() string                  { return "PubSub" }
@@ -2858,7 +2846,7 @@ func (commandSPublish) WarnVersion() string            { return "0.0.0" }
 func (commandSPublish) Warning() string                { return "" }
 func (commandSPublish) P(p Pipeliner) commandSPublishP { return commandSPublishP{p} }
 func (b commandSPublishP) Cmd(channel string, message any) {
-	b.Pipeliner.Cmd(b.builder().SPublishCompleted(channel, message))
+	b.p.Cmd(b.p.builder().SPublishCompleted(channel, message))
 }
 
 var CommandSubscribe commandSubscribe
@@ -2897,7 +2885,7 @@ func (commandPUnsubscribe) Warning() string        { return "" }
 var CommandEval commandEval
 
 type commandEval string
-type commandEvalP struct{ Pipeliner }
+type commandEvalP struct{ p Pipeliner }
 
 func (commandEval) String() string             { return "EVAL" }
 func (commandEval) Class() string              { return "Scripting" }
@@ -2907,13 +2895,13 @@ func (commandEval) WarnVersion() string        { return "0.0.0" }
 func (commandEval) Warning() string            { return "" }
 func (commandEval) P(p Pipeliner) commandEvalP { return commandEvalP{p} }
 func (b commandEvalP) Cmd(script string, keys []string, args ...any) {
-	b.Pipeliner.Cmd(b.builder().EvalCompleted(script, keys, args...))
+	b.p.Cmd(b.p.builder().EvalCompleted(script, keys, args...))
 }
 
 var CommandEvalRO commandEvalRO
 
 type commandEvalRO string
-type commandEvalROP struct{ Pipeliner }
+type commandEvalROP struct{ p Pipeliner }
 
 func (commandEvalRO) String() string               { return "EVAL_RO" }
 func (commandEvalRO) Class() string                { return "Scripting" }
@@ -2923,13 +2911,13 @@ func (commandEvalRO) WarnVersion() string          { return "0.0.0" }
 func (commandEvalRO) Warning() string              { return "" }
 func (commandEvalRO) P(p Pipeliner) commandEvalROP { return commandEvalROP{p} }
 func (b commandEvalROP) Cmd(script string, keys []string, args ...any) {
-	b.Pipeliner.Cmd(b.builder().EvalROCompleted(script, keys, args...))
+	b.p.Cmd(b.p.builder().EvalROCompleted(script, keys, args...))
 }
 
 var CommandEvalSha commandEvalSha
 
 type commandEvalSha string
-type commandEvalShaP struct{ Pipeliner }
+type commandEvalShaP struct{ p Pipeliner }
 
 func (commandEvalSha) String() string                { return "EVALSHA" }
 func (commandEvalSha) Class() string                 { return "Scripting" }
@@ -2939,13 +2927,13 @@ func (commandEvalSha) WarnVersion() string           { return "0.0.0" }
 func (commandEvalSha) Warning() string               { return "" }
 func (commandEvalSha) P(p Pipeliner) commandEvalShaP { return commandEvalShaP{p} }
 func (b commandEvalShaP) Cmd(sha1 string, keys []string, args ...any) {
-	b.Pipeliner.Cmd(b.builder().EvalShaCompleted(sha1, keys, args...))
+	b.p.Cmd(b.p.builder().EvalShaCompleted(sha1, keys, args...))
 }
 
 var CommandEvalShaRO commandEvalShaRO
 
 type commandEvalShaRO string
-type commandEvalShaROP struct{ Pipeliner }
+type commandEvalShaROP struct{ p Pipeliner }
 
 func (commandEvalShaRO) String() string                  { return "EVALSHA_RO" }
 func (commandEvalShaRO) Class() string                   { return "Scripting" }
@@ -2955,13 +2943,13 @@ func (commandEvalShaRO) WarnVersion() string             { return "0.0.0" }
 func (commandEvalShaRO) Warning() string                 { return "" }
 func (commandEvalShaRO) P(p Pipeliner) commandEvalShaROP { return commandEvalShaROP{p} }
 func (b commandEvalShaROP) Cmd(sha1 string, keys []string, args ...any) {
-	b.Pipeliner.Cmd(b.builder().EvalShaROCompleted(sha1, keys, args...))
+	b.p.Cmd(b.p.builder().EvalShaROCompleted(sha1, keys, args...))
 }
 
 var CommandFCall commandFCall
 
 type commandFCall string
-type commandFCallP struct{ Pipeliner }
+type commandFCallP struct{ p Pipeliner }
 
 func (commandFCall) String() string              { return "FCALL" }
 func (commandFCall) Class() string               { return "Scripting" }
@@ -2971,13 +2959,13 @@ func (commandFCall) WarnVersion() string         { return "0.0.0" }
 func (commandFCall) Warning() string             { return "" }
 func (commandFCall) P(p Pipeliner) commandFCallP { return commandFCallP{p} }
 func (b commandFCallP) Cmd(function string, keys []string, args ...any) {
-	b.Pipeliner.Cmd(b.builder().FCallCompleted(function, keys, args...))
+	b.p.Cmd(b.p.builder().FCallCompleted(function, keys, args...))
 }
 
 var CommandFCallRO commandFCallRO
 
 type commandFCallRO string
-type commandFCallROP struct{ Pipeliner }
+type commandFCallROP struct{ p Pipeliner }
 
 func (commandFCallRO) String() string                { return "FCALL_RO" }
 func (commandFCallRO) Class() string                 { return "Scripting" }
@@ -2987,7 +2975,7 @@ func (commandFCallRO) WarnVersion() string           { return "0.0.0" }
 func (commandFCallRO) Warning() string               { return "" }
 func (commandFCallRO) P(p Pipeliner) commandFCallROP { return commandFCallROP{p} }
 func (b commandFCallROP) Cmd(function string, keys []string, args ...any) {
-	b.Pipeliner.Cmd(b.builder().FCallROCompleted(function, keys, args...))
+	b.p.Cmd(b.p.builder().FCallROCompleted(function, keys, args...))
 }
 
 var CommandFunctionDelete commandFunctionDelete
@@ -3004,7 +2992,7 @@ func (commandFunctionDelete) Warning() string        { return "" }
 var CommandFunctionDump commandFunctionDump
 
 type commandFunctionDump string
-type commandFunctionDumpP struct{ Pipeliner }
+type commandFunctionDumpP struct{ p Pipeliner }
 
 func (commandFunctionDump) String() string                     { return "FUNCTION DUMP" }
 func (commandFunctionDump) Class() string                      { return "Scripting" }
@@ -3013,7 +3001,7 @@ func (commandFunctionDump) Forbid() bool                       { return false }
 func (commandFunctionDump) WarnVersion() string                { return "0.0.0" }
 func (commandFunctionDump) Warning() string                    { return "" }
 func (commandFunctionDump) P(p Pipeliner) commandFunctionDumpP { return commandFunctionDumpP{p} }
-func (b commandFunctionDumpP) Cmd()                            { b.Pipeliner.Cmd(b.builder().FunctionDumpCompleted()) }
+func (b commandFunctionDumpP) Cmd()                            { b.p.Cmd(b.p.builder().FunctionDumpCompleted()) }
 
 var CommandFunctionFlush commandFunctionFlush
 
@@ -3051,7 +3039,7 @@ func (commandFunctionKill) Warning() string        { return "" }
 var CommandFunctionList commandFunctionList
 
 type commandFunctionList string
-type commandFunctionListP struct{ Pipeliner }
+type commandFunctionListP struct{ p Pipeliner }
 
 func (commandFunctionList) String() string                     { return "FUNCTION LIST" }
 func (commandFunctionList) Class() string                      { return "Scripting" }
@@ -3061,7 +3049,7 @@ func (commandFunctionList) WarnVersion() string                { return "0.0.0" 
 func (commandFunctionList) Warning() string                    { return "" }
 func (commandFunctionList) P(p Pipeliner) commandFunctionListP { return commandFunctionListP{p} }
 func (b commandFunctionListP) Cmd(q FunctionListQuery) {
-	b.Pipeliner.Cmd(b.builder().FunctionListCompleted(q))
+	b.p.Cmd(b.p.builder().FunctionListCompleted(q))
 }
 
 var CommandFunctionLoad commandFunctionLoad
@@ -3144,7 +3132,7 @@ func (commandScriptLoad) Warning() string        { return "" }
 var CommandACLDryRun commandACLDryRun
 
 type commandACLDryRun string
-type commandACLDryRunP struct{ Pipeliner }
+type commandACLDryRunP struct{ p Pipeliner }
 
 func (commandACLDryRun) String() string                  { return "ACL DRYRUN" }
 func (commandACLDryRun) Class() string                   { return "Server" }
@@ -3154,7 +3142,7 @@ func (commandACLDryRun) WarnVersion() string             { return "0.0.0" }
 func (commandACLDryRun) Warning() string                 { return "" }
 func (commandACLDryRun) P(p Pipeliner) commandACLDryRunP { return commandACLDryRunP{p} }
 func (b commandACLDryRunP) Cmd(username string, command ...any) {
-	b.Pipeliner.Cmd(b.builder().ACLDryRunCompleted(username, command...))
+	b.p.Cmd(b.p.builder().ACLDryRunCompleted(username, command...))
 }
 
 var CommandBgRewriteAOF commandBgRewriteAOF
@@ -3182,7 +3170,7 @@ func (commandBgSave) Warning() string        { return "" }
 var CommandCommand commandCommand
 
 type commandCommand string
-type commandCommandP struct{ Pipeliner }
+type commandCommandP struct{ p Pipeliner }
 
 func (commandCommand) String() string                { return "COMMAND" }
 func (commandCommand) Class() string                 { return "Server" }
@@ -3191,12 +3179,12 @@ func (commandCommand) Forbid() bool                  { return false }
 func (commandCommand) WarnVersion() string           { return "0.0.0" }
 func (commandCommand) Warning() string               { return "" }
 func (commandCommand) P(p Pipeliner) commandCommandP { return commandCommandP{p} }
-func (b commandCommandP) Cmd()                       { b.Pipeliner.Cmd(b.builder().CommandCompleted()) }
+func (b commandCommandP) Cmd()                       { b.p.Cmd(b.p.builder().CommandCompleted()) }
 
 var CommandCommandList commandCommandList
 
 type commandCommandList string
-type commandCommandListP struct{ Pipeliner }
+type commandCommandListP struct{ p Pipeliner }
 
 func (commandCommandList) String() string                    { return "COMMAND LIST" }
 func (commandCommandList) Class() string                     { return "Server" }
@@ -3206,13 +3194,13 @@ func (commandCommandList) WarnVersion() string               { return "0.0.0" }
 func (commandCommandList) Warning() string                   { return "" }
 func (commandCommandList) P(p Pipeliner) commandCommandListP { return commandCommandListP{p} }
 func (b commandCommandListP) Cmd(filter FilterBy) {
-	b.Pipeliner.Cmd(b.builder().CommandListCompleted(filter))
+	b.p.Cmd(b.p.builder().CommandListCompleted(filter))
 }
 
 var CommandCommandGetKeys commandCommandGetKeys
 
 type commandCommandGetKeys string
-type commandCommandGetKeysP struct{ Pipeliner }
+type commandCommandGetKeysP struct{ p Pipeliner }
 
 func (commandCommandGetKeys) String() string                       { return "COMMAND GETKEYS" }
 func (commandCommandGetKeys) Class() string                        { return "Server" }
@@ -3222,13 +3210,13 @@ func (commandCommandGetKeys) WarnVersion() string                  { return "0.0
 func (commandCommandGetKeys) Warning() string                      { return "" }
 func (commandCommandGetKeys) P(p Pipeliner) commandCommandGetKeysP { return commandCommandGetKeysP{p} }
 func (b commandCommandGetKeysP) Cmd(commands ...any) {
-	b.Pipeliner.Cmd(b.builder().CommandGetKeysCompleted(commands...))
+	b.p.Cmd(b.p.builder().CommandGetKeysCompleted(commands...))
 }
 
 var CommandCommandGetKeysAndFlags commandCommandGetKeysAndFlags
 
 type commandCommandGetKeysAndFlags string
-type commandCommandGetKeysAndFlagsP struct{ Pipeliner }
+type commandCommandGetKeysAndFlagsP struct{ p Pipeliner }
 
 func (commandCommandGetKeysAndFlags) String() string         { return "COMMAND GETKEYSANDFLAGS" }
 func (commandCommandGetKeysAndFlags) Class() string          { return "Server" }
@@ -3240,13 +3228,13 @@ func (commandCommandGetKeysAndFlags) P(p Pipeliner) commandCommandGetKeysAndFlag
 	return commandCommandGetKeysAndFlagsP{p}
 }
 func (b commandCommandGetKeysAndFlagsP) Cmd(commands ...any) {
-	b.Pipeliner.Cmd(b.builder().CommandGetKeysAndFlagsCompleted(commands...))
+	b.p.Cmd(b.p.builder().CommandGetKeysAndFlagsCompleted(commands...))
 }
 
 var CommandConfigGet commandConfigGet
 
 type commandConfigGet string
-type commandConfigGetP struct{ Pipeliner }
+type commandConfigGetP struct{ p Pipeliner }
 
 func (commandConfigGet) String() string                  { return "CONFIG GET" }
 func (commandConfigGet) Class() string                   { return "Server" }
@@ -3256,7 +3244,7 @@ func (commandConfigGet) WarnVersion() string             { return "0.0.0" }
 func (commandConfigGet) Warning() string                 { return "" }
 func (commandConfigGet) P(p Pipeliner) commandConfigGetP { return commandConfigGetP{p} }
 func (b commandConfigGetP) Cmd(parameter string) {
-	b.Pipeliner.Cmd(b.builder().ConfigGetCompleted(parameter))
+	b.p.Cmd(b.p.builder().ConfigGetCompleted(parameter))
 }
 
 var CommandConfigResetStat commandConfigResetStat
@@ -3350,7 +3338,7 @@ func (commandFlushDBAsync) Warning() string        { return "" }
 var CommandServerInfo commandServerInfo
 
 type commandServerInfo string
-type commandServerInfoP struct{ Pipeliner }
+type commandServerInfoP struct{ p Pipeliner }
 
 func (commandServerInfo) String() string                   { return "INFO" }
 func (commandServerInfo) Class() string                    { return "Server" }
@@ -3359,12 +3347,12 @@ func (commandServerInfo) Forbid() bool                     { return false }
 func (commandServerInfo) WarnVersion() string              { return "0.0.0" }
 func (commandServerInfo) Warning() string                  { return "" }
 func (commandServerInfo) P(p Pipeliner) commandServerInfoP { return commandServerInfoP{p} }
-func (b commandServerInfoP) Cmd(section string)            { b.Pipeliner.Cmd(b.builder().InfoCompleted(section)) }
+func (b commandServerInfoP) Cmd(section string)            { b.p.Cmd(b.p.builder().InfoCompleted(section)) }
 
 var CommandMServerInfo commandMServerInfo
 
 type commandMServerInfo string
-type commandMServerInfoP struct{ Pipeliner }
+type commandMServerInfoP struct{ p Pipeliner }
 
 func (commandMServerInfo) String() string                    { return "INFO" }
 func (commandMServerInfo) Class() string                     { return "Server" }
@@ -3373,14 +3361,12 @@ func (commandMServerInfo) Forbid() bool                      { return false }
 func (commandMServerInfo) WarnVersion() string               { return "0.0.0" }
 func (commandMServerInfo) Warning() string                   { return "" }
 func (commandMServerInfo) P(p Pipeliner) commandMServerInfoP { return commandMServerInfoP{p} }
-func (b commandMServerInfoP) Cmd(section ...string) {
-	b.Pipeliner.Cmd(b.builder().InfoCompleted(section...))
-}
+func (b commandMServerInfoP) Cmd(section ...string)          { b.p.Cmd(b.p.builder().InfoCompleted(section...)) }
 
 var CommandLastSave commandLastSave
 
 type commandLastSave string
-type commandLastSaveP struct{ Pipeliner }
+type commandLastSaveP struct{ p Pipeliner }
 
 func (commandLastSave) String() string                 { return "LASTSAVE" }
 func (commandLastSave) Class() string                  { return "Server" }
@@ -3389,12 +3375,12 @@ func (commandLastSave) Forbid() bool                   { return true }
 func (commandLastSave) WarnVersion() string            { return "0.0.0" }
 func (commandLastSave) Warning() string                { return "" }
 func (commandLastSave) P(p Pipeliner) commandLastSaveP { return commandLastSaveP{p} }
-func (b commandLastSaveP) Cmd()                        { b.Pipeliner.Cmd(b.builder().LastSaveCompleted()) }
+func (b commandLastSaveP) Cmd()                        { b.p.Cmd(b.p.builder().LastSaveCompleted()) }
 
 var CommandMemoryUsage commandMemoryUsage
 
 type commandMemoryUsage string
-type commandMemoryUsageP struct{ Pipeliner }
+type commandMemoryUsageP struct{ p Pipeliner }
 
 func (commandMemoryUsage) String() string                    { return "MEMORY USAGE" }
 func (commandMemoryUsage) Class() string                     { return "Server" }
@@ -3404,7 +3390,7 @@ func (commandMemoryUsage) WarnVersion() string               { return "0.0.0" }
 func (commandMemoryUsage) Warning() string                   { return "" }
 func (commandMemoryUsage) P(p Pipeliner) commandMemoryUsageP { return commandMemoryUsageP{p} }
 func (b commandMemoryUsageP) Cmd(key string, samples ...int64) {
-	b.Pipeliner.Cmd(b.builder().MemoryUsageCompleted(key, samples...))
+	b.p.Cmd(b.p.builder().MemoryUsageCompleted(key, samples...))
 }
 
 var CommandSave commandSave
@@ -3454,7 +3440,7 @@ func (commandShutdownNoSave) Warning() string        { return "" }
 var CommandDebugObject commandDebugObject
 
 type commandDebugObject string
-type commandDebugObjectP struct{ Pipeliner }
+type commandDebugObjectP struct{ p Pipeliner }
 
 func (commandDebugObject) String() string                    { return "DEBUG OBJECT" }
 func (commandDebugObject) Class() string                     { return "Server" }
@@ -3463,12 +3449,12 @@ func (commandDebugObject) Forbid() bool                      { return false }
 func (commandDebugObject) WarnVersion() string               { return "0.0.0" }
 func (commandDebugObject) Warning() string                   { return "" }
 func (commandDebugObject) P(p Pipeliner) commandDebugObjectP { return commandDebugObjectP{p} }
-func (b commandDebugObjectP) Cmd(key string)                 { b.Pipeliner.Cmd(b.builder().DebugObjectCompleted(key)) }
+func (b commandDebugObjectP) Cmd(key string)                 { b.p.Cmd(b.p.builder().DebugObjectCompleted(key)) }
 
 var CommandTime commandTime
 
 type commandTime string
-type commandTimeP struct{ Pipeliner }
+type commandTimeP struct{ p Pipeliner }
 
 func (commandTime) String() string             { return "TIME" }
 func (commandTime) Class() string              { return "Server" }
@@ -3477,28 +3463,26 @@ func (commandTime) Forbid() bool               { return false }
 func (commandTime) WarnVersion() string        { return "0.0.0" }
 func (commandTime) Warning() string            { return "" }
 func (commandTime) P(p Pipeliner) commandTimeP { return commandTimeP{p} }
-func (b commandTimeP) Cmd()                    { b.Pipeliner.Cmd(b.builder().TimeCompleted()) }
+func (b commandTimeP) Cmd()                    { b.p.Cmd(b.p.builder().TimeCompleted()) }
 
 var CommandSAdd commandSAdd
 
 type commandSAdd string
-type commandSAddP struct{ Pipeliner }
+type commandSAddP struct{ p Pipeliner }
 
-func (commandSAdd) String() string             { return "SADD" }
-func (commandSAdd) Class() string              { return "Set" }
-func (commandSAdd) RequireVersion() string     { return "1.0.0" }
-func (commandSAdd) Forbid() bool               { return false }
-func (commandSAdd) WarnVersion() string        { return "0.0.0" }
-func (commandSAdd) Warning() string            { return "" }
-func (commandSAdd) P(p Pipeliner) commandSAddP { return commandSAddP{p} }
-func (b commandSAddP) Cmd(key string, member any) {
-	b.Pipeliner.Cmd(b.builder().SAddCompleted(key, member))
-}
+func (commandSAdd) String() string                { return "SADD" }
+func (commandSAdd) Class() string                 { return "Set" }
+func (commandSAdd) RequireVersion() string        { return "1.0.0" }
+func (commandSAdd) Forbid() bool                  { return false }
+func (commandSAdd) WarnVersion() string           { return "0.0.0" }
+func (commandSAdd) Warning() string               { return "" }
+func (commandSAdd) P(p Pipeliner) commandSAddP    { return commandSAddP{p} }
+func (b commandSAddP) Cmd(key string, member any) { b.p.Cmd(b.p.builder().SAddCompleted(key, member)) }
 
 var CommandSMAdd commandSMAdd
 
 type commandSMAdd string
-type commandSMAddP struct{ Pipeliner }
+type commandSMAddP struct{ p Pipeliner }
 
 func (commandSMAdd) String() string              { return "SADD" }
 func (commandSMAdd) Class() string               { return "Set" }
@@ -3508,13 +3492,13 @@ func (commandSMAdd) WarnVersion() string         { return "0.0.0" }
 func (commandSMAdd) Warning() string             { return "" }
 func (commandSMAdd) P(p Pipeliner) commandSMAddP { return commandSMAddP{p} }
 func (b commandSMAddP) Cmd(key string, members ...any) {
-	b.Pipeliner.Cmd(b.builder().SAddCompleted(key, members...))
+	b.p.Cmd(b.p.builder().SAddCompleted(key, members...))
 }
 
 var CommandSCard commandSCard
 
 type commandSCard string
-type commandSCardP struct{ Pipeliner }
+type commandSCardP struct{ p Pipeliner }
 
 func (commandSCard) String() string              { return "SCARD" }
 func (commandSCard) Class() string               { return "Set" }
@@ -3523,12 +3507,12 @@ func (commandSCard) Forbid() bool                { return false }
 func (commandSCard) WarnVersion() string         { return "0.0.0" }
 func (commandSCard) Warning() string             { return "" }
 func (commandSCard) P(p Pipeliner) commandSCardP { return commandSCardP{p} }
-func (b commandSCardP) Cmd(key string)           { b.Pipeliner.Cmd(b.builder().SCardCompleted(key)) }
+func (b commandSCardP) Cmd(key string)           { b.p.Cmd(b.p.builder().SCardCompleted(key)) }
 
 var CommandSDiff commandSDiff
 
 type commandSDiff string
-type commandSDiffP struct{ Pipeliner }
+type commandSDiffP struct{ p Pipeliner }
 
 func (commandSDiff) String() string              { return "SDIFF" }
 func (commandSDiff) Class() string               { return "Set" }
@@ -3537,12 +3521,12 @@ func (commandSDiff) Forbid() bool                { return false }
 func (commandSDiff) WarnVersion() string         { return "0.0.0" }
 func (commandSDiff) Warning() string             { return "" }
 func (commandSDiff) P(p Pipeliner) commandSDiffP { return commandSDiffP{p} }
-func (b commandSDiffP) Cmd(keys ...string)       { b.Pipeliner.Cmd(b.builder().SDiffCompleted(keys...)) }
+func (b commandSDiffP) Cmd(keys ...string)       { b.p.Cmd(b.p.builder().SDiffCompleted(keys...)) }
 
 var CommandSDiffStore commandSDiffStore
 
 type commandSDiffStore string
-type commandSDiffStoreP struct{ Pipeliner }
+type commandSDiffStoreP struct{ p Pipeliner }
 
 func (commandSDiffStore) String() string                   { return "SDIFFSTORE" }
 func (commandSDiffStore) Class() string                    { return "Set" }
@@ -3552,13 +3536,13 @@ func (commandSDiffStore) WarnVersion() string              { return "0.0.0" }
 func (commandSDiffStore) Warning() string                  { return "" }
 func (commandSDiffStore) P(p Pipeliner) commandSDiffStoreP { return commandSDiffStoreP{p} }
 func (b commandSDiffStoreP) Cmd(destination string, keys ...string) {
-	b.Pipeliner.Cmd(b.builder().SDiffStoreCompleted(destination, keys...))
+	b.p.Cmd(b.p.builder().SDiffStoreCompleted(destination, keys...))
 }
 
 var CommandSInter commandSInter
 
 type commandSInter string
-type commandSInterP struct{ Pipeliner }
+type commandSInterP struct{ p Pipeliner }
 
 func (commandSInter) String() string               { return "SINTER" }
 func (commandSInter) Class() string                { return "Set" }
@@ -3567,12 +3551,12 @@ func (commandSInter) Forbid() bool                 { return false }
 func (commandSInter) WarnVersion() string          { return "0.0.0" }
 func (commandSInter) Warning() string              { return "" }
 func (commandSInter) P(p Pipeliner) commandSInterP { return commandSInterP{p} }
-func (b commandSInterP) Cmd(keys ...string)        { b.Pipeliner.Cmd(b.builder().SInterCompleted(keys...)) }
+func (b commandSInterP) Cmd(keys ...string)        { b.p.Cmd(b.p.builder().SInterCompleted(keys...)) }
 
 var CommandSInterStore commandSInterStore
 
 type commandSInterStore string
-type commandSInterStoreP struct{ Pipeliner }
+type commandSInterStoreP struct{ p Pipeliner }
 
 func (commandSInterStore) String() string                    { return "SINTERSTORE" }
 func (commandSInterStore) Class() string                     { return "Set" }
@@ -3582,13 +3566,13 @@ func (commandSInterStore) WarnVersion() string               { return "0.0.0" }
 func (commandSInterStore) Warning() string                   { return "" }
 func (commandSInterStore) P(p Pipeliner) commandSInterStoreP { return commandSInterStoreP{p} }
 func (b commandSInterStoreP) Cmd(destination string, keys ...string) {
-	b.Pipeliner.Cmd(b.builder().SInterStoreCompleted(destination, keys...))
+	b.p.Cmd(b.p.builder().SInterStoreCompleted(destination, keys...))
 }
 
 var CommandSInterCard commandSInterCard
 
 type commandSInterCard string
-type commandSInterCardP struct{ Pipeliner }
+type commandSInterCardP struct{ p Pipeliner }
 
 func (commandSInterCard) String() string                   { return "SINTERCARD" }
 func (commandSInterCard) Class() string                    { return "Set" }
@@ -3598,13 +3582,13 @@ func (commandSInterCard) WarnVersion() string              { return "0.0.0" }
 func (commandSInterCard) Warning() string                  { return "" }
 func (commandSInterCard) P(p Pipeliner) commandSInterCardP { return commandSInterCardP{p} }
 func (b commandSInterCardP) Cmd(limit int64, keys ...string) {
-	b.Pipeliner.Cmd(b.builder().SInterCardCompleted(limit, keys...))
+	b.p.Cmd(b.p.builder().SInterCardCompleted(limit, keys...))
 }
 
 var CommandSIsMember commandSIsMember
 
 type commandSIsMember string
-type commandSIsMemberP struct{ Pipeliner }
+type commandSIsMemberP struct{ p Pipeliner }
 
 func (commandSIsMember) String() string                  { return "SISMEMBER" }
 func (commandSIsMember) Class() string                   { return "Set" }
@@ -3614,13 +3598,13 @@ func (commandSIsMember) WarnVersion() string             { return "0.0.0" }
 func (commandSIsMember) Warning() string                 { return "" }
 func (commandSIsMember) P(p Pipeliner) commandSIsMemberP { return commandSIsMemberP{p} }
 func (b commandSIsMemberP) Cmd(key string, member any) {
-	b.Pipeliner.Cmd(b.builder().SIsMemberCompleted(key, member))
+	b.p.Cmd(b.p.builder().SIsMemberCompleted(key, member))
 }
 
 var CommandSMIsMember commandSMIsMember
 
 type commandSMIsMember string
-type commandSMIsMemberP struct{ Pipeliner }
+type commandSMIsMemberP struct{ p Pipeliner }
 
 func (commandSMIsMember) String() string                   { return "SMISMEMBER" }
 func (commandSMIsMember) Class() string                    { return "Set" }
@@ -3630,13 +3614,13 @@ func (commandSMIsMember) WarnVersion() string              { return "0.0.0" }
 func (commandSMIsMember) Warning() string                  { return "" }
 func (commandSMIsMember) P(p Pipeliner) commandSMIsMemberP { return commandSMIsMemberP{p} }
 func (b commandSMIsMemberP) Cmd(key string, members ...any) {
-	b.Pipeliner.Cmd(b.builder().SMIsMemberCompleted(key, members...))
+	b.p.Cmd(b.p.builder().SMIsMemberCompleted(key, members...))
 }
 
 var CommandSMembers commandSMembers
 
 type commandSMembers string
-type commandSMembersP struct{ Pipeliner }
+type commandSMembersP struct{ p Pipeliner }
 
 func (commandSMembers) String() string                 { return "SMEMBERS" }
 func (commandSMembers) Class() string                  { return "Set" }
@@ -3645,12 +3629,12 @@ func (commandSMembers) Forbid() bool                   { return false }
 func (commandSMembers) WarnVersion() string            { return "0.0.0" }
 func (commandSMembers) Warning() string                { return "" }
 func (commandSMembers) P(p Pipeliner) commandSMembersP { return commandSMembersP{p} }
-func (b commandSMembersP) Cmd(key string)              { b.Pipeliner.Cmd(b.builder().SMembersCompleted(key)) }
+func (b commandSMembersP) Cmd(key string)              { b.p.Cmd(b.p.builder().SMembersCompleted(key)) }
 
 var CommandSMove commandSMove
 
 type commandSMove string
-type commandSMoveP struct{ Pipeliner }
+type commandSMoveP struct{ p Pipeliner }
 
 func (commandSMove) String() string              { return "SMOVE" }
 func (commandSMove) Class() string               { return "Set" }
@@ -3660,13 +3644,13 @@ func (commandSMove) WarnVersion() string         { return "0.0.0" }
 func (commandSMove) Warning() string             { return "" }
 func (commandSMove) P(p Pipeliner) commandSMoveP { return commandSMoveP{p} }
 func (b commandSMoveP) Cmd(source, destination string, member any) {
-	b.Pipeliner.Cmd(b.builder().SMoveCompleted(source, destination, member))
+	b.p.Cmd(b.p.builder().SMoveCompleted(source, destination, member))
 }
 
 var CommandSPop commandSPop
 
 type commandSPop string
-type commandSPopP struct{ Pipeliner }
+type commandSPopP struct{ p Pipeliner }
 
 func (commandSPop) String() string             { return "SPOP" }
 func (commandSPop) Class() string              { return "Set" }
@@ -3675,12 +3659,12 @@ func (commandSPop) Forbid() bool               { return false }
 func (commandSPop) WarnVersion() string        { return "0.0.0" }
 func (commandSPop) Warning() string            { return "" }
 func (commandSPop) P(p Pipeliner) commandSPopP { return commandSPopP{p} }
-func (b commandSPopP) Cmd(key string)          { b.Pipeliner.Cmd(b.builder().SPopCompleted(key)) }
+func (b commandSPopP) Cmd(key string)          { b.p.Cmd(b.p.builder().SPopCompleted(key)) }
 
 var CommandSPopN commandSPopN
 
 type commandSPopN string
-type commandSPopNP struct{ Pipeliner }
+type commandSPopNP struct{ p Pipeliner }
 
 func (commandSPopN) String() string              { return "SPOP" }
 func (commandSPopN) Class() string               { return "Set" }
@@ -3690,13 +3674,13 @@ func (commandSPopN) WarnVersion() string         { return "0.0.0" }
 func (commandSPopN) Warning() string             { return "" }
 func (commandSPopN) P(p Pipeliner) commandSPopNP { return commandSPopNP{p} }
 func (b commandSPopNP) Cmd(key string, count int64) {
-	b.Pipeliner.Cmd(b.builder().SPopNCompleted(key, count))
+	b.p.Cmd(b.p.builder().SPopNCompleted(key, count))
 }
 
 var CommandSRandMember commandSRandMember
 
 type commandSRandMember string
-type commandSRandMemberP struct{ Pipeliner }
+type commandSRandMemberP struct{ p Pipeliner }
 
 func (commandSRandMember) String() string                    { return "SRANDMEMBER" }
 func (commandSRandMember) Class() string                     { return "Set" }
@@ -3705,12 +3689,12 @@ func (commandSRandMember) Forbid() bool                      { return false }
 func (commandSRandMember) WarnVersion() string               { return "0.0.0" }
 func (commandSRandMember) Warning() string                   { return "" }
 func (commandSRandMember) P(p Pipeliner) commandSRandMemberP { return commandSRandMemberP{p} }
-func (b commandSRandMemberP) Cmd(key string)                 { b.Pipeliner.Cmd(b.builder().SRandMemberCompleted(key)) }
+func (b commandSRandMemberP) Cmd(key string)                 { b.p.Cmd(b.p.builder().SRandMemberCompleted(key)) }
 
 var CommandSRandMemberN commandSRandMemberN
 
 type commandSRandMemberN string
-type commandSRandMemberNP struct{ Pipeliner }
+type commandSRandMemberNP struct{ p Pipeliner }
 
 func (commandSRandMemberN) String() string                     { return "SRANDMEMBER" }
 func (commandSRandMemberN) Class() string                      { return "Set" }
@@ -3720,29 +3704,27 @@ func (commandSRandMemberN) WarnVersion() string                { return "0.0.0" 
 func (commandSRandMemberN) Warning() string                    { return "" }
 func (commandSRandMemberN) P(p Pipeliner) commandSRandMemberNP { return commandSRandMemberNP{p} }
 func (b commandSRandMemberNP) Cmd(key string, count int64) {
-	b.Pipeliner.Cmd(b.builder().SRandMemberNCompleted(key, count))
+	b.p.Cmd(b.p.builder().SRandMemberNCompleted(key, count))
 }
 
 var CommandSRem commandSRem
 
 type commandSRem string
-type commandSRemP struct{ Pipeliner }
+type commandSRemP struct{ p Pipeliner }
 
-func (commandSRem) String() string             { return "SREM" }
-func (commandSRem) Class() string              { return "Set" }
-func (commandSRem) RequireVersion() string     { return "1.0.0" }
-func (commandSRem) Forbid() bool               { return false }
-func (commandSRem) WarnVersion() string        { return "0.0.0" }
-func (commandSRem) Warning() string            { return "" }
-func (commandSRem) P(p Pipeliner) commandSRemP { return commandSRemP{p} }
-func (b commandSRemP) Cmd(key string, member any) {
-	b.Pipeliner.Cmd(b.builder().SRemCompleted(key, member))
-}
+func (commandSRem) String() string                { return "SREM" }
+func (commandSRem) Class() string                 { return "Set" }
+func (commandSRem) RequireVersion() string        { return "1.0.0" }
+func (commandSRem) Forbid() bool                  { return false }
+func (commandSRem) WarnVersion() string           { return "0.0.0" }
+func (commandSRem) Warning() string               { return "" }
+func (commandSRem) P(p Pipeliner) commandSRemP    { return commandSRemP{p} }
+func (b commandSRemP) Cmd(key string, member any) { b.p.Cmd(b.p.builder().SRemCompleted(key, member)) }
 
 var CommandSMRem commandSMRem
 
 type commandSMRem string
-type commandSMRemP struct{ Pipeliner }
+type commandSMRemP struct{ p Pipeliner }
 
 func (commandSMRem) String() string              { return "SREM" }
 func (commandSMRem) Class() string               { return "Set" }
@@ -3752,13 +3734,13 @@ func (commandSMRem) WarnVersion() string         { return "0.0.0" }
 func (commandSMRem) Warning() string             { return "" }
 func (commandSMRem) P(p Pipeliner) commandSMRemP { return commandSMRemP{p} }
 func (b commandSMRemP) Cmd(key string, members ...any) {
-	b.Pipeliner.Cmd(b.builder().SRemCompleted(key, members...))
+	b.p.Cmd(b.p.builder().SRemCompleted(key, members...))
 }
 
 var CommandSScan commandSScan
 
 type commandSScan string
-type commandSScanP struct{ Pipeliner }
+type commandSScanP struct{ p Pipeliner }
 
 func (commandSScan) String() string              { return "SSCAN" }
 func (commandSScan) Class() string               { return "Set" }
@@ -3768,13 +3750,13 @@ func (commandSScan) WarnVersion() string         { return "0.0.0" }
 func (commandSScan) Warning() string             { return "" }
 func (commandSScan) P(p Pipeliner) commandSScanP { return commandSScanP{p} }
 func (b commandSScanP) Cmd(key string, cursor uint64, match string, count int64) {
-	b.Pipeliner.Cmd(b.builder().SScanCompleted(key, cursor, match, count))
+	b.p.Cmd(b.p.builder().SScanCompleted(key, cursor, match, count))
 }
 
 var CommandSUnion commandSUnion
 
 type commandSUnion string
-type commandSUnionP struct{ Pipeliner }
+type commandSUnionP struct{ p Pipeliner }
 
 func (commandSUnion) String() string               { return "SUNION" }
 func (commandSUnion) Class() string                { return "Set" }
@@ -3783,12 +3765,12 @@ func (commandSUnion) Forbid() bool                 { return false }
 func (commandSUnion) WarnVersion() string          { return "0.0.0" }
 func (commandSUnion) Warning() string              { return "" }
 func (commandSUnion) P(p Pipeliner) commandSUnionP { return commandSUnionP{p} }
-func (b commandSUnionP) Cmd(keys ...string)        { b.Pipeliner.Cmd(b.builder().SUnionCompleted(keys...)) }
+func (b commandSUnionP) Cmd(keys ...string)        { b.p.Cmd(b.p.builder().SUnionCompleted(keys...)) }
 
 var CommandSUnionStore commandSUnionStore
 
 type commandSUnionStore string
-type commandSUnionStoreP struct{ Pipeliner }
+type commandSUnionStoreP struct{ p Pipeliner }
 
 func (commandSUnionStore) String() string                    { return "SUNIONSTORE" }
 func (commandSUnionStore) Class() string                     { return "Set" }
@@ -3798,7 +3780,7 @@ func (commandSUnionStore) WarnVersion() string               { return "0.0.0" }
 func (commandSUnionStore) Warning() string                   { return "" }
 func (commandSUnionStore) P(p Pipeliner) commandSUnionStoreP { return commandSUnionStoreP{p} }
 func (b commandSUnionStoreP) Cmd(destination string, keys ...string) {
-	b.Pipeliner.Cmd(b.builder().SUnionStoreCompleted(destination, keys...))
+	b.p.Cmd(b.p.builder().SUnionStoreCompleted(destination, keys...))
 }
 
 var CommandBZMPop commandBZMPop
@@ -3837,23 +3819,21 @@ func (commandBZPopMin) Warning() string        { return "" }
 var CommandZAdd commandZAdd
 
 type commandZAdd string
-type commandZAddP struct{ Pipeliner }
+type commandZAddP struct{ p Pipeliner }
 
-func (commandZAdd) String() string             { return "ZADD" }
-func (commandZAdd) Class() string              { return "SortedSet" }
-func (commandZAdd) RequireVersion() string     { return "1.2.0" }
-func (commandZAdd) Forbid() bool               { return false }
-func (commandZAdd) WarnVersion() string        { return "0.0.0" }
-func (commandZAdd) Warning() string            { return "" }
-func (commandZAdd) P(p Pipeliner) commandZAddP { return commandZAddP{p} }
-func (b commandZAddP) Cmd(key string, member Z) {
-	b.Pipeliner.Cmd(b.builder().ZAddCompleted(key, member))
-}
+func (commandZAdd) String() string              { return "ZADD" }
+func (commandZAdd) Class() string               { return "SortedSet" }
+func (commandZAdd) RequireVersion() string      { return "1.2.0" }
+func (commandZAdd) Forbid() bool                { return false }
+func (commandZAdd) WarnVersion() string         { return "0.0.0" }
+func (commandZAdd) Warning() string             { return "" }
+func (commandZAdd) P(p Pipeliner) commandZAddP  { return commandZAddP{p} }
+func (b commandZAddP) Cmd(key string, member Z) { b.p.Cmd(b.p.builder().ZAddCompleted(key, member)) }
 
 var CommandZAddArgs commandZAddArgs
 
 type commandZAddArgs string
-type commandZAddArgsP struct{ Pipeliner }
+type commandZAddArgsP struct{ p Pipeliner }
 
 func (commandZAddArgs) String() string                 { return "ZADD" }
 func (commandZAddArgs) Class() string                  { return "SortedSet" }
@@ -3863,13 +3843,13 @@ func (commandZAddArgs) WarnVersion() string            { return "0.0.0" }
 func (commandZAddArgs) Warning() string                { return "" }
 func (commandZAddArgs) P(p Pipeliner) commandZAddArgsP { return commandZAddArgsP{p} }
 func (b commandZAddArgsP) Cmd(key string, args ZAddArgs) {
-	b.Pipeliner.Cmd(b.builder().ZAddArgsCompleted(key, args))
+	b.p.Cmd(b.p.builder().ZAddArgsCompleted(key, args))
 }
 
 var CommandZMAdd commandZMAdd
 
 type commandZMAdd string
-type commandZMAddP struct{ Pipeliner }
+type commandZMAddP struct{ p Pipeliner }
 
 func (commandZMAdd) String() string              { return "ZADD" }
 func (commandZMAdd) Class() string               { return "SortedSet" }
@@ -3879,13 +3859,13 @@ func (commandZMAdd) WarnVersion() string         { return "0.0.0" }
 func (commandZMAdd) Warning() string             { return "" }
 func (commandZMAdd) P(p Pipeliner) commandZMAddP { return commandZMAddP{p} }
 func (b commandZMAddP) Cmd(key string, members ...Z) {
-	b.Pipeliner.Cmd(b.builder().ZAddCompleted(key, members...))
+	b.p.Cmd(b.p.builder().ZAddCompleted(key, members...))
 }
 
 var CommandZAddCh commandZAddCh
 
 type commandZAddCh string
-type commandZAddChP struct{ Pipeliner }
+type commandZAddChP struct{ p Pipeliner }
 
 func (commandZAddCh) String() string               { return "ZADD CH" }
 func (commandZAddCh) Class() string                { return "SortedSet" }
@@ -3895,13 +3875,13 @@ func (commandZAddCh) WarnVersion() string          { return "0.0.0" }
 func (commandZAddCh) Warning() string              { return "" }
 func (commandZAddCh) P(p Pipeliner) commandZAddChP { return commandZAddChP{p} }
 func (b commandZAddChP) Cmd(key string, members ...Z) {
-	b.Pipeliner.Cmd(b.builder().ZAddChCompleted(key, members...))
+	b.p.Cmd(b.p.builder().ZAddChCompleted(key, members...))
 }
 
 var CommandZAddLT commandZAddLT
 
 type commandZAddLT string
-type commandZAddLTP struct{ Pipeliner }
+type commandZAddLTP struct{ p Pipeliner }
 
 func (commandZAddLT) String() string               { return "ZADD LT" }
 func (commandZAddLT) Class() string                { return "SortedSet" }
@@ -3911,13 +3891,13 @@ func (commandZAddLT) WarnVersion() string          { return "0.0.0" }
 func (commandZAddLT) Warning() string              { return "" }
 func (commandZAddLT) P(p Pipeliner) commandZAddLTP { return commandZAddLTP{p} }
 func (b commandZAddLTP) Cmd(key string, members ...Z) {
-	b.Pipeliner.Cmd(b.builder().ZAddLTCompleted(key, members...))
+	b.p.Cmd(b.p.builder().ZAddLTCompleted(key, members...))
 }
 
 var CommandZAddGT commandZAddGT
 
 type commandZAddGT string
-type commandZAddGTP struct{ Pipeliner }
+type commandZAddGTP struct{ p Pipeliner }
 
 func (commandZAddGT) String() string               { return "ZADD GT" }
 func (commandZAddGT) Class() string                { return "SortedSet" }
@@ -3927,13 +3907,13 @@ func (commandZAddGT) WarnVersion() string          { return "0.0.0" }
 func (commandZAddGT) Warning() string              { return "" }
 func (commandZAddGT) P(p Pipeliner) commandZAddGTP { return commandZAddGTP{p} }
 func (b commandZAddGTP) Cmd(key string, members ...Z) {
-	b.Pipeliner.Cmd(b.builder().ZAddGTCompleted(key, members...))
+	b.p.Cmd(b.p.builder().ZAddGTCompleted(key, members...))
 }
 
 var CommandZAddNX commandZAddNX
 
 type commandZAddNX string
-type commandZAddNXP struct{ Pipeliner }
+type commandZAddNXP struct{ p Pipeliner }
 
 func (commandZAddNX) String() string               { return "ZADD NX" }
 func (commandZAddNX) Class() string                { return "SortedSet" }
@@ -3943,13 +3923,13 @@ func (commandZAddNX) WarnVersion() string          { return "0.0.0" }
 func (commandZAddNX) Warning() string              { return "" }
 func (commandZAddNX) P(p Pipeliner) commandZAddNXP { return commandZAddNXP{p} }
 func (b commandZAddNXP) Cmd(key string, members ...Z) {
-	b.Pipeliner.Cmd(b.builder().ZAddNXCompleted(key, members...))
+	b.p.Cmd(b.p.builder().ZAddNXCompleted(key, members...))
 }
 
 var CommandZAddXX commandZAddXX
 
 type commandZAddXX string
-type commandZAddXXP struct{ Pipeliner }
+type commandZAddXXP struct{ p Pipeliner }
 
 func (commandZAddXX) String() string               { return "ZADD XX" }
 func (commandZAddXX) Class() string                { return "SortedSet" }
@@ -3959,13 +3939,13 @@ func (commandZAddXX) WarnVersion() string          { return "0.0.0" }
 func (commandZAddXX) Warning() string              { return "" }
 func (commandZAddXX) P(p Pipeliner) commandZAddXXP { return commandZAddXXP{p} }
 func (b commandZAddXXP) Cmd(key string, members ...Z) {
-	b.Pipeliner.Cmd(b.builder().ZAddXXCompleted(key, members...))
+	b.p.Cmd(b.p.builder().ZAddXXCompleted(key, members...))
 }
 
 var CommandZAddINCR commandZAddINCR
 
 type commandZAddINCR string
-type commandZAddINCRP struct{ Pipeliner }
+type commandZAddINCRP struct{ p Pipeliner }
 
 func (commandZAddINCR) String() string                 { return "ZADD INCR" }
 func (commandZAddINCR) Class() string                  { return "SortedSet" }
@@ -3975,13 +3955,13 @@ func (commandZAddINCR) WarnVersion() string            { return "0.0.0" }
 func (commandZAddINCR) Warning() string                { return "" }
 func (commandZAddINCR) P(p Pipeliner) commandZAddINCRP { return commandZAddINCRP{p} }
 func (b commandZAddINCRP) Cmd(key string, args ZAddArgs) {
-	b.Pipeliner.Cmd(b.builder().ZAddArgsIncrCompleted(key, args))
+	b.p.Cmd(b.p.builder().ZAddArgsIncrCompleted(key, args))
 }
 
 var CommandZCard commandZCard
 
 type commandZCard string
-type commandZCardP struct{ Pipeliner }
+type commandZCardP struct{ p Pipeliner }
 
 func (commandZCard) String() string              { return "ZCARD" }
 func (commandZCard) Class() string               { return "SortedSet" }
@@ -3990,12 +3970,12 @@ func (commandZCard) Forbid() bool                { return false }
 func (commandZCard) WarnVersion() string         { return "0.0.0" }
 func (commandZCard) Warning() string             { return "" }
 func (commandZCard) P(p Pipeliner) commandZCardP { return commandZCardP{p} }
-func (b commandZCardP) Cmd(key string)           { b.Pipeliner.Cmd(b.builder().ZCardCompleted(key)) }
+func (b commandZCardP) Cmd(key string)           { b.p.Cmd(b.p.builder().ZCardCompleted(key)) }
 
 var CommandZCount commandZCount
 
 type commandZCount string
-type commandZCountP struct{ Pipeliner }
+type commandZCountP struct{ p Pipeliner }
 
 func (commandZCount) String() string               { return "ZCOUNT" }
 func (commandZCount) Class() string                { return "SortedSet" }
@@ -4005,13 +3985,13 @@ func (commandZCount) WarnVersion() string          { return "0.0.0" }
 func (commandZCount) Warning() string              { return "" }
 func (commandZCount) P(p Pipeliner) commandZCountP { return commandZCountP{p} }
 func (b commandZCountP) Cmd(key, min, max string) {
-	b.Pipeliner.Cmd(b.builder().ZCountCompleted(key, min, max))
+	b.p.Cmd(b.p.builder().ZCountCompleted(key, min, max))
 }
 
 var CommandZDiff commandZDiff
 
 type commandZDiff string
-type commandZDiffP struct{ Pipeliner }
+type commandZDiffP struct{ p Pipeliner }
 
 func (commandZDiff) String() string              { return "ZDIFF" }
 func (commandZDiff) Class() string               { return "SortedSet" }
@@ -4020,12 +4000,12 @@ func (commandZDiff) Forbid() bool                { return false }
 func (commandZDiff) WarnVersion() string         { return "0.0.0" }
 func (commandZDiff) Warning() string             { return "" }
 func (commandZDiff) P(p Pipeliner) commandZDiffP { return commandZDiffP{p} }
-func (b commandZDiffP) Cmd(keys ...string)       { b.Pipeliner.Cmd(b.builder().ZDiffCompleted(keys...)) }
+func (b commandZDiffP) Cmd(keys ...string)       { b.p.Cmd(b.p.builder().ZDiffCompleted(keys...)) }
 
 var CommandZDiffWithScores commandZDiffWithScores
 
 type commandZDiffWithScores string
-type commandZDiffWithScoresP struct{ Pipeliner }
+type commandZDiffWithScoresP struct{ p Pipeliner }
 
 func (commandZDiffWithScores) String() string         { return "ZDIFF WITHSCORES" }
 func (commandZDiffWithScores) Class() string          { return "SortedSet" }
@@ -4037,13 +4017,13 @@ func (commandZDiffWithScores) P(p Pipeliner) commandZDiffWithScoresP {
 	return commandZDiffWithScoresP{p}
 }
 func (b commandZDiffWithScoresP) Cmd(keys ...string) {
-	b.Pipeliner.Cmd(b.builder().ZDiffWithScoresCompleted(keys...))
+	b.p.Cmd(b.p.builder().ZDiffWithScoresCompleted(keys...))
 }
 
 var CommandZDiffStore commandZDiffStore
 
 type commandZDiffStore string
-type commandZDiffStoreP struct{ Pipeliner }
+type commandZDiffStoreP struct{ p Pipeliner }
 
 func (commandZDiffStore) String() string                   { return "ZDIFFSTORE" }
 func (commandZDiffStore) Class() string                    { return "SortedSet" }
@@ -4053,13 +4033,13 @@ func (commandZDiffStore) WarnVersion() string              { return "0.0.0" }
 func (commandZDiffStore) Warning() string                  { return "" }
 func (commandZDiffStore) P(p Pipeliner) commandZDiffStoreP { return commandZDiffStoreP{p} }
 func (b commandZDiffStoreP) Cmd(destination string, keys ...string) {
-	b.Pipeliner.Cmd(b.builder().ZDiffStoreCompleted(destination, keys...))
+	b.p.Cmd(b.p.builder().ZDiffStoreCompleted(destination, keys...))
 }
 
 var CommandZIncrBy commandZIncrBy
 
 type commandZIncrBy string
-type commandZIncrByP struct{ Pipeliner }
+type commandZIncrByP struct{ p Pipeliner }
 
 func (commandZIncrBy) String() string                { return "ZINCRBY" }
 func (commandZIncrBy) Class() string                 { return "SortedSet" }
@@ -4069,13 +4049,13 @@ func (commandZIncrBy) WarnVersion() string           { return "0.0.0" }
 func (commandZIncrBy) Warning() string               { return "" }
 func (commandZIncrBy) P(p Pipeliner) commandZIncrByP { return commandZIncrByP{p} }
 func (b commandZIncrByP) Cmd(key string, increment float64, member string) {
-	b.Pipeliner.Cmd(b.builder().ZIncrByCompleted(key, increment, member))
+	b.p.Cmd(b.p.builder().ZIncrByCompleted(key, increment, member))
 }
 
 var CommandZInter commandZInter
 
 type commandZInter string
-type commandZInterP struct{ Pipeliner }
+type commandZInterP struct{ p Pipeliner }
 
 func (commandZInter) String() string               { return "ZINTER" }
 func (commandZInter) Class() string                { return "SortedSet" }
@@ -4084,12 +4064,12 @@ func (commandZInter) Forbid() bool                 { return false }
 func (commandZInter) WarnVersion() string          { return "0.0.0" }
 func (commandZInter) Warning() string              { return "" }
 func (commandZInter) P(p Pipeliner) commandZInterP { return commandZInterP{p} }
-func (b commandZInterP) Cmd(store ZStore)          { b.Pipeliner.Cmd(b.builder().ZInterCompleted(store)) }
+func (b commandZInterP) Cmd(store ZStore)          { b.p.Cmd(b.p.builder().ZInterCompleted(store)) }
 
 var CommandZInterWithScores commandZInterWithScores
 
 type commandZInterWithScores string
-type commandZInterWithScoresP struct{ Pipeliner }
+type commandZInterWithScoresP struct{ p Pipeliner }
 
 func (commandZInterWithScores) String() string         { return "ZINTER WITHSCORES" }
 func (commandZInterWithScores) Class() string          { return "SortedSet" }
@@ -4101,13 +4081,13 @@ func (commandZInterWithScores) P(p Pipeliner) commandZInterWithScoresP {
 	return commandZInterWithScoresP{p}
 }
 func (b commandZInterWithScoresP) Cmd(store ZStore) {
-	b.Pipeliner.Cmd(b.builder().ZInterWithScoresCompleted(store))
+	b.p.Cmd(b.p.builder().ZInterWithScoresCompleted(store))
 }
 
 var CommandZInterStore commandZInterStore
 
 type commandZInterStore string
-type commandZInterStoreP struct{ Pipeliner }
+type commandZInterStoreP struct{ p Pipeliner }
 
 func (commandZInterStore) String() string                    { return "ZINTERSTORE" }
 func (commandZInterStore) Class() string                     { return "SortedSet" }
@@ -4117,13 +4097,13 @@ func (commandZInterStore) WarnVersion() string               { return "0.0.0" }
 func (commandZInterStore) Warning() string                   { return "" }
 func (commandZInterStore) P(p Pipeliner) commandZInterStoreP { return commandZInterStoreP{p} }
 func (b commandZInterStoreP) Cmd(destination string, store ZStore) {
-	b.Pipeliner.Cmd(b.builder().ZInterStoreCompleted(destination, store))
+	b.p.Cmd(b.p.builder().ZInterStoreCompleted(destination, store))
 }
 
 var CommandZInterCard commandZInterCard
 
 type commandZInterCard string
-type commandZInterCardP struct{ Pipeliner }
+type commandZInterCardP struct{ p Pipeliner }
 
 func (commandZInterCard) String() string                   { return "ZINTERCARD" }
 func (commandZInterCard) Class() string                    { return "SortedSet" }
@@ -4133,13 +4113,13 @@ func (commandZInterCard) WarnVersion() string              { return "0.0.0" }
 func (commandZInterCard) Warning() string                  { return "" }
 func (commandZInterCard) P(p Pipeliner) commandZInterCardP { return commandZInterCardP{p} }
 func (b commandZInterCardP) Cmd(limit int64, keys ...string) {
-	b.Pipeliner.Cmd(b.builder().ZInterCardCompleted(limit, keys...))
+	b.p.Cmd(b.p.builder().ZInterCardCompleted(limit, keys...))
 }
 
 var CommandZLexCount commandZLexCount
 
 type commandZLexCount string
-type commandZLexCountP struct{ Pipeliner }
+type commandZLexCountP struct{ p Pipeliner }
 
 func (commandZLexCount) String() string                  { return "ZLEXCOUNT" }
 func (commandZLexCount) Class() string                   { return "SortedSet" }
@@ -4149,13 +4129,13 @@ func (commandZLexCount) WarnVersion() string             { return "0.0.0" }
 func (commandZLexCount) Warning() string                 { return "" }
 func (commandZLexCount) P(p Pipeliner) commandZLexCountP { return commandZLexCountP{p} }
 func (b commandZLexCountP) Cmd(key, min, max string) {
-	b.Pipeliner.Cmd(b.builder().ZLexCountCompleted(key, min, max))
+	b.p.Cmd(b.p.builder().ZLexCountCompleted(key, min, max))
 }
 
 var CommandZMPop commandZMPop
 
 type commandZMPop string
-type commandZMPopP struct{ Pipeliner }
+type commandZMPopP struct{ p Pipeliner }
 
 func (commandZMPop) String() string              { return "ZMPOP" }
 func (commandZMPop) Class() string               { return "SortedSet" }
@@ -4165,13 +4145,13 @@ func (commandZMPop) WarnVersion() string         { return "0.0.0" }
 func (commandZMPop) Warning() string             { return "" }
 func (commandZMPop) P(p Pipeliner) commandZMPopP { return commandZMPopP{p} }
 func (b commandZMPopP) Cmd(order string, count int64, keys ...string) {
-	b.Pipeliner.Cmd(b.builder().ZMPopCompleted(order, count, keys...))
+	b.p.Cmd(b.p.builder().ZMPopCompleted(order, count, keys...))
 }
 
 var CommandZMScore commandZMScore
 
 type commandZMScore string
-type commandZMScoreP struct{ Pipeliner }
+type commandZMScoreP struct{ p Pipeliner }
 
 func (commandZMScore) String() string                { return "ZMSCORE" }
 func (commandZMScore) Class() string                 { return "SortedSet" }
@@ -4181,13 +4161,13 @@ func (commandZMScore) WarnVersion() string           { return "0.0.0" }
 func (commandZMScore) Warning() string               { return "" }
 func (commandZMScore) P(p Pipeliner) commandZMScoreP { return commandZMScoreP{p} }
 func (b commandZMScoreP) Cmd(key string, members ...string) {
-	b.Pipeliner.Cmd(b.builder().ZMScoreCompleted(key, members...))
+	b.p.Cmd(b.p.builder().ZMScoreCompleted(key, members...))
 }
 
 var CommandZPopMax commandZPopMax
 
 type commandZPopMax string
-type commandZPopMaxP struct{ Pipeliner }
+type commandZPopMaxP struct{ p Pipeliner }
 
 func (commandZPopMax) String() string                { return "ZPOPMAX" }
 func (commandZPopMax) Class() string                 { return "SortedSet" }
@@ -4197,13 +4177,13 @@ func (commandZPopMax) WarnVersion() string           { return "0.0.0" }
 func (commandZPopMax) Warning() string               { return "" }
 func (commandZPopMax) P(p Pipeliner) commandZPopMaxP { return commandZPopMaxP{p} }
 func (b commandZPopMaxP) Cmd(key string, count ...int64) {
-	b.Pipeliner.Cmd(b.builder().ZPopMaxCompleted(key, count...))
+	b.p.Cmd(b.p.builder().ZPopMaxCompleted(key, count...))
 }
 
 var CommandZPopMin commandZPopMin
 
 type commandZPopMin string
-type commandZPopMinP struct{ Pipeliner }
+type commandZPopMinP struct{ p Pipeliner }
 
 func (commandZPopMin) String() string                { return "ZPOPMIN" }
 func (commandZPopMin) Class() string                 { return "SortedSet" }
@@ -4213,13 +4193,13 @@ func (commandZPopMin) WarnVersion() string           { return "0.0.0" }
 func (commandZPopMin) Warning() string               { return "" }
 func (commandZPopMin) P(p Pipeliner) commandZPopMinP { return commandZPopMinP{p} }
 func (b commandZPopMinP) Cmd(key string, count ...int64) {
-	b.Pipeliner.Cmd(b.builder().ZPopMinCompleted(key, count...))
+	b.p.Cmd(b.p.builder().ZPopMinCompleted(key, count...))
 }
 
 var CommandZRandMember commandZRandMember
 
 type commandZRandMember string
-type commandZRandMemberP struct{ Pipeliner }
+type commandZRandMemberP struct{ p Pipeliner }
 
 func (commandZRandMember) String() string                    { return "ZRANDMEMBER" }
 func (commandZRandMember) Class() string                     { return "SortedSet" }
@@ -4229,13 +4209,13 @@ func (commandZRandMember) WarnVersion() string               { return "0.0.0" }
 func (commandZRandMember) Warning() string                   { return "" }
 func (commandZRandMember) P(p Pipeliner) commandZRandMemberP { return commandZRandMemberP{p} }
 func (b commandZRandMemberP) Cmd(key string, count int64) {
-	b.Pipeliner.Cmd(b.builder().ZRandMemberCompleted(key, count))
+	b.p.Cmd(b.p.builder().ZRandMemberCompleted(key, count))
 }
 
 var CommandZRandMemberWithScores commandZRandMemberWithScores
 
 type commandZRandMemberWithScores string
-type commandZRandMemberWithScoresP struct{ Pipeliner }
+type commandZRandMemberWithScoresP struct{ p Pipeliner }
 
 func (commandZRandMemberWithScores) String() string         { return "ZRANDMEMBER WITHSCORES" }
 func (commandZRandMemberWithScores) Class() string          { return "SortedSet" }
@@ -4247,13 +4227,13 @@ func (commandZRandMemberWithScores) P(p Pipeliner) commandZRandMemberWithScoresP
 	return commandZRandMemberWithScoresP{p}
 }
 func (b commandZRandMemberWithScoresP) Cmd(key string, count int64) {
-	b.Pipeliner.Cmd(b.builder().ZRandMemberWithScoresCompleted(key, count))
+	b.p.Cmd(b.p.builder().ZRandMemberWithScoresCompleted(key, count))
 }
 
 var CommandZUnion commandZUnion
 
 type commandZUnion string
-type commandZUnionP struct{ Pipeliner }
+type commandZUnionP struct{ p Pipeliner }
 
 func (commandZUnion) String() string               { return "ZUNION" }
 func (commandZUnion) Class() string                { return "SortedSet" }
@@ -4262,12 +4242,12 @@ func (commandZUnion) Forbid() bool                 { return false }
 func (commandZUnion) WarnVersion() string          { return "0.0.0" }
 func (commandZUnion) Warning() string              { return "" }
 func (commandZUnion) P(p Pipeliner) commandZUnionP { return commandZUnionP{p} }
-func (b commandZUnionP) Cmd(store ZStore)          { b.Pipeliner.Cmd(b.builder().ZUnionCompleted(store)) }
+func (b commandZUnionP) Cmd(store ZStore)          { b.p.Cmd(b.p.builder().ZUnionCompleted(store)) }
 
 var CommandZUnionWithScores commandZUnionWithScores
 
 type commandZUnionWithScores string
-type commandZUnionWithScoresP struct{ Pipeliner }
+type commandZUnionWithScoresP struct{ p Pipeliner }
 
 func (commandZUnionWithScores) String() string         { return "ZUNION WITHSCORES" }
 func (commandZUnionWithScores) Class() string          { return "SortedSet" }
@@ -4279,13 +4259,13 @@ func (commandZUnionWithScores) P(p Pipeliner) commandZUnionWithScoresP {
 	return commandZUnionWithScoresP{p}
 }
 func (b commandZUnionWithScoresP) Cmd(store ZStore) {
-	b.Pipeliner.Cmd(b.builder().ZUnionWithScoresCompleted(store))
+	b.p.Cmd(b.p.builder().ZUnionWithScoresCompleted(store))
 }
 
 var CommandZUnionStore commandZUnionStore
 
 type commandZUnionStore string
-type commandZUnionStoreP struct{ Pipeliner }
+type commandZUnionStoreP struct{ p Pipeliner }
 
 func (commandZUnionStore) String() string                    { return "ZUNIONSTORE" }
 func (commandZUnionStore) Class() string                     { return "SortedSet" }
@@ -4295,13 +4275,13 @@ func (commandZUnionStore) WarnVersion() string               { return "0.0.0" }
 func (commandZUnionStore) Warning() string                   { return "" }
 func (commandZUnionStore) P(p Pipeliner) commandZUnionStoreP { return commandZUnionStoreP{p} }
 func (b commandZUnionStoreP) Cmd(dest string, store ZStore) {
-	b.Pipeliner.Cmd(b.builder().ZUnionStoreCompleted(dest, store))
+	b.p.Cmd(b.p.builder().ZUnionStoreCompleted(dest, store))
 }
 
 var CommandZScore commandZScore
 
 type commandZScore string
-type commandZScoreP struct{ Pipeliner }
+type commandZScoreP struct{ p Pipeliner }
 
 func (commandZScore) String() string               { return "ZSCORE" }
 func (commandZScore) Class() string                { return "SortedSet" }
@@ -4310,14 +4290,12 @@ func (commandZScore) Forbid() bool                 { return false }
 func (commandZScore) WarnVersion() string          { return "0.0.0" }
 func (commandZScore) Warning() string              { return "" }
 func (commandZScore) P(p Pipeliner) commandZScoreP { return commandZScoreP{p} }
-func (b commandZScoreP) Cmd(key, member string) {
-	b.Pipeliner.Cmd(b.builder().ZScoreCompleted(key, member))
-}
+func (b commandZScoreP) Cmd(key, member string)    { b.p.Cmd(b.p.builder().ZScoreCompleted(key, member)) }
 
 var CommandZScan commandZScan
 
 type commandZScan string
-type commandZScanP struct{ Pipeliner }
+type commandZScanP struct{ p Pipeliner }
 
 func (commandZScan) String() string              { return "ZSCAN" }
 func (commandZScan) Class() string               { return "SortedSet" }
@@ -4327,29 +4305,27 @@ func (commandZScan) WarnVersion() string         { return "0.0.0" }
 func (commandZScan) Warning() string             { return "" }
 func (commandZScan) P(p Pipeliner) commandZScanP { return commandZScanP{p} }
 func (b commandZScanP) Cmd(key string, cursor uint64, match string, count int64) {
-	b.Pipeliner.Cmd(b.builder().ZScanCompleted(key, cursor, match, count))
+	b.p.Cmd(b.p.builder().ZScanCompleted(key, cursor, match, count))
 }
 
 var CommandZRem commandZRem
 
 type commandZRem string
-type commandZRemP struct{ Pipeliner }
+type commandZRemP struct{ p Pipeliner }
 
-func (commandZRem) String() string             { return "ZREM" }
-func (commandZRem) Class() string              { return "SortedSet" }
-func (commandZRem) RequireVersion() string     { return "1.2.0" }
-func (commandZRem) Forbid() bool               { return false }
-func (commandZRem) WarnVersion() string        { return "0.0.0" }
-func (commandZRem) Warning() string            { return "" }
-func (commandZRem) P(p Pipeliner) commandZRemP { return commandZRemP{p} }
-func (b commandZRemP) Cmd(key string, member any) {
-	b.Pipeliner.Cmd(b.builder().ZRemCompleted(key, member))
-}
+func (commandZRem) String() string                { return "ZREM" }
+func (commandZRem) Class() string                 { return "SortedSet" }
+func (commandZRem) RequireVersion() string        { return "1.2.0" }
+func (commandZRem) Forbid() bool                  { return false }
+func (commandZRem) WarnVersion() string           { return "0.0.0" }
+func (commandZRem) Warning() string               { return "" }
+func (commandZRem) P(p Pipeliner) commandZRemP    { return commandZRemP{p} }
+func (b commandZRemP) Cmd(key string, member any) { b.p.Cmd(b.p.builder().ZRemCompleted(key, member)) }
 
 var CommandZMRem commandZMRem
 
 type commandZMRem string
-type commandZMRemP struct{ Pipeliner }
+type commandZMRemP struct{ p Pipeliner }
 
 func (commandZMRem) String() string              { return "ZREM" }
 func (commandZMRem) Class() string               { return "SortedSet" }
@@ -4359,13 +4335,13 @@ func (commandZMRem) WarnVersion() string         { return "0.0.0" }
 func (commandZMRem) Warning() string             { return "" }
 func (commandZMRem) P(p Pipeliner) commandZMRemP { return commandZMRemP{p} }
 func (b commandZMRemP) Cmd(key string, members ...any) {
-	b.Pipeliner.Cmd(b.builder().ZRemCompleted(key, members...))
+	b.p.Cmd(b.p.builder().ZRemCompleted(key, members...))
 }
 
 var CommandZRemRangeByLex commandZRemRangeByLex
 
 type commandZRemRangeByLex string
-type commandZRemRangeByLexP struct{ Pipeliner }
+type commandZRemRangeByLexP struct{ p Pipeliner }
 
 func (commandZRemRangeByLex) String() string                       { return "ZREMRANGEBYLEX" }
 func (commandZRemRangeByLex) Class() string                        { return "SortedSet" }
@@ -4375,13 +4351,13 @@ func (commandZRemRangeByLex) WarnVersion() string                  { return "0.0
 func (commandZRemRangeByLex) Warning() string                      { return "" }
 func (commandZRemRangeByLex) P(p Pipeliner) commandZRemRangeByLexP { return commandZRemRangeByLexP{p} }
 func (b commandZRemRangeByLexP) Cmd(key, min, max string) {
-	b.Pipeliner.Cmd(b.builder().ZRemRangeByLexCompleted(key, min, max))
+	b.p.Cmd(b.p.builder().ZRemRangeByLexCompleted(key, min, max))
 }
 
 var CommandZRemRangeByRank commandZRemRangeByRank
 
 type commandZRemRangeByRank string
-type commandZRemRangeByRankP struct{ Pipeliner }
+type commandZRemRangeByRankP struct{ p Pipeliner }
 
 func (commandZRemRangeByRank) String() string         { return "ZREMRANGEBYRANK" }
 func (commandZRemRangeByRank) Class() string          { return "SortedSet" }
@@ -4393,13 +4369,13 @@ func (commandZRemRangeByRank) P(p Pipeliner) commandZRemRangeByRankP {
 	return commandZRemRangeByRankP{p}
 }
 func (b commandZRemRangeByRankP) Cmd(key string, start, stop int64) {
-	b.Pipeliner.Cmd(b.builder().ZRemRangeByRankCompleted(key, start, stop))
+	b.p.Cmd(b.p.builder().ZRemRangeByRankCompleted(key, start, stop))
 }
 
 var CommandZRemRangeByScore commandZRemRangeByScore
 
 type commandZRemRangeByScore string
-type commandZRemRangeByScoreP struct{ Pipeliner }
+type commandZRemRangeByScoreP struct{ p Pipeliner }
 
 func (commandZRemRangeByScore) String() string         { return "ZREMRANGEBYSCORE" }
 func (commandZRemRangeByScore) Class() string          { return "SortedSet" }
@@ -4411,13 +4387,13 @@ func (commandZRemRangeByScore) P(p Pipeliner) commandZRemRangeByScoreP {
 	return commandZRemRangeByScoreP{p}
 }
 func (b commandZRemRangeByScoreP) Cmd(key, min, max string) {
-	b.Pipeliner.Cmd(b.builder().ZRemRangeByScoreCompleted(key, min, max))
+	b.p.Cmd(b.p.builder().ZRemRangeByScoreCompleted(key, min, max))
 }
 
 var CommandZRank commandZRank
 
 type commandZRank string
-type commandZRankP struct{ Pipeliner }
+type commandZRankP struct{ p Pipeliner }
 
 func (commandZRank) String() string              { return "ZRANK" }
 func (commandZRank) Class() string               { return "SortedSet" }
@@ -4426,14 +4402,12 @@ func (commandZRank) Forbid() bool                { return false }
 func (commandZRank) WarnVersion() string         { return "0.0.0" }
 func (commandZRank) Warning() string             { return "" }
 func (commandZRank) P(p Pipeliner) commandZRankP { return commandZRankP{p} }
-func (b commandZRankP) Cmd(key, member string) {
-	b.Pipeliner.Cmd(b.builder().ZRankCompleted(key, member))
-}
+func (b commandZRankP) Cmd(key, member string)   { b.p.Cmd(b.p.builder().ZRankCompleted(key, member)) }
 
 var CommandZRankWithScore commandZRankWithScore
 
 type commandZRankWithScore string
-type commandZRankWithScoreP struct{ Pipeliner }
+type commandZRankWithScoreP struct{ p Pipeliner }
 
 func (commandZRankWithScore) String() string                       { return "ZRANK WITHSCORE" }
 func (commandZRankWithScore) Class() string                        { return "SortedSet" }
@@ -4443,13 +4417,13 @@ func (commandZRankWithScore) WarnVersion() string                  { return "0.0
 func (commandZRankWithScore) Warning() string                      { return "" }
 func (commandZRankWithScore) P(p Pipeliner) commandZRankWithScoreP { return commandZRankWithScoreP{p} }
 func (b commandZRankWithScoreP) Cmd(key, member string) {
-	b.Pipeliner.Cmd(b.builder().ZRankWithScoreCompleted(key, member))
+	b.p.Cmd(b.p.builder().ZRankWithScoreCompleted(key, member))
 }
 
 var CommandZRevRank commandZRevRank
 
 type commandZRevRank string
-type commandZRevRankP struct{ Pipeliner }
+type commandZRevRankP struct{ p Pipeliner }
 
 func (commandZRevRank) String() string                 { return "ZREVRANK" }
 func (commandZRevRank) Class() string                  { return "SortedSet" }
@@ -4459,13 +4433,13 @@ func (commandZRevRank) WarnVersion() string            { return "0.0.0" }
 func (commandZRevRank) Warning() string                { return "" }
 func (commandZRevRank) P(p Pipeliner) commandZRevRankP { return commandZRevRankP{p} }
 func (b commandZRevRankP) Cmd(key, member string) {
-	b.Pipeliner.Cmd(b.builder().ZRevRankCompleted(key, member))
+	b.p.Cmd(b.p.builder().ZRevRankCompleted(key, member))
 }
 
 var CommandZRevRankWithScore commandZRevRankWithScore
 
 type commandZRevRankWithScore string
-type commandZRevRankWithScoreP struct{ Pipeliner }
+type commandZRevRankWithScoreP struct{ p Pipeliner }
 
 func (commandZRevRankWithScore) String() string         { return "ZREVRANK WITHSCORE" }
 func (commandZRevRankWithScore) Class() string          { return "SortedSet" }
@@ -4477,13 +4451,13 @@ func (commandZRevRankWithScore) P(p Pipeliner) commandZRevRankWithScoreP {
 	return commandZRevRankWithScoreP{p}
 }
 func (b commandZRevRankWithScoreP) Cmd(key, member string) {
-	b.Pipeliner.Cmd(b.builder().ZRevRankWithScoreCompleted(key, member))
+	b.p.Cmd(b.p.builder().ZRevRankWithScoreCompleted(key, member))
 }
 
 var CommandZRange commandZRange
 
 type commandZRange string
-type commandZRangeP struct{ Pipeliner }
+type commandZRangeP struct{ p Pipeliner }
 
 func (commandZRange) String() string               { return "ZRANGE" }
 func (commandZRange) Class() string                { return "SortedSet" }
@@ -4493,13 +4467,13 @@ func (commandZRange) WarnVersion() string          { return "0.0.0" }
 func (commandZRange) Warning() string              { return "" }
 func (commandZRange) P(p Pipeliner) commandZRangeP { return commandZRangeP{p} }
 func (b commandZRangeP) Cmd(key string, start, stop int64) {
-	b.Pipeliner.Cmd(b.builder().ZRangeCompleted(key, start, stop))
+	b.p.Cmd(b.p.builder().ZRangeCompleted(key, start, stop))
 }
 
 var CommandZRevRange commandZRevRange
 
 type commandZRevRange string
-type commandZRevRangeP struct{ Pipeliner }
+type commandZRevRangeP struct{ p Pipeliner }
 
 func (commandZRevRange) String() string                  { return "ZREVRANGE" }
 func (commandZRevRange) Class() string                   { return "SortedSet" }
@@ -4509,13 +4483,13 @@ func (commandZRevRange) WarnVersion() string             { return "6.2.0" }
 func (commandZRevRange) Warning() string                 { return commandZRevRangeWarning }
 func (commandZRevRange) P(p Pipeliner) commandZRevRangeP { return commandZRevRangeP{p} }
 func (b commandZRevRangeP) Cmd(key string, start, stop int64) {
-	b.Pipeliner.Cmd(b.builder().ZRevRangeCompleted(key, start, stop))
+	b.p.Cmd(b.p.builder().ZRevRangeCompleted(key, start, stop))
 }
 
 var CommandZRangeWithScores commandZRangeWithScores
 
 type commandZRangeWithScores string
-type commandZRangeWithScoresP struct{ Pipeliner }
+type commandZRangeWithScoresP struct{ p Pipeliner }
 
 func (commandZRangeWithScores) String() string         { return "ZRANGE WITHSCORE" }
 func (commandZRangeWithScores) Class() string          { return "SortedSet" }
@@ -4527,13 +4501,13 @@ func (commandZRangeWithScores) P(p Pipeliner) commandZRangeWithScoresP {
 	return commandZRangeWithScoresP{p}
 }
 func (b commandZRangeWithScoresP) Cmd(key string, start, stop int64) {
-	b.Pipeliner.Cmd(b.builder().ZRangeWithScoresCompleted(key, start, stop))
+	b.p.Cmd(b.p.builder().ZRangeWithScoresCompleted(key, start, stop))
 }
 
 var CommandZRevRangeWithScores commandZRevRangeWithScores
 
 type commandZRevRangeWithScores string
-type commandZRevRangeWithScoresP struct{ Pipeliner }
+type commandZRevRangeWithScoresP struct{ p Pipeliner }
 
 func (commandZRevRangeWithScores) String() string         { return "ZREVRANGE WITHSCORE" }
 func (commandZRevRangeWithScores) Class() string          { return "SortedSet" }
@@ -4545,13 +4519,13 @@ func (commandZRevRangeWithScores) P(p Pipeliner) commandZRevRangeWithScoresP {
 	return commandZRevRangeWithScoresP{p}
 }
 func (b commandZRevRangeWithScoresP) Cmd(key string, start, stop int64) {
-	b.Pipeliner.Cmd(b.builder().ZRevRangeWithScoresCompleted(key, start, stop))
+	b.p.Cmd(b.p.builder().ZRevRangeWithScoresCompleted(key, start, stop))
 }
 
 var CommandZRangeByLex commandZRangeByLex
 
 type commandZRangeByLex string
-type commandZRangeByLexP struct{ Pipeliner }
+type commandZRangeByLexP struct{ p Pipeliner }
 
 func (commandZRangeByLex) String() string                    { return "ZRANGEBYLEX" }
 func (commandZRangeByLex) Class() string                     { return "SortedSet" }
@@ -4561,13 +4535,13 @@ func (commandZRangeByLex) WarnVersion() string               { return "6.2.0" }
 func (commandZRangeByLex) Warning() string                   { return commandZRangeByLexWarning }
 func (commandZRangeByLex) P(p Pipeliner) commandZRangeByLexP { return commandZRangeByLexP{p} }
 func (b commandZRangeByLexP) Cmd(key string, opt ZRangeBy) {
-	b.Pipeliner.Cmd(b.builder().ZRangeByLexCompleted(key, opt))
+	b.p.Cmd(b.p.builder().ZRangeByLexCompleted(key, opt))
 }
 
 var CommandZRevRangeByLex commandZRevRangeByLex
 
 type commandZRevRangeByLex string
-type commandZRevRangeByLexP struct{ Pipeliner }
+type commandZRevRangeByLexP struct{ p Pipeliner }
 
 func (commandZRevRangeByLex) String() string                       { return "ZREVRANGEBYLEX" }
 func (commandZRevRangeByLex) Class() string                        { return "SortedSet" }
@@ -4577,13 +4551,13 @@ func (commandZRevRangeByLex) WarnVersion() string                  { return "6.2
 func (commandZRevRangeByLex) Warning() string                      { return commandZRevRangeByLexWarning }
 func (commandZRevRangeByLex) P(p Pipeliner) commandZRevRangeByLexP { return commandZRevRangeByLexP{p} }
 func (b commandZRevRangeByLexP) Cmd(key string, opt ZRangeBy) {
-	b.Pipeliner.Cmd(b.builder().ZRevRangeByLexCompleted(key, opt))
+	b.p.Cmd(b.p.builder().ZRevRangeByLexCompleted(key, opt))
 }
 
 var CommandZRangeByScore commandZRangeByScore
 
 type commandZRangeByScore string
-type commandZRangeByScoreP struct{ Pipeliner }
+type commandZRangeByScoreP struct{ p Pipeliner }
 
 func (commandZRangeByScore) String() string                      { return "ZRANGEBYSCORE" }
 func (commandZRangeByScore) Class() string                       { return "SortedSet" }
@@ -4593,13 +4567,13 @@ func (commandZRangeByScore) WarnVersion() string                 { return "6.2.0
 func (commandZRangeByScore) Warning() string                     { return commandZRangeByScoreWarning }
 func (commandZRangeByScore) P(p Pipeliner) commandZRangeByScoreP { return commandZRangeByScoreP{p} }
 func (b commandZRangeByScoreP) Cmd(key string, opt ZRangeBy) {
-	b.Pipeliner.Cmd(b.builder().ZRangeByScoreCompleted(key, opt))
+	b.p.Cmd(b.p.builder().ZRangeByScoreCompleted(key, opt))
 }
 
 var CommandZRevRangeByScore commandZRevRangeByScore
 
 type commandZRevRangeByScore string
-type commandZRevRangeByScoreP struct{ Pipeliner }
+type commandZRevRangeByScoreP struct{ p Pipeliner }
 
 func (commandZRevRangeByScore) String() string         { return "ZREVRANGEBYSCORE" }
 func (commandZRevRangeByScore) Class() string          { return "SortedSet" }
@@ -4611,13 +4585,13 @@ func (commandZRevRangeByScore) P(p Pipeliner) commandZRevRangeByScoreP {
 	return commandZRevRangeByScoreP{p}
 }
 func (b commandZRevRangeByScoreP) Cmd(key string, opt ZRangeBy) {
-	b.Pipeliner.Cmd(b.builder().ZRevRangeByScoreCompleted(key, opt))
+	b.p.Cmd(b.p.builder().ZRevRangeByScoreCompleted(key, opt))
 }
 
 var CommandZRangeByScoreWithScores commandZRangeByScoreWithScores
 
 type commandZRangeByScoreWithScores string
-type commandZRangeByScoreWithScoresP struct{ Pipeliner }
+type commandZRangeByScoreWithScoresP struct{ p Pipeliner }
 
 func (commandZRangeByScoreWithScores) String() string         { return "ZRANGEBYSCORE WITHSCORE" }
 func (commandZRangeByScoreWithScores) Class() string          { return "SortedSet" }
@@ -4629,13 +4603,13 @@ func (commandZRangeByScoreWithScores) P(p Pipeliner) commandZRangeByScoreWithSco
 	return commandZRangeByScoreWithScoresP{p}
 }
 func (b commandZRangeByScoreWithScoresP) Cmd(key string, opt ZRangeBy) {
-	b.Pipeliner.Cmd(b.builder().ZRangeByScoreWithScoresCompleted(key, opt))
+	b.p.Cmd(b.p.builder().ZRangeByScoreWithScoresCompleted(key, opt))
 }
 
 var CommandZRevRangeByScoreWithScores commandZRevRangeByScoreWithScores
 
 type commandZRevRangeByScoreWithScores string
-type commandZRevRangeByScoreWithScoresP struct{ Pipeliner }
+type commandZRevRangeByScoreWithScoresP struct{ p Pipeliner }
 
 func (commandZRevRangeByScoreWithScores) String() string         { return "ZREVRANGEBYSCORE WITHSCORE" }
 func (commandZRevRangeByScoreWithScores) Class() string          { return "SortedSet" }
@@ -4649,13 +4623,13 @@ func (commandZRevRangeByScoreWithScores) P(p Pipeliner) commandZRevRangeByScoreW
 	return commandZRevRangeByScoreWithScoresP{p}
 }
 func (b commandZRevRangeByScoreWithScoresP) Cmd(key string, opt ZRangeBy) {
-	b.Pipeliner.Cmd(b.builder().ZRevRangeByScoreWithScoresCompleted(key, opt))
+	b.p.Cmd(b.p.builder().ZRevRangeByScoreWithScoresCompleted(key, opt))
 }
 
 var CommandZRangeStore commandZRangeStore
 
 type commandZRangeStore string
-type commandZRangeStoreP struct{ Pipeliner }
+type commandZRangeStoreP struct{ p Pipeliner }
 
 func (commandZRangeStore) String() string                    { return "ZRANGESTORE" }
 func (commandZRangeStore) Class() string                     { return "SortedSet" }
@@ -4665,13 +4639,13 @@ func (commandZRangeStore) WarnVersion() string               { return "0.0.0" }
 func (commandZRangeStore) Warning() string                   { return "" }
 func (commandZRangeStore) P(p Pipeliner) commandZRangeStoreP { return commandZRangeStoreP{p} }
 func (b commandZRangeStoreP) Cmd(dst string, z ZRangeArgs) {
-	b.Pipeliner.Cmd(b.builder().ZRangeStoreCompleted(dst, z))
+	b.p.Cmd(b.p.builder().ZRangeStoreCompleted(dst, z))
 }
 
 var CommandZRangeArgsWithOption commandZRangeArgsWithOption
 
 type commandZRangeArgsWithOption string
-type commandZRangeArgsWithOptionP struct{ Pipeliner }
+type commandZRangeArgsWithOptionP struct{ p Pipeliner }
 
 func (commandZRangeArgsWithOption) String() string         { return "ZRANGE" }
 func (commandZRangeArgsWithOption) Class() string          { return "SortedSet" }
@@ -4683,13 +4657,13 @@ func (commandZRangeArgsWithOption) P(p Pipeliner) commandZRangeArgsWithOptionP {
 	return commandZRangeArgsWithOptionP{p}
 }
 func (b commandZRangeArgsWithOptionP) Cmd(z ZRangeArgs) {
-	b.Pipeliner.Cmd(b.builder().ZRangeArgsCompleted(z))
+	b.p.Cmd(b.p.builder().ZRangeArgsCompleted(z))
 }
 
 var CommandZRangeArgs commandZRangeArgs
 
 type commandZRangeArgs string
-type commandZRangeArgsP struct{ Pipeliner }
+type commandZRangeArgsP struct{ p Pipeliner }
 
 func (commandZRangeArgs) String() string                   { return "ZRANGE" }
 func (commandZRangeArgs) Class() string                    { return "SortedSet" }
@@ -4698,12 +4672,12 @@ func (commandZRangeArgs) Forbid() bool                     { return false }
 func (commandZRangeArgs) WarnVersion() string              { return "0.0.0" }
 func (commandZRangeArgs) Warning() string                  { return "" }
 func (commandZRangeArgs) P(p Pipeliner) commandZRangeArgsP { return commandZRangeArgsP{p} }
-func (b commandZRangeArgsP) Cmd(z ZRangeArgs)              { b.Pipeliner.Cmd(b.builder().ZRangeArgsCompleted(z)) }
+func (b commandZRangeArgsP) Cmd(z ZRangeArgs)              { b.p.Cmd(b.p.builder().ZRangeArgsCompleted(z)) }
 
 var CommandZRangeArgsWithScoresWithOption commandZRangeArgsWithScoresWithOption
 
 type commandZRangeArgsWithScoresWithOption string
-type commandZRangeArgsWithScoresWithOptionP struct{ Pipeliner }
+type commandZRangeArgsWithScoresWithOptionP struct{ p Pipeliner }
 
 func (commandZRangeArgsWithScoresWithOption) String() string         { return "ZRANGE WITHSCORES" }
 func (commandZRangeArgsWithScoresWithOption) Class() string          { return "SortedSet" }
@@ -4715,13 +4689,13 @@ func (commandZRangeArgsWithScoresWithOption) P(p Pipeliner) commandZRangeArgsWit
 	return commandZRangeArgsWithScoresWithOptionP{p}
 }
 func (b commandZRangeArgsWithScoresWithOptionP) Cmd(z ZRangeArgs) {
-	b.Pipeliner.Cmd(b.builder().ZRangeArgsCompleted(z))
+	b.p.Cmd(b.p.builder().ZRangeArgsCompleted(z))
 }
 
 var CommandZRangeArgsWithScores commandZRangeArgsWithScores
 
 type commandZRangeArgsWithScores string
-type commandZRangeArgsWithScoresP struct{ Pipeliner }
+type commandZRangeArgsWithScoresP struct{ p Pipeliner }
 
 func (commandZRangeArgsWithScores) String() string         { return "ZRANGE WITHSCORES" }
 func (commandZRangeArgsWithScores) Class() string          { return "SortedSet" }
@@ -4733,13 +4707,13 @@ func (commandZRangeArgsWithScores) P(p Pipeliner) commandZRangeArgsWithScoresP {
 	return commandZRangeArgsWithScoresP{p}
 }
 func (b commandZRangeArgsWithScoresP) Cmd(z ZRangeArgs) {
-	b.Pipeliner.Cmd(b.builder().ZRangeArgsCompleted(z))
+	b.p.Cmd(b.p.builder().ZRangeArgsCompleted(z))
 }
 
 var CommandXAck commandXAck
 
 type commandXAck string
-type commandXAckP struct{ Pipeliner }
+type commandXAckP struct{ p Pipeliner }
 
 func (commandXAck) String() string             { return "XACK" }
 func (commandXAck) Class() string              { return "Stream" }
@@ -4749,13 +4723,13 @@ func (commandXAck) WarnVersion() string        { return "0.0.0" }
 func (commandXAck) Warning() string            { return "" }
 func (commandXAck) P(p Pipeliner) commandXAckP { return commandXAckP{p} }
 func (b commandXAckP) Cmd(stream, group string, ids ...string) {
-	b.Pipeliner.Cmd(b.builder().XAckCompleted(stream, group, ids...))
+	b.p.Cmd(b.p.builder().XAckCompleted(stream, group, ids...))
 }
 
 var CommandXAdd commandXAdd
 
 type commandXAdd string
-type commandXAddP struct{ Pipeliner }
+type commandXAddP struct{ p Pipeliner }
 
 func (commandXAdd) String() string             { return "XADD" }
 func (commandXAdd) Class() string              { return "Stream" }
@@ -4764,7 +4738,7 @@ func (commandXAdd) Forbid() bool               { return false }
 func (commandXAdd) WarnVersion() string        { return "0.0.0" }
 func (commandXAdd) Warning() string            { return "" }
 func (commandXAdd) P(p Pipeliner) commandXAddP { return commandXAddP{p} }
-func (b commandXAddP) Cmd(a XAddArgs)          { b.Pipeliner.Cmd(b.builder().XAddCompleted(a)) }
+func (b commandXAddP) Cmd(a XAddArgs)          { b.p.Cmd(b.p.builder().XAddCompleted(a)) }
 
 var CommandXAddNoMKStream commandXAddNoMKStream
 
@@ -4813,7 +4787,7 @@ func (commandXAddLimit) Warning() string        { return "" }
 var CommandXAutoClaim commandXAutoClaim
 
 type commandXAutoClaim string
-type commandXAutoClaimP struct{ Pipeliner }
+type commandXAutoClaimP struct{ p Pipeliner }
 
 func (commandXAutoClaim) String() string                   { return "XAUTOCLAIM" }
 func (commandXAutoClaim) Class() string                    { return "Stream" }
@@ -4822,14 +4796,12 @@ func (commandXAutoClaim) Forbid() bool                     { return false }
 func (commandXAutoClaim) WarnVersion() string              { return "0.0.0" }
 func (commandXAutoClaim) Warning() string                  { return "" }
 func (commandXAutoClaim) P(p Pipeliner) commandXAutoClaimP { return commandXAutoClaimP{p} }
-func (b commandXAutoClaimP) Cmd(a XAutoClaimArgs) {
-	b.Pipeliner.Cmd(b.builder().XAutoClaimCompleted(a))
-}
+func (b commandXAutoClaimP) Cmd(a XAutoClaimArgs)          { b.p.Cmd(b.p.builder().XAutoClaimCompleted(a)) }
 
 var CommandXAutoClaimJustID commandXAutoClaimJustID
 
 type commandXAutoClaimJustID string
-type commandXAutoClaimJustIDP struct{ Pipeliner }
+type commandXAutoClaimJustIDP struct{ p Pipeliner }
 
 func (commandXAutoClaimJustID) String() string         { return "XAUTOCLAIM JUSTID" }
 func (commandXAutoClaimJustID) Class() string          { return "Stream" }
@@ -4841,13 +4813,13 @@ func (commandXAutoClaimJustID) P(p Pipeliner) commandXAutoClaimJustIDP {
 	return commandXAutoClaimJustIDP{p}
 }
 func (b commandXAutoClaimJustIDP) Cmd(a XAutoClaimArgs) {
-	b.Pipeliner.Cmd(b.builder().XAutoClaimJustIDCompleted(a))
+	b.p.Cmd(b.p.builder().XAutoClaimJustIDCompleted(a))
 }
 
 var CommandXClaim commandXClaim
 
 type commandXClaim string
-type commandXClaimP struct{ Pipeliner }
+type commandXClaimP struct{ p Pipeliner }
 
 func (commandXClaim) String() string               { return "XCLAIM" }
 func (commandXClaim) Class() string                { return "Stream" }
@@ -4856,12 +4828,12 @@ func (commandXClaim) Forbid() bool                 { return false }
 func (commandXClaim) WarnVersion() string          { return "0.0.0" }
 func (commandXClaim) Warning() string              { return "" }
 func (commandXClaim) P(p Pipeliner) commandXClaimP { return commandXClaimP{p} }
-func (b commandXClaimP) Cmd(a XClaimArgs)          { b.Pipeliner.Cmd(b.builder().XClaimCompleted(a)) }
+func (b commandXClaimP) Cmd(a XClaimArgs)          { b.p.Cmd(b.p.builder().XClaimCompleted(a)) }
 
 var CommandXClaimJustID commandXClaimJustID
 
 type commandXClaimJustID string
-type commandXClaimJustIDP struct{ Pipeliner }
+type commandXClaimJustIDP struct{ p Pipeliner }
 
 func (commandXClaimJustID) String() string                     { return "XCLAIM JUSTID" }
 func (commandXClaimJustID) Class() string                      { return "Stream" }
@@ -4870,14 +4842,12 @@ func (commandXClaimJustID) Forbid() bool                       { return false }
 func (commandXClaimJustID) WarnVersion() string                { return "0.0.0" }
 func (commandXClaimJustID) Warning() string                    { return "" }
 func (commandXClaimJustID) P(p Pipeliner) commandXClaimJustIDP { return commandXClaimJustIDP{p} }
-func (b commandXClaimJustIDP) Cmd(a XClaimArgs) {
-	b.Pipeliner.Cmd(b.builder().XClaimJustIDCompleted(a))
-}
+func (b commandXClaimJustIDP) Cmd(a XClaimArgs)                { b.p.Cmd(b.p.builder().XClaimJustIDCompleted(a)) }
 
 var CommandXDel commandXDel
 
 type commandXDel string
-type commandXDelP struct{ Pipeliner }
+type commandXDelP struct{ p Pipeliner }
 
 func (commandXDel) String() string             { return "XDEL" }
 func (commandXDel) Class() string              { return "Stream" }
@@ -4887,13 +4857,13 @@ func (commandXDel) WarnVersion() string        { return "0.0.0" }
 func (commandXDel) Warning() string            { return "" }
 func (commandXDel) P(p Pipeliner) commandXDelP { return commandXDelP{p} }
 func (b commandXDelP) Cmd(stream string, ids ...string) {
-	b.Pipeliner.Cmd(b.builder().XDelCompleted(stream, ids...))
+	b.p.Cmd(b.p.builder().XDelCompleted(stream, ids...))
 }
 
 var CommandXGroupCreate commandXGroupCreate
 
 type commandXGroupCreate string
-type commandXGroupCreateP struct{ Pipeliner }
+type commandXGroupCreateP struct{ p Pipeliner }
 
 func (commandXGroupCreate) String() string                     { return "XGROUP CREATE" }
 func (commandXGroupCreate) Class() string                      { return "Stream" }
@@ -4903,13 +4873,13 @@ func (commandXGroupCreate) WarnVersion() string                { return "0.0.0" 
 func (commandXGroupCreate) Warning() string                    { return "" }
 func (commandXGroupCreate) P(p Pipeliner) commandXGroupCreateP { return commandXGroupCreateP{p} }
 func (b commandXGroupCreateP) Cmd(stream, group, start string) {
-	b.Pipeliner.Cmd(b.builder().XGroupCreateCompleted(stream, group, start))
+	b.p.Cmd(b.p.builder().XGroupCreateCompleted(stream, group, start))
 }
 
 var CommandXGroupCreateMkStream commandXGroupCreateMkStream
 
 type commandXGroupCreateMkStream string
-type commandXGroupCreateMkStreamP struct{ Pipeliner }
+type commandXGroupCreateMkStreamP struct{ p Pipeliner }
 
 func (commandXGroupCreateMkStream) String() string         { return "XGROUP CREATE MKSTREAM" }
 func (commandXGroupCreateMkStream) Class() string          { return "Stream" }
@@ -4921,13 +4891,13 @@ func (commandXGroupCreateMkStream) P(p Pipeliner) commandXGroupCreateMkStreamP {
 	return commandXGroupCreateMkStreamP{p}
 }
 func (b commandXGroupCreateMkStreamP) Cmd(stream, group, start string) {
-	b.Pipeliner.Cmd(b.builder().XGroupCreateMkStreamCompleted(stream, group, start))
+	b.p.Cmd(b.p.builder().XGroupCreateMkStreamCompleted(stream, group, start))
 }
 
 var CommandXGroupCreateConsumer commandXGroupCreateConsumer
 
 type commandXGroupCreateConsumer string
-type commandXGroupCreateConsumerP struct{ Pipeliner }
+type commandXGroupCreateConsumerP struct{ p Pipeliner }
 
 func (commandXGroupCreateConsumer) String() string         { return "XGROUP CREATECONSUMER" }
 func (commandXGroupCreateConsumer) Class() string          { return "Stream" }
@@ -4939,13 +4909,13 @@ func (commandXGroupCreateConsumer) P(p Pipeliner) commandXGroupCreateConsumerP {
 	return commandXGroupCreateConsumerP{p}
 }
 func (b commandXGroupCreateConsumerP) Cmd(stream, group, consumer string) {
-	b.Pipeliner.Cmd(b.builder().XGroupCreateConsumerCompleted(stream, group, consumer))
+	b.p.Cmd(b.p.builder().XGroupCreateConsumerCompleted(stream, group, consumer))
 }
 
 var CommandXGroupDelConsumer commandXGroupDelConsumer
 
 type commandXGroupDelConsumer string
-type commandXGroupDelConsumerP struct{ Pipeliner }
+type commandXGroupDelConsumerP struct{ p Pipeliner }
 
 func (commandXGroupDelConsumer) String() string         { return "XGROUP DELCONSUMER" }
 func (commandXGroupDelConsumer) Class() string          { return "Stream" }
@@ -4957,13 +4927,13 @@ func (commandXGroupDelConsumer) P(p Pipeliner) commandXGroupDelConsumerP {
 	return commandXGroupDelConsumerP{p}
 }
 func (b commandXGroupDelConsumerP) Cmd(stream, group, consumer string) {
-	b.Pipeliner.Cmd(b.builder().XGroupDelConsumerCompleted(stream, group, consumer))
+	b.p.Cmd(b.p.builder().XGroupDelConsumerCompleted(stream, group, consumer))
 }
 
 var CommandXGroupDestroy commandXGroupDestroy
 
 type commandXGroupDestroy string
-type commandXGroupDestroyP struct{ Pipeliner }
+type commandXGroupDestroyP struct{ p Pipeliner }
 
 func (commandXGroupDestroy) String() string                      { return "XGROUP DESTROY" }
 func (commandXGroupDestroy) Class() string                       { return "Stream" }
@@ -4973,13 +4943,13 @@ func (commandXGroupDestroy) WarnVersion() string                 { return "0.0.0
 func (commandXGroupDestroy) Warning() string                     { return "" }
 func (commandXGroupDestroy) P(p Pipeliner) commandXGroupDestroyP { return commandXGroupDestroyP{p} }
 func (b commandXGroupDestroyP) Cmd(stream, group string) {
-	b.Pipeliner.Cmd(b.builder().XGroupDestroyCompleted(stream, group))
+	b.p.Cmd(b.p.builder().XGroupDestroyCompleted(stream, group))
 }
 
 var CommandXGroupSetID commandXGroupSetID
 
 type commandXGroupSetID string
-type commandXGroupSetIDP struct{ Pipeliner }
+type commandXGroupSetIDP struct{ p Pipeliner }
 
 func (commandXGroupSetID) String() string                    { return "XGROUP SETID" }
 func (commandXGroupSetID) Class() string                     { return "Stream" }
@@ -4989,13 +4959,13 @@ func (commandXGroupSetID) WarnVersion() string               { return "0.0.0" }
 func (commandXGroupSetID) Warning() string                   { return "" }
 func (commandXGroupSetID) P(p Pipeliner) commandXGroupSetIDP { return commandXGroupSetIDP{p} }
 func (b commandXGroupSetIDP) Cmd(stream, group, start string) {
-	b.Pipeliner.Cmd(b.builder().XGroupSetIDCompleted(stream, group, start))
+	b.p.Cmd(b.p.builder().XGroupSetIDCompleted(stream, group, start))
 }
 
 var CommandXInfoConsumers commandXInfoConsumers
 
 type commandXInfoConsumers string
-type commandXInfoConsumersP struct{ Pipeliner }
+type commandXInfoConsumersP struct{ p Pipeliner }
 
 func (commandXInfoConsumers) String() string                       { return "XINFO CONSUMERS" }
 func (commandXInfoConsumers) Class() string                        { return "Stream" }
@@ -5005,13 +4975,13 @@ func (commandXInfoConsumers) WarnVersion() string                  { return "0.0
 func (commandXInfoConsumers) Warning() string                      { return "" }
 func (commandXInfoConsumers) P(p Pipeliner) commandXInfoConsumersP { return commandXInfoConsumersP{p} }
 func (b commandXInfoConsumersP) Cmd(key, group string) {
-	b.Pipeliner.Cmd(b.builder().XInfoConsumersCompleted(key, group))
+	b.p.Cmd(b.p.builder().XInfoConsumersCompleted(key, group))
 }
 
 var CommandXInfoGroups commandXInfoGroups
 
 type commandXInfoGroups string
-type commandXInfoGroupsP struct{ Pipeliner }
+type commandXInfoGroupsP struct{ p Pipeliner }
 
 func (commandXInfoGroups) String() string                    { return "XINFO GROUPS" }
 func (commandXInfoGroups) Class() string                     { return "Stream" }
@@ -5020,12 +4990,12 @@ func (commandXInfoGroups) Forbid() bool                      { return false }
 func (commandXInfoGroups) WarnVersion() string               { return "0.0.0" }
 func (commandXInfoGroups) Warning() string                   { return "" }
 func (commandXInfoGroups) P(p Pipeliner) commandXInfoGroupsP { return commandXInfoGroupsP{p} }
-func (b commandXInfoGroupsP) Cmd(key string)                 { b.Pipeliner.Cmd(b.builder().XInfoGroupsCompleted(key)) }
+func (b commandXInfoGroupsP) Cmd(key string)                 { b.p.Cmd(b.p.builder().XInfoGroupsCompleted(key)) }
 
 var CommandXInfoStream commandXInfoStream
 
 type commandXInfoStream string
-type commandXInfoStreamP struct{ Pipeliner }
+type commandXInfoStreamP struct{ p Pipeliner }
 
 func (commandXInfoStream) String() string                    { return "XINFO STREAM" }
 func (commandXInfoStream) Class() string                     { return "Stream" }
@@ -5034,12 +5004,12 @@ func (commandXInfoStream) Forbid() bool                      { return false }
 func (commandXInfoStream) WarnVersion() string               { return "0.0.0" }
 func (commandXInfoStream) Warning() string                   { return "" }
 func (commandXInfoStream) P(p Pipeliner) commandXInfoStreamP { return commandXInfoStreamP{p} }
-func (b commandXInfoStreamP) Cmd(key string)                 { b.Pipeliner.Cmd(b.builder().XInfoStreamCompleted(key)) }
+func (b commandXInfoStreamP) Cmd(key string)                 { b.p.Cmd(b.p.builder().XInfoStreamCompleted(key)) }
 
 var CommandXInfoStreamFull commandXInfoStreamFull
 
 type commandXInfoStreamFull string
-type commandXInfoStreamFullP struct{ Pipeliner }
+type commandXInfoStreamFullP struct{ p Pipeliner }
 
 func (commandXInfoStreamFull) String() string         { return "XINFO STREAM FULL" }
 func (commandXInfoStreamFull) Class() string          { return "Stream" }
@@ -5051,13 +5021,13 @@ func (commandXInfoStreamFull) P(p Pipeliner) commandXInfoStreamFullP {
 	return commandXInfoStreamFullP{p}
 }
 func (b commandXInfoStreamFullP) Cmd(key string, count int64) {
-	b.Pipeliner.Cmd(b.builder().XInfoStreamFullCompleted(key, count))
+	b.p.Cmd(b.p.builder().XInfoStreamFullCompleted(key, count))
 }
 
 var CommandXLen commandXLen
 
 type commandXLen string
-type commandXLenP struct{ Pipeliner }
+type commandXLenP struct{ p Pipeliner }
 
 func (commandXLen) String() string             { return "XLEN" }
 func (commandXLen) Class() string              { return "Stream" }
@@ -5066,12 +5036,12 @@ func (commandXLen) Forbid() bool               { return false }
 func (commandXLen) WarnVersion() string        { return "0.0.0" }
 func (commandXLen) Warning() string            { return "" }
 func (commandXLen) P(p Pipeliner) commandXLenP { return commandXLenP{p} }
-func (b commandXLenP) Cmd(stream string)       { b.Pipeliner.Cmd(b.builder().XLenCompleted(stream)) }
+func (b commandXLenP) Cmd(stream string)       { b.p.Cmd(b.p.builder().XLenCompleted(stream)) }
 
 var CommandXPending commandXPending
 
 type commandXPending string
-type commandXPendingP struct{ Pipeliner }
+type commandXPendingP struct{ p Pipeliner }
 
 func (commandXPending) String() string                 { return "XPENDING" }
 func (commandXPending) Class() string                  { return "Stream" }
@@ -5081,13 +5051,13 @@ func (commandXPending) WarnVersion() string            { return "0.0.0" }
 func (commandXPending) Warning() string                { return "" }
 func (commandXPending) P(p Pipeliner) commandXPendingP { return commandXPendingP{p} }
 func (b commandXPendingP) Cmd(stream, group string) {
-	b.Pipeliner.Cmd(b.builder().XPendingCompleted(stream, group))
+	b.p.Cmd(b.p.builder().XPendingCompleted(stream, group))
 }
 
 var CommandXPendingExt commandXPendingExt
 
 type commandXPendingExt string
-type commandXPendingExtP struct{ Pipeliner }
+type commandXPendingExtP struct{ p Pipeliner }
 
 func (commandXPendingExt) String() string                    { return "XPENDING" }
 func (commandXPendingExt) Class() string                     { return "Stream" }
@@ -5096,14 +5066,12 @@ func (commandXPendingExt) Forbid() bool                      { return false }
 func (commandXPendingExt) WarnVersion() string               { return "0.0.0" }
 func (commandXPendingExt) Warning() string                   { return "" }
 func (commandXPendingExt) P(p Pipeliner) commandXPendingExtP { return commandXPendingExtP{p} }
-func (b commandXPendingExtP) Cmd(a XPendingExtArgs) {
-	b.Pipeliner.Cmd(b.builder().XPendingExtCompleted(a))
-}
+func (b commandXPendingExtP) Cmd(a XPendingExtArgs)          { b.p.Cmd(b.p.builder().XPendingExtCompleted(a)) }
 
 var CommandXRange commandXRange
 
 type commandXRange string
-type commandXRangeP struct{ Pipeliner }
+type commandXRangeP struct{ p Pipeliner }
 
 func (commandXRange) String() string               { return "XRANGE" }
 func (commandXRange) Class() string                { return "Stream" }
@@ -5113,13 +5081,13 @@ func (commandXRange) WarnVersion() string          { return "0.0.0" }
 func (commandXRange) Warning() string              { return "" }
 func (commandXRange) P(p Pipeliner) commandXRangeP { return commandXRangeP{p} }
 func (b commandXRangeP) Cmd(stream, start, stop string) {
-	b.Pipeliner.Cmd(b.builder().XRangeCompleted(stream, start, stop))
+	b.p.Cmd(b.p.builder().XRangeCompleted(stream, start, stop))
 }
 
 var CommandXRangeN commandXRangeN
 
 type commandXRangeN string
-type commandXRangeNP struct{ Pipeliner }
+type commandXRangeNP struct{ p Pipeliner }
 
 func (commandXRangeN) String() string                { return "XRANGE COUNT" }
 func (commandXRangeN) Class() string                 { return "Stream" }
@@ -5129,13 +5097,13 @@ func (commandXRangeN) WarnVersion() string           { return "0.0.0" }
 func (commandXRangeN) Warning() string               { return "" }
 func (commandXRangeN) P(p Pipeliner) commandXRangeNP { return commandXRangeNP{p} }
 func (b commandXRangeNP) Cmd(stream, start, stop string, count int64) {
-	b.Pipeliner.Cmd(b.builder().XRangeNCompleted(stream, start, stop, count))
+	b.p.Cmd(b.p.builder().XRangeNCompleted(stream, start, stop, count))
 }
 
 var CommandXRevRange commandXRevRange
 
 type commandXRevRange string
-type commandXRevRangeP struct{ Pipeliner }
+type commandXRevRangeP struct{ p Pipeliner }
 
 func (commandXRevRange) String() string                  { return "XREVRANGE" }
 func (commandXRevRange) Class() string                   { return "Stream" }
@@ -5145,13 +5113,13 @@ func (commandXRevRange) WarnVersion() string             { return "0.0.0" }
 func (commandXRevRange) Warning() string                 { return "" }
 func (commandXRevRange) P(p Pipeliner) commandXRevRangeP { return commandXRevRangeP{p} }
 func (b commandXRevRangeP) Cmd(stream, stop, start string) {
-	b.Pipeliner.Cmd(b.builder().XRevRangeCompleted(stream, start, stop))
+	b.p.Cmd(b.p.builder().XRevRangeCompleted(stream, start, stop))
 }
 
 var CommandXRevRangeN commandXRevRangeN
 
 type commandXRevRangeN string
-type commandXRevRangeNP struct{ Pipeliner }
+type commandXRevRangeNP struct{ p Pipeliner }
 
 func (commandXRevRangeN) String() string                   { return "XREVRANGE COUNT" }
 func (commandXRevRangeN) Class() string                    { return "Stream" }
@@ -5161,13 +5129,13 @@ func (commandXRevRangeN) WarnVersion() string              { return "0.0.0" }
 func (commandXRevRangeN) Warning() string                  { return "" }
 func (commandXRevRangeN) P(p Pipeliner) commandXRevRangeNP { return commandXRevRangeNP{p} }
 func (b commandXRevRangeNP) Cmd(stream, stop, start string, count int64) {
-	b.Pipeliner.Cmd(b.builder().XRevRangeNCompleted(stream, start, stop, count))
+	b.p.Cmd(b.p.builder().XRevRangeNCompleted(stream, start, stop, count))
 }
 
 var CommandXTrim commandXTrim
 
 type commandXTrim string
-type commandXTrimP struct{ Pipeliner }
+type commandXTrimP struct{ p Pipeliner }
 
 func (commandXTrim) String() string              { return "XTRIM" }
 func (commandXTrim) Class() string               { return "Stream" }
@@ -5177,13 +5145,13 @@ func (commandXTrim) WarnVersion() string         { return "0.0.0" }
 func (commandXTrim) Warning() string             { return "" }
 func (commandXTrim) P(p Pipeliner) commandXTrimP { return commandXTrimP{p} }
 func (b commandXTrimP) Cmd(key string, maxLen int64) {
-	b.Pipeliner.Cmd(b.builder().XTrimCompleted(key, maxLen))
+	b.p.Cmd(b.p.builder().XTrimCompleted(key, maxLen))
 }
 
 var CommandXTrimMaxLenApprox commandXTrimMaxLenApprox
 
 type commandXTrimMaxLenApprox string
-type commandXTrimMaxLenApproxP struct{ Pipeliner }
+type commandXTrimMaxLenApproxP struct{ p Pipeliner }
 
 func (commandXTrimMaxLenApprox) String() string         { return "XTRIM LIMIT" }
 func (commandXTrimMaxLenApprox) Class() string          { return "Stream" }
@@ -5195,13 +5163,13 @@ func (commandXTrimMaxLenApprox) P(p Pipeliner) commandXTrimMaxLenApproxP {
 	return commandXTrimMaxLenApproxP{p}
 }
 func (b commandXTrimMaxLenApproxP) Cmd(key string, maxLen, limit int64) {
-	b.Pipeliner.Cmd(b.builder().XTrimMaxLenApproxCompleted(key, maxLen, limit))
+	b.p.Cmd(b.p.builder().XTrimMaxLenApproxCompleted(key, maxLen, limit))
 }
 
 var CommandXTrimMinID commandXTrimMinID
 
 type commandXTrimMinID string
-type commandXTrimMinIDP struct{ Pipeliner }
+type commandXTrimMinIDP struct{ p Pipeliner }
 
 func (commandXTrimMinID) String() string                   { return "XTRIM MINID" }
 func (commandXTrimMinID) Class() string                    { return "Stream" }
@@ -5211,13 +5179,13 @@ func (commandXTrimMinID) WarnVersion() string              { return "0.0.0" }
 func (commandXTrimMinID) Warning() string                  { return "" }
 func (commandXTrimMinID) P(p Pipeliner) commandXTrimMinIDP { return commandXTrimMinIDP{p} }
 func (b commandXTrimMinIDP) Cmd(key string, minID string) {
-	b.Pipeliner.Cmd(b.builder().XTrimMinIDCompleted(key, minID))
+	b.p.Cmd(b.p.builder().XTrimMinIDCompleted(key, minID))
 }
 
 var CommandXTrimMinIDApprox commandXTrimMinIDApprox
 
 type commandXTrimMinIDApprox string
-type commandXTrimMinIDApproxP struct{ Pipeliner }
+type commandXTrimMinIDApproxP struct{ p Pipeliner }
 
 func (commandXTrimMinIDApprox) String() string         { return "XTRIM MINID LIMIT" }
 func (commandXTrimMinIDApprox) Class() string          { return "Stream" }
@@ -5229,7 +5197,7 @@ func (commandXTrimMinIDApprox) P(p Pipeliner) commandXTrimMinIDApproxP {
 	return commandXTrimMinIDApproxP{p}
 }
 func (b commandXTrimMinIDApproxP) Cmd(key string, minID string, limit int64) {
-	b.Pipeliner.Cmd(b.builder().XTrimMinIDApproxCompleted(key, minID, limit))
+	b.p.Cmd(b.p.builder().XTrimMinIDApproxCompleted(key, minID, limit))
 }
 
 var CommandXRead commandXRead
@@ -5257,7 +5225,7 @@ func (commandXReadGroup) Warning() string        { return "" }
 var CommandAppend commandAppend
 
 type commandAppend string
-type commandAppendP struct{ Pipeliner }
+type commandAppendP struct{ p Pipeliner }
 
 func (commandAppend) String() string               { return "APPEND" }
 func (commandAppend) Class() string                { return "String" }
@@ -5266,14 +5234,12 @@ func (commandAppend) Forbid() bool                 { return false }
 func (commandAppend) WarnVersion() string          { return "0.0.0" }
 func (commandAppend) Warning() string              { return "" }
 func (commandAppend) P(p Pipeliner) commandAppendP { return commandAppendP{p} }
-func (b commandAppendP) Cmd(key, value string) {
-	b.Pipeliner.Cmd(b.builder().AppendCompleted(key, value))
-}
+func (b commandAppendP) Cmd(key, value string)     { b.p.Cmd(b.p.builder().AppendCompleted(key, value)) }
 
 var CommandDecr commandDecr
 
 type commandDecr string
-type commandDecrP struct{ Pipeliner }
+type commandDecrP struct{ p Pipeliner }
 
 func (commandDecr) String() string             { return "DECR" }
 func (commandDecr) Class() string              { return "String" }
@@ -5282,12 +5248,12 @@ func (commandDecr) Forbid() bool               { return false }
 func (commandDecr) WarnVersion() string        { return "0.0.0" }
 func (commandDecr) Warning() string            { return "" }
 func (commandDecr) P(p Pipeliner) commandDecrP { return commandDecrP{p} }
-func (b commandDecrP) Cmd(key, value string)   { b.Pipeliner.Cmd(b.builder().DecrCompleted(key)) }
+func (b commandDecrP) Cmd(key, value string)   { b.p.Cmd(b.p.builder().DecrCompleted(key)) }
 
 var CommandDecrBy commandDecrBy
 
 type commandDecrBy string
-type commandDecrByP struct{ Pipeliner }
+type commandDecrByP struct{ p Pipeliner }
 
 func (commandDecrBy) String() string               { return "DECRBY" }
 func (commandDecrBy) Class() string                { return "String" }
@@ -5297,13 +5263,13 @@ func (commandDecrBy) WarnVersion() string          { return "0.0.0" }
 func (commandDecrBy) Warning() string              { return "" }
 func (commandDecrBy) P(p Pipeliner) commandDecrByP { return commandDecrByP{p} }
 func (b commandDecrByP) Cmd(key string, decrement int64) {
-	b.Pipeliner.Cmd(b.builder().DecrByCompleted(key, decrement))
+	b.p.Cmd(b.p.builder().DecrByCompleted(key, decrement))
 }
 
 var CommandGet commandGet
 
 type commandGet string
-type commandGetP struct{ Pipeliner }
+type commandGetP struct{ p Pipeliner }
 
 func (commandGet) String() string            { return "GET" }
 func (commandGet) Class() string             { return "String" }
@@ -5312,12 +5278,12 @@ func (commandGet) Forbid() bool              { return false }
 func (commandGet) WarnVersion() string       { return "0.0.0" }
 func (commandGet) Warning() string           { return "" }
 func (commandGet) P(p Pipeliner) commandGetP { return commandGetP{p} }
-func (b commandGetP) Cmd(key string)         { b.Pipeliner.Cmd(b.builder().GetCompleted(key)) }
+func (b commandGetP) Cmd(key string)         { b.p.Cmd(b.p.builder().GetCompleted(key)) }
 
 var CommandGetDel commandGetDel
 
 type commandGetDel string
-type commandGetDelP struct{ Pipeliner }
+type commandGetDelP struct{ p Pipeliner }
 
 func (commandGetDel) String() string               { return "GETDEL" }
 func (commandGetDel) Class() string                { return "String" }
@@ -5326,12 +5292,12 @@ func (commandGetDel) Forbid() bool                 { return false }
 func (commandGetDel) WarnVersion() string          { return "0.0.0" }
 func (commandGetDel) Warning() string              { return "" }
 func (commandGetDel) P(p Pipeliner) commandGetDelP { return commandGetDelP{p} }
-func (b commandGetDelP) Cmd(key string)            { b.Pipeliner.Cmd(b.builder().GetDelCompleted(key)) }
+func (b commandGetDelP) Cmd(key string)            { b.p.Cmd(b.p.builder().GetDelCompleted(key)) }
 
 var CommandGetEx commandGetEx
 
 type commandGetEx string
-type commandGetExP struct{ Pipeliner }
+type commandGetExP struct{ p Pipeliner }
 
 func (commandGetEx) String() string              { return "GETEX" }
 func (commandGetEx) Class() string               { return "String" }
@@ -5341,13 +5307,13 @@ func (commandGetEx) WarnVersion() string         { return "0.0.0" }
 func (commandGetEx) Warning() string             { return "" }
 func (commandGetEx) P(p Pipeliner) commandGetExP { return commandGetExP{p} }
 func (b commandGetExP) Cmd(key string, expiration time.Duration) {
-	b.Pipeliner.Cmd(b.builder().GetExCompleted(key, expiration))
+	b.p.Cmd(b.p.builder().GetExCompleted(key, expiration))
 }
 
 var CommandGetRange commandGetRange
 
 type commandGetRange string
-type commandGetRangeP struct{ Pipeliner }
+type commandGetRangeP struct{ p Pipeliner }
 
 func (commandGetRange) String() string                 { return "GETRANGE" }
 func (commandGetRange) Class() string                  { return "String" }
@@ -5357,13 +5323,13 @@ func (commandGetRange) WarnVersion() string            { return "0.0.0" }
 func (commandGetRange) Warning() string                { return "" }
 func (commandGetRange) P(p Pipeliner) commandGetRangeP { return commandGetRangeP{p} }
 func (b commandGetRangeP) Cmd(key string, start, end int64) {
-	b.Pipeliner.Cmd(b.builder().GetRangeCompleted(key, start, end))
+	b.p.Cmd(b.p.builder().GetRangeCompleted(key, start, end))
 }
 
 var CommandGetSet commandGetSet
 
 type commandGetSet string
-type commandGetSetP struct{ Pipeliner }
+type commandGetSetP struct{ p Pipeliner }
 
 func (commandGetSet) String() string               { return "GETSET" }
 func (commandGetSet) Class() string                { return "String" }
@@ -5373,13 +5339,13 @@ func (commandGetSet) WarnVersion() string          { return "6.2.0" }
 func (commandGetSet) Warning() string              { return commandGetSetWarning }
 func (commandGetSet) P(p Pipeliner) commandGetSetP { return commandGetSetP{p} }
 func (b commandGetSetP) Cmd(key string, value any) {
-	b.Pipeliner.Cmd(b.builder().GetSetCompleted(key, value))
+	b.p.Cmd(b.p.builder().GetSetCompleted(key, value))
 }
 
 var CommandIncr commandIncr
 
 type commandIncr string
-type commandIncrP struct{ Pipeliner }
+type commandIncrP struct{ p Pipeliner }
 
 func (commandIncr) String() string             { return "INCR" }
 func (commandIncr) Class() string              { return "String" }
@@ -5388,12 +5354,12 @@ func (commandIncr) Forbid() bool               { return false }
 func (commandIncr) WarnVersion() string        { return "0.0.0" }
 func (commandIncr) Warning() string            { return "" }
 func (commandIncr) P(p Pipeliner) commandIncrP { return commandIncrP{p} }
-func (b commandIncrP) Cmd(key string)          { b.Pipeliner.Cmd(b.builder().IncrCompleted(key)) }
+func (b commandIncrP) Cmd(key string)          { b.p.Cmd(b.p.builder().IncrCompleted(key)) }
 
 var CommandIncrBy commandIncrBy
 
 type commandIncrBy string
-type commandIncrByP struct{ Pipeliner }
+type commandIncrByP struct{ p Pipeliner }
 
 func (commandIncrBy) String() string               { return "INCRBY" }
 func (commandIncrBy) Class() string                { return "String" }
@@ -5403,13 +5369,13 @@ func (commandIncrBy) WarnVersion() string          { return "0.0.0" }
 func (commandIncrBy) Warning() string              { return "" }
 func (commandIncrBy) P(p Pipeliner) commandIncrByP { return commandIncrByP{p} }
 func (b commandIncrByP) Cmd(key string, value int64) {
-	b.Pipeliner.Cmd(b.builder().IncrByCompleted(key, value))
+	b.p.Cmd(b.p.builder().IncrByCompleted(key, value))
 }
 
 var CommandIncrByFloat commandIncrByFloat
 
 type commandIncrByFloat string
-type commandIncrByFloatP struct{ Pipeliner }
+type commandIncrByFloatP struct{ p Pipeliner }
 
 func (commandIncrByFloat) String() string                    { return "INCRBYFLOAT" }
 func (commandIncrByFloat) Class() string                     { return "String" }
@@ -5419,13 +5385,13 @@ func (commandIncrByFloat) WarnVersion() string               { return "0.0.0" }
 func (commandIncrByFloat) Warning() string                   { return "" }
 func (commandIncrByFloat) P(p Pipeliner) commandIncrByFloatP { return commandIncrByFloatP{p} }
 func (b commandIncrByFloatP) Cmd(key string, value float64) {
-	b.Pipeliner.Cmd(b.builder().IncrByFloatCompleted(key, value))
+	b.p.Cmd(b.p.builder().IncrByFloatCompleted(key, value))
 }
 
 var CommandMGet commandMGet
 
 type commandMGet string
-type commandMGetP struct{ Pipeliner }
+type commandMGetP struct{ p Pipeliner }
 
 func (commandMGet) String() string             { return "MGET" }
 func (commandMGet) Class() string              { return "String" }
@@ -5434,12 +5400,12 @@ func (commandMGet) Forbid() bool               { return false }
 func (commandMGet) WarnVersion() string        { return "0.0.0" }
 func (commandMGet) Warning() string            { return "" }
 func (commandMGet) P(p Pipeliner) commandMGetP { return commandMGetP{p} }
-func (b commandMGetP) Cmd(keys ...string)      { b.Pipeliner.Cmd(b.builder().MGetCompleted(keys...)) }
+func (b commandMGetP) Cmd(keys ...string)      { b.p.Cmd(b.p.builder().MGetCompleted(keys...)) }
 
 var CommandMSet commandMSet
 
 type commandMSet string
-type commandMSetP struct{ Pipeliner }
+type commandMSetP struct{ p Pipeliner }
 
 func (commandMSet) String() string             { return "MSET" }
 func (commandMSet) Class() string              { return "String" }
@@ -5448,12 +5414,12 @@ func (commandMSet) Forbid() bool               { return false }
 func (commandMSet) WarnVersion() string        { return "0.0.0" }
 func (commandMSet) Warning() string            { return "" }
 func (commandMSet) P(p Pipeliner) commandMSetP { return commandMSetP{p} }
-func (b commandMSetP) Cmd(values ...any)       { b.Pipeliner.Cmd(b.builder().MSetCompleted(values...)) }
+func (b commandMSetP) Cmd(values ...any)       { b.p.Cmd(b.p.builder().MSetCompleted(values...)) }
 
 var CommandMSetNX commandMSetNX
 
 type commandMSetNX string
-type commandMSetNXP struct{ Pipeliner }
+type commandMSetNXP struct{ p Pipeliner }
 
 func (commandMSetNX) String() string               { return "MSETNX" }
 func (commandMSetNX) Class() string                { return "String" }
@@ -5462,12 +5428,12 @@ func (commandMSetNX) Forbid() bool                 { return false }
 func (commandMSetNX) WarnVersion() string          { return "0.0.0" }
 func (commandMSetNX) Warning() string              { return "" }
 func (commandMSetNX) P(p Pipeliner) commandMSetNXP { return commandMSetNXP{p} }
-func (b commandMSetNXP) Cmd(values ...any)         { b.Pipeliner.Cmd(b.builder().MSetNXCompleted(values...)) }
+func (b commandMSetNXP) Cmd(values ...any)         { b.p.Cmd(b.p.builder().MSetNXCompleted(values...)) }
 
 var CommandSet commandSet
 
 type commandSet string
-type commandSetP struct{ Pipeliner }
+type commandSetP struct{ p Pipeliner }
 
 func (commandSet) String() string            { return "SET" }
 func (commandSet) Class() string             { return "String" }
@@ -5477,13 +5443,13 @@ func (commandSet) WarnVersion() string       { return "0.0.0" }
 func (commandSet) Warning() string           { return "" }
 func (commandSet) P(p Pipeliner) commandSetP { return commandSetP{p} }
 func (b commandSetP) Cmd(key string, value any, expiration time.Duration) {
-	b.Pipeliner.Cmd(b.builder().SetCompleted(key, value, expiration))
+	b.p.Cmd(b.p.builder().SetCompleted(key, value, expiration))
 }
 
 var CommandSetKeepTTL commandSetKeepTTL
 
 type commandSetKeepTTL string
-type commandSetKeepTTLP struct{ Pipeliner }
+type commandSetKeepTTLP struct{ p Pipeliner }
 
 func (commandSetKeepTTL) String() string                   { return "SET" }
 func (commandSetKeepTTL) Class() string                    { return "String" }
@@ -5493,13 +5459,13 @@ func (commandSetKeepTTL) WarnVersion() string              { return "0.0.0" }
 func (commandSetKeepTTL) Warning() string                  { return "" }
 func (commandSetKeepTTL) P(p Pipeliner) commandSetKeepTTLP { return commandSetKeepTTLP{p} }
 func (b commandSetKeepTTLP) Cmd(key string, value any) {
-	b.Pipeliner.Cmd(b.builder().SetKeepTTLCompleted(key, value))
+	b.p.Cmd(b.p.builder().SetKeepTTLCompleted(key, value))
 }
 
 var CommandSetEX commandSetEX
 
 type commandSetEX string
-type commandSetEXP struct{ Pipeliner }
+type commandSetEXP struct{ p Pipeliner }
 
 func (commandSetEX) String() string              { return "SETEX" }
 func (commandSetEX) Class() string               { return "String" }
@@ -5509,13 +5475,13 @@ func (commandSetEX) WarnVersion() string         { return "2.6.12" }
 func (commandSetEX) Warning() string             { return commandSetEXWarning }
 func (commandSetEX) P(p Pipeliner) commandSetEXP { return commandSetEXP{p} }
 func (b commandSetEXP) Cmd(key string, value any, expiration time.Duration) {
-	b.Pipeliner.Cmd(b.builder().SetEXCompleted(key, value, expiration))
+	b.p.Cmd(b.p.builder().SetEXCompleted(key, value, expiration))
 }
 
 var CommandSetArgsEX commandSetArgsEX
 
 type commandSetArgsEX string
-type commandSetArgsEXP struct{ Pipeliner }
+type commandSetArgsEXP struct{ p Pipeliner }
 
 func (commandSetArgsEX) String() string                  { return "SET" }
 func (commandSetArgsEX) Class() string                   { return "String" }
@@ -5525,13 +5491,13 @@ func (commandSetArgsEX) WarnVersion() string             { return "0.0.0" }
 func (commandSetArgsEX) Warning() string                 { return "" }
 func (commandSetArgsEX) P(p Pipeliner) commandSetArgsEXP { return commandSetArgsEXP{p} }
 func (b commandSetArgsEXP) Cmd(key string, value any, a SetArgs) {
-	b.Pipeliner.Cmd(b.builder().SetArgsCompleted(key, value, a))
+	b.p.Cmd(b.p.builder().SetArgsCompleted(key, value, a))
 }
 
 var CommandSetNX commandSetNX
 
 type commandSetNX string
-type commandSetNXP struct{ Pipeliner }
+type commandSetNXP struct{ p Pipeliner }
 
 func (commandSetNX) String() string              { return "SETNX" }
 func (commandSetNX) Class() string               { return "String" }
@@ -5541,13 +5507,13 @@ func (commandSetNX) WarnVersion() string         { return "2.6.12" }
 func (commandSetNX) Warning() string             { return commandSetNXWarning }
 func (commandSetNX) P(p Pipeliner) commandSetNXP { return commandSetNXP{p} }
 func (b commandSetNXP) Cmd(key string, value any, expiration time.Duration) {
-	b.Pipeliner.Cmd(b.builder().SetNXCompleted(key, value, expiration))
+	b.p.Cmd(b.p.builder().SetNXCompleted(key, value, expiration))
 }
 
 var CommandSetArgsNX commandSetArgsNX
 
 type commandSetArgsNX string
-type commandSetArgsNXP struct{ Pipeliner }
+type commandSetArgsNXP struct{ p Pipeliner }
 
 func (commandSetArgsNX) String() string                  { return "SET" }
 func (commandSetArgsNX) Class() string                   { return "String" }
@@ -5557,13 +5523,13 @@ func (commandSetArgsNX) WarnVersion() string             { return "0.0.0" }
 func (commandSetArgsNX) Warning() string                 { return "" }
 func (commandSetArgsNX) P(p Pipeliner) commandSetArgsNXP { return commandSetArgsNXP{p} }
 func (b commandSetArgsNXP) Cmd(key string, value any, a SetArgs) {
-	b.Pipeliner.Cmd(b.builder().SetArgsCompleted(key, value, a))
+	b.p.Cmd(b.p.builder().SetArgsCompleted(key, value, a))
 }
 
 var CommandSetXX commandSetXX
 
 type commandSetXX string
-type commandSetXXP struct{ Pipeliner }
+type commandSetXXP struct{ p Pipeliner }
 
 func (commandSetXX) String() string              { return "SETXX" }
 func (commandSetXX) Class() string               { return "String" }
@@ -5573,13 +5539,13 @@ func (commandSetXX) WarnVersion() string         { return "0.0.0" }
 func (commandSetXX) Warning() string             { return "" }
 func (commandSetXX) P(p Pipeliner) commandSetXXP { return commandSetXXP{p} }
 func (b commandSetXXP) Cmd(key string, value any, expiration time.Duration) {
-	b.Pipeliner.Cmd(b.builder().SetXXCompleted(key, value, expiration))
+	b.p.Cmd(b.p.builder().SetXXCompleted(key, value, expiration))
 }
 
 var CommandSetNXGet commandSetNXGet
 
 type commandSetNXGet string
-type commandSetNXGetP struct{ Pipeliner }
+type commandSetNXGetP struct{ p Pipeliner }
 
 func (commandSetNXGet) String() string                 { return "SET" }
 func (commandSetNXGet) Class() string                  { return "String" }
@@ -5589,13 +5555,13 @@ func (commandSetNXGet) WarnVersion() string            { return "0.0.0" }
 func (commandSetNXGet) Warning() string                { return "" }
 func (commandSetNXGet) P(p Pipeliner) commandSetNXGetP { return commandSetNXGetP{p} }
 func (b commandSetNXGetP) Cmd(key string, value any, a SetArgs) {
-	b.Pipeliner.Cmd(b.builder().SetArgsCompleted(key, value, a))
+	b.p.Cmd(b.p.builder().SetArgsCompleted(key, value, a))
 }
 
 var CommandSetGet commandSetGet
 
 type commandSetGet string
-type commandSetGetP struct{ Pipeliner }
+type commandSetGetP struct{ p Pipeliner }
 
 func (commandSetGet) String() string               { return "SET" }
 func (commandSetGet) Class() string                { return "String" }
@@ -5605,13 +5571,13 @@ func (commandSetGet) WarnVersion() string          { return "0.0.0" }
 func (commandSetGet) Warning() string              { return "" }
 func (commandSetGet) P(p Pipeliner) commandSetGetP { return commandSetGetP{p} }
 func (b commandSetGetP) Cmd(key string, value any, a SetArgs) {
-	b.Pipeliner.Cmd(b.builder().SetArgsCompleted(key, value, a))
+	b.p.Cmd(b.p.builder().SetArgsCompleted(key, value, a))
 }
 
 var CommandSetRange commandSetRange
 
 type commandSetRange string
-type commandSetRangeP struct{ Pipeliner }
+type commandSetRangeP struct{ p Pipeliner }
 
 func (commandSetRange) String() string                 { return "SETRANGE" }
 func (commandSetRange) Class() string                  { return "String" }
@@ -5621,13 +5587,13 @@ func (commandSetRange) WarnVersion() string            { return "0.0.0" }
 func (commandSetRange) Warning() string                { return "" }
 func (commandSetRange) P(p Pipeliner) commandSetRangeP { return commandSetRangeP{p} }
 func (b commandSetRangeP) Cmd(key string, offset int64, value string) {
-	b.Pipeliner.Cmd(b.builder().SetRangeCompleted(key, offset, value))
+	b.p.Cmd(b.p.builder().SetRangeCompleted(key, offset, value))
 }
 
 var CommandStrLen commandStrLen
 
 type commandStrLen string
-type commandStrLenP struct{ Pipeliner }
+type commandStrLenP struct{ p Pipeliner }
 
 func (commandStrLen) String() string               { return "STRLEN" }
 func (commandStrLen) Class() string                { return "String" }
@@ -5636,4 +5602,4 @@ func (commandStrLen) Forbid() bool                 { return false }
 func (commandStrLen) WarnVersion() string          { return "0.0.0" }
 func (commandStrLen) Warning() string              { return "" }
 func (commandStrLen) P(p Pipeliner) commandStrLenP { return commandStrLenP{p} }
-func (b commandStrLenP) Cmd(key string)            { b.Pipeliner.Cmd(b.builder().StrLenCompleted(key)) }
+func (b commandStrLenP) Cmd(key string)            { b.p.Cmd(b.p.builder().StrLenCompleted(key)) }
