@@ -91,6 +91,8 @@ func (c *client) BitCount(ctx context.Context, key string, bc *BitCount) IntCmd 
 			ctx = c.handler.before(ctx, CommandBitCountByte)
 		case BitCountIndexBit:
 			ctx = c.handler.before(ctx, CommandBitCountBit)
+		default:
+			ctx = c.handler.before(ctx, CommandBitCount)
 		}
 	}
 	var r IntCmd
