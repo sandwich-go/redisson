@@ -371,7 +371,7 @@ func (c *client) LInsertBefore(ctx context.Context, key string, pivot, value any
 }
 
 func (c *client) LInsertAfter(ctx context.Context, key string, pivot, value any) IntCmd {
-	ctx = c.handler.before(ctx, CommandLLInsertAfter)
+	ctx = c.handler.before(ctx, CommandLInsertAfter)
 	r := c.adapter.LInsertAfter(ctx, key, pivot, value)
 	c.handler.after(ctx, r.Err())
 	return r
