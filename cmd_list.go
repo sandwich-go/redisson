@@ -2,6 +2,8 @@ package redisson
 
 import (
 	"context"
+	"fmt"
+	"strings"
 	"time"
 )
 
@@ -357,7 +359,14 @@ func (c *client) LIndex(ctx context.Context, key string, index int64) StringCmd 
 }
 
 func (c *client) LInsert(ctx context.Context, key, op string, pivot, value any) IntCmd {
-	ctx = c.handler.before(ctx, CommandLInsert)
+	switch strings.ToUpper(op) {
+	case BEFORE:
+		ctx = c.handler.before(ctx, CommandLInsertBefore)
+	case AFTER:
+		ctx = c.handler.before(ctx, CommandLInsertAfter)
+	default:
+		panic(fmt.Sprintf("Invalid op argument value: %s", op))
+	}
 	r := c.adapter.LInsert(ctx, key, op, pivot, value)
 	c.handler.after(ctx, r.Err())
 	return r
