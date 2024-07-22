@@ -3182,39 +3182,53 @@ func (commandBgSave) Warning() string        { return "" }
 var CommandCommand commandCommand
 
 type commandCommand string
+type commandCommandP struct{ Pipeliner }
 
-func (commandCommand) String() string         { return "COMMAND" }
-func (commandCommand) Class() string          { return "Server" }
-func (commandCommand) RequireVersion() string { return "2.8.13" }
-func (commandCommand) Forbid() bool           { return false }
-func (commandCommand) WarnVersion() string    { return "0.0.0" }
-func (commandCommand) Warning() string        { return "" }
+func (commandCommand) String() string                { return "COMMAND" }
+func (commandCommand) Class() string                 { return "Server" }
+func (commandCommand) RequireVersion() string        { return "2.8.13" }
+func (commandCommand) Forbid() bool                  { return false }
+func (commandCommand) WarnVersion() string           { return "0.0.0" }
+func (commandCommand) Warning() string               { return "" }
+func (commandCommand) P(p Pipeliner) commandCommandP { return commandCommandP{p} }
+func (b commandCommandP) Cmd()                       { b.Pipeliner.Cmd(b.builder().CommandCompleted()) }
 
 var CommandCommandList commandCommandList
 
 type commandCommandList string
+type commandCommandListP struct{ Pipeliner }
 
-func (commandCommandList) String() string         { return "COMMAND LIST" }
-func (commandCommandList) Class() string          { return "Server" }
-func (commandCommandList) RequireVersion() string { return "7.0.0" }
-func (commandCommandList) Forbid() bool           { return false }
-func (commandCommandList) WarnVersion() string    { return "0.0.0" }
-func (commandCommandList) Warning() string        { return "" }
+func (commandCommandList) String() string                    { return "COMMAND LIST" }
+func (commandCommandList) Class() string                     { return "Server" }
+func (commandCommandList) RequireVersion() string            { return "7.0.0" }
+func (commandCommandList) Forbid() bool                      { return false }
+func (commandCommandList) WarnVersion() string               { return "0.0.0" }
+func (commandCommandList) Warning() string                   { return "" }
+func (commandCommandList) P(p Pipeliner) commandCommandListP { return commandCommandListP{p} }
+func (b commandCommandListP) Cmd(filter FilterBy) {
+	b.Pipeliner.Cmd(b.builder().CommandListCompleted(filter))
+}
 
 var CommandCommandGetKeys commandCommandGetKeys
 
 type commandCommandGetKeys string
+type commandCommandGetKeysP struct{ Pipeliner }
 
-func (commandCommandGetKeys) String() string         { return "COMMAND GETKEYS" }
-func (commandCommandGetKeys) Class() string          { return "Server" }
-func (commandCommandGetKeys) RequireVersion() string { return "2.8.13" }
-func (commandCommandGetKeys) Forbid() bool           { return false }
-func (commandCommandGetKeys) WarnVersion() string    { return "0.0.0" }
-func (commandCommandGetKeys) Warning() string        { return "" }
+func (commandCommandGetKeys) String() string                       { return "COMMAND GETKEYS" }
+func (commandCommandGetKeys) Class() string                        { return "Server" }
+func (commandCommandGetKeys) RequireVersion() string               { return "2.8.13" }
+func (commandCommandGetKeys) Forbid() bool                         { return false }
+func (commandCommandGetKeys) WarnVersion() string                  { return "0.0.0" }
+func (commandCommandGetKeys) Warning() string                      { return "" }
+func (commandCommandGetKeys) P(p Pipeliner) commandCommandGetKeysP { return commandCommandGetKeysP{p} }
+func (b commandCommandGetKeysP) Cmd(commands ...any) {
+	b.Pipeliner.Cmd(b.builder().CommandGetKeysCompleted(commands...))
+}
 
 var CommandCommandGetKeysAndFlags commandCommandGetKeysAndFlags
 
 type commandCommandGetKeysAndFlags string
+type commandCommandGetKeysAndFlagsP struct{ Pipeliner }
 
 func (commandCommandGetKeysAndFlags) String() string         { return "COMMAND GETKEYSANDFLAGS" }
 func (commandCommandGetKeysAndFlags) Class() string          { return "Server" }
@@ -3222,6 +3236,12 @@ func (commandCommandGetKeysAndFlags) RequireVersion() string { return "7.0.0" }
 func (commandCommandGetKeysAndFlags) Forbid() bool           { return false }
 func (commandCommandGetKeysAndFlags) WarnVersion() string    { return "0.0.0" }
 func (commandCommandGetKeysAndFlags) Warning() string        { return "" }
+func (commandCommandGetKeysAndFlags) P(p Pipeliner) commandCommandGetKeysAndFlagsP {
+	return commandCommandGetKeysAndFlagsP{p}
+}
+func (b commandCommandGetKeysAndFlagsP) Cmd(commands ...any) {
+	b.Pipeliner.Cmd(b.builder().CommandGetKeysAndFlagsCompleted(commands...))
+}
 
 var CommandConfigGet commandConfigGet
 

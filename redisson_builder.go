@@ -747,6 +747,28 @@ func (b builder) ACLDryRunCompleted(username string, command ...any) Completed {
 	return b.AclDryrun().Username(username).Command(command[0].(string)).Arg(argsToSlice(command[1:])...).Build()
 }
 
+func (b builder) CommandCompleted() Completed { return b.Command().Build() }
+
+func (b builder) CommandListCompleted(filter FilterBy) Completed {
+	if filter.Module != "" {
+		return b.CommandList().FilterbyModuleName(filter.Module).Build()
+	} else if filter.Pattern != "" {
+		return b.CommandList().FilterbyPatternPattern(filter.Pattern).Build()
+	} else if filter.ACLCat != "" {
+		return b.CommandList().FilterbyAclcatCategory(filter.ACLCat).Build()
+	} else {
+		return b.CommandList().Build()
+	}
+}
+
+func (b builder) CommandGetKeysCompleted(commands ...any) Completed {
+	return b.CommandGetkeys().Command(commands[0].(string)).Arg(argsToSlice(commands[1:])...).Build()
+}
+
+func (b builder) CommandGetKeysAndFlagsCompleted(commands ...any) Completed {
+	return b.CommandGetkeysandflags().Command(commands[0].(string)).Arg(argsToSlice(commands[1:])...).Build()
+}
+
 func (b builder) TimeCompleted() Completed {
 	return b.Time().Build()
 }
