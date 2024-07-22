@@ -2750,50 +2750,69 @@ func (commandPSubscribe) Warning() string        { return "" }
 var CommandPublish commandPublish
 
 type commandPublish string
+type commandPublishP struct{ Pipeliner }
 
-func (commandPublish) String() string         { return "PUBLISH" }
-func (commandPublish) Class() string          { return "PubSub" }
-func (commandPublish) RequireVersion() string { return "2.0.0" }
-func (commandPublish) Forbid() bool           { return false }
-func (commandPublish) WarnVersion() string    { return "0.0.0" }
-func (commandPublish) Warning() string        { return "" }
+func (commandPublish) String() string                { return "PUBLISH" }
+func (commandPublish) Class() string                 { return "PubSub" }
+func (commandPublish) RequireVersion() string        { return "2.0.0" }
+func (commandPublish) Forbid() bool                  { return false }
+func (commandPublish) WarnVersion() string           { return "0.0.0" }
+func (commandPublish) Warning() string               { return "" }
+func (commandPublish) P(p Pipeliner) commandPublishP { return commandPublishP{p} }
+func (b commandPublishP) Cmd(channel string, message any) {
+	b.Pipeliner.Cmd(b.builder().PublishCompleted(channel, message))
+}
 
 var CommandPubSubChannels commandPubSubChannels
 
 type commandPubSubChannels string
+type commandPubSubChannelsP struct{ Pipeliner }
 
-func (commandPubSubChannels) String() string         { return "PUBSUB CHANNELS" }
-func (commandPubSubChannels) Class() string          { return "PubSub" }
-func (commandPubSubChannels) RequireVersion() string { return "2.8.0" }
-func (commandPubSubChannels) Forbid() bool           { return false }
-func (commandPubSubChannels) WarnVersion() string    { return "0.0.0" }
-func (commandPubSubChannels) Warning() string        { return "" }
+func (commandPubSubChannels) String() string                       { return "PUBSUB CHANNELS" }
+func (commandPubSubChannels) Class() string                        { return "PubSub" }
+func (commandPubSubChannels) RequireVersion() string               { return "2.8.0" }
+func (commandPubSubChannels) Forbid() bool                         { return false }
+func (commandPubSubChannels) WarnVersion() string                  { return "0.0.0" }
+func (commandPubSubChannels) Warning() string                      { return "" }
+func (commandPubSubChannels) P(p Pipeliner) commandPubSubChannelsP { return commandPubSubChannelsP{p} }
+func (b commandPubSubChannelsP) Cmd(pattern string) {
+	b.Pipeliner.Cmd(b.builder().PubSubChannelsCompleted(pattern))
+}
 
 var CommandPubSubNumPat commandPubSubNumPat
 
 type commandPubSubNumPat string
+type commandPubSubNumPatP struct{ Pipeliner }
 
-func (commandPubSubNumPat) String() string         { return "PUBSUB NUMPAT" }
-func (commandPubSubNumPat) Class() string          { return "PubSub" }
-func (commandPubSubNumPat) RequireVersion() string { return "2.8.0" }
-func (commandPubSubNumPat) Forbid() bool           { return false }
-func (commandPubSubNumPat) WarnVersion() string    { return "0.0.0" }
-func (commandPubSubNumPat) Warning() string        { return "" }
+func (commandPubSubNumPat) String() string                     { return "PUBSUB NUMPAT" }
+func (commandPubSubNumPat) Class() string                      { return "PubSub" }
+func (commandPubSubNumPat) RequireVersion() string             { return "2.8.0" }
+func (commandPubSubNumPat) Forbid() bool                       { return false }
+func (commandPubSubNumPat) WarnVersion() string                { return "0.0.0" }
+func (commandPubSubNumPat) Warning() string                    { return "" }
+func (commandPubSubNumPat) P(p Pipeliner) commandPubSubNumPatP { return commandPubSubNumPatP{p} }
+func (b commandPubSubNumPatP) Cmd()                            { b.Pipeliner.Cmd(b.builder().PubSubNumPatCompleted()) }
 
 var CommandPubSubNumSub commandPubSubNumSub
 
 type commandPubSubNumSub string
+type commandPubSubNumSubP struct{ Pipeliner }
 
-func (commandPubSubNumSub) String() string         { return "PUBSUB NUMSUB" }
-func (commandPubSubNumSub) Class() string          { return "PubSub" }
-func (commandPubSubNumSub) RequireVersion() string { return "2.8.0" }
-func (commandPubSubNumSub) Forbid() bool           { return false }
-func (commandPubSubNumSub) WarnVersion() string    { return "0.0.0" }
-func (commandPubSubNumSub) Warning() string        { return "" }
+func (commandPubSubNumSub) String() string                     { return "PUBSUB NUMSUB" }
+func (commandPubSubNumSub) Class() string                      { return "PubSub" }
+func (commandPubSubNumSub) RequireVersion() string             { return "2.8.0" }
+func (commandPubSubNumSub) Forbid() bool                       { return false }
+func (commandPubSubNumSub) WarnVersion() string                { return "0.0.0" }
+func (commandPubSubNumSub) Warning() string                    { return "" }
+func (commandPubSubNumSub) P(p Pipeliner) commandPubSubNumSubP { return commandPubSubNumSubP{p} }
+func (b commandPubSubNumSubP) Cmd(channels ...string) {
+	b.Pipeliner.Cmd(b.builder().PubSubNumSubCompleted(channels...))
+}
 
 var CommandPubSubShardChannels commandPubSubShardChannels
 
 type commandPubSubShardChannels string
+type commandPubSubShardChannelsP struct{ Pipeliner }
 
 func (commandPubSubShardChannels) String() string         { return "PUBSUB SHARDCHANNELS" }
 func (commandPubSubShardChannels) Class() string          { return "PubSub" }
@@ -2801,10 +2820,17 @@ func (commandPubSubShardChannels) RequireVersion() string { return "7.0.0" }
 func (commandPubSubShardChannels) Forbid() bool           { return false }
 func (commandPubSubShardChannels) WarnVersion() string    { return "0.0.0" }
 func (commandPubSubShardChannels) Warning() string        { return "" }
+func (commandPubSubShardChannels) P(p Pipeliner) commandPubSubShardChannelsP {
+	return commandPubSubShardChannelsP{p}
+}
+func (b commandPubSubShardChannelsP) Cmd(pattern string) {
+	b.Pipeliner.Cmd(b.builder().PubSubShardChannelsCompleted(pattern))
+}
 
 var CommandPubSubShardNumSub commandPubSubShardNumSub
 
 type commandPubSubShardNumSub string
+type commandPubSubShardNumSubP struct{ Pipeliner }
 
 func (commandPubSubShardNumSub) String() string         { return "PUBSUB SHARDNUMSUB" }
 func (commandPubSubShardNumSub) Class() string          { return "PubSub" }
@@ -2812,17 +2838,28 @@ func (commandPubSubShardNumSub) RequireVersion() string { return "7.0.0" }
 func (commandPubSubShardNumSub) Forbid() bool           { return false }
 func (commandPubSubShardNumSub) WarnVersion() string    { return "0.0.0" }
 func (commandPubSubShardNumSub) Warning() string        { return "" }
+func (commandPubSubShardNumSub) P(p Pipeliner) commandPubSubShardNumSubP {
+	return commandPubSubShardNumSubP{p}
+}
+func (b commandPubSubShardNumSubP) Cmd(channels ...string) {
+	b.Pipeliner.Cmd(b.builder().PubSubShardNumSubCompleted(channels...))
+}
 
 var CommandSPublish commandSPublish
 
 type commandSPublish string
+type commandSPublishP struct{ Pipeliner }
 
-func (commandSPublish) String() string         { return "SPUBLISH" }
-func (commandSPublish) Class() string          { return "PubSub" }
-func (commandSPublish) RequireVersion() string { return "7.0.0" }
-func (commandSPublish) Forbid() bool           { return false }
-func (commandSPublish) WarnVersion() string    { return "0.0.0" }
-func (commandSPublish) Warning() string        { return "" }
+func (commandSPublish) String() string                 { return "SPUBLISH" }
+func (commandSPublish) Class() string                  { return "PubSub" }
+func (commandSPublish) RequireVersion() string         { return "7.0.0" }
+func (commandSPublish) Forbid() bool                   { return false }
+func (commandSPublish) WarnVersion() string            { return "0.0.0" }
+func (commandSPublish) Warning() string                { return "" }
+func (commandSPublish) P(p Pipeliner) commandSPublishP { return commandSPublishP{p} }
+func (b commandSPublishP) Cmd(channel string, message any) {
+	b.Pipeliner.Cmd(b.builder().SPublishCompleted(channel, message))
+}
 
 var CommandSubscribe commandSubscribe
 
