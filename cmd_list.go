@@ -364,14 +364,14 @@ func (c *client) LInsert(ctx context.Context, key, op string, pivot, value any) 
 }
 
 func (c *client) LInsertBefore(ctx context.Context, key string, pivot, value any) IntCmd {
-	ctx = c.handler.before(ctx, CommandLInsert)
+	ctx = c.handler.before(ctx, CommandLInsertBefore)
 	r := c.adapter.LInsertBefore(ctx, key, pivot, value)
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) LInsertAfter(ctx context.Context, key string, pivot, value any) IntCmd {
-	ctx = c.handler.before(ctx, CommandLInsert)
+	ctx = c.handler.before(ctx, CommandLLInsertAfter)
 	r := c.adapter.LInsertAfter(ctx, key, pivot, value)
 	c.handler.after(ctx, r.Err())
 	return r

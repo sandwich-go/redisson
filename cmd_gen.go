@@ -2358,6 +2358,38 @@ func (b commandLInsertP) Cmd(key, op string, pivot, element any) {
 	b.Pipeliner.Cmd(b.builder().LInsertCompleted(key, op, pivot, element))
 }
 
+var CommandLInsertBefore commandLInsertBefore
+
+type commandLInsertBefore string
+type commandLInsertBeforeP struct{ Pipeliner }
+
+func (commandLInsertBefore) String() string                      { return "LINSERTBEFORE" }
+func (commandLInsertBefore) Class() string                       { return "List" }
+func (commandLInsertBefore) RequireVersion() string              { return "2.2.0" }
+func (commandLInsertBefore) Forbid() bool                        { return false }
+func (commandLInsertBefore) WarnVersion() string                 { return "0.0.0" }
+func (commandLInsertBefore) Warning() string                     { return "" }
+func (commandLInsertBefore) P(p Pipeliner) commandLInsertBeforeP { return commandLInsertBeforeP{p} }
+func (b commandLInsertBeforeP) Cmd(key string, pivot, element any) {
+	b.Pipeliner.Cmd(b.builder().LInsertBeforeCompleted(key, pivot, element))
+}
+
+var CommandLInsertAfter commandLInsertAfter
+
+type commandLInsertAfter string
+type commandLInsertAfterP struct{ Pipeliner }
+
+func (commandLInsertAfter) String() string                     { return "LINSERTAFTER" }
+func (commandLInsertAfter) Class() string                      { return "List" }
+func (commandLInsertAfter) RequireVersion() string             { return "2.2.0" }
+func (commandLInsertAfter) Forbid() bool                       { return false }
+func (commandLInsertAfter) WarnVersion() string                { return "0.0.0" }
+func (commandLInsertAfter) Warning() string                    { return "" }
+func (commandLInsertAfter) P(p Pipeliner) commandLInsertAfterP { return commandLInsertAfterP{p} }
+func (b commandLInsertAfterP) Cmd(key string, pivot, element any) {
+	b.Pipeliner.Cmd(b.builder().LInsertAfterCompleted(key, pivot, element))
+}
+
 var CommandLLen commandLLen
 
 type commandLLen string

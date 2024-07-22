@@ -563,6 +563,14 @@ func (b builder) LInsertCompleted(key, op string, pivot, element any) Completed 
 	}
 }
 
+func (b builder) LInsertBeforeCompleted(key string, pivot, element any) Completed {
+	return b.Linsert().Key(key).Before().Pivot(str(pivot)).Element(str(element)).Build()
+}
+
+func (b builder) LInsertAfterCompleted(key string, pivot, element any) Completed {
+	return b.Linsert().Key(key).After().Pivot(str(pivot)).Element(str(element)).Build()
+}
+
 func (b builder) LLenCompleted(key string) Completed {
 	return b.Llen().Key(key).Build()
 }
