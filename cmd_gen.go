@@ -2363,7 +2363,7 @@ var CommandLInsertBefore commandLInsertBefore
 type commandLInsertBefore string
 type commandLInsertBeforeP struct{ Pipeliner }
 
-func (commandLInsertBefore) String() string                      { return "LINSERTBEFORE" }
+func (commandLInsertBefore) String() string                      { return "LINSERT BEFORE" }
 func (commandLInsertBefore) Class() string                       { return "List" }
 func (commandLInsertBefore) RequireVersion() string              { return "2.2.0" }
 func (commandLInsertBefore) Forbid() bool                        { return false }
@@ -2379,7 +2379,7 @@ var CommandLInsertAfter commandLInsertAfter
 type commandLInsertAfter string
 type commandLInsertAfterP struct{ Pipeliner }
 
-func (commandLInsertAfter) String() string                     { return "LINSERTAFTER" }
+func (commandLInsertAfter) String() string                     { return "LINSERT AFTER" }
 func (commandLInsertAfter) Class() string                      { return "List" }
 func (commandLInsertAfter) RequireVersion() string             { return "2.2.0" }
 func (commandLInsertAfter) Forbid() bool                       { return false }
@@ -2487,7 +2487,7 @@ var CommandLPosCount commandLPosCount
 type commandLPosCount string
 type commandLPosCountP struct{ Pipeliner }
 
-func (commandLPosCount) String() string                  { return "LPOS" }
+func (commandLPosCount) String() string                  { return "LPOS COUNT" }
 func (commandLPosCount) Class() string                   { return "List" }
 func (commandLPosCount) RequireVersion() string          { return "6.0.6" }
 func (commandLPosCount) Forbid() bool                    { return false }
@@ -5485,7 +5485,7 @@ var CommandSetKeepTTL commandSetKeepTTL
 type commandSetKeepTTL string
 type commandSetKeepTTLP struct{ Pipeliner }
 
-func (commandSetKeepTTL) String() string                   { return "SETKEEPTTL" }
+func (commandSetKeepTTL) String() string                   { return "SET" }
 func (commandSetKeepTTL) Class() string                    { return "String" }
 func (commandSetKeepTTL) RequireVersion() string           { return "6.0.0" }
 func (commandSetKeepTTL) Forbid() bool                     { return false }
