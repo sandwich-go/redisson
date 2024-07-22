@@ -604,7 +604,7 @@ func (commandEcho) Forbid() bool               { return false }
 func (commandEcho) WarnVersion() string        { return "0.0.0" }
 func (commandEcho) Warning() string            { return "" }
 func (commandEcho) P(p Pipeliner) commandEchoP { return commandEchoP{p} }
-func (b commandEchoP) Cmd(message string)      { b.Pipeliner.Cmd(b.builder().EchoCompleted(message)) }
+func (b commandEchoP) Cmd(message any)         { b.Pipeliner.Cmd(b.builder().EchoCompleted(message)) }
 
 var CommandPing commandPing
 

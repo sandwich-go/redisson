@@ -81,8 +81,8 @@ func (b builder) BitFieldCompleted(key string, args ...any) Completed {
 	return cmd.Build()
 }
 
-func (b builder) EchoCompleted(message string) Completed { return b.Echo().Message(message).Build() }
-func (b builder) PingCompleted() Completed               { return b.Ping().Build() }
+func (b builder) EchoCompleted(message any) Completed { return b.Echo().Message(str(message)).Build() }
+func (b builder) PingCompleted() Completed            { return b.Ping().Build() }
 func (b builder) CopyCompleted(source string, destination string, db int64, replace bool) Completed {
 	if replace {
 		return b.Copy().Source(source).Destination(destination).Db(db).Replace().Build()
