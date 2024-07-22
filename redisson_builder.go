@@ -300,14 +300,18 @@ func (b builder) GeoPosCompleted(key string, members ...string) Completed {
 	return b.Geopos().Key(key).Member(members...).Build()
 }
 
-func (b builder) GeoSearchCompleted(key string, q GeoSearchQuery) Completed {
-	return b.Arbitrary(GEOSEARCH).Keys(key).Args(geoSearchQueryArgs(q)...).Build()
-}
-
 func (b builder) GeoRadiusByMemberCompleted(key, member string, query GeoRadiusQuery) Completed {
 	cmd := b.Arbitrary(GEORADIUSBYMEMBER_RO).Keys(key).Args(member)
 	if query.Store != "" || query.StoreDist != "" {
 		panic("GeoRadiusByMember does not support Store or StoreDist")
+	}
+	return cmd.Args(geoRadiusQueryArgs(query)...).Build()
+}
+
+func (b builder) GeoRadiusByMemberStoreCompleted(key, member string, query GeoRadiusQuery) Completed {
+	cmd := b.Arbitrary(GEORADIUSBYMEMBER).Keys(key).Args(member)
+	if query.Store == "" && query.StoreDist == "" {
+		panic("GeoRadiusByMemberStore requires Store or StoreDist")
 	}
 	return cmd.Args(geoRadiusQueryArgs(query)...).Build()
 }
@@ -318,6 +322,18 @@ func (b builder) GeoRadiusCompleted(key string, longitude, latitude float64, que
 		panic("GeoRadius does not support Store or StoreDist")
 	}
 	return cmd.Args(geoRadiusQueryArgs(query)...).Build()
+}
+
+func (b builder) GeoRadiusStoreCompleted(key string, longitude, latitude float64, query GeoRadiusQuery) Completed {
+	cmd := b.Arbitrary(GEORADIUS).Keys(key).Args(strconv.FormatFloat(longitude, 'f', -1, 64), strconv.FormatFloat(latitude, 'f', -1, 64))
+	if query.Store == "" && query.StoreDist == "" {
+		panic("GeoRadiusStore requires Store or StoreDist")
+	}
+	return cmd.Args(geoRadiusQueryArgs(query)...).Build()
+}
+
+func (b builder) GeoSearchCompleted(key string, q GeoSearchQuery) Completed {
+	return b.Arbitrary(GEOSEARCH).Keys(key).Args(geoSearchQueryArgs(q)...).Build()
 }
 
 func (b builder) GeoSearchStoreCompleted(src, dest string, q GeoSearchStoreQuery) Completed {

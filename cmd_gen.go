@@ -1434,28 +1434,39 @@ func (b commandGeoPosP) Cmd(key string, members ...string) {
 var CommandGeoRadiusRO commandGeoRadiusRO
 
 type commandGeoRadiusRO string
+type commandGeoRadiusROP struct{ Pipeliner }
 
-func (commandGeoRadiusRO) String() string         { return "GEORADIUS_RO" }
-func (commandGeoRadiusRO) Class() string          { return "Geospatial" }
-func (commandGeoRadiusRO) RequireVersion() string { return "3.2.10" }
-func (commandGeoRadiusRO) Forbid() bool           { return false }
-func (commandGeoRadiusRO) WarnVersion() string    { return "6.2.0" }
-func (commandGeoRadiusRO) Warning() string        { return commandGeoRadiusROWarning }
+func (commandGeoRadiusRO) String() string                    { return "GEORADIUS_RO" }
+func (commandGeoRadiusRO) Class() string                     { return "Geospatial" }
+func (commandGeoRadiusRO) RequireVersion() string            { return "3.2.10" }
+func (commandGeoRadiusRO) Forbid() bool                      { return false }
+func (commandGeoRadiusRO) WarnVersion() string               { return "6.2.0" }
+func (commandGeoRadiusRO) Warning() string                   { return commandGeoRadiusROWarning }
+func (commandGeoRadiusRO) P(p Pipeliner) commandGeoRadiusROP { return commandGeoRadiusROP{p} }
+func (b commandGeoRadiusROP) Cmd(key string, longitude, latitude float64, query GeoRadiusQuery) {
+	b.Pipeliner.Cmd(b.builder().GeoRadiusCompleted(key, longitude, latitude, query))
+}
 
 var CommandGeoRadiusStore commandGeoRadiusStore
 
 type commandGeoRadiusStore string
+type commandGeoRadiusStoreP struct{ Pipeliner }
 
-func (commandGeoRadiusStore) String() string         { return "GEORADIUS" }
-func (commandGeoRadiusStore) Class() string          { return "Geospatial" }
-func (commandGeoRadiusStore) RequireVersion() string { return "3.2.0" }
-func (commandGeoRadiusStore) Forbid() bool           { return false }
-func (commandGeoRadiusStore) WarnVersion() string    { return "6.2.0" }
-func (commandGeoRadiusStore) Warning() string        { return commandGeoRadiusStoreWarning }
+func (commandGeoRadiusStore) String() string                       { return "GEORADIUS" }
+func (commandGeoRadiusStore) Class() string                        { return "Geospatial" }
+func (commandGeoRadiusStore) RequireVersion() string               { return "3.2.0" }
+func (commandGeoRadiusStore) Forbid() bool                         { return false }
+func (commandGeoRadiusStore) WarnVersion() string                  { return "6.2.0" }
+func (commandGeoRadiusStore) Warning() string                      { return commandGeoRadiusStoreWarning }
+func (commandGeoRadiusStore) P(p Pipeliner) commandGeoRadiusStoreP { return commandGeoRadiusStoreP{p} }
+func (b commandGeoRadiusStoreP) Cmd(key string, longitude, latitude float64, query GeoRadiusQuery) {
+	b.Pipeliner.Cmd(b.builder().GeoRadiusStoreCompleted(key, longitude, latitude, query))
+}
 
 var CommandGeoRadiusByMemberRO commandGeoRadiusByMemberRO
 
 type commandGeoRadiusByMemberRO string
+type commandGeoRadiusByMemberROP struct{ Pipeliner }
 
 func (commandGeoRadiusByMemberRO) String() string         { return "GEORADIUSBYMEMBER_RO" }
 func (commandGeoRadiusByMemberRO) Class() string          { return "Geospatial" }
@@ -1463,10 +1474,17 @@ func (commandGeoRadiusByMemberRO) RequireVersion() string { return "3.2.10" }
 func (commandGeoRadiusByMemberRO) Forbid() bool           { return false }
 func (commandGeoRadiusByMemberRO) WarnVersion() string    { return "6.2.0" }
 func (commandGeoRadiusByMemberRO) Warning() string        { return commandGeoRadiusByMemberROWarning }
+func (commandGeoRadiusByMemberRO) P(p Pipeliner) commandGeoRadiusByMemberROP {
+	return commandGeoRadiusByMemberROP{p}
+}
+func (b commandGeoRadiusByMemberROP) Cmd(key, member string, query GeoRadiusQuery) {
+	b.Pipeliner.Cmd(b.builder().GeoRadiusByMemberCompleted(key, member, query))
+}
 
 var CommandGeoRadiusByMemberStore commandGeoRadiusByMemberStore
 
 type commandGeoRadiusByMemberStore string
+type commandGeoRadiusByMemberStoreP struct{ Pipeliner }
 
 func (commandGeoRadiusByMemberStore) String() string         { return "GEORADIUSBYMEMBER" }
 func (commandGeoRadiusByMemberStore) Class() string          { return "Geospatial" }
@@ -1474,6 +1492,12 @@ func (commandGeoRadiusByMemberStore) RequireVersion() string { return "3.2.0" }
 func (commandGeoRadiusByMemberStore) Forbid() bool           { return false }
 func (commandGeoRadiusByMemberStore) WarnVersion() string    { return "6.2.0" }
 func (commandGeoRadiusByMemberStore) Warning() string        { return commandGeoRadiusByMemberStoreWarning }
+func (commandGeoRadiusByMemberStore) P(p Pipeliner) commandGeoRadiusByMemberStoreP {
+	return commandGeoRadiusByMemberStoreP{p}
+}
+func (b commandGeoRadiusByMemberStoreP) Cmd(key, member string, query GeoRadiusQuery) {
+	b.Pipeliner.Cmd(b.builder().GeoRadiusByMemberStoreCompleted(key, member, query))
+}
 
 var CommandGeoSearch commandGeoSearch
 
