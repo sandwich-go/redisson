@@ -706,6 +706,22 @@ func (b builder) PubSubShardNumSubCompleted(channels ...string) Completed {
 	return b.PubsubShardnumsub().Channel(channels...).Build()
 }
 
+func (b builder) EvalCompleted(script string, keys []string, args ...any) Completed {
+	return b.Eval().Script(script).Numkeys(int64(len(keys))).Key(keys...).Arg(argsToSlice(args)...).Build()
+}
+
+func (b builder) EvalShaCompleted(sha1 string, keys []string, args ...any) Completed {
+	return b.Evalsha().Sha1(sha1).Numkeys(int64(len(keys))).Key(keys...).Arg(argsToSlice(args)...).Build()
+}
+
+func (b builder) EvalROCompleted(script string, keys []string, args ...any) Completed {
+	return b.EvalRo().Script(script).Numkeys(int64(len(keys))).Key(keys...).Arg(argsToSlice(args)...).Build()
+}
+
+func (b builder) EvalShaROCompleted(sha1 string, keys []string, args ...any) Completed {
+	return b.EvalshaRo().Sha1(sha1).Numkeys(int64(len(keys))).Key(keys...).Arg(argsToSlice(args)...).Build()
+}
+
 func (b builder) TimeCompleted() Completed {
 	return b.Time().Build()
 }

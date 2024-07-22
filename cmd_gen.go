@@ -2897,46 +2897,66 @@ func (commandPUnsubscribe) Warning() string        { return "" }
 var CommandEval commandEval
 
 type commandEval string
+type commandEvalP struct{ Pipeliner }
 
-func (commandEval) String() string         { return "EVAL" }
-func (commandEval) Class() string          { return "Scripting" }
-func (commandEval) RequireVersion() string { return "2.6.0" }
-func (commandEval) Forbid() bool           { return false }
-func (commandEval) WarnVersion() string    { return "0.0.0" }
-func (commandEval) Warning() string        { return "" }
+func (commandEval) String() string             { return "EVAL" }
+func (commandEval) Class() string              { return "Scripting" }
+func (commandEval) RequireVersion() string     { return "2.6.0" }
+func (commandEval) Forbid() bool               { return false }
+func (commandEval) WarnVersion() string        { return "0.0.0" }
+func (commandEval) Warning() string            { return "" }
+func (commandEval) P(p Pipeliner) commandEvalP { return commandEvalP{p} }
+func (b commandEvalP) Cmd(script string, keys []string, args ...any) {
+	b.Pipeliner.Cmd(b.builder().EvalCompleted(script, keys, args...))
+}
 
 var CommandEvalRO commandEvalRO
 
 type commandEvalRO string
+type commandEvalROP struct{ Pipeliner }
 
-func (commandEvalRO) String() string         { return "EVAL_RO" }
-func (commandEvalRO) Class() string          { return "Scripting" }
-func (commandEvalRO) RequireVersion() string { return "7.0.0" }
-func (commandEvalRO) Forbid() bool           { return false }
-func (commandEvalRO) WarnVersion() string    { return "0.0.0" }
-func (commandEvalRO) Warning() string        { return "" }
+func (commandEvalRO) String() string               { return "EVAL_RO" }
+func (commandEvalRO) Class() string                { return "Scripting" }
+func (commandEvalRO) RequireVersion() string       { return "7.0.0" }
+func (commandEvalRO) Forbid() bool                 { return false }
+func (commandEvalRO) WarnVersion() string          { return "0.0.0" }
+func (commandEvalRO) Warning() string              { return "" }
+func (commandEvalRO) P(p Pipeliner) commandEvalROP { return commandEvalROP{p} }
+func (b commandEvalROP) Cmd(script string, keys []string, args ...any) {
+	b.Pipeliner.Cmd(b.builder().EvalROCompleted(script, keys, args...))
+}
 
 var CommandEvalSha commandEvalSha
 
 type commandEvalSha string
+type commandEvalShaP struct{ Pipeliner }
 
-func (commandEvalSha) String() string         { return "EVALSHA" }
-func (commandEvalSha) Class() string          { return "Scripting" }
-func (commandEvalSha) RequireVersion() string { return "2.6.0" }
-func (commandEvalSha) Forbid() bool           { return false }
-func (commandEvalSha) WarnVersion() string    { return "0.0.0" }
-func (commandEvalSha) Warning() string        { return "" }
+func (commandEvalSha) String() string                { return "EVALSHA" }
+func (commandEvalSha) Class() string                 { return "Scripting" }
+func (commandEvalSha) RequireVersion() string        { return "2.6.0" }
+func (commandEvalSha) Forbid() bool                  { return false }
+func (commandEvalSha) WarnVersion() string           { return "0.0.0" }
+func (commandEvalSha) Warning() string               { return "" }
+func (commandEvalSha) P(p Pipeliner) commandEvalShaP { return commandEvalShaP{p} }
+func (b commandEvalShaP) Cmd(sha1 string, keys []string, args ...any) {
+	b.Pipeliner.Cmd(b.builder().EvalShaCompleted(sha1, keys, args...))
+}
 
 var CommandEvalShaRO commandEvalShaRO
 
 type commandEvalShaRO string
+type commandEvalShaROP struct{ Pipeliner }
 
-func (commandEvalShaRO) String() string         { return "EVALSHA_RO" }
-func (commandEvalShaRO) Class() string          { return "Scripting" }
-func (commandEvalShaRO) RequireVersion() string { return "7.0.0" }
-func (commandEvalShaRO) Forbid() bool           { return false }
-func (commandEvalShaRO) WarnVersion() string    { return "0.0.0" }
-func (commandEvalShaRO) Warning() string        { return "" }
+func (commandEvalShaRO) String() string                  { return "EVALSHA_RO" }
+func (commandEvalShaRO) Class() string                   { return "Scripting" }
+func (commandEvalShaRO) RequireVersion() string          { return "7.0.0" }
+func (commandEvalShaRO) Forbid() bool                    { return false }
+func (commandEvalShaRO) WarnVersion() string             { return "0.0.0" }
+func (commandEvalShaRO) Warning() string                 { return "" }
+func (commandEvalShaRO) P(p Pipeliner) commandEvalShaROP { return commandEvalShaROP{p} }
+func (b commandEvalShaROP) Cmd(sha1 string, keys []string, args ...any) {
+	b.Pipeliner.Cmd(b.builder().EvalShaROCompleted(sha1, keys, args...))
+}
 
 var CommandFCall commandFCall
 
