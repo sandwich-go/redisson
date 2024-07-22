@@ -3246,13 +3246,18 @@ func (b commandCommandGetKeysAndFlagsP) Cmd(commands ...any) {
 var CommandConfigGet commandConfigGet
 
 type commandConfigGet string
+type commandConfigGetP struct{ Pipeliner }
 
-func (commandConfigGet) String() string         { return "CONFIG GET" }
-func (commandConfigGet) Class() string          { return "Server" }
-func (commandConfigGet) RequireVersion() string { return "2.0.0" }
-func (commandConfigGet) Forbid() bool           { return true }
-func (commandConfigGet) WarnVersion() string    { return "0.0.0" }
-func (commandConfigGet) Warning() string        { return "" }
+func (commandConfigGet) String() string                  { return "CONFIG GET" }
+func (commandConfigGet) Class() string                   { return "Server" }
+func (commandConfigGet) RequireVersion() string          { return "2.0.0" }
+func (commandConfigGet) Forbid() bool                    { return true }
+func (commandConfigGet) WarnVersion() string             { return "0.0.0" }
+func (commandConfigGet) Warning() string                 { return "" }
+func (commandConfigGet) P(p Pipeliner) commandConfigGetP { return commandConfigGetP{p} }
+func (b commandConfigGetP) Cmd(parameter string) {
+	b.Pipeliner.Cmd(b.builder().ConfigGetCompleted(parameter))
+}
 
 var CommandConfigResetStat commandConfigResetStat
 
@@ -3345,46 +3350,64 @@ func (commandFlushDBAsync) Warning() string        { return "" }
 var CommandServerInfo commandServerInfo
 
 type commandServerInfo string
+type commandServerInfoP struct{ Pipeliner }
 
-func (commandServerInfo) String() string         { return "INFO" }
-func (commandServerInfo) Class() string          { return "Server" }
-func (commandServerInfo) RequireVersion() string { return "1.0.0" }
-func (commandServerInfo) Forbid() bool           { return false }
-func (commandServerInfo) WarnVersion() string    { return "0.0.0" }
-func (commandServerInfo) Warning() string        { return "" }
+func (commandServerInfo) String() string                   { return "INFO" }
+func (commandServerInfo) Class() string                    { return "Server" }
+func (commandServerInfo) RequireVersion() string           { return "1.0.0" }
+func (commandServerInfo) Forbid() bool                     { return false }
+func (commandServerInfo) WarnVersion() string              { return "0.0.0" }
+func (commandServerInfo) Warning() string                  { return "" }
+func (commandServerInfo) P(p Pipeliner) commandServerInfoP { return commandServerInfoP{p} }
+func (b commandServerInfoP) Cmd(section string) {
+	b.Pipeliner.Cmd(b.builder().ServerInfoCompleted(section))
+}
 
 var CommandMServerInfo commandMServerInfo
 
 type commandMServerInfo string
+type commandMServerInfoP struct{ Pipeliner }
 
-func (commandMServerInfo) String() string         { return "INFO" }
-func (commandMServerInfo) Class() string          { return "Server" }
-func (commandMServerInfo) RequireVersion() string { return "7.0.0" }
-func (commandMServerInfo) Forbid() bool           { return false }
-func (commandMServerInfo) WarnVersion() string    { return "0.0.0" }
-func (commandMServerInfo) Warning() string        { return "" }
+func (commandMServerInfo) String() string                    { return "INFO" }
+func (commandMServerInfo) Class() string                     { return "Server" }
+func (commandMServerInfo) RequireVersion() string            { return "7.0.0" }
+func (commandMServerInfo) Forbid() bool                      { return false }
+func (commandMServerInfo) WarnVersion() string               { return "0.0.0" }
+func (commandMServerInfo) Warning() string                   { return "" }
+func (commandMServerInfo) P(p Pipeliner) commandMServerInfoP { return commandMServerInfoP{p} }
+func (b commandMServerInfoP) Cmd(section ...string) {
+	b.Pipeliner.Cmd(b.builder().ServerInfoCompleted(section...))
+}
 
 var CommandLastSave commandLastSave
 
 type commandLastSave string
+type commandLastSaveP struct{ Pipeliner }
 
-func (commandLastSave) String() string         { return "LASTSAVE" }
-func (commandLastSave) Class() string          { return "Server" }
-func (commandLastSave) RequireVersion() string { return "1.0.0" }
-func (commandLastSave) Forbid() bool           { return true }
-func (commandLastSave) WarnVersion() string    { return "0.0.0" }
-func (commandLastSave) Warning() string        { return "" }
+func (commandLastSave) String() string                 { return "LASTSAVE" }
+func (commandLastSave) Class() string                  { return "Server" }
+func (commandLastSave) RequireVersion() string         { return "1.0.0" }
+func (commandLastSave) Forbid() bool                   { return true }
+func (commandLastSave) WarnVersion() string            { return "0.0.0" }
+func (commandLastSave) Warning() string                { return "" }
+func (commandLastSave) P(p Pipeliner) commandLastSaveP { return commandLastSaveP{p} }
+func (b commandLastSaveP) Cmd()                        { b.Pipeliner.Cmd(b.builder().LastSaveCompleted()) }
 
 var CommandMemoryUsage commandMemoryUsage
 
 type commandMemoryUsage string
+type commandMemoryUsageP struct{ Pipeliner }
 
-func (commandMemoryUsage) String() string         { return "MEMORY USAGE" }
-func (commandMemoryUsage) Class() string          { return "Server" }
-func (commandMemoryUsage) RequireVersion() string { return "4.0.0" }
-func (commandMemoryUsage) Forbid() bool           { return false }
-func (commandMemoryUsage) WarnVersion() string    { return "0.0.0" }
-func (commandMemoryUsage) Warning() string        { return "" }
+func (commandMemoryUsage) String() string                    { return "MEMORY USAGE" }
+func (commandMemoryUsage) Class() string                     { return "Server" }
+func (commandMemoryUsage) RequireVersion() string            { return "4.0.0" }
+func (commandMemoryUsage) Forbid() bool                      { return false }
+func (commandMemoryUsage) WarnVersion() string               { return "0.0.0" }
+func (commandMemoryUsage) Warning() string                   { return "" }
+func (commandMemoryUsage) P(p Pipeliner) commandMemoryUsageP { return commandMemoryUsageP{p} }
+func (b commandMemoryUsageP) Cmd(key string, samples ...int64) {
+	b.Pipeliner.Cmd(b.builder().MemoryUsageCompleted(key, samples...))
+}
 
 var CommandSave commandSave
 
@@ -3433,13 +3456,16 @@ func (commandShutdownNoSave) Warning() string        { return "" }
 var CommandDebugObject commandDebugObject
 
 type commandDebugObject string
+type commandDebugObjectP struct{ Pipeliner }
 
-func (commandDebugObject) String() string         { return "DEBUG OBJECT" }
-func (commandDebugObject) Class() string          { return "Server" }
-func (commandDebugObject) RequireVersion() string { return "1.0.0" }
-func (commandDebugObject) Forbid() bool           { return false }
-func (commandDebugObject) WarnVersion() string    { return "0.0.0" }
-func (commandDebugObject) Warning() string        { return "" }
+func (commandDebugObject) String() string                    { return "DEBUG OBJECT" }
+func (commandDebugObject) Class() string                     { return "Server" }
+func (commandDebugObject) RequireVersion() string            { return "1.0.0" }
+func (commandDebugObject) Forbid() bool                      { return false }
+func (commandDebugObject) WarnVersion() string               { return "0.0.0" }
+func (commandDebugObject) Warning() string                   { return "" }
+func (commandDebugObject) P(p Pipeliner) commandDebugObjectP { return commandDebugObjectP{p} }
+func (b commandDebugObjectP) Cmd(key string)                 { b.Pipeliner.Cmd(b.builder().DebugObjectCompleted(key)) }
 
 var CommandTime commandTime
 
