@@ -3508,7 +3508,7 @@ func (commandSMAdd) WarnVersion() string         { return "0.0.0" }
 func (commandSMAdd) Warning() string             { return "" }
 func (commandSMAdd) P(p Pipeliner) commandSMAddP { return commandSMAddP{p} }
 func (b commandSMAddP) Cmd(key string, members ...any) {
-	b.Pipeliner.Cmd(b.builder().SMAddCompleted(key, members...))
+	b.Pipeliner.Cmd(b.builder().SAddCompleted(key, members...))
 }
 
 var CommandSCard commandSCard
@@ -3752,7 +3752,7 @@ func (commandSMRem) WarnVersion() string         { return "0.0.0" }
 func (commandSMRem) Warning() string             { return "" }
 func (commandSMRem) P(p Pipeliner) commandSMRemP { return commandSMRemP{p} }
 func (b commandSMRemP) Cmd(key string, members ...any) {
-	b.Pipeliner.Cmd(b.builder().SMRemCompleted(key, members...))
+	b.Pipeliner.Cmd(b.builder().SRemCompleted(key, members...))
 }
 
 var CommandSScan commandSScan

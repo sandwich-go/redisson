@@ -797,11 +797,8 @@ func (b builder) MemoryUsageCompleted(key string, samples ...int64) Completed {
 func (b builder) TimeCompleted() Completed {
 	return b.Time().Build()
 }
-func (b builder) SAddCompleted(key string, member any) Completed {
-	return b.Sadd().Key(key).Member(str(member)).Build()
-}
 
-func (b builder) SMAddCompleted(key string, members ...any) Completed {
+func (b builder) SAddCompleted(key string, members ...any) Completed {
 	cmd := b.Sadd().Key(key).Member()
 	for _, m := range argsToSlice(members) {
 		cmd = cmd.Member(str(m))
@@ -865,11 +862,7 @@ func (b builder) SRandMemberNCompleted(key string, count int64) Completed {
 	return b.Srandmember().Key(key).Count(count).Build()
 }
 
-func (b builder) SRemCompleted(key string, member any) Completed {
-	return b.Srem().Key(key).Member(str(member)).Build()
-}
-
-func (b builder) SMRemCompleted(key string, members ...any) Completed {
+func (b builder) SRemCompleted(key string, members ...any) Completed {
 	return b.Srem().Key(key).Member(argsToSlice(members)...).Build()
 }
 
@@ -1321,7 +1314,7 @@ func (b builder) ZInterCardCompleted(limit int64, keys ...string) Completed {
 }
 
 func (b builder) ZInterStoreCompleted(destination string, store ZStore) Completed {
-	cmd := b.Arbitrary(ZINTERSTORE).Args(strconv.Itoa(len(store.Keys))).Keys(store.Keys...)
+	cmd := b.Arbitrary(ZINTERSTORE).Keys(destination).Args(strconv.Itoa(len(store.Keys))).Keys(store.Keys...)
 	if len(store.Weights) > 0 {
 		cmd = cmd.Args(WEIGHTS)
 		for _, w := range store.Weights {
@@ -1331,7 +1324,7 @@ func (b builder) ZInterStoreCompleted(destination string, store ZStore) Complete
 	if store.Aggregate != "" {
 		cmd = cmd.Args(AGGREGATE, store.Aggregate)
 	}
-	return cmd.Keys(destination).Build()
+	return cmd.Build()
 }
 
 func (b builder) ZMPopCompleted(order string, count int64, keys ...string) Completed {
@@ -1547,7 +1540,7 @@ func (b builder) zUnion(store ZStore, withScores bool) Completed {
 }
 
 func (b builder) ZUnionStoreCompleted(dest string, store ZStore) Completed {
-	cmd := b.Arbitrary(ZUNIONSTORE).Args(strconv.Itoa(len(store.Keys))).Keys(store.Keys...)
+	cmd := b.Arbitrary(ZUNIONSTORE).Keys(dest).Args(strconv.Itoa(len(store.Keys))).Keys(store.Keys...)
 	if len(store.Weights) > 0 {
 		cmd = cmd.Args(WEIGHTS)
 		for _, w := range store.Weights {
@@ -1557,7 +1550,7 @@ func (b builder) ZUnionStoreCompleted(dest string, store ZStore) Completed {
 	if store.Aggregate != "" {
 		cmd = cmd.Args(AGGREGATE, store.Aggregate)
 	}
-	return cmd.Keys(dest).Build()
+	return cmd.Build()
 }
 
 func (b builder) ZUnionCompleted(store ZStore) Completed           { return b.zUnion(store, false) }
