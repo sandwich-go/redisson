@@ -3359,9 +3359,7 @@ func (commandServerInfo) Forbid() bool                     { return false }
 func (commandServerInfo) WarnVersion() string              { return "0.0.0" }
 func (commandServerInfo) Warning() string                  { return "" }
 func (commandServerInfo) P(p Pipeliner) commandServerInfoP { return commandServerInfoP{p} }
-func (b commandServerInfoP) Cmd(section string) {
-	b.Pipeliner.Cmd(b.builder().ServerInfoCompleted(section))
-}
+func (b commandServerInfoP) Cmd(section string)            { b.Pipeliner.Cmd(b.builder().InfoCompleted(section)) }
 
 var CommandMServerInfo commandMServerInfo
 
@@ -3376,7 +3374,7 @@ func (commandMServerInfo) WarnVersion() string               { return "0.0.0" }
 func (commandMServerInfo) Warning() string                   { return "" }
 func (commandMServerInfo) P(p Pipeliner) commandMServerInfoP { return commandMServerInfoP{p} }
 func (b commandMServerInfoP) Cmd(section ...string) {
-	b.Pipeliner.Cmd(b.builder().ServerInfoCompleted(section...))
+	b.Pipeliner.Cmd(b.builder().InfoCompleted(section...))
 }
 
 var CommandLastSave commandLastSave
