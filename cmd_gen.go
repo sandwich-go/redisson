@@ -2961,24 +2961,34 @@ func (b commandEvalShaROP) Cmd(sha1 string, keys []string, args ...any) {
 var CommandFCall commandFCall
 
 type commandFCall string
+type commandFCallP struct{ Pipeliner }
 
-func (commandFCall) String() string         { return "FCALL" }
-func (commandFCall) Class() string          { return "Scripting" }
-func (commandFCall) RequireVersion() string { return "7.0.0" }
-func (commandFCall) Forbid() bool           { return false }
-func (commandFCall) WarnVersion() string    { return "0.0.0" }
-func (commandFCall) Warning() string        { return "" }
+func (commandFCall) String() string              { return "FCALL" }
+func (commandFCall) Class() string               { return "Scripting" }
+func (commandFCall) RequireVersion() string      { return "7.0.0" }
+func (commandFCall) Forbid() bool                { return false }
+func (commandFCall) WarnVersion() string         { return "0.0.0" }
+func (commandFCall) Warning() string             { return "" }
+func (commandFCall) P(p Pipeliner) commandFCallP { return commandFCallP{p} }
+func (b commandFCallP) Cmd(function string, keys []string, args ...any) {
+	b.Pipeliner.Cmd(b.builder().FCallCompleted(function, keys, args...))
+}
 
 var CommandFCallRO commandFCallRO
 
 type commandFCallRO string
+type commandFCallROP struct{ Pipeliner }
 
-func (commandFCallRO) String() string         { return "FCALL_RO" }
-func (commandFCallRO) Class() string          { return "Scripting" }
-func (commandFCallRO) RequireVersion() string { return "7.0.0" }
-func (commandFCallRO) Forbid() bool           { return false }
-func (commandFCallRO) WarnVersion() string    { return "0.0.0" }
-func (commandFCallRO) Warning() string        { return "" }
+func (commandFCallRO) String() string                { return "FCALL_RO" }
+func (commandFCallRO) Class() string                 { return "Scripting" }
+func (commandFCallRO) RequireVersion() string        { return "7.0.0" }
+func (commandFCallRO) Forbid() bool                  { return false }
+func (commandFCallRO) WarnVersion() string           { return "0.0.0" }
+func (commandFCallRO) Warning() string               { return "" }
+func (commandFCallRO) P(p Pipeliner) commandFCallROP { return commandFCallROP{p} }
+func (b commandFCallROP) Cmd(function string, keys []string, args ...any) {
+	b.Pipeliner.Cmd(b.builder().FCallROCompleted(function, keys, args...))
+}
 
 var CommandFunctionDelete commandFunctionDelete
 
@@ -2994,13 +3004,16 @@ func (commandFunctionDelete) Warning() string        { return "" }
 var CommandFunctionDump commandFunctionDump
 
 type commandFunctionDump string
+type commandFunctionDumpP struct{ Pipeliner }
 
-func (commandFunctionDump) String() string         { return "FUNCTION DUMP" }
-func (commandFunctionDump) Class() string          { return "Scripting" }
-func (commandFunctionDump) RequireVersion() string { return "7.0.0" }
-func (commandFunctionDump) Forbid() bool           { return false }
-func (commandFunctionDump) WarnVersion() string    { return "0.0.0" }
-func (commandFunctionDump) Warning() string        { return "" }
+func (commandFunctionDump) String() string                     { return "FUNCTION DUMP" }
+func (commandFunctionDump) Class() string                      { return "Scripting" }
+func (commandFunctionDump) RequireVersion() string             { return "7.0.0" }
+func (commandFunctionDump) Forbid() bool                       { return false }
+func (commandFunctionDump) WarnVersion() string                { return "0.0.0" }
+func (commandFunctionDump) Warning() string                    { return "" }
+func (commandFunctionDump) P(p Pipeliner) commandFunctionDumpP { return commandFunctionDumpP{p} }
+func (b commandFunctionDumpP) Cmd()                            { b.Pipeliner.Cmd(b.builder().FunctionDumpCompleted()) }
 
 var CommandFunctionFlush commandFunctionFlush
 
@@ -3038,13 +3051,18 @@ func (commandFunctionKill) Warning() string        { return "" }
 var CommandFunctionList commandFunctionList
 
 type commandFunctionList string
+type commandFunctionListP struct{ Pipeliner }
 
-func (commandFunctionList) String() string         { return "FUNCTION LIST" }
-func (commandFunctionList) Class() string          { return "Scripting" }
-func (commandFunctionList) RequireVersion() string { return "7.0.0" }
-func (commandFunctionList) Forbid() bool           { return false }
-func (commandFunctionList) WarnVersion() string    { return "0.0.0" }
-func (commandFunctionList) Warning() string        { return "" }
+func (commandFunctionList) String() string                     { return "FUNCTION LIST" }
+func (commandFunctionList) Class() string                      { return "Scripting" }
+func (commandFunctionList) RequireVersion() string             { return "7.0.0" }
+func (commandFunctionList) Forbid() bool                       { return false }
+func (commandFunctionList) WarnVersion() string                { return "0.0.0" }
+func (commandFunctionList) Warning() string                    { return "" }
+func (commandFunctionList) P(p Pipeliner) commandFunctionListP { return commandFunctionListP{p} }
+func (b commandFunctionListP) Cmd(q FunctionListQuery) {
+	b.Pipeliner.Cmd(b.builder().FunctionListCompleted(q))
+}
 
 var CommandFunctionLoad commandFunctionLoad
 

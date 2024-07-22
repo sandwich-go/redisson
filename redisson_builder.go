@@ -722,6 +722,27 @@ func (b builder) EvalShaROCompleted(sha1 string, keys []string, args ...any) Com
 	return b.EvalshaRo().Sha1(sha1).Numkeys(int64(len(keys))).Key(keys...).Arg(argsToSlice(args)...).Build()
 }
 
+func (b builder) FunctionListCompleted(q FunctionListQuery) Completed {
+	cmd := b.Arbitrary(FUNCTION, LIST)
+	if q.LibraryNamePattern != "" {
+		cmd = cmd.Args(LIBRARYNAME, q.LibraryNamePattern)
+	}
+	if q.WithCode {
+		cmd = cmd.Args(WITHCODE)
+	}
+	return cmd.Build()
+}
+
+func (b builder) FunctionDumpCompleted() Completed { return b.FunctionDump().Build() }
+
+func (b builder) FCallCompleted(function string, keys []string, args ...any) Completed {
+	return b.Fcall().Function(function).Numkeys(int64(len(keys))).Key(keys...).Arg(argsToSlice(args)...).Build()
+}
+
+func (b builder) FCallROCompleted(function string, keys []string, args ...any) Completed {
+	return b.FcallRo().Function(function).Numkeys(int64(len(keys))).Key(keys...).Arg(argsToSlice(args)...).Build()
+}
+
 func (b builder) TimeCompleted() Completed {
 	return b.Time().Build()
 }

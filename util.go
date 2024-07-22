@@ -84,6 +84,10 @@ const (
 	AGGREGATE            = "AGGREGATE"
 	ZMPOP                = "ZMPOP"
 	ZSCAN                = "ZSCAN"
+	FUNCTION             = "FUNCTION"
+	LIST                 = "LIST"
+	LIBRARYNAME          = "LIBRARYNAME"
+	WITHCODE             = "WITHCODE"
 )
 
 var (
