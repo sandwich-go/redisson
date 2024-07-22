@@ -509,9 +509,9 @@ func (b builder) HScanCompleted(key string, cursor uint64, match string, count i
 	return cmd.ReadOnly()
 }
 
-func (b builder) HSetCompleted(key, field, value string) Completed {
+func (b builder) HSetCompleted(key, field string, value any) Completed {
 	partial := b.Hset().Key(key).FieldValue()
-	partial = partial.FieldValue(field, value)
+	partial = partial.FieldValue(field, str(value))
 	return partial.Build()
 }
 

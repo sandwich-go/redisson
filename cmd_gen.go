@@ -2159,7 +2159,7 @@ func (commandHSet) Forbid() bool               { return false }
 func (commandHSet) WarnVersion() string        { return "0.0.0" }
 func (commandHSet) Warning() string            { return "" }
 func (commandHSet) P(p Pipeliner) commandHSetP { return commandHSetP{p} }
-func (b commandHSetP) Cmd(key, field, value string) {
+func (b commandHSetP) Cmd(key, field string, value any) {
 	b.Pipeliner.Cmd(b.builder().HSetCompleted(key, field, value))
 }
 
