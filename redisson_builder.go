@@ -743,6 +743,10 @@ func (b builder) FCallROCompleted(function string, keys []string, args ...any) C
 	return b.FcallRo().Function(function).Numkeys(int64(len(keys))).Key(keys...).Arg(argsToSlice(args)...).Build()
 }
 
+func (b builder) ACLDryRunCompleted(username string, command ...any) Completed {
+	return b.AclDryrun().Username(username).Command(command[0].(string)).Arg(argsToSlice(command[1:])...).Build()
+}
+
 func (b builder) TimeCompleted() Completed {
 	return b.Time().Build()
 }

@@ -3144,13 +3144,18 @@ func (commandScriptLoad) Warning() string        { return "" }
 var CommandACLDryRun commandACLDryRun
 
 type commandACLDryRun string
+type commandACLDryRunP struct{ Pipeliner }
 
-func (commandACLDryRun) String() string         { return "ACL DRYRUN" }
-func (commandACLDryRun) Class() string          { return "Server" }
-func (commandACLDryRun) RequireVersion() string { return "7.0.0" }
-func (commandACLDryRun) Forbid() bool           { return true }
-func (commandACLDryRun) WarnVersion() string    { return "0.0.0" }
-func (commandACLDryRun) Warning() string        { return "" }
+func (commandACLDryRun) String() string                  { return "ACL DRYRUN" }
+func (commandACLDryRun) Class() string                   { return "Server" }
+func (commandACLDryRun) RequireVersion() string          { return "7.0.0" }
+func (commandACLDryRun) Forbid() bool                    { return true }
+func (commandACLDryRun) WarnVersion() string             { return "0.0.0" }
+func (commandACLDryRun) Warning() string                 { return "" }
+func (commandACLDryRun) P(p Pipeliner) commandACLDryRunP { return commandACLDryRunP{p} }
+func (b commandACLDryRunP) Cmd(username string, command ...any) {
+	b.Pipeliner.Cmd(b.builder().ACLDryRunCompleted(username, command...))
+}
 
 var CommandBgRewriteAOF commandBgRewriteAOF
 
