@@ -46,7 +46,7 @@ func (commandBitCount) String() string                 { return "BITCOUNT" }
 func (commandBitCount) Class() string                  { return "Bitmap" }
 func (commandBitCount) RequireVersion() string         { return "2.6.0" }
 func (commandBitCount) Forbid() bool                   { return false }
-func (commandBitCount) WarnVersion() string            { return "0.0.0" }
+func (commandBitCount) WarnVersion() string            { return "" }
 func (commandBitCount) Warning() string                { return "" }
 func (commandBitCount) P(p Pipeliner) commandBitCountP { return commandBitCountP{p} }
 func (b commandBitCountP) Cmd(key string, bc *BitCount) {
@@ -62,7 +62,7 @@ func (commandBitCountByte) String() string                     { return "BITCOUN
 func (commandBitCountByte) Class() string                      { return "Bitmap" }
 func (commandBitCountByte) RequireVersion() string             { return "7.0.0" }
 func (commandBitCountByte) Forbid() bool                       { return false }
-func (commandBitCountByte) WarnVersion() string                { return "0.0.0" }
+func (commandBitCountByte) WarnVersion() string                { return "" }
 func (commandBitCountByte) Warning() string                    { return "" }
 func (commandBitCountByte) P(p Pipeliner) commandBitCountByteP { return commandBitCountByteP{p} }
 func (b commandBitCountByteP) Cmd(key string, bc *BitCount) {
@@ -78,7 +78,7 @@ func (commandBitCountBit) String() string                    { return "BITCOUNT 
 func (commandBitCountBit) Class() string                     { return "Bitmap" }
 func (commandBitCountBit) RequireVersion() string            { return "7.0.0" }
 func (commandBitCountBit) Forbid() bool                      { return false }
-func (commandBitCountBit) WarnVersion() string               { return "0.0.0" }
+func (commandBitCountBit) WarnVersion() string               { return "" }
 func (commandBitCountBit) Warning() string                   { return "" }
 func (commandBitCountBit) P(p Pipeliner) commandBitCountBitP { return commandBitCountBitP{p} }
 func (b commandBitCountBitP) Cmd(key string, bc *BitCount) {
@@ -94,7 +94,7 @@ func (commandBitField) String() string                 { return "BITFIELD" }
 func (commandBitField) Class() string                  { return "Bitmap" }
 func (commandBitField) RequireVersion() string         { return "3.2.0" }
 func (commandBitField) Forbid() bool                   { return false }
-func (commandBitField) WarnVersion() string            { return "0.0.0" }
+func (commandBitField) WarnVersion() string            { return "" }
 func (commandBitField) Warning() string                { return "" }
 func (commandBitField) P(p Pipeliner) commandBitFieldP { return commandBitFieldP{p} }
 func (b commandBitFieldP) Cmd(key string, args ...any) {
@@ -110,7 +110,7 @@ func (commandBitOpAnd) String() string                 { return "BITOP AND" }
 func (commandBitOpAnd) Class() string                  { return "Bitmap" }
 func (commandBitOpAnd) RequireVersion() string         { return "2.6.0" }
 func (commandBitOpAnd) Forbid() bool                   { return false }
-func (commandBitOpAnd) WarnVersion() string            { return "0.0.0" }
+func (commandBitOpAnd) WarnVersion() string            { return "" }
 func (commandBitOpAnd) Warning() string                { return "" }
 func (commandBitOpAnd) P(p Pipeliner) commandBitOpAndP { return commandBitOpAndP{p} }
 func (b commandBitOpAndP) Cmd(destKey string, keys ...string) {
@@ -126,7 +126,7 @@ func (commandBitOpOr) String() string                { return "BITOP OR" }
 func (commandBitOpOr) Class() string                 { return "Bitmap" }
 func (commandBitOpOr) RequireVersion() string        { return "2.6.0" }
 func (commandBitOpOr) Forbid() bool                  { return false }
-func (commandBitOpOr) WarnVersion() string           { return "0.0.0" }
+func (commandBitOpOr) WarnVersion() string           { return "" }
 func (commandBitOpOr) Warning() string               { return "" }
 func (commandBitOpOr) P(p Pipeliner) commandBitOpOrP { return commandBitOpOrP{p} }
 func (b commandBitOpOrP) Cmd(destKey string, keys ...string) {
@@ -142,7 +142,7 @@ func (commandBitOpXor) String() string                 { return "BITOP XOR" }
 func (commandBitOpXor) Class() string                  { return "Bitmap" }
 func (commandBitOpXor) RequireVersion() string         { return "2.6.0" }
 func (commandBitOpXor) Forbid() bool                   { return false }
-func (commandBitOpXor) WarnVersion() string            { return "0.0.0" }
+func (commandBitOpXor) WarnVersion() string            { return "" }
 func (commandBitOpXor) Warning() string                { return "" }
 func (commandBitOpXor) P(p Pipeliner) commandBitOpXorP { return commandBitOpXorP{p} }
 func (b commandBitOpXorP) Cmd(destKey string, keys ...string) {
@@ -158,7 +158,7 @@ func (commandBitOpNot) String() string                 { return "BITOP NOT" }
 func (commandBitOpNot) Class() string                  { return "Bitmap" }
 func (commandBitOpNot) RequireVersion() string         { return "2.6.0" }
 func (commandBitOpNot) Forbid() bool                   { return false }
-func (commandBitOpNot) WarnVersion() string            { return "0.0.0" }
+func (commandBitOpNot) WarnVersion() string            { return "" }
 func (commandBitOpNot) Warning() string                { return "" }
 func (commandBitOpNot) P(p Pipeliner) commandBitOpNotP { return commandBitOpNotP{p} }
 func (b commandBitOpNotP) Cmd(destKey string, key string) {
@@ -174,7 +174,7 @@ func (commandBitPos) String() string               { return "BITPOS" }
 func (commandBitPos) Class() string                { return "Bitmap" }
 func (commandBitPos) RequireVersion() string       { return "2.8.7" }
 func (commandBitPos) Forbid() bool                 { return false }
-func (commandBitPos) WarnVersion() string          { return "0.0.0" }
+func (commandBitPos) WarnVersion() string          { return "" }
 func (commandBitPos) Warning() string              { return "" }
 func (commandBitPos) P(p Pipeliner) commandBitPosP { return commandBitPosP{p} }
 func (b commandBitPosP) Cmd(key string, bit int64, pos ...int64) {
@@ -190,7 +190,7 @@ func (commandBitPosSpan) String() string                   { return "BITPOS BYTE
 func (commandBitPosSpan) Class() string                    { return "Bitmap" }
 func (commandBitPosSpan) RequireVersion() string           { return "7.0.0" }
 func (commandBitPosSpan) Forbid() bool                     { return false }
-func (commandBitPosSpan) WarnVersion() string              { return "0.0.0" }
+func (commandBitPosSpan) WarnVersion() string              { return "" }
 func (commandBitPosSpan) Warning() string                  { return "" }
 func (commandBitPosSpan) P(p Pipeliner) commandBitPosSpanP { return commandBitPosSpanP{p} }
 func (b commandBitPosSpanP) Cmd(key string, bit, start, end int64, span string) {
@@ -206,7 +206,7 @@ func (commandGetBit) String() string               { return "GETBIT" }
 func (commandGetBit) Class() string                { return "Bitmap" }
 func (commandGetBit) RequireVersion() string       { return "2.2.0" }
 func (commandGetBit) Forbid() bool                 { return false }
-func (commandGetBit) WarnVersion() string          { return "0.0.0" }
+func (commandGetBit) WarnVersion() string          { return "" }
 func (commandGetBit) Warning() string              { return "" }
 func (commandGetBit) P(p Pipeliner) commandGetBitP { return commandGetBitP{p} }
 func (b commandGetBitP) Cmd(key string, offset int64) {
@@ -237,7 +237,7 @@ func (commandClusterAddSlots) String() string         { return "CLUSTER ADDSLOTS
 func (commandClusterAddSlots) Class() string          { return "Cluster" }
 func (commandClusterAddSlots) RequireVersion() string { return "3.0.0" }
 func (commandClusterAddSlots) Forbid() bool           { return true }
-func (commandClusterAddSlots) WarnVersion() string    { return "0.0.0" }
+func (commandClusterAddSlots) WarnVersion() string    { return "" }
 func (commandClusterAddSlots) Warning() string        { return "" }
 
 var CommandClusterAddSlotsRange commandClusterAddSlotsRange
@@ -248,7 +248,7 @@ func (commandClusterAddSlotsRange) String() string         { return "CLUSTER ADD
 func (commandClusterAddSlotsRange) Class() string          { return "Cluster" }
 func (commandClusterAddSlotsRange) RequireVersion() string { return "7.0.0" }
 func (commandClusterAddSlotsRange) Forbid() bool           { return true }
-func (commandClusterAddSlotsRange) WarnVersion() string    { return "0.0.0" }
+func (commandClusterAddSlotsRange) WarnVersion() string    { return "" }
 func (commandClusterAddSlotsRange) Warning() string        { return "" }
 
 var CommandClusterCountFailureReports commandClusterCountFailureReports
@@ -259,7 +259,7 @@ func (commandClusterCountFailureReports) String() string         { return "CLUST
 func (commandClusterCountFailureReports) Class() string          { return "Cluster" }
 func (commandClusterCountFailureReports) RequireVersion() string { return "3.0.0" }
 func (commandClusterCountFailureReports) Forbid() bool           { return true }
-func (commandClusterCountFailureReports) WarnVersion() string    { return "0.0.0" }
+func (commandClusterCountFailureReports) WarnVersion() string    { return "" }
 func (commandClusterCountFailureReports) Warning() string        { return "" }
 
 var CommandClusterCountKeysInSlot commandClusterCountKeysInSlot
@@ -270,7 +270,7 @@ func (commandClusterCountKeysInSlot) String() string         { return "CLUSTER C
 func (commandClusterCountKeysInSlot) Class() string          { return "Cluster" }
 func (commandClusterCountKeysInSlot) RequireVersion() string { return "3.0.0" }
 func (commandClusterCountKeysInSlot) Forbid() bool           { return false }
-func (commandClusterCountKeysInSlot) WarnVersion() string    { return "0.0.0" }
+func (commandClusterCountKeysInSlot) WarnVersion() string    { return "" }
 func (commandClusterCountKeysInSlot) Warning() string        { return "" }
 
 var CommandClusterDelSlots commandClusterDelSlots
@@ -281,7 +281,7 @@ func (commandClusterDelSlots) String() string         { return "CLUSTER DELSLOTS
 func (commandClusterDelSlots) Class() string          { return "Cluster" }
 func (commandClusterDelSlots) RequireVersion() string { return "3.0.0" }
 func (commandClusterDelSlots) Forbid() bool           { return true }
-func (commandClusterDelSlots) WarnVersion() string    { return "0.0.0" }
+func (commandClusterDelSlots) WarnVersion() string    { return "" }
 func (commandClusterDelSlots) Warning() string        { return "" }
 
 var CommandClusterDelSlotsRange commandClusterDelSlotsRange
@@ -292,7 +292,7 @@ func (commandClusterDelSlotsRange) String() string         { return "CLUSTER DEL
 func (commandClusterDelSlotsRange) Class() string          { return "Cluster" }
 func (commandClusterDelSlotsRange) RequireVersion() string { return "7.0.0" }
 func (commandClusterDelSlotsRange) Forbid() bool           { return true }
-func (commandClusterDelSlotsRange) WarnVersion() string    { return "0.0.0" }
+func (commandClusterDelSlotsRange) WarnVersion() string    { return "" }
 func (commandClusterDelSlotsRange) Warning() string        { return "" }
 
 var CommandClusterFailover commandClusterFailover
@@ -303,7 +303,7 @@ func (commandClusterFailover) String() string         { return "CLUSTER FAILOVER
 func (commandClusterFailover) Class() string          { return "Cluster" }
 func (commandClusterFailover) RequireVersion() string { return "3.0.0" }
 func (commandClusterFailover) Forbid() bool           { return true }
-func (commandClusterFailover) WarnVersion() string    { return "0.0.0" }
+func (commandClusterFailover) WarnVersion() string    { return "" }
 func (commandClusterFailover) Warning() string        { return "" }
 
 var CommandClusterForget commandClusterForget
@@ -314,7 +314,7 @@ func (commandClusterForget) String() string         { return "CLUSTER FORGET" }
 func (commandClusterForget) Class() string          { return "Cluster" }
 func (commandClusterForget) RequireVersion() string { return "3.0.0" }
 func (commandClusterForget) Forbid() bool           { return true }
-func (commandClusterForget) WarnVersion() string    { return "0.0.0" }
+func (commandClusterForget) WarnVersion() string    { return "" }
 func (commandClusterForget) Warning() string        { return "" }
 
 var CommandClusterGetKeysInSlot commandClusterGetKeysInSlot
@@ -325,7 +325,7 @@ func (commandClusterGetKeysInSlot) String() string         { return "CLUSTER GET
 func (commandClusterGetKeysInSlot) Class() string          { return "Cluster" }
 func (commandClusterGetKeysInSlot) RequireVersion() string { return "3.0.0" }
 func (commandClusterGetKeysInSlot) Forbid() bool           { return false }
-func (commandClusterGetKeysInSlot) WarnVersion() string    { return "0.0.0" }
+func (commandClusterGetKeysInSlot) WarnVersion() string    { return "" }
 func (commandClusterGetKeysInSlot) Warning() string        { return "" }
 
 var CommandClusterInfo commandClusterInfo
@@ -336,7 +336,7 @@ func (commandClusterInfo) String() string         { return "CLUSTER INFO" }
 func (commandClusterInfo) Class() string          { return "Cluster" }
 func (commandClusterInfo) RequireVersion() string { return "3.0.0" }
 func (commandClusterInfo) Forbid() bool           { return false }
-func (commandClusterInfo) WarnVersion() string    { return "0.0.0" }
+func (commandClusterInfo) WarnVersion() string    { return "" }
 func (commandClusterInfo) Warning() string        { return "" }
 
 var CommandClusterKeySlot commandClusterKeySlot
@@ -347,7 +347,7 @@ func (commandClusterKeySlot) String() string         { return "CLUSTERKEYSLOT" }
 func (commandClusterKeySlot) Class() string          { return "Cluster" }
 func (commandClusterKeySlot) RequireVersion() string { return "3.0.0" }
 func (commandClusterKeySlot) Forbid() bool           { return false }
-func (commandClusterKeySlot) WarnVersion() string    { return "0.0.0" }
+func (commandClusterKeySlot) WarnVersion() string    { return "" }
 func (commandClusterKeySlot) Warning() string        { return "" }
 
 var CommandClusterMeet commandClusterMeet
@@ -358,7 +358,7 @@ func (commandClusterMeet) String() string         { return "CLUSTER MEET" }
 func (commandClusterMeet) Class() string          { return "Cluster" }
 func (commandClusterMeet) RequireVersion() string { return "3.0.0" }
 func (commandClusterMeet) Forbid() bool           { return true }
-func (commandClusterMeet) WarnVersion() string    { return "0.0.0" }
+func (commandClusterMeet) WarnVersion() string    { return "" }
 func (commandClusterMeet) Warning() string        { return "" }
 
 var CommandClusterNodes commandClusterNodes
@@ -369,7 +369,7 @@ func (commandClusterNodes) String() string         { return "CLUSTER NODES" }
 func (commandClusterNodes) Class() string          { return "Cluster" }
 func (commandClusterNodes) RequireVersion() string { return "3.0.0" }
 func (commandClusterNodes) Forbid() bool           { return false }
-func (commandClusterNodes) WarnVersion() string    { return "0.0.0" }
+func (commandClusterNodes) WarnVersion() string    { return "" }
 func (commandClusterNodes) Warning() string        { return "" }
 
 var CommandClusterReplicate commandClusterReplicate
@@ -380,7 +380,7 @@ func (commandClusterReplicate) String() string         { return "CLUSTERREPLICAT
 func (commandClusterReplicate) Class() string          { return "Cluster" }
 func (commandClusterReplicate) RequireVersion() string { return "3.0.0" }
 func (commandClusterReplicate) Forbid() bool           { return true }
-func (commandClusterReplicate) WarnVersion() string    { return "0.0.0" }
+func (commandClusterReplicate) WarnVersion() string    { return "" }
 func (commandClusterReplicate) Warning() string        { return "" }
 
 var CommandClusterResetHard commandClusterResetHard
@@ -391,7 +391,7 @@ func (commandClusterResetHard) String() string         { return "CLUSTER RESET H
 func (commandClusterResetHard) Class() string          { return "Cluster" }
 func (commandClusterResetHard) RequireVersion() string { return "3.0.0" }
 func (commandClusterResetHard) Forbid() bool           { return true }
-func (commandClusterResetHard) WarnVersion() string    { return "0.0.0" }
+func (commandClusterResetHard) WarnVersion() string    { return "" }
 func (commandClusterResetHard) Warning() string        { return "" }
 
 var CommandClusterResetSoft commandClusterResetSoft
@@ -402,7 +402,7 @@ func (commandClusterResetSoft) String() string         { return "CLUSTER RESET S
 func (commandClusterResetSoft) Class() string          { return "Cluster" }
 func (commandClusterResetSoft) RequireVersion() string { return "3.0.0" }
 func (commandClusterResetSoft) Forbid() bool           { return true }
-func (commandClusterResetSoft) WarnVersion() string    { return "0.0.0" }
+func (commandClusterResetSoft) WarnVersion() string    { return "" }
 func (commandClusterResetSoft) Warning() string        { return "" }
 
 var CommandClusterSaveConfig commandClusterSaveConfig
@@ -413,7 +413,7 @@ func (commandClusterSaveConfig) String() string         { return "CLUSTERSAVECON
 func (commandClusterSaveConfig) Class() string          { return "Cluster" }
 func (commandClusterSaveConfig) RequireVersion() string { return "3.0.0" }
 func (commandClusterSaveConfig) Forbid() bool           { return true }
-func (commandClusterSaveConfig) WarnVersion() string    { return "0.0.0" }
+func (commandClusterSaveConfig) WarnVersion() string    { return "" }
 func (commandClusterSaveConfig) Warning() string        { return "" }
 
 var CommandClusterSlaves commandClusterSlaves
@@ -446,7 +446,7 @@ func (commandClusterShards) String() string         { return "CLUSTER SHARDS" }
 func (commandClusterShards) Class() string          { return "Cluster" }
 func (commandClusterShards) RequireVersion() string { return "7.0.0" }
 func (commandClusterShards) Forbid() bool           { return false }
-func (commandClusterShards) WarnVersion() string    { return "0.0.0" }
+func (commandClusterShards) WarnVersion() string    { return "" }
 func (commandClusterShards) Warning() string        { return "" }
 
 var CommandReadOnly commandReadOnly
@@ -457,7 +457,7 @@ func (commandReadOnly) String() string         { return "READONLY" }
 func (commandReadOnly) Class() string          { return "Cluster" }
 func (commandReadOnly) RequireVersion() string { return "3.0.0" }
 func (commandReadOnly) Forbid() bool           { return false }
-func (commandReadOnly) WarnVersion() string    { return "0.0.0" }
+func (commandReadOnly) WarnVersion() string    { return "" }
 func (commandReadOnly) Warning() string        { return "" }
 
 var CommandReadWrite commandReadWrite
@@ -468,7 +468,7 @@ func (commandReadWrite) String() string         { return "READWRITE" }
 func (commandReadWrite) Class() string          { return "Cluster" }
 func (commandReadWrite) RequireVersion() string { return "3.0.0" }
 func (commandReadWrite) Forbid() bool           { return false }
-func (commandReadWrite) WarnVersion() string    { return "0.0.0" }
+func (commandReadWrite) WarnVersion() string    { return "" }
 func (commandReadWrite) Warning() string        { return "" }
 
 var CommandClientGetName commandClientGetName
@@ -479,7 +479,7 @@ func (commandClientGetName) String() string         { return "CLIENT GETNAME" }
 func (commandClientGetName) Class() string          { return "Connection" }
 func (commandClientGetName) RequireVersion() string { return "2.6.9" }
 func (commandClientGetName) Forbid() bool           { return false }
-func (commandClientGetName) WarnVersion() string    { return "0.0.0" }
+func (commandClientGetName) WarnVersion() string    { return "" }
 func (commandClientGetName) Warning() string        { return "" }
 
 var CommandClientID commandClientID
@@ -490,7 +490,7 @@ func (commandClientID) String() string         { return "CLIENT ID" }
 func (commandClientID) Class() string          { return "Connection" }
 func (commandClientID) RequireVersion() string { return "5.0.0" }
 func (commandClientID) Forbid() bool           { return false }
-func (commandClientID) WarnVersion() string    { return "0.0.0" }
+func (commandClientID) WarnVersion() string    { return "" }
 func (commandClientID) Warning() string        { return "" }
 
 var CommandClientKill commandClientKill
@@ -501,7 +501,7 @@ func (commandClientKill) String() string         { return "CLIENT KILL" }
 func (commandClientKill) Class() string          { return "Connection" }
 func (commandClientKill) RequireVersion() string { return "2.4.0" }
 func (commandClientKill) Forbid() bool           { return true }
-func (commandClientKill) WarnVersion() string    { return "0.0.0" }
+func (commandClientKill) WarnVersion() string    { return "" }
 func (commandClientKill) Warning() string        { return "" }
 
 var CommandClientKillByFilter commandClientKillByFilter
@@ -512,7 +512,7 @@ func (commandClientKillByFilter) String() string         { return "CLIENT KILL" 
 func (commandClientKillByFilter) Class() string          { return "Connection" }
 func (commandClientKillByFilter) RequireVersion() string { return "2.8.12" }
 func (commandClientKillByFilter) Forbid() bool           { return true }
-func (commandClientKillByFilter) WarnVersion() string    { return "0.0.0" }
+func (commandClientKillByFilter) WarnVersion() string    { return "" }
 func (commandClientKillByFilter) Warning() string        { return "" }
 
 var CommandClientKillByFilterWithType commandClientKillByFilterWithType
@@ -523,7 +523,7 @@ func (commandClientKillByFilterWithType) String() string         { return "CLIEN
 func (commandClientKillByFilterWithType) Class() string          { return "Connection" }
 func (commandClientKillByFilterWithType) RequireVersion() string { return "3.2.0" }
 func (commandClientKillByFilterWithType) Forbid() bool           { return true }
-func (commandClientKillByFilterWithType) WarnVersion() string    { return "0.0.0" }
+func (commandClientKillByFilterWithType) WarnVersion() string    { return "" }
 func (commandClientKillByFilterWithType) Warning() string        { return "" }
 
 var CommandClientKillByFilterWithLADDR commandClientKillByFilterWithLADDR
@@ -534,7 +534,7 @@ func (commandClientKillByFilterWithLADDR) String() string         { return "CLIE
 func (commandClientKillByFilterWithLADDR) Class() string          { return "Connection" }
 func (commandClientKillByFilterWithLADDR) RequireVersion() string { return "6.2.0" }
 func (commandClientKillByFilterWithLADDR) Forbid() bool           { return true }
-func (commandClientKillByFilterWithLADDR) WarnVersion() string    { return "0.0.0" }
+func (commandClientKillByFilterWithLADDR) WarnVersion() string    { return "" }
 func (commandClientKillByFilterWithLADDR) Warning() string        { return "" }
 
 var CommandClientList commandClientList
@@ -545,7 +545,7 @@ func (commandClientList) String() string         { return "CLIENT LIST" }
 func (commandClientList) Class() string          { return "Connection" }
 func (commandClientList) RequireVersion() string { return "2.4.0" }
 func (commandClientList) Forbid() bool           { return true }
-func (commandClientList) WarnVersion() string    { return "0.0.0" }
+func (commandClientList) WarnVersion() string    { return "" }
 func (commandClientList) Warning() string        { return "" }
 
 var CommandClientPause commandClientPause
@@ -556,7 +556,7 @@ func (commandClientPause) String() string         { return "CLIENT PAUSE" }
 func (commandClientPause) Class() string          { return "Connection" }
 func (commandClientPause) RequireVersion() string { return "3.0.0" }
 func (commandClientPause) Forbid() bool           { return true }
-func (commandClientPause) WarnVersion() string    { return "0.0.0" }
+func (commandClientPause) WarnVersion() string    { return "" }
 func (commandClientPause) Warning() string        { return "" }
 
 var CommandClientUnpause commandClientUnpause
@@ -567,7 +567,7 @@ func (commandClientUnpause) String() string         { return "CLIENT UNPAUSE" }
 func (commandClientUnpause) Class() string          { return "Connection" }
 func (commandClientUnpause) RequireVersion() string { return "6.2.0" }
 func (commandClientUnpause) Forbid() bool           { return true }
-func (commandClientUnpause) WarnVersion() string    { return "0.0.0" }
+func (commandClientUnpause) WarnVersion() string    { return "" }
 func (commandClientUnpause) Warning() string        { return "" }
 
 var CommandClientUnblock commandClientUnblock
@@ -578,7 +578,7 @@ func (commandClientUnblock) String() string         { return "CLIENT UNBLOCK" }
 func (commandClientUnblock) Class() string          { return "Connection" }
 func (commandClientUnblock) RequireVersion() string { return "5.0.0" }
 func (commandClientUnblock) Forbid() bool           { return true }
-func (commandClientUnblock) WarnVersion() string    { return "0.0.0" }
+func (commandClientUnblock) WarnVersion() string    { return "" }
 func (commandClientUnblock) Warning() string        { return "" }
 
 var CommandClientUnblockWithError commandClientUnblockWithError
@@ -589,7 +589,7 @@ func (commandClientUnblockWithError) String() string         { return "CLIENT UN
 func (commandClientUnblockWithError) Class() string          { return "Connection" }
 func (commandClientUnblockWithError) RequireVersion() string { return "5.0.0" }
 func (commandClientUnblockWithError) Forbid() bool           { return true }
-func (commandClientUnblockWithError) WarnVersion() string    { return "0.0.0" }
+func (commandClientUnblockWithError) WarnVersion() string    { return "" }
 func (commandClientUnblockWithError) Warning() string        { return "" }
 
 var CommandEcho commandEcho
@@ -601,7 +601,7 @@ func (commandEcho) String() string             { return "ECHO" }
 func (commandEcho) Class() string              { return "Connection" }
 func (commandEcho) RequireVersion() string     { return "1.0.0" }
 func (commandEcho) Forbid() bool               { return false }
-func (commandEcho) WarnVersion() string        { return "0.0.0" }
+func (commandEcho) WarnVersion() string        { return "" }
 func (commandEcho) Warning() string            { return "" }
 func (commandEcho) P(p Pipeliner) commandEchoP { return commandEchoP{p} }
 func (b commandEchoP) Cmd(message any)         { b.p.Cmd(b.p.builder().EchoCompleted(message)) }
@@ -615,7 +615,7 @@ func (commandPing) String() string             { return "PING" }
 func (commandPing) Class() string              { return "Connection" }
 func (commandPing) RequireVersion() string     { return "1.0.0" }
 func (commandPing) Forbid() bool               { return false }
-func (commandPing) WarnVersion() string        { return "0.0.0" }
+func (commandPing) WarnVersion() string        { return "" }
 func (commandPing) Warning() string            { return "" }
 func (commandPing) P(p Pipeliner) commandPingP { return commandPingP{p} }
 func (b commandPingP) Cmd()                    { b.p.Cmd(b.p.builder().PingCompleted()) }
@@ -640,7 +640,7 @@ func (commandCopy) String() string             { return "COPY" }
 func (commandCopy) Class() string              { return "Generic" }
 func (commandCopy) RequireVersion() string     { return "6.2.0" }
 func (commandCopy) Forbid() bool               { return false }
-func (commandCopy) WarnVersion() string        { return "0.0.0" }
+func (commandCopy) WarnVersion() string        { return "" }
 func (commandCopy) Warning() string            { return "" }
 func (commandCopy) P(p Pipeliner) commandCopyP { return commandCopyP{p} }
 func (b commandCopyP) Cmd(source string, destination string, db int64, replace bool) {
@@ -656,7 +656,7 @@ func (commandDel) String() string            { return "DEL" }
 func (commandDel) Class() string             { return "Generic" }
 func (commandDel) RequireVersion() string    { return "1.0.0" }
 func (commandDel) Forbid() bool              { return false }
-func (commandDel) WarnVersion() string       { return "0.0.0" }
+func (commandDel) WarnVersion() string       { return "" }
 func (commandDel) Warning() string           { return "" }
 func (commandDel) P(p Pipeliner) commandDelP { return commandDelP{p} }
 func (b commandDelP) Cmd(keys ...string)     { b.p.Cmd(b.p.builder().DelCompleted(keys...)) }
@@ -670,7 +670,7 @@ func (commandDump) String() string             { return "DUMP" }
 func (commandDump) Class() string              { return "Generic" }
 func (commandDump) RequireVersion() string     { return "2.6.0" }
 func (commandDump) Forbid() bool               { return false }
-func (commandDump) WarnVersion() string        { return "0.0.0" }
+func (commandDump) WarnVersion() string        { return "" }
 func (commandDump) Warning() string            { return "" }
 func (commandDump) P(p Pipeliner) commandDumpP { return commandDumpP{p} }
 func (b commandDumpP) Cmd(key string)          { b.p.Cmd(b.p.builder().DumpCompleted(key)) }
@@ -684,7 +684,7 @@ func (commandExists) String() string               { return "EXISTS" }
 func (commandExists) Class() string                { return "Generic" }
 func (commandExists) RequireVersion() string       { return "1.0.0" }
 func (commandExists) Forbid() bool                 { return false }
-func (commandExists) WarnVersion() string          { return "0.0.0" }
+func (commandExists) WarnVersion() string          { return "" }
 func (commandExists) Warning() string              { return "" }
 func (commandExists) P(p Pipeliner) commandExistsP { return commandExistsP{p} }
 func (b commandExistsP) Cmd(key string)            { b.p.Cmd(b.p.builder().ExistsCompleted(key)) }
@@ -698,7 +698,7 @@ func (commandMExists) String() string                { return "EXISTS" }
 func (commandMExists) Class() string                 { return "Generic" }
 func (commandMExists) RequireVersion() string        { return "3.0.3" }
 func (commandMExists) Forbid() bool                  { return false }
-func (commandMExists) WarnVersion() string           { return "0.0.0" }
+func (commandMExists) WarnVersion() string           { return "" }
 func (commandMExists) Warning() string               { return "" }
 func (commandMExists) P(p Pipeliner) commandMExistsP { return commandMExistsP{p} }
 func (b commandMExistsP) Cmd(keys ...string)         { b.p.Cmd(b.p.builder().ExistsCompleted(keys...)) }
@@ -712,7 +712,7 @@ func (commandExpire) String() string               { return "EXPIRE" }
 func (commandExpire) Class() string                { return "Generic" }
 func (commandExpire) RequireVersion() string       { return "1.0.0" }
 func (commandExpire) Forbid() bool                 { return false }
-func (commandExpire) WarnVersion() string          { return "0.0.0" }
+func (commandExpire) WarnVersion() string          { return "" }
 func (commandExpire) Warning() string              { return "" }
 func (commandExpire) P(p Pipeliner) commandExpireP { return commandExpireP{p} }
 func (b commandExpireP) Cmd(key string, seconds time.Duration) {
@@ -728,7 +728,7 @@ func (commandExpireNX) String() string                 { return "EXPIRE NX" }
 func (commandExpireNX) Class() string                  { return "Generic" }
 func (commandExpireNX) RequireVersion() string         { return "7.0.0" }
 func (commandExpireNX) Forbid() bool                   { return false }
-func (commandExpireNX) WarnVersion() string            { return "0.0.0" }
+func (commandExpireNX) WarnVersion() string            { return "" }
 func (commandExpireNX) Warning() string                { return "" }
 func (commandExpireNX) P(p Pipeliner) commandExpireNXP { return commandExpireNXP{p} }
 func (b commandExpireNXP) Cmd(key string, seconds time.Duration) {
@@ -744,7 +744,7 @@ func (commandExpireXX) String() string                 { return "EXPIRE XX" }
 func (commandExpireXX) Class() string                  { return "Generic" }
 func (commandExpireXX) RequireVersion() string         { return "7.0.0" }
 func (commandExpireXX) Forbid() bool                   { return false }
-func (commandExpireXX) WarnVersion() string            { return "0.0.0" }
+func (commandExpireXX) WarnVersion() string            { return "" }
 func (commandExpireXX) Warning() string                { return "" }
 func (commandExpireXX) P(p Pipeliner) commandExpireXXP { return commandExpireXXP{p} }
 func (b commandExpireXXP) Cmd(key string, seconds time.Duration) {
@@ -760,7 +760,7 @@ func (commandExpireGT) String() string                 { return "EXPIRE GT" }
 func (commandExpireGT) Class() string                  { return "Generic" }
 func (commandExpireGT) RequireVersion() string         { return "7.0.0" }
 func (commandExpireGT) Forbid() bool                   { return false }
-func (commandExpireGT) WarnVersion() string            { return "0.0.0" }
+func (commandExpireGT) WarnVersion() string            { return "" }
 func (commandExpireGT) Warning() string                { return "" }
 func (commandExpireGT) P(p Pipeliner) commandExpireGTP { return commandExpireGTP{p} }
 func (b commandExpireGTP) Cmd(key string, seconds time.Duration) {
@@ -776,7 +776,7 @@ func (commandExpireLT) String() string                 { return "EXPIRE LT" }
 func (commandExpireLT) Class() string                  { return "Generic" }
 func (commandExpireLT) RequireVersion() string         { return "7.0.0" }
 func (commandExpireLT) Forbid() bool                   { return false }
-func (commandExpireLT) WarnVersion() string            { return "0.0.0" }
+func (commandExpireLT) WarnVersion() string            { return "" }
 func (commandExpireLT) Warning() string                { return "" }
 func (commandExpireLT) P(p Pipeliner) commandExpireLTP { return commandExpireLTP{p} }
 func (b commandExpireLTP) Cmd(key string, seconds time.Duration) {
@@ -792,7 +792,7 @@ func (commandExpireAt) String() string                 { return "EXPIREAT" }
 func (commandExpireAt) Class() string                  { return "Generic" }
 func (commandExpireAt) RequireVersion() string         { return "1.2.0" }
 func (commandExpireAt) Forbid() bool                   { return false }
-func (commandExpireAt) WarnVersion() string            { return "0.0.0" }
+func (commandExpireAt) WarnVersion() string            { return "" }
 func (commandExpireAt) Warning() string                { return "" }
 func (commandExpireAt) P(p Pipeliner) commandExpireAtP { return commandExpireAtP{p} }
 func (b commandExpireAtP) Cmd(key string, timestamp time.Time) {
@@ -808,7 +808,7 @@ func (commandExpireAtNX) String() string                   { return "EXPIREAT NX
 func (commandExpireAtNX) Class() string                    { return "Generic" }
 func (commandExpireAtNX) RequireVersion() string           { return "7.0.0" }
 func (commandExpireAtNX) Forbid() bool                     { return false }
-func (commandExpireAtNX) WarnVersion() string              { return "0.0.0" }
+func (commandExpireAtNX) WarnVersion() string              { return "" }
 func (commandExpireAtNX) Warning() string                  { return "" }
 func (commandExpireAtNX) P(p Pipeliner) commandExpireAtNXP { return commandExpireAtNXP{p} }
 func (b commandExpireAtNXP) Cmd(key string, timestamp time.Time) {
@@ -824,7 +824,7 @@ func (commandExpireAtXX) String() string                   { return "EXPIREAT XX
 func (commandExpireAtXX) Class() string                    { return "Generic" }
 func (commandExpireAtXX) RequireVersion() string           { return "7.0.0" }
 func (commandExpireAtXX) Forbid() bool                     { return false }
-func (commandExpireAtXX) WarnVersion() string              { return "0.0.0" }
+func (commandExpireAtXX) WarnVersion() string              { return "" }
 func (commandExpireAtXX) Warning() string                  { return "" }
 func (commandExpireAtXX) P(p Pipeliner) commandExpireAtXXP { return commandExpireAtXXP{p} }
 func (b commandExpireAtXXP) Cmd(key string, timestamp time.Time) {
@@ -840,7 +840,7 @@ func (commandExpireAtGT) String() string                   { return "EXPIREAT GT
 func (commandExpireAtGT) Class() string                    { return "Generic" }
 func (commandExpireAtGT) RequireVersion() string           { return "7.0.0" }
 func (commandExpireAtGT) Forbid() bool                     { return false }
-func (commandExpireAtGT) WarnVersion() string              { return "0.0.0" }
+func (commandExpireAtGT) WarnVersion() string              { return "" }
 func (commandExpireAtGT) Warning() string                  { return "" }
 func (commandExpireAtGT) P(p Pipeliner) commandExpireAtGTP { return commandExpireAtGTP{p} }
 func (b commandExpireAtGTP) Cmd(key string, timestamp time.Time) {
@@ -856,7 +856,7 @@ func (commandExpireAtLT) String() string                   { return "EXPIREAT LT
 func (commandExpireAtLT) Class() string                    { return "Generic" }
 func (commandExpireAtLT) RequireVersion() string           { return "7.0.0" }
 func (commandExpireAtLT) Forbid() bool                     { return false }
-func (commandExpireAtLT) WarnVersion() string              { return "0.0.0" }
+func (commandExpireAtLT) WarnVersion() string              { return "" }
 func (commandExpireAtLT) Warning() string                  { return "" }
 func (commandExpireAtLT) P(p Pipeliner) commandExpireAtLTP { return commandExpireAtLTP{p} }
 func (b commandExpireAtLTP) Cmd(key string, timestamp time.Time) {
@@ -872,7 +872,7 @@ func (commandExpireTime) String() string                   { return "EXPIRETIME"
 func (commandExpireTime) Class() string                    { return "Generic" }
 func (commandExpireTime) RequireVersion() string           { return "7.0.0" }
 func (commandExpireTime) Forbid() bool                     { return false }
-func (commandExpireTime) WarnVersion() string              { return "0.0.0" }
+func (commandExpireTime) WarnVersion() string              { return "" }
 func (commandExpireTime) Warning() string                  { return "" }
 func (commandExpireTime) P(p Pipeliner) commandExpireTimeP { return commandExpireTimeP{p} }
 func (b commandExpireTimeP) Cmd(key string)                { b.p.Cmd(b.p.builder().ExpireTimeCompleted(key)) }
@@ -897,7 +897,7 @@ func (commandMigrate) String() string                { return "MIGRATE" }
 func (commandMigrate) Class() string                 { return "Generic" }
 func (commandMigrate) RequireVersion() string        { return "2.6.0" }
 func (commandMigrate) Forbid() bool                  { return true }
-func (commandMigrate) WarnVersion() string           { return "0.0.0" }
+func (commandMigrate) WarnVersion() string           { return "" }
 func (commandMigrate) Warning() string               { return "" }
 func (commandMigrate) P(p Pipeliner) commandMigrateP { return commandMigrateP{p} }
 func (b commandMigrateP) Cmd(host string, port int64, key string, db int64, timeout time.Duration) {
@@ -913,7 +913,7 @@ func (commandMove) String() string              { return "MOVE" }
 func (commandMove) Class() string               { return "Generic" }
 func (commandMove) RequireVersion() string      { return "1.0.0" }
 func (commandMove) Forbid() bool                { return false }
-func (commandMove) WarnVersion() string         { return "0.0.0" }
+func (commandMove) WarnVersion() string         { return "" }
 func (commandMove) Warning() string             { return "" }
 func (commandMove) P(p Pipeliner) commandMoveP  { return commandMoveP{p} }
 func (b commandMoveP) Cmd(key string, db int64) { b.p.Cmd(b.p.builder().MoveCompleted(key, db)) }
@@ -927,7 +927,7 @@ func (commandObjectEncoding) String() string                       { return "OBJ
 func (commandObjectEncoding) Class() string                        { return "Generic" }
 func (commandObjectEncoding) RequireVersion() string               { return "2.2.3" }
 func (commandObjectEncoding) Forbid() bool                         { return false }
-func (commandObjectEncoding) WarnVersion() string                  { return "0.0.0" }
+func (commandObjectEncoding) WarnVersion() string                  { return "" }
 func (commandObjectEncoding) Warning() string                      { return "" }
 func (commandObjectEncoding) P(p Pipeliner) commandObjectEncodingP { return commandObjectEncodingP{p} }
 func (b commandObjectEncodingP) Cmd(key string)                    { b.p.Cmd(b.p.builder().ObjectEncodingCompleted(key)) }
@@ -941,7 +941,7 @@ func (commandObjectIdleTime) String() string                       { return "OBJ
 func (commandObjectIdleTime) Class() string                        { return "Generic" }
 func (commandObjectIdleTime) RequireVersion() string               { return "2.2.3" }
 func (commandObjectIdleTime) Forbid() bool                         { return false }
-func (commandObjectIdleTime) WarnVersion() string                  { return "0.0.0" }
+func (commandObjectIdleTime) WarnVersion() string                  { return "" }
 func (commandObjectIdleTime) Warning() string                      { return "" }
 func (commandObjectIdleTime) P(p Pipeliner) commandObjectIdleTimeP { return commandObjectIdleTimeP{p} }
 func (b commandObjectIdleTimeP) Cmd(key string)                    { b.p.Cmd(b.p.builder().ObjectIdleTimeCompleted(key)) }
@@ -955,7 +955,7 @@ func (commandObjectRefCount) String() string                       { return "OBJ
 func (commandObjectRefCount) Class() string                        { return "Generic" }
 func (commandObjectRefCount) RequireVersion() string               { return "2.2.3" }
 func (commandObjectRefCount) Forbid() bool                         { return false }
-func (commandObjectRefCount) WarnVersion() string                  { return "0.0.0" }
+func (commandObjectRefCount) WarnVersion() string                  { return "" }
 func (commandObjectRefCount) Warning() string                      { return "" }
 func (commandObjectRefCount) P(p Pipeliner) commandObjectRefCountP { return commandObjectRefCountP{p} }
 func (b commandObjectRefCountP) Cmd(key string)                    { b.p.Cmd(b.p.builder().ObjectRefCountCompleted(key)) }
@@ -969,7 +969,7 @@ func (commandPersist) String() string                { return "PERSIST" }
 func (commandPersist) Class() string                 { return "Generic" }
 func (commandPersist) RequireVersion() string        { return "2.2.0" }
 func (commandPersist) Forbid() bool                  { return false }
-func (commandPersist) WarnVersion() string           { return "0.0.0" }
+func (commandPersist) WarnVersion() string           { return "" }
 func (commandPersist) Warning() string               { return "" }
 func (commandPersist) P(p Pipeliner) commandPersistP { return commandPersistP{p} }
 func (b commandPersistP) Cmd(key string)             { b.p.Cmd(b.p.builder().PersistCompleted(key)) }
@@ -983,7 +983,7 @@ func (commandPExpire) String() string                { return "PEXPIRE" }
 func (commandPExpire) Class() string                 { return "Generic" }
 func (commandPExpire) RequireVersion() string        { return "2.6.0" }
 func (commandPExpire) Forbid() bool                  { return false }
-func (commandPExpire) WarnVersion() string           { return "0.0.0" }
+func (commandPExpire) WarnVersion() string           { return "" }
 func (commandPExpire) Warning() string               { return "" }
 func (commandPExpire) P(p Pipeliner) commandPExpireP { return commandPExpireP{p} }
 func (b commandPExpireP) Cmd(key string, milliseconds time.Duration) {
@@ -999,7 +999,7 @@ func (commandPExpireNX) String() string                  { return "PEXPIRE NX" }
 func (commandPExpireNX) Class() string                   { return "Generic" }
 func (commandPExpireNX) RequireVersion() string          { return "7.0.0" }
 func (commandPExpireNX) Forbid() bool                    { return false }
-func (commandPExpireNX) WarnVersion() string             { return "0.0.0" }
+func (commandPExpireNX) WarnVersion() string             { return "" }
 func (commandPExpireNX) Warning() string                 { return "" }
 func (commandPExpireNX) P(p Pipeliner) commandPExpireNXP { return commandPExpireNXP{p} }
 func (b commandPExpireNXP) Cmd(key string, milliseconds time.Duration) {
@@ -1015,7 +1015,7 @@ func (commandPExpireXX) String() string                  { return "PEXPIRE XX" }
 func (commandPExpireXX) Class() string                   { return "Generic" }
 func (commandPExpireXX) RequireVersion() string          { return "7.0.0" }
 func (commandPExpireXX) Forbid() bool                    { return false }
-func (commandPExpireXX) WarnVersion() string             { return "0.0.0" }
+func (commandPExpireXX) WarnVersion() string             { return "" }
 func (commandPExpireXX) Warning() string                 { return "" }
 func (commandPExpireXX) P(p Pipeliner) commandPExpireXXP { return commandPExpireXXP{p} }
 func (b commandPExpireXXP) Cmd(key string, milliseconds time.Duration) {
@@ -1031,7 +1031,7 @@ func (commandPExpireGT) String() string                  { return "PEXPIRE GT" }
 func (commandPExpireGT) Class() string                   { return "Generic" }
 func (commandPExpireGT) RequireVersion() string          { return "7.0.0" }
 func (commandPExpireGT) Forbid() bool                    { return false }
-func (commandPExpireGT) WarnVersion() string             { return "0.0.0" }
+func (commandPExpireGT) WarnVersion() string             { return "" }
 func (commandPExpireGT) Warning() string                 { return "" }
 func (commandPExpireGT) P(p Pipeliner) commandPExpireGTP { return commandPExpireGTP{p} }
 func (b commandPExpireGTP) Cmd(key string, milliseconds time.Duration) {
@@ -1047,7 +1047,7 @@ func (commandPExpireLT) String() string                  { return "PEXPIRE LT" }
 func (commandPExpireLT) Class() string                   { return "Generic" }
 func (commandPExpireLT) RequireVersion() string          { return "7.0.0" }
 func (commandPExpireLT) Forbid() bool                    { return false }
-func (commandPExpireLT) WarnVersion() string             { return "0.0.0" }
+func (commandPExpireLT) WarnVersion() string             { return "" }
 func (commandPExpireLT) Warning() string                 { return "" }
 func (commandPExpireLT) P(p Pipeliner) commandPExpireLTP { return commandPExpireLTP{p} }
 func (b commandPExpireLTP) Cmd(key string, milliseconds time.Duration) {
@@ -1063,7 +1063,7 @@ func (commandPExpireAt) String() string                  { return "PEXPIREAT" }
 func (commandPExpireAt) Class() string                   { return "Generic" }
 func (commandPExpireAt) RequireVersion() string          { return "2.6.0" }
 func (commandPExpireAt) Forbid() bool                    { return false }
-func (commandPExpireAt) WarnVersion() string             { return "0.0.0" }
+func (commandPExpireAt) WarnVersion() string             { return "" }
 func (commandPExpireAt) Warning() string                 { return "" }
 func (commandPExpireAt) P(p Pipeliner) commandPExpireAtP { return commandPExpireAtP{p} }
 func (b commandPExpireAtP) Cmd(key string, millisecondsTimestamp time.Time) {
@@ -1079,7 +1079,7 @@ func (commandPExpireAtNX) String() string                    { return "PEXPIREAT
 func (commandPExpireAtNX) Class() string                     { return "Generic" }
 func (commandPExpireAtNX) RequireVersion() string            { return "7.0.0" }
 func (commandPExpireAtNX) Forbid() bool                      { return false }
-func (commandPExpireAtNX) WarnVersion() string               { return "0.0.0" }
+func (commandPExpireAtNX) WarnVersion() string               { return "" }
 func (commandPExpireAtNX) Warning() string                   { return "" }
 func (commandPExpireAtNX) P(p Pipeliner) commandPExpireAtNXP { return commandPExpireAtNXP{p} }
 func (b commandPExpireAtNXP) Cmd(key string, millisecondsTimestamp time.Time) {
@@ -1095,7 +1095,7 @@ func (commandPExpireAtXX) String() string                    { return "PEXPIREAT
 func (commandPExpireAtXX) Class() string                     { return "Generic" }
 func (commandPExpireAtXX) RequireVersion() string            { return "7.0.0" }
 func (commandPExpireAtXX) Forbid() bool                      { return false }
-func (commandPExpireAtXX) WarnVersion() string               { return "0.0.0" }
+func (commandPExpireAtXX) WarnVersion() string               { return "" }
 func (commandPExpireAtXX) Warning() string                   { return "" }
 func (commandPExpireAtXX) P(p Pipeliner) commandPExpireAtXXP { return commandPExpireAtXXP{p} }
 func (b commandPExpireAtXXP) Cmd(key string, millisecondsTimestamp time.Time) {
@@ -1111,7 +1111,7 @@ func (commandPExpireAtGT) String() string                    { return "PEXPIREAT
 func (commandPExpireAtGT) Class() string                     { return "Generic" }
 func (commandPExpireAtGT) RequireVersion() string            { return "7.0.0" }
 func (commandPExpireAtGT) Forbid() bool                      { return false }
-func (commandPExpireAtGT) WarnVersion() string               { return "0.0.0" }
+func (commandPExpireAtGT) WarnVersion() string               { return "" }
 func (commandPExpireAtGT) Warning() string                   { return "" }
 func (commandPExpireAtGT) P(p Pipeliner) commandPExpireAtGTP { return commandPExpireAtGTP{p} }
 func (b commandPExpireAtGTP) Cmd(key string, millisecondsTimestamp time.Time) {
@@ -1127,7 +1127,7 @@ func (commandPExpireAtLT) String() string                    { return "PEXPIREAT
 func (commandPExpireAtLT) Class() string                     { return "Generic" }
 func (commandPExpireAtLT) RequireVersion() string            { return "7.0.0" }
 func (commandPExpireAtLT) Forbid() bool                      { return false }
-func (commandPExpireAtLT) WarnVersion() string               { return "0.0.0" }
+func (commandPExpireAtLT) WarnVersion() string               { return "" }
 func (commandPExpireAtLT) Warning() string                   { return "" }
 func (commandPExpireAtLT) P(p Pipeliner) commandPExpireAtLTP { return commandPExpireAtLTP{p} }
 func (b commandPExpireAtLTP) Cmd(key string, millisecondsTimestamp time.Time) {
@@ -1143,7 +1143,7 @@ func (commandPExpireTime) String() string                    { return "PEXPIRETI
 func (commandPExpireTime) Class() string                     { return "Generic" }
 func (commandPExpireTime) RequireVersion() string            { return "7.0.0" }
 func (commandPExpireTime) Forbid() bool                      { return false }
-func (commandPExpireTime) WarnVersion() string               { return "0.0.0" }
+func (commandPExpireTime) WarnVersion() string               { return "" }
 func (commandPExpireTime) Warning() string                   { return "" }
 func (commandPExpireTime) P(p Pipeliner) commandPExpireTimeP { return commandPExpireTimeP{p} }
 func (b commandPExpireTimeP) Cmd(key string)                 { b.p.Cmd(b.p.builder().PExpireTimeCompleted(key)) }
@@ -1157,7 +1157,7 @@ func (commandPTTL) String() string             { return "PTTL" }
 func (commandPTTL) Class() string              { return "Generic" }
 func (commandPTTL) RequireVersion() string     { return "2.6.0" }
 func (commandPTTL) Forbid() bool               { return false }
-func (commandPTTL) WarnVersion() string        { return "0.0.0" }
+func (commandPTTL) WarnVersion() string        { return "" }
 func (commandPTTL) Warning() string            { return "" }
 func (commandPTTL) P(p Pipeliner) commandPTTLP { return commandPTTLP{p} }
 func (b commandPTTLP) Cmd(key string)          { b.p.Cmd(b.p.builder().PTTLCompleted(key)) }
@@ -1171,7 +1171,7 @@ func (commandRandomKey) String() string                  { return "RANDOMKEY" }
 func (commandRandomKey) Class() string                   { return "Generic" }
 func (commandRandomKey) RequireVersion() string          { return "1.0.0" }
 func (commandRandomKey) Forbid() bool                    { return false }
-func (commandRandomKey) WarnVersion() string             { return "0.0.0" }
+func (commandRandomKey) WarnVersion() string             { return "" }
 func (commandRandomKey) Warning() string                 { return "" }
 func (commandRandomKey) P(p Pipeliner) commandRandomKeyP { return commandRandomKeyP{p} }
 func (b commandRandomKeyP) Cmd()                         { b.p.Cmd(b.p.builder().RandomKeyCompleted()) }
@@ -1185,7 +1185,7 @@ func (commandRename) String() string               { return "RENAME" }
 func (commandRename) Class() string                { return "Generic" }
 func (commandRename) RequireVersion() string       { return "1.0.0" }
 func (commandRename) Forbid() bool                 { return false }
-func (commandRename) WarnVersion() string          { return "0.0.0" }
+func (commandRename) WarnVersion() string          { return "" }
 func (commandRename) Warning() string              { return "" }
 func (commandRename) P(p Pipeliner) commandRenameP { return commandRenameP{p} }
 func (b commandRenameP) Cmd(key, newkey string)    { b.p.Cmd(b.p.builder().RenameCompleted(key, newkey)) }
@@ -1199,7 +1199,7 @@ func (commandRenameNX) String() string                 { return "RENAMENX" }
 func (commandRenameNX) Class() string                  { return "Generic" }
 func (commandRenameNX) RequireVersion() string         { return "1.0.0" }
 func (commandRenameNX) Forbid() bool                   { return false }
-func (commandRenameNX) WarnVersion() string            { return "0.0.0" }
+func (commandRenameNX) WarnVersion() string            { return "" }
 func (commandRenameNX) Warning() string                { return "" }
 func (commandRenameNX) P(p Pipeliner) commandRenameNXP { return commandRenameNXP{p} }
 func (b commandRenameNXP) Cmd(key, newkey string) {
@@ -1215,7 +1215,7 @@ func (commandRestore) String() string                { return "RESTORE" }
 func (commandRestore) Class() string                 { return "Generic" }
 func (commandRestore) RequireVersion() string        { return "2.6.0" }
 func (commandRestore) Forbid() bool                  { return true }
-func (commandRestore) WarnVersion() string           { return "0.0.0" }
+func (commandRestore) WarnVersion() string           { return "" }
 func (commandRestore) Warning() string               { return "" }
 func (commandRestore) P(p Pipeliner) commandRestoreP { return commandRestoreP{p} }
 func (b commandRestoreP) Cmd(key string, ttl time.Duration, serializedValue string) {
@@ -1231,7 +1231,7 @@ func (commandRestoreReplace) String() string                       { return "RES
 func (commandRestoreReplace) Class() string                        { return "Generic" }
 func (commandRestoreReplace) RequireVersion() string               { return "3.0.0" }
 func (commandRestoreReplace) Forbid() bool                         { return true }
-func (commandRestoreReplace) WarnVersion() string                  { return "0.0.0" }
+func (commandRestoreReplace) WarnVersion() string                  { return "" }
 func (commandRestoreReplace) Warning() string                      { return "" }
 func (commandRestoreReplace) P(p Pipeliner) commandRestoreReplaceP { return commandRestoreReplaceP{p} }
 func (b commandRestoreReplaceP) Cmd(key string, ttl time.Duration, serializedValue string) {
@@ -1247,7 +1247,7 @@ func (commandScan) String() string             { return "SCAN" }
 func (commandScan) Class() string              { return "Generic" }
 func (commandScan) RequireVersion() string     { return "2.8.0" }
 func (commandScan) Forbid() bool               { return false }
-func (commandScan) WarnVersion() string        { return "0.0.0" }
+func (commandScan) WarnVersion() string        { return "" }
 func (commandScan) Warning() string            { return "" }
 func (commandScan) P(p Pipeliner) commandScanP { return commandScanP{p} }
 func (b commandScanP) Cmd(cursor uint64, match string, count int64) {
@@ -1263,7 +1263,7 @@ func (commandScanType) String() string                 { return "SCAN TYPE" }
 func (commandScanType) Class() string                  { return "Generic" }
 func (commandScanType) RequireVersion() string         { return "6.0.0" }
 func (commandScanType) Forbid() bool                   { return false }
-func (commandScanType) WarnVersion() string            { return "0.0.0" }
+func (commandScanType) WarnVersion() string            { return "" }
 func (commandScanType) Warning() string                { return "" }
 func (commandScanType) P(p Pipeliner) commandScanTypeP { return commandScanTypeP{p} }
 func (b commandScanTypeP) Cmd(cursor uint64, match string, count int64, keyType string) {
@@ -1278,7 +1278,7 @@ func (commandSort) String() string         { return "SORT" }
 func (commandSort) Class() string          { return "Generic" }
 func (commandSort) RequireVersion() string { return "1.0.0" }
 func (commandSort) Forbid() bool           { return true }
-func (commandSort) WarnVersion() string    { return "0.0.0" }
+func (commandSort) WarnVersion() string    { return "" }
 func (commandSort) Warning() string        { return "" }
 
 var CommandSortStore commandSortStore
@@ -1289,7 +1289,7 @@ func (commandSortStore) String() string         { return "SORT STORE" }
 func (commandSortStore) Class() string          { return "Generic" }
 func (commandSortStore) RequireVersion() string { return "1.0.0" }
 func (commandSortStore) Forbid() bool           { return true }
-func (commandSortStore) WarnVersion() string    { return "0.0.0" }
+func (commandSortStore) WarnVersion() string    { return "" }
 func (commandSortStore) Warning() string        { return "" }
 
 var CommandSortRO commandSortRO
@@ -1300,7 +1300,7 @@ func (commandSortRO) String() string         { return "SORT_RO" }
 func (commandSortRO) Class() string          { return "Generic" }
 func (commandSortRO) RequireVersion() string { return "7.0.0" }
 func (commandSortRO) Forbid() bool           { return true }
-func (commandSortRO) WarnVersion() string    { return "0.0.0" }
+func (commandSortRO) WarnVersion() string    { return "" }
 func (commandSortRO) Warning() string        { return "" }
 
 var CommandTouch commandTouch
@@ -1312,7 +1312,7 @@ func (commandTouch) String() string              { return "TOUCH" }
 func (commandTouch) Class() string               { return "Generic" }
 func (commandTouch) RequireVersion() string      { return "3.2.1" }
 func (commandTouch) Forbid() bool                { return false }
-func (commandTouch) WarnVersion() string         { return "0.0.0" }
+func (commandTouch) WarnVersion() string         { return "" }
 func (commandTouch) Warning() string             { return "" }
 func (commandTouch) P(p Pipeliner) commandTouchP { return commandTouchP{p} }
 func (b commandTouchP) Cmd(keys ...string)       { b.p.Cmd(b.p.builder().TouchCompleted(keys...)) }
@@ -1326,7 +1326,7 @@ func (commandTTL) String() string            { return "TTL" }
 func (commandTTL) Class() string             { return "Generic" }
 func (commandTTL) RequireVersion() string    { return "1.0.0" }
 func (commandTTL) Forbid() bool              { return false }
-func (commandTTL) WarnVersion() string       { return "0.0.0" }
+func (commandTTL) WarnVersion() string       { return "" }
 func (commandTTL) Warning() string           { return "" }
 func (commandTTL) P(p Pipeliner) commandTTLP { return commandTTLP{p} }
 func (b commandTTLP) Cmd(key string)         { b.p.Cmd(b.p.builder().TTLCompleted(key)) }
@@ -1340,7 +1340,7 @@ func (commandType) String() string             { return "TYPE" }
 func (commandType) Class() string              { return "Generic" }
 func (commandType) RequireVersion() string     { return "1.0.0" }
 func (commandType) Forbid() bool               { return false }
-func (commandType) WarnVersion() string        { return "0.0.0" }
+func (commandType) WarnVersion() string        { return "" }
 func (commandType) Warning() string            { return "" }
 func (commandType) P(p Pipeliner) commandTypeP { return commandTypeP{p} }
 func (b commandTypeP) Cmd(key string)          { b.p.Cmd(b.p.builder().TypeCompleted(key)) }
@@ -1354,7 +1354,7 @@ func (commandUnlink) String() string               { return "UNLINK" }
 func (commandUnlink) Class() string                { return "Generic" }
 func (commandUnlink) RequireVersion() string       { return "4.0.0" }
 func (commandUnlink) Forbid() bool                 { return false }
-func (commandUnlink) WarnVersion() string          { return "0.0.0" }
+func (commandUnlink) WarnVersion() string          { return "" }
 func (commandUnlink) Warning() string              { return "" }
 func (commandUnlink) P(p Pipeliner) commandUnlinkP { return commandUnlinkP{p} }
 func (b commandUnlinkP) Cmd(keys ...string)        { b.p.Cmd(b.p.builder().UnlinkCompleted(keys...)) }
@@ -1368,7 +1368,7 @@ func (commandGeoAdd) String() string               { return "GEOADD" }
 func (commandGeoAdd) Class() string                { return "Geospatial" }
 func (commandGeoAdd) RequireVersion() string       { return "3.2.0" }
 func (commandGeoAdd) Forbid() bool                 { return false }
-func (commandGeoAdd) WarnVersion() string          { return "0.0.0" }
+func (commandGeoAdd) WarnVersion() string          { return "" }
 func (commandGeoAdd) Warning() string              { return "" }
 func (commandGeoAdd) P(p Pipeliner) commandGeoAddP { return commandGeoAddP{p} }
 func (b commandGeoAddP) Cmd(key string, geoLocation ...GeoLocation) {
@@ -1384,7 +1384,7 @@ func (commandGeoDist) String() string                { return "GEODIST" }
 func (commandGeoDist) Class() string                 { return "Geospatial" }
 func (commandGeoDist) RequireVersion() string        { return "3.2.0" }
 func (commandGeoDist) Forbid() bool                  { return false }
-func (commandGeoDist) WarnVersion() string           { return "0.0.0" }
+func (commandGeoDist) WarnVersion() string           { return "" }
 func (commandGeoDist) Warning() string               { return "" }
 func (commandGeoDist) P(p Pipeliner) commandGeoDistP { return commandGeoDistP{p} }
 func (b commandGeoDistP) Cmd(key, member1, member2, unit string) {
@@ -1400,7 +1400,7 @@ func (commandGeoHash) String() string                { return "GEOHASH" }
 func (commandGeoHash) Class() string                 { return "Geospatial" }
 func (commandGeoHash) RequireVersion() string        { return "3.2.0" }
 func (commandGeoHash) Forbid() bool                  { return false }
-func (commandGeoHash) WarnVersion() string           { return "0.0.0" }
+func (commandGeoHash) WarnVersion() string           { return "" }
 func (commandGeoHash) Warning() string               { return "" }
 func (commandGeoHash) P(p Pipeliner) commandGeoHashP { return commandGeoHashP{p} }
 func (b commandGeoHashP) Cmd(key string, members ...string) {
@@ -1416,7 +1416,7 @@ func (commandGeoPos) String() string               { return "GEOPOS" }
 func (commandGeoPos) Class() string                { return "Geospatial" }
 func (commandGeoPos) RequireVersion() string       { return "3.2.0" }
 func (commandGeoPos) Forbid() bool                 { return false }
-func (commandGeoPos) WarnVersion() string          { return "0.0.0" }
+func (commandGeoPos) WarnVersion() string          { return "" }
 func (commandGeoPos) Warning() string              { return "" }
 func (commandGeoPos) P(p Pipeliner) commandGeoPosP { return commandGeoPosP{p} }
 func (b commandGeoPosP) Cmd(key string, members ...string) {
@@ -1500,7 +1500,7 @@ func (commandGeoSearch) String() string                  { return "GEOSEARCH" }
 func (commandGeoSearch) Class() string                   { return "Geospatial" }
 func (commandGeoSearch) RequireVersion() string          { return "6.2.0" }
 func (commandGeoSearch) Forbid() bool                    { return false }
-func (commandGeoSearch) WarnVersion() string             { return "0.0.0" }
+func (commandGeoSearch) WarnVersion() string             { return "" }
 func (commandGeoSearch) Warning() string                 { return "" }
 func (commandGeoSearch) P(p Pipeliner) commandGeoSearchP { return commandGeoSearchP{p} }
 func (b commandGeoSearchP) Cmd(key string, q GeoSearchQuery) {
@@ -1516,7 +1516,7 @@ func (commandGeoSearchStore) String() string                       { return "GEO
 func (commandGeoSearchStore) Class() string                        { return "Geospatial" }
 func (commandGeoSearchStore) RequireVersion() string               { return "6.2.0" }
 func (commandGeoSearchStore) Forbid() bool                         { return false }
-func (commandGeoSearchStore) WarnVersion() string                  { return "0.0.0" }
+func (commandGeoSearchStore) WarnVersion() string                  { return "" }
 func (commandGeoSearchStore) Warning() string                      { return "" }
 func (commandGeoSearchStore) P(p Pipeliner) commandGeoSearchStoreP { return commandGeoSearchStoreP{p} }
 func (b commandGeoSearchStoreP) Cmd(src, dest string, q GeoSearchStoreQuery) {
@@ -1532,7 +1532,7 @@ func (commandHDel) String() string             { return "HDEL" }
 func (commandHDel) Class() string              { return "Hash" }
 func (commandHDel) RequireVersion() string     { return "2.0.0" }
 func (commandHDel) Forbid() bool               { return false }
-func (commandHDel) WarnVersion() string        { return "0.0.0" }
+func (commandHDel) WarnVersion() string        { return "" }
 func (commandHDel) Warning() string            { return "" }
 func (commandHDel) P(p Pipeliner) commandHDelP { return commandHDelP{p} }
 func (b commandHDelP) Cmd(key, field string)   { b.p.Cmd(b.p.builder().HDelCompleted(key, field)) }
@@ -1546,7 +1546,7 @@ func (commandHMDel) String() string              { return "HDEL" }
 func (commandHMDel) Class() string               { return "Hash" }
 func (commandHMDel) RequireVersion() string      { return "2.4.0" }
 func (commandHMDel) Forbid() bool                { return false }
-func (commandHMDel) WarnVersion() string         { return "0.0.0" }
+func (commandHMDel) WarnVersion() string         { return "" }
 func (commandHMDel) Warning() string             { return "" }
 func (commandHMDel) P(p Pipeliner) commandHMDelP { return commandHMDelP{p} }
 func (b commandHMDelP) Cmd(key string, fields ...string) {
@@ -1562,7 +1562,7 @@ func (commandHExists) String() string                { return "HEXISTS" }
 func (commandHExists) Class() string                 { return "Hash" }
 func (commandHExists) RequireVersion() string        { return "2.0.0" }
 func (commandHExists) Forbid() bool                  { return false }
-func (commandHExists) WarnVersion() string           { return "0.0.0" }
+func (commandHExists) WarnVersion() string           { return "" }
 func (commandHExists) Warning() string               { return "" }
 func (commandHExists) P(p Pipeliner) commandHExistsP { return commandHExistsP{p} }
 func (b commandHExistsP) Cmd(key, field string)      { b.p.Cmd(b.p.builder().HExistsCompleted(key, field)) }
@@ -1576,7 +1576,7 @@ func (commandHExpire) String() string                { return "HEXPIRE" }
 func (commandHExpire) Class() string                 { return "Hash" }
 func (commandHExpire) RequireVersion() string        { return "7.4.0" }
 func (commandHExpire) Forbid() bool                  { return false }
-func (commandHExpire) WarnVersion() string           { return "0.0.0" }
+func (commandHExpire) WarnVersion() string           { return "" }
 func (commandHExpire) Warning() string               { return "" }
 func (commandHExpire) P(p Pipeliner) commandHExpireP { return commandHExpireP{p} }
 func (b commandHExpireP) Cmd(key string, seconds time.Duration, fields ...string) {
@@ -1592,7 +1592,7 @@ func (commandHExpireNX) String() string                  { return "HEXPIRE NX" }
 func (commandHExpireNX) Class() string                   { return "Hash" }
 func (commandHExpireNX) RequireVersion() string          { return "7.4.0" }
 func (commandHExpireNX) Forbid() bool                    { return false }
-func (commandHExpireNX) WarnVersion() string             { return "0.0.0" }
+func (commandHExpireNX) WarnVersion() string             { return "" }
 func (commandHExpireNX) Warning() string                 { return "" }
 func (commandHExpireNX) P(p Pipeliner) commandHExpireNXP { return commandHExpireNXP{p} }
 func (b commandHExpireNXP) Cmd(key string, seconds time.Duration, fields ...string) {
@@ -1608,7 +1608,7 @@ func (commandHExpireXX) String() string                  { return "HEXPIRE XX" }
 func (commandHExpireXX) Class() string                   { return "Hash" }
 func (commandHExpireXX) RequireVersion() string          { return "7.4.0" }
 func (commandHExpireXX) Forbid() bool                    { return false }
-func (commandHExpireXX) WarnVersion() string             { return "0.0.0" }
+func (commandHExpireXX) WarnVersion() string             { return "" }
 func (commandHExpireXX) Warning() string                 { return "" }
 func (commandHExpireXX) P(p Pipeliner) commandHExpireXXP { return commandHExpireXXP{p} }
 func (b commandHExpireXXP) Cmd(key string, seconds time.Duration, fields ...string) {
@@ -1624,7 +1624,7 @@ func (commandHExpireGT) String() string                  { return "HEXPIRE GT" }
 func (commandHExpireGT) Class() string                   { return "Hash" }
 func (commandHExpireGT) RequireVersion() string          { return "7.4.0" }
 func (commandHExpireGT) Forbid() bool                    { return false }
-func (commandHExpireGT) WarnVersion() string             { return "0.0.0" }
+func (commandHExpireGT) WarnVersion() string             { return "" }
 func (commandHExpireGT) Warning() string                 { return "" }
 func (commandHExpireGT) P(p Pipeliner) commandHExpireGTP { return commandHExpireGTP{p} }
 func (b commandHExpireGTP) Cmd(key string, seconds time.Duration, fields ...string) {
@@ -1640,7 +1640,7 @@ func (commandHExpireLT) String() string                  { return "HEXPIRE LT" }
 func (commandHExpireLT) Class() string                   { return "Hash" }
 func (commandHExpireLT) RequireVersion() string          { return "7.4.0" }
 func (commandHExpireLT) Forbid() bool                    { return false }
-func (commandHExpireLT) WarnVersion() string             { return "0.0.0" }
+func (commandHExpireLT) WarnVersion() string             { return "" }
 func (commandHExpireLT) Warning() string                 { return "" }
 func (commandHExpireLT) P(p Pipeliner) commandHExpireLTP { return commandHExpireLTP{p} }
 func (b commandHExpireLTP) Cmd(key string, seconds time.Duration, fields ...string) {
@@ -1656,7 +1656,7 @@ func (commandHExpireAt) String() string                  { return "HEXPIREAT" }
 func (commandHExpireAt) Class() string                   { return "Hash" }
 func (commandHExpireAt) RequireVersion() string          { return "7.4.0" }
 func (commandHExpireAt) Forbid() bool                    { return false }
-func (commandHExpireAt) WarnVersion() string             { return "0.0.0" }
+func (commandHExpireAt) WarnVersion() string             { return "" }
 func (commandHExpireAt) Warning() string                 { return "" }
 func (commandHExpireAt) P(p Pipeliner) commandHExpireAtP { return commandHExpireAtP{p} }
 func (b commandHExpireAtP) Cmd(key string, tm time.Time, fields ...string) {
@@ -1672,7 +1672,7 @@ func (commandHExpireAtNX) String() string                    { return "HEXPIREAT
 func (commandHExpireAtNX) Class() string                     { return "Hash" }
 func (commandHExpireAtNX) RequireVersion() string            { return "7.4.0" }
 func (commandHExpireAtNX) Forbid() bool                      { return false }
-func (commandHExpireAtNX) WarnVersion() string               { return "0.0.0" }
+func (commandHExpireAtNX) WarnVersion() string               { return "" }
 func (commandHExpireAtNX) Warning() string                   { return "" }
 func (commandHExpireAtNX) P(p Pipeliner) commandHExpireAtNXP { return commandHExpireAtNXP{p} }
 func (b commandHExpireAtNXP) Cmd(key string, tm time.Time, fields ...string) {
@@ -1688,7 +1688,7 @@ func (commandHExpireAtXX) String() string                    { return "HEXPIREAT
 func (commandHExpireAtXX) Class() string                     { return "Hash" }
 func (commandHExpireAtXX) RequireVersion() string            { return "7.4.0" }
 func (commandHExpireAtXX) Forbid() bool                      { return false }
-func (commandHExpireAtXX) WarnVersion() string               { return "0.0.0" }
+func (commandHExpireAtXX) WarnVersion() string               { return "" }
 func (commandHExpireAtXX) Warning() string                   { return "" }
 func (commandHExpireAtXX) P(p Pipeliner) commandHExpireAtXXP { return commandHExpireAtXXP{p} }
 func (b commandHExpireAtXXP) Cmd(key string, tm time.Time, fields ...string) {
@@ -1704,7 +1704,7 @@ func (commandHExpireAtGT) String() string                    { return "HEXPIREAT
 func (commandHExpireAtGT) Class() string                     { return "Hash" }
 func (commandHExpireAtGT) RequireVersion() string            { return "7.4.0" }
 func (commandHExpireAtGT) Forbid() bool                      { return false }
-func (commandHExpireAtGT) WarnVersion() string               { return "0.0.0" }
+func (commandHExpireAtGT) WarnVersion() string               { return "" }
 func (commandHExpireAtGT) Warning() string                   { return "" }
 func (commandHExpireAtGT) P(p Pipeliner) commandHExpireAtGTP { return commandHExpireAtGTP{p} }
 func (b commandHExpireAtGTP) Cmd(key string, tm time.Time, fields ...string) {
@@ -1720,7 +1720,7 @@ func (commandHExpireAtLT) String() string                    { return "HEXPIREAT
 func (commandHExpireAtLT) Class() string                     { return "Hash" }
 func (commandHExpireAtLT) RequireVersion() string            { return "7.4.0" }
 func (commandHExpireAtLT) Forbid() bool                      { return false }
-func (commandHExpireAtLT) WarnVersion() string               { return "0.0.0" }
+func (commandHExpireAtLT) WarnVersion() string               { return "" }
 func (commandHExpireAtLT) Warning() string                   { return "" }
 func (commandHExpireAtLT) P(p Pipeliner) commandHExpireAtLTP { return commandHExpireAtLTP{p} }
 func (b commandHExpireAtLTP) Cmd(key string, tm time.Time, fields ...string) {
@@ -1736,7 +1736,7 @@ func (commandHExpireTime) String() string                    { return "HEXPIRETI
 func (commandHExpireTime) Class() string                     { return "Hash" }
 func (commandHExpireTime) RequireVersion() string            { return "7.4.0" }
 func (commandHExpireTime) Forbid() bool                      { return false }
-func (commandHExpireTime) WarnVersion() string               { return "0.0.0" }
+func (commandHExpireTime) WarnVersion() string               { return "" }
 func (commandHExpireTime) Warning() string                   { return "" }
 func (commandHExpireTime) P(p Pipeliner) commandHExpireTimeP { return commandHExpireTimeP{p} }
 func (b commandHExpireTimeP) Cmd(key string, fields ...string) {
@@ -1752,7 +1752,7 @@ func (commandHGet) String() string             { return "HGET" }
 func (commandHGet) Class() string              { return "Hash" }
 func (commandHGet) RequireVersion() string     { return "2.0.0" }
 func (commandHGet) Forbid() bool               { return false }
-func (commandHGet) WarnVersion() string        { return "0.0.0" }
+func (commandHGet) WarnVersion() string        { return "" }
 func (commandHGet) Warning() string            { return "" }
 func (commandHGet) P(p Pipeliner) commandHGetP { return commandHGetP{p} }
 func (b commandHGetP) Cmd(key, field string)   { b.p.Cmd(b.p.builder().HGetCompleted(key, field)) }
@@ -1766,7 +1766,7 @@ func (commandHGetAll) String() string                { return "HGETALL" }
 func (commandHGetAll) Class() string                 { return "Hash" }
 func (commandHGetAll) RequireVersion() string        { return "2.0.0" }
 func (commandHGetAll) Forbid() bool                  { return false }
-func (commandHGetAll) WarnVersion() string           { return "0.0.0" }
+func (commandHGetAll) WarnVersion() string           { return "" }
 func (commandHGetAll) Warning() string               { return "" }
 func (commandHGetAll) P(p Pipeliner) commandHGetAllP { return commandHGetAllP{p} }
 func (b commandHGetAllP) Cmd(key string)             { b.p.Cmd(b.p.builder().HGetAllCompleted(key)) }
@@ -1780,7 +1780,7 @@ func (commandHIncrBy) String() string                { return "HINCRBY" }
 func (commandHIncrBy) Class() string                 { return "Hash" }
 func (commandHIncrBy) RequireVersion() string        { return "2.0.0" }
 func (commandHIncrBy) Forbid() bool                  { return false }
-func (commandHIncrBy) WarnVersion() string           { return "0.0.0" }
+func (commandHIncrBy) WarnVersion() string           { return "" }
 func (commandHIncrBy) Warning() string               { return "" }
 func (commandHIncrBy) P(p Pipeliner) commandHIncrByP { return commandHIncrByP{p} }
 func (b commandHIncrByP) Cmd(key, field string, incr int64) {
@@ -1796,7 +1796,7 @@ func (commandHIncrByFloat) String() string                     { return "HINCRBY
 func (commandHIncrByFloat) Class() string                      { return "Hash" }
 func (commandHIncrByFloat) RequireVersion() string             { return "2.6.0" }
 func (commandHIncrByFloat) Forbid() bool                       { return false }
-func (commandHIncrByFloat) WarnVersion() string                { return "0.0.0" }
+func (commandHIncrByFloat) WarnVersion() string                { return "" }
 func (commandHIncrByFloat) Warning() string                    { return "" }
 func (commandHIncrByFloat) P(p Pipeliner) commandHIncrByFloatP { return commandHIncrByFloatP{p} }
 func (b commandHIncrByFloatP) Cmd(key, field string, incr float64) {
@@ -1812,7 +1812,7 @@ func (commandHKeys) String() string              { return "HKEYS" }
 func (commandHKeys) Class() string               { return "Hash" }
 func (commandHKeys) RequireVersion() string      { return "2.0.0" }
 func (commandHKeys) Forbid() bool                { return false }
-func (commandHKeys) WarnVersion() string         { return "0.0.0" }
+func (commandHKeys) WarnVersion() string         { return "" }
 func (commandHKeys) Warning() string             { return "" }
 func (commandHKeys) P(p Pipeliner) commandHKeysP { return commandHKeysP{p} }
 func (b commandHKeysP) Cmd(key string)           { b.p.Cmd(b.p.builder().HKeysCompleted(key)) }
@@ -1826,7 +1826,7 @@ func (commandHLen) String() string             { return "HLEN" }
 func (commandHLen) Class() string              { return "Hash" }
 func (commandHLen) RequireVersion() string     { return "2.0.0" }
 func (commandHLen) Forbid() bool               { return false }
-func (commandHLen) WarnVersion() string        { return "0.0.0" }
+func (commandHLen) WarnVersion() string        { return "" }
 func (commandHLen) Warning() string            { return "" }
 func (commandHLen) P(p Pipeliner) commandHLenP { return commandHLenP{p} }
 func (b commandHLenP) Cmd(key string)          { b.p.Cmd(b.p.builder().HLenCompleted(key)) }
@@ -1840,7 +1840,7 @@ func (commandHMGet) String() string              { return "HMGET" }
 func (commandHMGet) Class() string               { return "Hash" }
 func (commandHMGet) RequireVersion() string      { return "2.0.0" }
 func (commandHMGet) Forbid() bool                { return false }
-func (commandHMGet) WarnVersion() string         { return "0.0.0" }
+func (commandHMGet) WarnVersion() string         { return "" }
 func (commandHMGet) Warning() string             { return "" }
 func (commandHMGet) P(p Pipeliner) commandHMGetP { return commandHMGetP{p} }
 func (b commandHMGetP) Cmd(key string, fields ...string) {
@@ -1872,7 +1872,7 @@ func (commandHPersist) String() string                 { return "HPERSIST" }
 func (commandHPersist) Class() string                  { return "Hash" }
 func (commandHPersist) RequireVersion() string         { return "7.4.0" }
 func (commandHPersist) Forbid() bool                   { return false }
-func (commandHPersist) WarnVersion() string            { return "0.0.0" }
+func (commandHPersist) WarnVersion() string            { return "" }
 func (commandHPersist) Warning() string                { return "" }
 func (commandHPersist) P(p Pipeliner) commandHPersistP { return commandHPersistP{p} }
 func (b commandHPersistP) Cmd(key string, fields ...string) {
@@ -1888,7 +1888,7 @@ func (commandHPExpire) String() string                 { return "HPEXPIRE" }
 func (commandHPExpire) Class() string                  { return "Hash" }
 func (commandHPExpire) RequireVersion() string         { return "7.4.0" }
 func (commandHPExpire) Forbid() bool                   { return false }
-func (commandHPExpire) WarnVersion() string            { return "0.0.0" }
+func (commandHPExpire) WarnVersion() string            { return "" }
 func (commandHPExpire) Warning() string                { return "" }
 func (commandHPExpire) P(p Pipeliner) commandHPExpireP { return commandHPExpireP{p} }
 func (b commandHPExpireP) Cmd(key string, milliseconds time.Duration, fields ...string) {
@@ -1904,7 +1904,7 @@ func (commandHPExpireNX) String() string                   { return "HPEXPIRE NX
 func (commandHPExpireNX) Class() string                    { return "Hash" }
 func (commandHPExpireNX) RequireVersion() string           { return "7.4.0" }
 func (commandHPExpireNX) Forbid() bool                     { return false }
-func (commandHPExpireNX) WarnVersion() string              { return "0.0.0" }
+func (commandHPExpireNX) WarnVersion() string              { return "" }
 func (commandHPExpireNX) Warning() string                  { return "" }
 func (commandHPExpireNX) P(p Pipeliner) commandHPExpireNXP { return commandHPExpireNXP{p} }
 func (b commandHPExpireNXP) Cmd(key string, milliseconds time.Duration, fields ...string) {
@@ -1920,7 +1920,7 @@ func (commandHPExpireXX) String() string                   { return "HPEXPIRE XX
 func (commandHPExpireXX) Class() string                    { return "Hash" }
 func (commandHPExpireXX) RequireVersion() string           { return "7.4.0" }
 func (commandHPExpireXX) Forbid() bool                     { return false }
-func (commandHPExpireXX) WarnVersion() string              { return "0.0.0" }
+func (commandHPExpireXX) WarnVersion() string              { return "" }
 func (commandHPExpireXX) Warning() string                  { return "" }
 func (commandHPExpireXX) P(p Pipeliner) commandHPExpireXXP { return commandHPExpireXXP{p} }
 func (b commandHPExpireXXP) Cmd(key string, milliseconds time.Duration, fields ...string) {
@@ -1936,7 +1936,7 @@ func (commandHPExpireGT) String() string                   { return "HPEXPIRE GT
 func (commandHPExpireGT) Class() string                    { return "Hash" }
 func (commandHPExpireGT) RequireVersion() string           { return "7.4.0" }
 func (commandHPExpireGT) Forbid() bool                     { return false }
-func (commandHPExpireGT) WarnVersion() string              { return "0.0.0" }
+func (commandHPExpireGT) WarnVersion() string              { return "" }
 func (commandHPExpireGT) Warning() string                  { return "" }
 func (commandHPExpireGT) P(p Pipeliner) commandHPExpireGTP { return commandHPExpireGTP{p} }
 func (b commandHPExpireGTP) Cmd(key string, milliseconds time.Duration, fields ...string) {
@@ -1952,7 +1952,7 @@ func (commandHPExpireLT) String() string                   { return "HPEXPIRE LT
 func (commandHPExpireLT) Class() string                    { return "Hash" }
 func (commandHPExpireLT) RequireVersion() string           { return "7.4.0" }
 func (commandHPExpireLT) Forbid() bool                     { return false }
-func (commandHPExpireLT) WarnVersion() string              { return "0.0.0" }
+func (commandHPExpireLT) WarnVersion() string              { return "" }
 func (commandHPExpireLT) Warning() string                  { return "" }
 func (commandHPExpireLT) P(p Pipeliner) commandHPExpireLTP { return commandHPExpireLTP{p} }
 func (b commandHPExpireLTP) Cmd(key string, milliseconds time.Duration, fields ...string) {
@@ -1968,7 +1968,7 @@ func (commandHPExpireAt) String() string                   { return "HPEXPIREAT"
 func (commandHPExpireAt) Class() string                    { return "Hash" }
 func (commandHPExpireAt) RequireVersion() string           { return "7.4.0" }
 func (commandHPExpireAt) Forbid() bool                     { return false }
-func (commandHPExpireAt) WarnVersion() string              { return "0.0.0" }
+func (commandHPExpireAt) WarnVersion() string              { return "" }
 func (commandHPExpireAt) Warning() string                  { return "" }
 func (commandHPExpireAt) P(p Pipeliner) commandHPExpireAtP { return commandHPExpireAtP{p} }
 func (b commandHPExpireAtP) Cmd(key string, tm time.Time, fields ...string) {
@@ -1984,7 +1984,7 @@ func (commandHPExpireAtNX) String() string                     { return "HPEXPIR
 func (commandHPExpireAtNX) Class() string                      { return "Hash" }
 func (commandHPExpireAtNX) RequireVersion() string             { return "7.4.0" }
 func (commandHPExpireAtNX) Forbid() bool                       { return false }
-func (commandHPExpireAtNX) WarnVersion() string                { return "0.0.0" }
+func (commandHPExpireAtNX) WarnVersion() string                { return "" }
 func (commandHPExpireAtNX) Warning() string                    { return "" }
 func (commandHPExpireAtNX) P(p Pipeliner) commandHPExpireAtNXP { return commandHPExpireAtNXP{p} }
 func (b commandHPExpireAtNXP) Cmd(key string, tm time.Time, fields ...string) {
@@ -2000,7 +2000,7 @@ func (commandHPExpireAtXX) String() string                     { return "HPEXPIR
 func (commandHPExpireAtXX) Class() string                      { return "Hash" }
 func (commandHPExpireAtXX) RequireVersion() string             { return "7.4.0" }
 func (commandHPExpireAtXX) Forbid() bool                       { return false }
-func (commandHPExpireAtXX) WarnVersion() string                { return "0.0.0" }
+func (commandHPExpireAtXX) WarnVersion() string                { return "" }
 func (commandHPExpireAtXX) Warning() string                    { return "" }
 func (commandHPExpireAtXX) P(p Pipeliner) commandHPExpireAtXXP { return commandHPExpireAtXXP{p} }
 func (b commandHPExpireAtXXP) Cmd(key string, tm time.Time, fields ...string) {
@@ -2016,7 +2016,7 @@ func (commandHPExpireAtGT) String() string                     { return "HPEXPIR
 func (commandHPExpireAtGT) Class() string                      { return "Hash" }
 func (commandHPExpireAtGT) RequireVersion() string             { return "7.4.0" }
 func (commandHPExpireAtGT) Forbid() bool                       { return false }
-func (commandHPExpireAtGT) WarnVersion() string                { return "0.0.0" }
+func (commandHPExpireAtGT) WarnVersion() string                { return "" }
 func (commandHPExpireAtGT) Warning() string                    { return "" }
 func (commandHPExpireAtGT) P(p Pipeliner) commandHPExpireAtGTP { return commandHPExpireAtGTP{p} }
 func (b commandHPExpireAtGTP) Cmd(key string, tm time.Time, fields ...string) {
@@ -2032,7 +2032,7 @@ func (commandHPExpireAtLT) String() string                     { return "HPEXPIR
 func (commandHPExpireAtLT) Class() string                      { return "Hash" }
 func (commandHPExpireAtLT) RequireVersion() string             { return "7.4.0" }
 func (commandHPExpireAtLT) Forbid() bool                       { return false }
-func (commandHPExpireAtLT) WarnVersion() string                { return "0.0.0" }
+func (commandHPExpireAtLT) WarnVersion() string                { return "" }
 func (commandHPExpireAtLT) Warning() string                    { return "" }
 func (commandHPExpireAtLT) P(p Pipeliner) commandHPExpireAtLTP { return commandHPExpireAtLTP{p} }
 func (b commandHPExpireAtLTP) Cmd(key string, tm time.Time, fields ...string) {
@@ -2048,7 +2048,7 @@ func (commandHPExpireTime) String() string                     { return "HPEXPIR
 func (commandHPExpireTime) Class() string                      { return "Hash" }
 func (commandHPExpireTime) RequireVersion() string             { return "7.4.0" }
 func (commandHPExpireTime) Forbid() bool                       { return false }
-func (commandHPExpireTime) WarnVersion() string                { return "0.0.0" }
+func (commandHPExpireTime) WarnVersion() string                { return "" }
 func (commandHPExpireTime) Warning() string                    { return "" }
 func (commandHPExpireTime) P(p Pipeliner) commandHPExpireTimeP { return commandHPExpireTimeP{p} }
 func (b commandHPExpireTimeP) Cmd(key string, fields ...string) {
@@ -2064,7 +2064,7 @@ func (commandHTTL) String() string             { return "HTTL" }
 func (commandHTTL) Class() string              { return "Hash" }
 func (commandHTTL) RequireVersion() string     { return "7.4.0" }
 func (commandHTTL) Forbid() bool               { return false }
-func (commandHTTL) WarnVersion() string        { return "0.0.0" }
+func (commandHTTL) WarnVersion() string        { return "" }
 func (commandHTTL) Warning() string            { return "" }
 func (commandHTTL) P(p Pipeliner) commandHTTLP { return commandHTTLP{p} }
 func (b commandHTTLP) Cmd(key string, fields ...string) {
@@ -2080,7 +2080,7 @@ func (commandHPTTL) String() string              { return "HPTTL" }
 func (commandHPTTL) Class() string               { return "Hash" }
 func (commandHPTTL) RequireVersion() string      { return "7.4.0" }
 func (commandHPTTL) Forbid() bool                { return false }
-func (commandHPTTL) WarnVersion() string         { return "0.0.0" }
+func (commandHPTTL) WarnVersion() string         { return "" }
 func (commandHPTTL) Warning() string             { return "" }
 func (commandHPTTL) P(p Pipeliner) commandHPTTLP { return commandHPTTLP{p} }
 func (b commandHPTTLP) Cmd(key string, fields ...string) {
@@ -2096,7 +2096,7 @@ func (commandHRandField) String() string                   { return "HRANDFIELD"
 func (commandHRandField) Class() string                    { return "Hash" }
 func (commandHRandField) RequireVersion() string           { return "6.2.0" }
 func (commandHRandField) Forbid() bool                     { return false }
-func (commandHRandField) WarnVersion() string              { return "0.0.0" }
+func (commandHRandField) WarnVersion() string              { return "" }
 func (commandHRandField) Warning() string                  { return "" }
 func (commandHRandField) P(p Pipeliner) commandHRandFieldP { return commandHRandFieldP{p} }
 func (b commandHRandFieldP) Cmd(key string, count int64) {
@@ -2112,7 +2112,7 @@ func (commandHRandFieldWithValues) String() string         { return "HRANDFIELD 
 func (commandHRandFieldWithValues) Class() string          { return "Hash" }
 func (commandHRandFieldWithValues) RequireVersion() string { return "6.2.0" }
 func (commandHRandFieldWithValues) Forbid() bool           { return false }
-func (commandHRandFieldWithValues) WarnVersion() string    { return "0.0.0" }
+func (commandHRandFieldWithValues) WarnVersion() string    { return "" }
 func (commandHRandFieldWithValues) Warning() string        { return "" }
 func (commandHRandFieldWithValues) P(p Pipeliner) commandHRandFieldWithValuesP {
 	return commandHRandFieldWithValuesP{p}
@@ -2130,7 +2130,7 @@ func (commandHScan) String() string              { return "HSCAN" }
 func (commandHScan) Class() string               { return "Hash" }
 func (commandHScan) RequireVersion() string      { return "2.8.0" }
 func (commandHScan) Forbid() bool                { return false }
-func (commandHScan) WarnVersion() string         { return "0.0.0" }
+func (commandHScan) WarnVersion() string         { return "" }
 func (commandHScan) Warning() string             { return "" }
 func (commandHScan) P(p Pipeliner) commandHScanP { return commandHScanP{p} }
 func (b commandHScanP) Cmd(key string, cursor uint64, match string, count int64) {
@@ -2146,7 +2146,7 @@ func (commandHSet) String() string             { return "HSET" }
 func (commandHSet) Class() string              { return "Hash" }
 func (commandHSet) RequireVersion() string     { return "2.8.0" }
 func (commandHSet) Forbid() bool               { return false }
-func (commandHSet) WarnVersion() string        { return "0.0.0" }
+func (commandHSet) WarnVersion() string        { return "" }
 func (commandHSet) Warning() string            { return "" }
 func (commandHSet) P(p Pipeliner) commandHSetP { return commandHSetP{p} }
 func (b commandHSetP) Cmd(key, field string, value any) {
@@ -2162,7 +2162,7 @@ func (commandHMSetX) String() string               { return "HSET" }
 func (commandHMSetX) Class() string                { return "Hash" }
 func (commandHMSetX) RequireVersion() string       { return "4.0.0" }
 func (commandHMSetX) Forbid() bool                 { return false }
-func (commandHMSetX) WarnVersion() string          { return "0.0.0" }
+func (commandHMSetX) WarnVersion() string          { return "" }
 func (commandHMSetX) Warning() string              { return "" }
 func (commandHMSetX) P(p Pipeliner) commandHMSetXP { return commandHMSetXP{p} }
 func (b commandHMSetXP) Cmd(key string, values ...any) {
@@ -2178,7 +2178,7 @@ func (commandHSetNX) String() string               { return "HSETNX" }
 func (commandHSetNX) Class() string                { return "Hash" }
 func (commandHSetNX) RequireVersion() string       { return "2.0.0" }
 func (commandHSetNX) Forbid() bool                 { return false }
-func (commandHSetNX) WarnVersion() string          { return "0.0.0" }
+func (commandHSetNX) WarnVersion() string          { return "" }
 func (commandHSetNX) Warning() string              { return "" }
 func (commandHSetNX) P(p Pipeliner) commandHSetNXP { return commandHSetNXP{p} }
 func (b commandHSetNXP) Cmd(key, field string, value any) {
@@ -2194,7 +2194,7 @@ func (commandHVals) String() string              { return "HVALS" }
 func (commandHVals) Class() string               { return "Hash" }
 func (commandHVals) RequireVersion() string      { return "2.0.0" }
 func (commandHVals) Forbid() bool                { return false }
-func (commandHVals) WarnVersion() string         { return "0.0.0" }
+func (commandHVals) WarnVersion() string         { return "" }
 func (commandHVals) Warning() string             { return "" }
 func (commandHVals) P(p Pipeliner) commandHValsP { return commandHValsP{p} }
 func (b commandHValsP) Cmd(key string)           { b.p.Cmd(b.p.builder().HValsCompleted(key)) }
@@ -2208,7 +2208,7 @@ func (commandHStrLen) String() string                { return "HSTRLEN" }
 func (commandHStrLen) Class() string                 { return "Hash" }
 func (commandHStrLen) RequireVersion() string        { return "3.2.0" }
 func (commandHStrLen) Forbid() bool                  { return false }
-func (commandHStrLen) WarnVersion() string           { return "0.0.0" }
+func (commandHStrLen) WarnVersion() string           { return "" }
 func (commandHStrLen) Warning() string               { return "" }
 func (commandHStrLen) P(p Pipeliner) commandHStrLenP { return commandHStrLenP{p} }
 func (b commandHStrLenP) Cmd(key, field string)      { b.p.Cmd(b.p.builder().HStrLenCompleted(key, field)) }
@@ -2222,7 +2222,7 @@ func (commandPFAdd) String() string              { return "PFADD" }
 func (commandPFAdd) Class() string               { return "HyperLog" }
 func (commandPFAdd) RequireVersion() string      { return "2.8.9" }
 func (commandPFAdd) Forbid() bool                { return false }
-func (commandPFAdd) WarnVersion() string         { return "0.0.0" }
+func (commandPFAdd) WarnVersion() string         { return "" }
 func (commandPFAdd) Warning() string             { return "" }
 func (commandPFAdd) P(p Pipeliner) commandPFAddP { return commandPFAddP{p} }
 func (b commandPFAddP) Cmd(key string, els ...any) {
@@ -2238,7 +2238,7 @@ func (commandPFCount) String() string                { return "PFCOUNT" }
 func (commandPFCount) Class() string                 { return "HyperLog" }
 func (commandPFCount) RequireVersion() string        { return "2.8.9" }
 func (commandPFCount) Forbid() bool                  { return false }
-func (commandPFCount) WarnVersion() string           { return "0.0.0" }
+func (commandPFCount) WarnVersion() string           { return "" }
 func (commandPFCount) Warning() string               { return "" }
 func (commandPFCount) P(p Pipeliner) commandPFCountP { return commandPFCountP{p} }
 func (b commandPFCountP) Cmd(keys ...string)         { b.p.Cmd(b.p.builder().PFCountCompleted(keys...)) }
@@ -2252,7 +2252,7 @@ func (commandPFMerge) String() string                { return "PFMERGE" }
 func (commandPFMerge) Class() string                 { return "HyperLog" }
 func (commandPFMerge) RequireVersion() string        { return "2.8.9" }
 func (commandPFMerge) Forbid() bool                  { return false }
-func (commandPFMerge) WarnVersion() string           { return "0.0.0" }
+func (commandPFMerge) WarnVersion() string           { return "" }
 func (commandPFMerge) Warning() string               { return "" }
 func (commandPFMerge) P(p Pipeliner) commandPFMergeP { return commandPFMergeP{p} }
 func (b commandPFMergeP) Cmd(dest string, keys ...string) {
@@ -2267,7 +2267,7 @@ func (commandBLMove) String() string         { return "BLMOVE" }
 func (commandBLMove) Class() string          { return "List" }
 func (commandBLMove) RequireVersion() string { return "6.2.0" }
 func (commandBLMove) Forbid() bool           { return false }
-func (commandBLMove) WarnVersion() string    { return "0.0.0" }
+func (commandBLMove) WarnVersion() string    { return "" }
 func (commandBLMove) Warning() string        { return "" }
 
 var CommandBLMPop commandBLMPop
@@ -2278,7 +2278,7 @@ func (commandBLMPop) String() string         { return "BLMPOP" }
 func (commandBLMPop) Class() string          { return "List" }
 func (commandBLMPop) RequireVersion() string { return "7.0.0" }
 func (commandBLMPop) Forbid() bool           { return false }
-func (commandBLMPop) WarnVersion() string    { return "0.0.0" }
+func (commandBLMPop) WarnVersion() string    { return "" }
 func (commandBLMPop) Warning() string        { return "" }
 
 var CommandBLPop commandBLPop
@@ -2289,7 +2289,7 @@ func (commandBLPop) String() string         { return "BLPOP" }
 func (commandBLPop) Class() string          { return "List" }
 func (commandBLPop) RequireVersion() string { return "2.0.0" }
 func (commandBLPop) Forbid() bool           { return false }
-func (commandBLPop) WarnVersion() string    { return "0.0.0" }
+func (commandBLPop) WarnVersion() string    { return "" }
 func (commandBLPop) Warning() string        { return "" }
 
 var CommandBRPop commandBRPop
@@ -2300,7 +2300,7 @@ func (commandBRPop) String() string         { return "BRPOP" }
 func (commandBRPop) Class() string          { return "List" }
 func (commandBRPop) RequireVersion() string { return "2.0.0" }
 func (commandBRPop) Forbid() bool           { return false }
-func (commandBRPop) WarnVersion() string    { return "0.0.0" }
+func (commandBRPop) WarnVersion() string    { return "" }
 func (commandBRPop) Warning() string        { return "" }
 
 var CommandBRPopLPush commandBRPopLPush
@@ -2311,7 +2311,7 @@ func (commandBRPopLPush) String() string         { return "BRPOPLPUSH" }
 func (commandBRPopLPush) Class() string          { return "List" }
 func (commandBRPopLPush) RequireVersion() string { return "2.2.0" }
 func (commandBRPopLPush) Forbid() bool           { return false }
-func (commandBRPopLPush) WarnVersion() string    { return "0.0.0" }
+func (commandBRPopLPush) WarnVersion() string    { return "" }
 func (commandBRPopLPush) Warning() string        { return "" }
 
 var CommandLIndex commandLIndex
@@ -2323,7 +2323,7 @@ func (commandLIndex) String() string               { return "LINDEX" }
 func (commandLIndex) Class() string                { return "List" }
 func (commandLIndex) RequireVersion() string       { return "1.0.0" }
 func (commandLIndex) Forbid() bool                 { return false }
-func (commandLIndex) WarnVersion() string          { return "0.0.0" }
+func (commandLIndex) WarnVersion() string          { return "" }
 func (commandLIndex) Warning() string              { return "" }
 func (commandLIndex) P(p Pipeliner) commandLIndexP { return commandLIndexP{p} }
 func (b commandLIndexP) Cmd(key string, index int64) {
@@ -2339,7 +2339,7 @@ func (commandLInsert) String() string                { return "LINSERT" }
 func (commandLInsert) Class() string                 { return "List" }
 func (commandLInsert) RequireVersion() string        { return "2.2.0" }
 func (commandLInsert) Forbid() bool                  { return false }
-func (commandLInsert) WarnVersion() string           { return "0.0.0" }
+func (commandLInsert) WarnVersion() string           { return "" }
 func (commandLInsert) Warning() string               { return "" }
 func (commandLInsert) P(p Pipeliner) commandLInsertP { return commandLInsertP{p} }
 func (b commandLInsertP) Cmd(key, op string, pivot, element any) {
@@ -2355,7 +2355,7 @@ func (commandLInsertBefore) String() string                      { return "LINSE
 func (commandLInsertBefore) Class() string                       { return "List" }
 func (commandLInsertBefore) RequireVersion() string              { return "2.2.0" }
 func (commandLInsertBefore) Forbid() bool                        { return false }
-func (commandLInsertBefore) WarnVersion() string                 { return "0.0.0" }
+func (commandLInsertBefore) WarnVersion() string                 { return "" }
 func (commandLInsertBefore) Warning() string                     { return "" }
 func (commandLInsertBefore) P(p Pipeliner) commandLInsertBeforeP { return commandLInsertBeforeP{p} }
 func (b commandLInsertBeforeP) Cmd(key string, pivot, element any) {
@@ -2371,7 +2371,7 @@ func (commandLInsertAfter) String() string                     { return "LINSERT
 func (commandLInsertAfter) Class() string                      { return "List" }
 func (commandLInsertAfter) RequireVersion() string             { return "2.2.0" }
 func (commandLInsertAfter) Forbid() bool                       { return false }
-func (commandLInsertAfter) WarnVersion() string                { return "0.0.0" }
+func (commandLInsertAfter) WarnVersion() string                { return "" }
 func (commandLInsertAfter) Warning() string                    { return "" }
 func (commandLInsertAfter) P(p Pipeliner) commandLInsertAfterP { return commandLInsertAfterP{p} }
 func (b commandLInsertAfterP) Cmd(key string, pivot, element any) {
@@ -2387,7 +2387,7 @@ func (commandLLen) String() string             { return "LLEN" }
 func (commandLLen) Class() string              { return "List" }
 func (commandLLen) RequireVersion() string     { return "1.0.0" }
 func (commandLLen) Forbid() bool               { return false }
-func (commandLLen) WarnVersion() string        { return "0.0.0" }
+func (commandLLen) WarnVersion() string        { return "" }
 func (commandLLen) Warning() string            { return "" }
 func (commandLLen) P(p Pipeliner) commandLLenP { return commandLLenP{p} }
 func (b commandLLenP) Cmd(key string)          { b.p.Cmd(b.p.builder().LLenCompleted(key)) }
@@ -2401,7 +2401,7 @@ func (commandLMove) String() string              { return "LMOVE" }
 func (commandLMove) Class() string               { return "List" }
 func (commandLMove) RequireVersion() string      { return "6.2.0" }
 func (commandLMove) Forbid() bool                { return false }
-func (commandLMove) WarnVersion() string         { return "0.0.0" }
+func (commandLMove) WarnVersion() string         { return "" }
 func (commandLMove) Warning() string             { return "" }
 func (commandLMove) P(p Pipeliner) commandLMoveP { return commandLMoveP{p} }
 func (b commandLMoveP) Cmd(source, destination, srcpos, destpos string) {
@@ -2417,7 +2417,7 @@ func (commandLPop) String() string             { return "LPOP" }
 func (commandLPop) Class() string              { return "List" }
 func (commandLPop) RequireVersion() string     { return "1.0.0" }
 func (commandLPop) Forbid() bool               { return false }
-func (commandLPop) WarnVersion() string        { return "0.0.0" }
+func (commandLPop) WarnVersion() string        { return "" }
 func (commandLPop) Warning() string            { return "" }
 func (commandLPop) P(p Pipeliner) commandLPopP { return commandLPopP{p} }
 func (b commandLPopP) Cmd(key string)          { b.p.Cmd(b.p.builder().LPopCompleted(key)) }
@@ -2431,7 +2431,7 @@ func (commandLPopCount) String() string                  { return "LPOP COUNT" }
 func (commandLPopCount) Class() string                   { return "List" }
 func (commandLPopCount) RequireVersion() string          { return "6.2.0" }
 func (commandLPopCount) Forbid() bool                    { return false }
-func (commandLPopCount) WarnVersion() string             { return "0.0.0" }
+func (commandLPopCount) WarnVersion() string             { return "" }
 func (commandLPopCount) Warning() string                 { return "" }
 func (commandLPopCount) P(p Pipeliner) commandLPopCountP { return commandLPopCountP{p} }
 func (b commandLPopCountP) Cmd(key string, count int64) {
@@ -2447,7 +2447,7 @@ func (commandLMPop) String() string              { return "LMPOP" }
 func (commandLMPop) Class() string               { return "List" }
 func (commandLMPop) RequireVersion() string      { return "7.0.0" }
 func (commandLMPop) Forbid() bool                { return false }
-func (commandLMPop) WarnVersion() string         { return "0.0.0" }
+func (commandLMPop) WarnVersion() string         { return "" }
 func (commandLMPop) Warning() string             { return "" }
 func (commandLMPop) P(p Pipeliner) commandLMPopP { return commandLMPopP{p} }
 func (b commandLMPopP) Cmd(direction string, count int64, keys ...string) {
@@ -2463,7 +2463,7 @@ func (commandLPos) String() string             { return "LPOS" }
 func (commandLPos) Class() string              { return "List" }
 func (commandLPos) RequireVersion() string     { return "6.0.6" }
 func (commandLPos) Forbid() bool               { return false }
-func (commandLPos) WarnVersion() string        { return "0.0.0" }
+func (commandLPos) WarnVersion() string        { return "" }
 func (commandLPos) Warning() string            { return "" }
 func (commandLPos) P(p Pipeliner) commandLPosP { return commandLPosP{p} }
 func (b commandLPosP) Cmd(key string, element string, a LPosArgs) {
@@ -2479,7 +2479,7 @@ func (commandLPosCount) String() string                  { return "LPOS COUNT" }
 func (commandLPosCount) Class() string                   { return "List" }
 func (commandLPosCount) RequireVersion() string          { return "6.0.6" }
 func (commandLPosCount) Forbid() bool                    { return false }
-func (commandLPosCount) WarnVersion() string             { return "0.0.0" }
+func (commandLPosCount) WarnVersion() string             { return "" }
 func (commandLPosCount) Warning() string                 { return "" }
 func (commandLPosCount) P(p Pipeliner) commandLPosCountP { return commandLPosCountP{p} }
 func (b commandLPosCountP) Cmd(key string, element string, count int64, a LPosArgs) {
@@ -2495,7 +2495,7 @@ func (commandLPush) String() string              { return "LPUSH" }
 func (commandLPush) Class() string               { return "List" }
 func (commandLPush) RequireVersion() string      { return "1.0.0" }
 func (commandLPush) Forbid() bool                { return false }
-func (commandLPush) WarnVersion() string         { return "0.0.0" }
+func (commandLPush) WarnVersion() string         { return "" }
 func (commandLPush) Warning() string             { return "" }
 func (commandLPush) P(p Pipeliner) commandLPushP { return commandLPushP{p} }
 func (b commandLPushP) Cmd(key string, element any) {
@@ -2511,7 +2511,7 @@ func (commandLMPush) String() string               { return "LPUSH" }
 func (commandLMPush) Class() string                { return "List" }
 func (commandLMPush) RequireVersion() string       { return "2.4.0" }
 func (commandLMPush) Forbid() bool                 { return false }
-func (commandLMPush) WarnVersion() string          { return "0.0.0" }
+func (commandLMPush) WarnVersion() string          { return "" }
 func (commandLMPush) Warning() string              { return "" }
 func (commandLMPush) P(p Pipeliner) commandLMPushP { return commandLMPushP{p} }
 func (b commandLMPushP) Cmd(key string, elements ...any) {
@@ -2527,7 +2527,7 @@ func (commandLPushX) String() string               { return "LPUSHX" }
 func (commandLPushX) Class() string                { return "List" }
 func (commandLPushX) RequireVersion() string       { return "2.2.0" }
 func (commandLPushX) Forbid() bool                 { return false }
-func (commandLPushX) WarnVersion() string          { return "0.0.0" }
+func (commandLPushX) WarnVersion() string          { return "" }
 func (commandLPushX) Warning() string              { return "" }
 func (commandLPushX) P(p Pipeliner) commandLPushXP { return commandLPushXP{p} }
 func (b commandLPushXP) Cmd(key string, element any) {
@@ -2543,7 +2543,7 @@ func (commandLMPushX) String() string                { return "LPUSHX" }
 func (commandLMPushX) Class() string                 { return "List" }
 func (commandLMPushX) RequireVersion() string        { return "4.0.0" }
 func (commandLMPushX) Forbid() bool                  { return false }
-func (commandLMPushX) WarnVersion() string           { return "0.0.0" }
+func (commandLMPushX) WarnVersion() string           { return "" }
 func (commandLMPushX) Warning() string               { return "" }
 func (commandLMPushX) P(p Pipeliner) commandLMPushXP { return commandLMPushXP{p} }
 func (b commandLMPushXP) Cmd(key string, elements ...any) {
@@ -2559,7 +2559,7 @@ func (commandLRange) String() string               { return "LRANGE" }
 func (commandLRange) Class() string                { return "List" }
 func (commandLRange) RequireVersion() string       { return "1.0.0" }
 func (commandLRange) Forbid() bool                 { return false }
-func (commandLRange) WarnVersion() string          { return "0.0.0" }
+func (commandLRange) WarnVersion() string          { return "" }
 func (commandLRange) Warning() string              { return "" }
 func (commandLRange) P(p Pipeliner) commandLRangeP { return commandLRangeP{p} }
 func (b commandLRangeP) Cmd(key string, start, stop int64) {
@@ -2575,7 +2575,7 @@ func (commandLRem) String() string             { return "LREM" }
 func (commandLRem) Class() string              { return "List" }
 func (commandLRem) RequireVersion() string     { return "1.0.0" }
 func (commandLRem) Forbid() bool               { return false }
-func (commandLRem) WarnVersion() string        { return "0.0.0" }
+func (commandLRem) WarnVersion() string        { return "" }
 func (commandLRem) Warning() string            { return "" }
 func (commandLRem) P(p Pipeliner) commandLRemP { return commandLRemP{p} }
 func (b commandLRemP) Cmd(key string, count int64, element any) {
@@ -2591,7 +2591,7 @@ func (commandLSet) String() string             { return "LSET" }
 func (commandLSet) Class() string              { return "List" }
 func (commandLSet) RequireVersion() string     { return "1.0.0" }
 func (commandLSet) Forbid() bool               { return false }
-func (commandLSet) WarnVersion() string        { return "0.0.0" }
+func (commandLSet) WarnVersion() string        { return "" }
 func (commandLSet) Warning() string            { return "" }
 func (commandLSet) P(p Pipeliner) commandLSetP { return commandLSetP{p} }
 func (b commandLSetP) Cmd(key string, index int64, element any) {
@@ -2607,7 +2607,7 @@ func (commandLTrim) String() string              { return "LTRIM" }
 func (commandLTrim) Class() string               { return "List" }
 func (commandLTrim) RequireVersion() string      { return "1.0.0" }
 func (commandLTrim) Forbid() bool                { return false }
-func (commandLTrim) WarnVersion() string         { return "0.0.0" }
+func (commandLTrim) WarnVersion() string         { return "" }
 func (commandLTrim) Warning() string             { return "" }
 func (commandLTrim) P(p Pipeliner) commandLTrimP { return commandLTrimP{p} }
 func (b commandLTrimP) Cmd(key string, start, stop int64) {
@@ -2623,7 +2623,7 @@ func (commandRPop) String() string             { return "RPOP" }
 func (commandRPop) Class() string              { return "List" }
 func (commandRPop) RequireVersion() string     { return "1.0.0" }
 func (commandRPop) Forbid() bool               { return false }
-func (commandRPop) WarnVersion() string        { return "0.0.0" }
+func (commandRPop) WarnVersion() string        { return "" }
 func (commandRPop) Warning() string            { return "" }
 func (commandRPop) P(p Pipeliner) commandRPopP { return commandRPopP{p} }
 func (b commandRPopP) Cmd(key string)          { b.p.Cmd(b.p.builder().RPopCompleted(key)) }
@@ -2637,7 +2637,7 @@ func (commandRPopCount) String() string                  { return "RPOP" }
 func (commandRPopCount) Class() string                   { return "List" }
 func (commandRPopCount) RequireVersion() string          { return "6.2.0" }
 func (commandRPopCount) Forbid() bool                    { return false }
-func (commandRPopCount) WarnVersion() string             { return "0.0.0" }
+func (commandRPopCount) WarnVersion() string             { return "" }
 func (commandRPopCount) Warning() string                 { return "" }
 func (commandRPopCount) P(p Pipeliner) commandRPopCountP { return commandRPopCountP{p} }
 func (b commandRPopCountP) Cmd(key string, count int64) {
@@ -2669,7 +2669,7 @@ func (commandRPush) String() string              { return "RPUSH" }
 func (commandRPush) Class() string               { return "List" }
 func (commandRPush) RequireVersion() string      { return "1.0.0" }
 func (commandRPush) Forbid() bool                { return false }
-func (commandRPush) WarnVersion() string         { return "0.0.0" }
+func (commandRPush) WarnVersion() string         { return "" }
 func (commandRPush) Warning() string             { return "" }
 func (commandRPush) P(p Pipeliner) commandRPushP { return commandRPushP{p} }
 func (b commandRPushP) Cmd(key string, element any) {
@@ -2685,7 +2685,7 @@ func (commandRMPush) String() string               { return "RPUSH" }
 func (commandRMPush) Class() string                { return "List" }
 func (commandRMPush) RequireVersion() string       { return "2.4.0" }
 func (commandRMPush) Forbid() bool                 { return false }
-func (commandRMPush) WarnVersion() string          { return "0.0.0" }
+func (commandRMPush) WarnVersion() string          { return "" }
 func (commandRMPush) Warning() string              { return "" }
 func (commandRMPush) P(p Pipeliner) commandRMPushP { return commandRMPushP{p} }
 func (b commandRMPushP) Cmd(key string, elements ...any) {
@@ -2701,7 +2701,7 @@ func (commandRPushX) String() string               { return "RPUSHX" }
 func (commandRPushX) Class() string                { return "List" }
 func (commandRPushX) RequireVersion() string       { return "2.2.0" }
 func (commandRPushX) Forbid() bool                 { return false }
-func (commandRPushX) WarnVersion() string          { return "0.0.0" }
+func (commandRPushX) WarnVersion() string          { return "" }
 func (commandRPushX) Warning() string              { return "" }
 func (commandRPushX) P(p Pipeliner) commandRPushXP { return commandRPushXP{p} }
 func (b commandRPushXP) Cmd(key string, element any) {
@@ -2717,7 +2717,7 @@ func (commandRMPushX) String() string                { return "RPUSHX" }
 func (commandRMPushX) Class() string                 { return "List" }
 func (commandRMPushX) RequireVersion() string        { return "4.0.0" }
 func (commandRMPushX) Forbid() bool                  { return false }
-func (commandRMPushX) WarnVersion() string           { return "0.0.0" }
+func (commandRMPushX) WarnVersion() string           { return "" }
 func (commandRMPushX) Warning() string               { return "" }
 func (commandRMPushX) P(p Pipeliner) commandRMPushXP { return commandRMPushXP{p} }
 func (b commandRMPushXP) Cmd(key string, elements ...any) {
@@ -2732,7 +2732,7 @@ func (commandPSubscribe) String() string         { return "PSUBSCRIBE" }
 func (commandPSubscribe) Class() string          { return "PubSub" }
 func (commandPSubscribe) RequireVersion() string { return "2.0.0" }
 func (commandPSubscribe) Forbid() bool           { return false }
-func (commandPSubscribe) WarnVersion() string    { return "0.0.0" }
+func (commandPSubscribe) WarnVersion() string    { return "" }
 func (commandPSubscribe) Warning() string        { return "" }
 
 var CommandPublish commandPublish
@@ -2744,7 +2744,7 @@ func (commandPublish) String() string                { return "PUBLISH" }
 func (commandPublish) Class() string                 { return "PubSub" }
 func (commandPublish) RequireVersion() string        { return "2.0.0" }
 func (commandPublish) Forbid() bool                  { return false }
-func (commandPublish) WarnVersion() string           { return "0.0.0" }
+func (commandPublish) WarnVersion() string           { return "" }
 func (commandPublish) Warning() string               { return "" }
 func (commandPublish) P(p Pipeliner) commandPublishP { return commandPublishP{p} }
 func (b commandPublishP) Cmd(channel string, message any) {
@@ -2760,7 +2760,7 @@ func (commandPubSubChannels) String() string                       { return "PUB
 func (commandPubSubChannels) Class() string                        { return "PubSub" }
 func (commandPubSubChannels) RequireVersion() string               { return "2.8.0" }
 func (commandPubSubChannels) Forbid() bool                         { return false }
-func (commandPubSubChannels) WarnVersion() string                  { return "0.0.0" }
+func (commandPubSubChannels) WarnVersion() string                  { return "" }
 func (commandPubSubChannels) Warning() string                      { return "" }
 func (commandPubSubChannels) P(p Pipeliner) commandPubSubChannelsP { return commandPubSubChannelsP{p} }
 func (b commandPubSubChannelsP) Cmd(pattern string) {
@@ -2776,7 +2776,7 @@ func (commandPubSubNumPat) String() string                     { return "PUBSUB 
 func (commandPubSubNumPat) Class() string                      { return "PubSub" }
 func (commandPubSubNumPat) RequireVersion() string             { return "2.8.0" }
 func (commandPubSubNumPat) Forbid() bool                       { return false }
-func (commandPubSubNumPat) WarnVersion() string                { return "0.0.0" }
+func (commandPubSubNumPat) WarnVersion() string                { return "" }
 func (commandPubSubNumPat) Warning() string                    { return "" }
 func (commandPubSubNumPat) P(p Pipeliner) commandPubSubNumPatP { return commandPubSubNumPatP{p} }
 func (b commandPubSubNumPatP) Cmd()                            { b.p.Cmd(b.p.builder().PubSubNumPatCompleted()) }
@@ -2790,7 +2790,7 @@ func (commandPubSubNumSub) String() string                     { return "PUBSUB 
 func (commandPubSubNumSub) Class() string                      { return "PubSub" }
 func (commandPubSubNumSub) RequireVersion() string             { return "2.8.0" }
 func (commandPubSubNumSub) Forbid() bool                       { return false }
-func (commandPubSubNumSub) WarnVersion() string                { return "0.0.0" }
+func (commandPubSubNumSub) WarnVersion() string                { return "" }
 func (commandPubSubNumSub) Warning() string                    { return "" }
 func (commandPubSubNumSub) P(p Pipeliner) commandPubSubNumSubP { return commandPubSubNumSubP{p} }
 func (b commandPubSubNumSubP) Cmd(channels ...string) {
@@ -2806,7 +2806,7 @@ func (commandPubSubShardChannels) String() string         { return "PUBSUB SHARD
 func (commandPubSubShardChannels) Class() string          { return "PubSub" }
 func (commandPubSubShardChannels) RequireVersion() string { return "7.0.0" }
 func (commandPubSubShardChannels) Forbid() bool           { return false }
-func (commandPubSubShardChannels) WarnVersion() string    { return "0.0.0" }
+func (commandPubSubShardChannels) WarnVersion() string    { return "" }
 func (commandPubSubShardChannels) Warning() string        { return "" }
 func (commandPubSubShardChannels) P(p Pipeliner) commandPubSubShardChannelsP {
 	return commandPubSubShardChannelsP{p}
@@ -2824,7 +2824,7 @@ func (commandPubSubShardNumSub) String() string         { return "PUBSUB SHARDNU
 func (commandPubSubShardNumSub) Class() string          { return "PubSub" }
 func (commandPubSubShardNumSub) RequireVersion() string { return "7.0.0" }
 func (commandPubSubShardNumSub) Forbid() bool           { return false }
-func (commandPubSubShardNumSub) WarnVersion() string    { return "0.0.0" }
+func (commandPubSubShardNumSub) WarnVersion() string    { return "" }
 func (commandPubSubShardNumSub) Warning() string        { return "" }
 func (commandPubSubShardNumSub) P(p Pipeliner) commandPubSubShardNumSubP {
 	return commandPubSubShardNumSubP{p}
@@ -2842,7 +2842,7 @@ func (commandSPublish) String() string                 { return "SPUBLISH" }
 func (commandSPublish) Class() string                  { return "PubSub" }
 func (commandSPublish) RequireVersion() string         { return "7.0.0" }
 func (commandSPublish) Forbid() bool                   { return false }
-func (commandSPublish) WarnVersion() string            { return "0.0.0" }
+func (commandSPublish) WarnVersion() string            { return "" }
 func (commandSPublish) Warning() string                { return "" }
 func (commandSPublish) P(p Pipeliner) commandSPublishP { return commandSPublishP{p} }
 func (b commandSPublishP) Cmd(channel string, message any) {
@@ -2857,7 +2857,7 @@ func (commandSubscribe) String() string         { return "SUBSCRIBE" }
 func (commandSubscribe) Class() string          { return "PubSub" }
 func (commandSubscribe) RequireVersion() string { return "2.0.0" }
 func (commandSubscribe) Forbid() bool           { return false }
-func (commandSubscribe) WarnVersion() string    { return "0.0.0" }
+func (commandSubscribe) WarnVersion() string    { return "" }
 func (commandSubscribe) Warning() string        { return "" }
 
 var CommandUnsubscribe commandUnsubscribe
@@ -2868,7 +2868,7 @@ func (commandUnsubscribe) String() string         { return "UNSUBSCRIBE" }
 func (commandUnsubscribe) Class() string          { return "PubSub" }
 func (commandUnsubscribe) RequireVersion() string { return "2.0.0" }
 func (commandUnsubscribe) Forbid() bool           { return false }
-func (commandUnsubscribe) WarnVersion() string    { return "0.0.0" }
+func (commandUnsubscribe) WarnVersion() string    { return "" }
 func (commandUnsubscribe) Warning() string        { return "" }
 
 var CommandPUnsubscribe commandPUnsubscribe
@@ -2879,7 +2879,7 @@ func (commandPUnsubscribe) String() string         { return "PUNSUBSCRIBE" }
 func (commandPUnsubscribe) Class() string          { return "PubSub" }
 func (commandPUnsubscribe) RequireVersion() string { return "2.0.0" }
 func (commandPUnsubscribe) Forbid() bool           { return false }
-func (commandPUnsubscribe) WarnVersion() string    { return "0.0.0" }
+func (commandPUnsubscribe) WarnVersion() string    { return "" }
 func (commandPUnsubscribe) Warning() string        { return "" }
 
 var CommandEval commandEval
@@ -2891,7 +2891,7 @@ func (commandEval) String() string             { return "EVAL" }
 func (commandEval) Class() string              { return "Scripting" }
 func (commandEval) RequireVersion() string     { return "2.6.0" }
 func (commandEval) Forbid() bool               { return false }
-func (commandEval) WarnVersion() string        { return "0.0.0" }
+func (commandEval) WarnVersion() string        { return "" }
 func (commandEval) Warning() string            { return "" }
 func (commandEval) P(p Pipeliner) commandEvalP { return commandEvalP{p} }
 func (b commandEvalP) Cmd(script string, keys []string, args ...any) {
@@ -2907,7 +2907,7 @@ func (commandEvalRO) String() string               { return "EVAL_RO" }
 func (commandEvalRO) Class() string                { return "Scripting" }
 func (commandEvalRO) RequireVersion() string       { return "7.0.0" }
 func (commandEvalRO) Forbid() bool                 { return false }
-func (commandEvalRO) WarnVersion() string          { return "0.0.0" }
+func (commandEvalRO) WarnVersion() string          { return "" }
 func (commandEvalRO) Warning() string              { return "" }
 func (commandEvalRO) P(p Pipeliner) commandEvalROP { return commandEvalROP{p} }
 func (b commandEvalROP) Cmd(script string, keys []string, args ...any) {
@@ -2923,7 +2923,7 @@ func (commandEvalSha) String() string                { return "EVALSHA" }
 func (commandEvalSha) Class() string                 { return "Scripting" }
 func (commandEvalSha) RequireVersion() string        { return "2.6.0" }
 func (commandEvalSha) Forbid() bool                  { return false }
-func (commandEvalSha) WarnVersion() string           { return "0.0.0" }
+func (commandEvalSha) WarnVersion() string           { return "" }
 func (commandEvalSha) Warning() string               { return "" }
 func (commandEvalSha) P(p Pipeliner) commandEvalShaP { return commandEvalShaP{p} }
 func (b commandEvalShaP) Cmd(sha1 string, keys []string, args ...any) {
@@ -2939,7 +2939,7 @@ func (commandEvalShaRO) String() string                  { return "EVALSHA_RO" }
 func (commandEvalShaRO) Class() string                   { return "Scripting" }
 func (commandEvalShaRO) RequireVersion() string          { return "7.0.0" }
 func (commandEvalShaRO) Forbid() bool                    { return false }
-func (commandEvalShaRO) WarnVersion() string             { return "0.0.0" }
+func (commandEvalShaRO) WarnVersion() string             { return "" }
 func (commandEvalShaRO) Warning() string                 { return "" }
 func (commandEvalShaRO) P(p Pipeliner) commandEvalShaROP { return commandEvalShaROP{p} }
 func (b commandEvalShaROP) Cmd(sha1 string, keys []string, args ...any) {
@@ -2955,7 +2955,7 @@ func (commandFCall) String() string              { return "FCALL" }
 func (commandFCall) Class() string               { return "Scripting" }
 func (commandFCall) RequireVersion() string      { return "7.0.0" }
 func (commandFCall) Forbid() bool                { return false }
-func (commandFCall) WarnVersion() string         { return "0.0.0" }
+func (commandFCall) WarnVersion() string         { return "" }
 func (commandFCall) Warning() string             { return "" }
 func (commandFCall) P(p Pipeliner) commandFCallP { return commandFCallP{p} }
 func (b commandFCallP) Cmd(function string, keys []string, args ...any) {
@@ -2971,7 +2971,7 @@ func (commandFCallRO) String() string                { return "FCALL_RO" }
 func (commandFCallRO) Class() string                 { return "Scripting" }
 func (commandFCallRO) RequireVersion() string        { return "7.0.0" }
 func (commandFCallRO) Forbid() bool                  { return false }
-func (commandFCallRO) WarnVersion() string           { return "0.0.0" }
+func (commandFCallRO) WarnVersion() string           { return "" }
 func (commandFCallRO) Warning() string               { return "" }
 func (commandFCallRO) P(p Pipeliner) commandFCallROP { return commandFCallROP{p} }
 func (b commandFCallROP) Cmd(function string, keys []string, args ...any) {
@@ -2986,7 +2986,7 @@ func (commandFunctionDelete) String() string         { return "FUNCTION DELETE" 
 func (commandFunctionDelete) Class() string          { return "Scripting" }
 func (commandFunctionDelete) RequireVersion() string { return "7.0.0" }
 func (commandFunctionDelete) Forbid() bool           { return false }
-func (commandFunctionDelete) WarnVersion() string    { return "0.0.0" }
+func (commandFunctionDelete) WarnVersion() string    { return "" }
 func (commandFunctionDelete) Warning() string        { return "" }
 
 var CommandFunctionDump commandFunctionDump
@@ -2998,7 +2998,7 @@ func (commandFunctionDump) String() string                     { return "FUNCTIO
 func (commandFunctionDump) Class() string                      { return "Scripting" }
 func (commandFunctionDump) RequireVersion() string             { return "7.0.0" }
 func (commandFunctionDump) Forbid() bool                       { return false }
-func (commandFunctionDump) WarnVersion() string                { return "0.0.0" }
+func (commandFunctionDump) WarnVersion() string                { return "" }
 func (commandFunctionDump) Warning() string                    { return "" }
 func (commandFunctionDump) P(p Pipeliner) commandFunctionDumpP { return commandFunctionDumpP{p} }
 func (b commandFunctionDumpP) Cmd()                            { b.p.Cmd(b.p.builder().FunctionDumpCompleted()) }
@@ -3011,7 +3011,7 @@ func (commandFunctionFlush) String() string         { return "FUNCTION FLUSH" }
 func (commandFunctionFlush) Class() string          { return "Scripting" }
 func (commandFunctionFlush) RequireVersion() string { return "7.0.0" }
 func (commandFunctionFlush) Forbid() bool           { return false }
-func (commandFunctionFlush) WarnVersion() string    { return "0.0.0" }
+func (commandFunctionFlush) WarnVersion() string    { return "" }
 func (commandFunctionFlush) Warning() string        { return "" }
 
 var CommandFunctionFlushAsync commandFunctionFlushAsync
@@ -3022,7 +3022,7 @@ func (commandFunctionFlushAsync) String() string         { return "FUNCTION FLUS
 func (commandFunctionFlushAsync) Class() string          { return "Scripting" }
 func (commandFunctionFlushAsync) RequireVersion() string { return "7.0.0" }
 func (commandFunctionFlushAsync) Forbid() bool           { return false }
-func (commandFunctionFlushAsync) WarnVersion() string    { return "0.0.0" }
+func (commandFunctionFlushAsync) WarnVersion() string    { return "" }
 func (commandFunctionFlushAsync) Warning() string        { return "" }
 
 var CommandFunctionKill commandFunctionKill
@@ -3033,7 +3033,7 @@ func (commandFunctionKill) String() string         { return "FUNCTION KILL" }
 func (commandFunctionKill) Class() string          { return "Scripting" }
 func (commandFunctionKill) RequireVersion() string { return "7.0.0" }
 func (commandFunctionKill) Forbid() bool           { return false }
-func (commandFunctionKill) WarnVersion() string    { return "0.0.0" }
+func (commandFunctionKill) WarnVersion() string    { return "" }
 func (commandFunctionKill) Warning() string        { return "" }
 
 var CommandFunctionList commandFunctionList
@@ -3045,7 +3045,7 @@ func (commandFunctionList) String() string                     { return "FUNCTIO
 func (commandFunctionList) Class() string                      { return "Scripting" }
 func (commandFunctionList) RequireVersion() string             { return "7.0.0" }
 func (commandFunctionList) Forbid() bool                       { return false }
-func (commandFunctionList) WarnVersion() string                { return "0.0.0" }
+func (commandFunctionList) WarnVersion() string                { return "" }
 func (commandFunctionList) Warning() string                    { return "" }
 func (commandFunctionList) P(p Pipeliner) commandFunctionListP { return commandFunctionListP{p} }
 func (b commandFunctionListP) Cmd(q FunctionListQuery) {
@@ -3060,7 +3060,7 @@ func (commandFunctionLoad) String() string         { return "FUNCTION LOAD" }
 func (commandFunctionLoad) Class() string          { return "Scripting" }
 func (commandFunctionLoad) RequireVersion() string { return "7.0.0" }
 func (commandFunctionLoad) Forbid() bool           { return false }
-func (commandFunctionLoad) WarnVersion() string    { return "0.0.0" }
+func (commandFunctionLoad) WarnVersion() string    { return "" }
 func (commandFunctionLoad) Warning() string        { return "" }
 
 var CommandFunctionLoadReplace commandFunctionLoadReplace
@@ -3071,7 +3071,7 @@ func (commandFunctionLoadReplace) String() string         { return "FUNCTION LOA
 func (commandFunctionLoadReplace) Class() string          { return "Scripting" }
 func (commandFunctionLoadReplace) RequireVersion() string { return "7.0.0" }
 func (commandFunctionLoadReplace) Forbid() bool           { return false }
-func (commandFunctionLoadReplace) WarnVersion() string    { return "0.0.0" }
+func (commandFunctionLoadReplace) WarnVersion() string    { return "" }
 func (commandFunctionLoadReplace) Warning() string        { return "" }
 
 var CommandFunctionRestore commandFunctionRestore
@@ -3082,7 +3082,7 @@ func (commandFunctionRestore) String() string         { return "FUNCTION RESTORE
 func (commandFunctionRestore) Class() string          { return "Scripting" }
 func (commandFunctionRestore) RequireVersion() string { return "7.0.0" }
 func (commandFunctionRestore) Forbid() bool           { return false }
-func (commandFunctionRestore) WarnVersion() string    { return "0.0.0" }
+func (commandFunctionRestore) WarnVersion() string    { return "" }
 func (commandFunctionRestore) Warning() string        { return "" }
 
 var CommandScriptExists commandScriptExists
@@ -3093,7 +3093,7 @@ func (commandScriptExists) String() string         { return "SCRIPT EXISTS" }
 func (commandScriptExists) Class() string          { return "Scripting" }
 func (commandScriptExists) RequireVersion() string { return "2.6.0" }
 func (commandScriptExists) Forbid() bool           { return false }
-func (commandScriptExists) WarnVersion() string    { return "0.0.0" }
+func (commandScriptExists) WarnVersion() string    { return "" }
 func (commandScriptExists) Warning() string        { return "" }
 
 var CommandScriptFlush commandScriptFlush
@@ -3104,7 +3104,7 @@ func (commandScriptFlush) String() string         { return "SCRIPT FLUSH" }
 func (commandScriptFlush) Class() string          { return "Scripting" }
 func (commandScriptFlush) RequireVersion() string { return "2.6.0" }
 func (commandScriptFlush) Forbid() bool           { return false }
-func (commandScriptFlush) WarnVersion() string    { return "0.0.0" }
+func (commandScriptFlush) WarnVersion() string    { return "" }
 func (commandScriptFlush) Warning() string        { return "" }
 
 var CommandScriptKill commandScriptKill
@@ -3115,7 +3115,7 @@ func (commandScriptKill) String() string         { return "SCRIPT KILL" }
 func (commandScriptKill) Class() string          { return "Scripting" }
 func (commandScriptKill) RequireVersion() string { return "2.6.0" }
 func (commandScriptKill) Forbid() bool           { return false }
-func (commandScriptKill) WarnVersion() string    { return "0.0.0" }
+func (commandScriptKill) WarnVersion() string    { return "" }
 func (commandScriptKill) Warning() string        { return "" }
 
 var CommandScriptLoad commandScriptLoad
@@ -3126,7 +3126,7 @@ func (commandScriptLoad) String() string         { return "SCRIPT LOAD" }
 func (commandScriptLoad) Class() string          { return "Scripting" }
 func (commandScriptLoad) RequireVersion() string { return "2.6.0" }
 func (commandScriptLoad) Forbid() bool           { return false }
-func (commandScriptLoad) WarnVersion() string    { return "0.0.0" }
+func (commandScriptLoad) WarnVersion() string    { return "" }
 func (commandScriptLoad) Warning() string        { return "" }
 
 var CommandACLDryRun commandACLDryRun
@@ -3138,7 +3138,7 @@ func (commandACLDryRun) String() string                  { return "ACL DRYRUN" }
 func (commandACLDryRun) Class() string                   { return "Server" }
 func (commandACLDryRun) RequireVersion() string          { return "7.0.0" }
 func (commandACLDryRun) Forbid() bool                    { return true }
-func (commandACLDryRun) WarnVersion() string             { return "0.0.0" }
+func (commandACLDryRun) WarnVersion() string             { return "" }
 func (commandACLDryRun) Warning() string                 { return "" }
 func (commandACLDryRun) P(p Pipeliner) commandACLDryRunP { return commandACLDryRunP{p} }
 func (b commandACLDryRunP) Cmd(username string, command ...any) {
@@ -3153,7 +3153,7 @@ func (commandBgRewriteAOF) String() string         { return "BGREWRITEAOF" }
 func (commandBgRewriteAOF) Class() string          { return "Server" }
 func (commandBgRewriteAOF) RequireVersion() string { return "1.0.0" }
 func (commandBgRewriteAOF) Forbid() bool           { return true }
-func (commandBgRewriteAOF) WarnVersion() string    { return "0.0.0" }
+func (commandBgRewriteAOF) WarnVersion() string    { return "" }
 func (commandBgRewriteAOF) Warning() string        { return "" }
 
 var CommandBgSave commandBgSave
@@ -3164,7 +3164,7 @@ func (commandBgSave) String() string         { return "BGSAVE" }
 func (commandBgSave) Class() string          { return "Server" }
 func (commandBgSave) RequireVersion() string { return "1.0.0" }
 func (commandBgSave) Forbid() bool           { return true }
-func (commandBgSave) WarnVersion() string    { return "0.0.0" }
+func (commandBgSave) WarnVersion() string    { return "" }
 func (commandBgSave) Warning() string        { return "" }
 
 var CommandCommand commandCommand
@@ -3176,7 +3176,7 @@ func (commandCommand) String() string                { return "COMMAND" }
 func (commandCommand) Class() string                 { return "Server" }
 func (commandCommand) RequireVersion() string        { return "2.8.13" }
 func (commandCommand) Forbid() bool                  { return false }
-func (commandCommand) WarnVersion() string           { return "0.0.0" }
+func (commandCommand) WarnVersion() string           { return "" }
 func (commandCommand) Warning() string               { return "" }
 func (commandCommand) P(p Pipeliner) commandCommandP { return commandCommandP{p} }
 func (b commandCommandP) Cmd()                       { b.p.Cmd(b.p.builder().CommandCompleted()) }
@@ -3190,7 +3190,7 @@ func (commandCommandList) String() string                    { return "COMMAND L
 func (commandCommandList) Class() string                     { return "Server" }
 func (commandCommandList) RequireVersion() string            { return "7.0.0" }
 func (commandCommandList) Forbid() bool                      { return false }
-func (commandCommandList) WarnVersion() string               { return "0.0.0" }
+func (commandCommandList) WarnVersion() string               { return "" }
 func (commandCommandList) Warning() string                   { return "" }
 func (commandCommandList) P(p Pipeliner) commandCommandListP { return commandCommandListP{p} }
 func (b commandCommandListP) Cmd(filter FilterBy) {
@@ -3206,7 +3206,7 @@ func (commandCommandGetKeys) String() string                       { return "COM
 func (commandCommandGetKeys) Class() string                        { return "Server" }
 func (commandCommandGetKeys) RequireVersion() string               { return "2.8.13" }
 func (commandCommandGetKeys) Forbid() bool                         { return false }
-func (commandCommandGetKeys) WarnVersion() string                  { return "0.0.0" }
+func (commandCommandGetKeys) WarnVersion() string                  { return "" }
 func (commandCommandGetKeys) Warning() string                      { return "" }
 func (commandCommandGetKeys) P(p Pipeliner) commandCommandGetKeysP { return commandCommandGetKeysP{p} }
 func (b commandCommandGetKeysP) Cmd(commands ...any) {
@@ -3222,7 +3222,7 @@ func (commandCommandGetKeysAndFlags) String() string         { return "COMMAND G
 func (commandCommandGetKeysAndFlags) Class() string          { return "Server" }
 func (commandCommandGetKeysAndFlags) RequireVersion() string { return "7.0.0" }
 func (commandCommandGetKeysAndFlags) Forbid() bool           { return false }
-func (commandCommandGetKeysAndFlags) WarnVersion() string    { return "0.0.0" }
+func (commandCommandGetKeysAndFlags) WarnVersion() string    { return "" }
 func (commandCommandGetKeysAndFlags) Warning() string        { return "" }
 func (commandCommandGetKeysAndFlags) P(p Pipeliner) commandCommandGetKeysAndFlagsP {
 	return commandCommandGetKeysAndFlagsP{p}
@@ -3240,7 +3240,7 @@ func (commandConfigGet) String() string                  { return "CONFIG GET" }
 func (commandConfigGet) Class() string                   { return "Server" }
 func (commandConfigGet) RequireVersion() string          { return "2.0.0" }
 func (commandConfigGet) Forbid() bool                    { return true }
-func (commandConfigGet) WarnVersion() string             { return "0.0.0" }
+func (commandConfigGet) WarnVersion() string             { return "" }
 func (commandConfigGet) Warning() string                 { return "" }
 func (commandConfigGet) P(p Pipeliner) commandConfigGetP { return commandConfigGetP{p} }
 func (b commandConfigGetP) Cmd(parameter string) {
@@ -3255,7 +3255,7 @@ func (commandConfigResetStat) String() string         { return "CONFIG RESETSTAT
 func (commandConfigResetStat) Class() string          { return "Server" }
 func (commandConfigResetStat) RequireVersion() string { return "2.0.0" }
 func (commandConfigResetStat) Forbid() bool           { return true }
-func (commandConfigResetStat) WarnVersion() string    { return "0.0.0" }
+func (commandConfigResetStat) WarnVersion() string    { return "" }
 func (commandConfigResetStat) Warning() string        { return "" }
 
 var CommandConfigRewrite commandConfigRewrite
@@ -3266,7 +3266,7 @@ func (commandConfigRewrite) String() string         { return "CONFIG REWRITE" }
 func (commandConfigRewrite) Class() string          { return "Server" }
 func (commandConfigRewrite) RequireVersion() string { return "2.8.0" }
 func (commandConfigRewrite) Forbid() bool           { return true }
-func (commandConfigRewrite) WarnVersion() string    { return "0.0.0" }
+func (commandConfigRewrite) WarnVersion() string    { return "" }
 func (commandConfigRewrite) Warning() string        { return "" }
 
 var CommandConfigSet commandConfigSet
@@ -3277,7 +3277,7 @@ func (commandConfigSet) String() string         { return "CONFIG SET" }
 func (commandConfigSet) Class() string          { return "Server" }
 func (commandConfigSet) RequireVersion() string { return "2.0.0" }
 func (commandConfigSet) Forbid() bool           { return true }
-func (commandConfigSet) WarnVersion() string    { return "0.0.0" }
+func (commandConfigSet) WarnVersion() string    { return "" }
 func (commandConfigSet) Warning() string        { return "" }
 
 var CommandDBSize commandDBSize
@@ -3288,7 +3288,7 @@ func (commandDBSize) String() string         { return "DBSIZE" }
 func (commandDBSize) Class() string          { return "Server" }
 func (commandDBSize) RequireVersion() string { return "1.0.0" }
 func (commandDBSize) Forbid() bool           { return false }
-func (commandDBSize) WarnVersion() string    { return "0.0.0" }
+func (commandDBSize) WarnVersion() string    { return "" }
 func (commandDBSize) Warning() string        { return "" }
 
 var CommandFlushAll commandFlushAll
@@ -3299,7 +3299,7 @@ func (commandFlushAll) String() string         { return "FLUSHALL" }
 func (commandFlushAll) Class() string          { return "Server" }
 func (commandFlushAll) RequireVersion() string { return "1.0.0" }
 func (commandFlushAll) Forbid() bool           { return true }
-func (commandFlushAll) WarnVersion() string    { return "0.0.0" }
+func (commandFlushAll) WarnVersion() string    { return "" }
 func (commandFlushAll) Warning() string        { return "" }
 
 var CommandFlushAllAsync commandFlushAllAsync
@@ -3310,7 +3310,7 @@ func (commandFlushAllAsync) String() string         { return "FLUSHALL ASYNC" }
 func (commandFlushAllAsync) Class() string          { return "Server" }
 func (commandFlushAllAsync) RequireVersion() string { return "4.0.0" }
 func (commandFlushAllAsync) Forbid() bool           { return true }
-func (commandFlushAllAsync) WarnVersion() string    { return "0.0.0" }
+func (commandFlushAllAsync) WarnVersion() string    { return "" }
 func (commandFlushAllAsync) Warning() string        { return "" }
 
 var CommandFlushDB commandFlushDB
@@ -3321,7 +3321,7 @@ func (commandFlushDB) String() string         { return "FLUSHDB" }
 func (commandFlushDB) Class() string          { return "Server" }
 func (commandFlushDB) RequireVersion() string { return "1.0.0" }
 func (commandFlushDB) Forbid() bool           { return true }
-func (commandFlushDB) WarnVersion() string    { return "0.0.0" }
+func (commandFlushDB) WarnVersion() string    { return "" }
 func (commandFlushDB) Warning() string        { return "" }
 
 var CommandFlushDBAsync commandFlushDBAsync
@@ -3332,7 +3332,7 @@ func (commandFlushDBAsync) String() string         { return "FLUSHDB ASYNC" }
 func (commandFlushDBAsync) Class() string          { return "Server" }
 func (commandFlushDBAsync) RequireVersion() string { return "4.0.0" }
 func (commandFlushDBAsync) Forbid() bool           { return true }
-func (commandFlushDBAsync) WarnVersion() string    { return "0.0.0" }
+func (commandFlushDBAsync) WarnVersion() string    { return "" }
 func (commandFlushDBAsync) Warning() string        { return "" }
 
 var CommandServerInfo commandServerInfo
@@ -3344,7 +3344,7 @@ func (commandServerInfo) String() string                   { return "INFO" }
 func (commandServerInfo) Class() string                    { return "Server" }
 func (commandServerInfo) RequireVersion() string           { return "1.0.0" }
 func (commandServerInfo) Forbid() bool                     { return false }
-func (commandServerInfo) WarnVersion() string              { return "0.0.0" }
+func (commandServerInfo) WarnVersion() string              { return "" }
 func (commandServerInfo) Warning() string                  { return "" }
 func (commandServerInfo) P(p Pipeliner) commandServerInfoP { return commandServerInfoP{p} }
 func (b commandServerInfoP) Cmd(section string)            { b.p.Cmd(b.p.builder().InfoCompleted(section)) }
@@ -3358,7 +3358,7 @@ func (commandMServerInfo) String() string                    { return "INFO" }
 func (commandMServerInfo) Class() string                     { return "Server" }
 func (commandMServerInfo) RequireVersion() string            { return "7.0.0" }
 func (commandMServerInfo) Forbid() bool                      { return false }
-func (commandMServerInfo) WarnVersion() string               { return "0.0.0" }
+func (commandMServerInfo) WarnVersion() string               { return "" }
 func (commandMServerInfo) Warning() string                   { return "" }
 func (commandMServerInfo) P(p Pipeliner) commandMServerInfoP { return commandMServerInfoP{p} }
 func (b commandMServerInfoP) Cmd(section ...string)          { b.p.Cmd(b.p.builder().InfoCompleted(section...)) }
@@ -3372,7 +3372,7 @@ func (commandLastSave) String() string                 { return "LASTSAVE" }
 func (commandLastSave) Class() string                  { return "Server" }
 func (commandLastSave) RequireVersion() string         { return "1.0.0" }
 func (commandLastSave) Forbid() bool                   { return true }
-func (commandLastSave) WarnVersion() string            { return "0.0.0" }
+func (commandLastSave) WarnVersion() string            { return "" }
 func (commandLastSave) Warning() string                { return "" }
 func (commandLastSave) P(p Pipeliner) commandLastSaveP { return commandLastSaveP{p} }
 func (b commandLastSaveP) Cmd()                        { b.p.Cmd(b.p.builder().LastSaveCompleted()) }
@@ -3386,7 +3386,7 @@ func (commandMemoryUsage) String() string                    { return "MEMORY US
 func (commandMemoryUsage) Class() string                     { return "Server" }
 func (commandMemoryUsage) RequireVersion() string            { return "4.0.0" }
 func (commandMemoryUsage) Forbid() bool                      { return false }
-func (commandMemoryUsage) WarnVersion() string               { return "0.0.0" }
+func (commandMemoryUsage) WarnVersion() string               { return "" }
 func (commandMemoryUsage) Warning() string                   { return "" }
 func (commandMemoryUsage) P(p Pipeliner) commandMemoryUsageP { return commandMemoryUsageP{p} }
 func (b commandMemoryUsageP) Cmd(key string, samples ...int64) {
@@ -3401,7 +3401,7 @@ func (commandSave) String() string         { return "SAVE" }
 func (commandSave) Class() string          { return "Server" }
 func (commandSave) RequireVersion() string { return "1.0.0" }
 func (commandSave) Forbid() bool           { return true }
-func (commandSave) WarnVersion() string    { return "0.0.0" }
+func (commandSave) WarnVersion() string    { return "" }
 func (commandSave) Warning() string        { return "" }
 
 var CommandShutdown commandShutdown
@@ -3412,7 +3412,7 @@ func (commandShutdown) String() string         { return "SHUTDOWN" }
 func (commandShutdown) Class() string          { return "Server" }
 func (commandShutdown) RequireVersion() string { return "1.0.0" }
 func (commandShutdown) Forbid() bool           { return true }
-func (commandShutdown) WarnVersion() string    { return "0.0.0" }
+func (commandShutdown) WarnVersion() string    { return "" }
 func (commandShutdown) Warning() string        { return "" }
 
 var CommandShutdownSave commandShutdownSave
@@ -3423,7 +3423,7 @@ func (commandShutdownSave) String() string         { return "SHUTDOWN SAVE" }
 func (commandShutdownSave) Class() string          { return "Server" }
 func (commandShutdownSave) RequireVersion() string { return "1.0.0" }
 func (commandShutdownSave) Forbid() bool           { return true }
-func (commandShutdownSave) WarnVersion() string    { return "0.0.0" }
+func (commandShutdownSave) WarnVersion() string    { return "" }
 func (commandShutdownSave) Warning() string        { return "" }
 
 var CommandShutdownNoSave commandShutdownNoSave
@@ -3434,7 +3434,7 @@ func (commandShutdownNoSave) String() string         { return "SHUTDOWN NOSAVE" 
 func (commandShutdownNoSave) Class() string          { return "Server" }
 func (commandShutdownNoSave) RequireVersion() string { return "1.0.0" }
 func (commandShutdownNoSave) Forbid() bool           { return true }
-func (commandShutdownNoSave) WarnVersion() string    { return "0.0.0" }
+func (commandShutdownNoSave) WarnVersion() string    { return "" }
 func (commandShutdownNoSave) Warning() string        { return "" }
 
 var CommandDebugObject commandDebugObject
@@ -3446,7 +3446,7 @@ func (commandDebugObject) String() string                    { return "DEBUG OBJ
 func (commandDebugObject) Class() string                     { return "Server" }
 func (commandDebugObject) RequireVersion() string            { return "1.0.0" }
 func (commandDebugObject) Forbid() bool                      { return false }
-func (commandDebugObject) WarnVersion() string               { return "0.0.0" }
+func (commandDebugObject) WarnVersion() string               { return "" }
 func (commandDebugObject) Warning() string                   { return "" }
 func (commandDebugObject) P(p Pipeliner) commandDebugObjectP { return commandDebugObjectP{p} }
 func (b commandDebugObjectP) Cmd(key string)                 { b.p.Cmd(b.p.builder().DebugObjectCompleted(key)) }
@@ -3460,7 +3460,7 @@ func (commandTime) String() string             { return "TIME" }
 func (commandTime) Class() string              { return "Server" }
 func (commandTime) RequireVersion() string     { return "2.6.0" }
 func (commandTime) Forbid() bool               { return false }
-func (commandTime) WarnVersion() string        { return "0.0.0" }
+func (commandTime) WarnVersion() string        { return "" }
 func (commandTime) Warning() string            { return "" }
 func (commandTime) P(p Pipeliner) commandTimeP { return commandTimeP{p} }
 func (b commandTimeP) Cmd()                    { b.p.Cmd(b.p.builder().TimeCompleted()) }
@@ -3474,7 +3474,7 @@ func (commandSAdd) String() string                { return "SADD" }
 func (commandSAdd) Class() string                 { return "Set" }
 func (commandSAdd) RequireVersion() string        { return "1.0.0" }
 func (commandSAdd) Forbid() bool                  { return false }
-func (commandSAdd) WarnVersion() string           { return "0.0.0" }
+func (commandSAdd) WarnVersion() string           { return "" }
 func (commandSAdd) Warning() string               { return "" }
 func (commandSAdd) P(p Pipeliner) commandSAddP    { return commandSAddP{p} }
 func (b commandSAddP) Cmd(key string, member any) { b.p.Cmd(b.p.builder().SAddCompleted(key, member)) }
@@ -3488,7 +3488,7 @@ func (commandSMAdd) String() string              { return "SADD" }
 func (commandSMAdd) Class() string               { return "Set" }
 func (commandSMAdd) RequireVersion() string      { return "2.4.0" }
 func (commandSMAdd) Forbid() bool                { return false }
-func (commandSMAdd) WarnVersion() string         { return "0.0.0" }
+func (commandSMAdd) WarnVersion() string         { return "" }
 func (commandSMAdd) Warning() string             { return "" }
 func (commandSMAdd) P(p Pipeliner) commandSMAddP { return commandSMAddP{p} }
 func (b commandSMAddP) Cmd(key string, members ...any) {
@@ -3504,7 +3504,7 @@ func (commandSCard) String() string              { return "SCARD" }
 func (commandSCard) Class() string               { return "Set" }
 func (commandSCard) RequireVersion() string      { return "1.0.0" }
 func (commandSCard) Forbid() bool                { return false }
-func (commandSCard) WarnVersion() string         { return "0.0.0" }
+func (commandSCard) WarnVersion() string         { return "" }
 func (commandSCard) Warning() string             { return "" }
 func (commandSCard) P(p Pipeliner) commandSCardP { return commandSCardP{p} }
 func (b commandSCardP) Cmd(key string)           { b.p.Cmd(b.p.builder().SCardCompleted(key)) }
@@ -3518,7 +3518,7 @@ func (commandSDiff) String() string              { return "SDIFF" }
 func (commandSDiff) Class() string               { return "Set" }
 func (commandSDiff) RequireVersion() string      { return "1.0.0" }
 func (commandSDiff) Forbid() bool                { return false }
-func (commandSDiff) WarnVersion() string         { return "0.0.0" }
+func (commandSDiff) WarnVersion() string         { return "" }
 func (commandSDiff) Warning() string             { return "" }
 func (commandSDiff) P(p Pipeliner) commandSDiffP { return commandSDiffP{p} }
 func (b commandSDiffP) Cmd(keys ...string)       { b.p.Cmd(b.p.builder().SDiffCompleted(keys...)) }
@@ -3532,7 +3532,7 @@ func (commandSDiffStore) String() string                   { return "SDIFFSTORE"
 func (commandSDiffStore) Class() string                    { return "Set" }
 func (commandSDiffStore) RequireVersion() string           { return "1.0.0" }
 func (commandSDiffStore) Forbid() bool                     { return false }
-func (commandSDiffStore) WarnVersion() string              { return "0.0.0" }
+func (commandSDiffStore) WarnVersion() string              { return "" }
 func (commandSDiffStore) Warning() string                  { return "" }
 func (commandSDiffStore) P(p Pipeliner) commandSDiffStoreP { return commandSDiffStoreP{p} }
 func (b commandSDiffStoreP) Cmd(destination string, keys ...string) {
@@ -3548,7 +3548,7 @@ func (commandSInter) String() string               { return "SINTER" }
 func (commandSInter) Class() string                { return "Set" }
 func (commandSInter) RequireVersion() string       { return "1.0.0" }
 func (commandSInter) Forbid() bool                 { return false }
-func (commandSInter) WarnVersion() string          { return "0.0.0" }
+func (commandSInter) WarnVersion() string          { return "" }
 func (commandSInter) Warning() string              { return "" }
 func (commandSInter) P(p Pipeliner) commandSInterP { return commandSInterP{p} }
 func (b commandSInterP) Cmd(keys ...string)        { b.p.Cmd(b.p.builder().SInterCompleted(keys...)) }
@@ -3562,7 +3562,7 @@ func (commandSInterStore) String() string                    { return "SINTERSTO
 func (commandSInterStore) Class() string                     { return "Set" }
 func (commandSInterStore) RequireVersion() string            { return "1.0.0" }
 func (commandSInterStore) Forbid() bool                      { return false }
-func (commandSInterStore) WarnVersion() string               { return "0.0.0" }
+func (commandSInterStore) WarnVersion() string               { return "" }
 func (commandSInterStore) Warning() string                   { return "" }
 func (commandSInterStore) P(p Pipeliner) commandSInterStoreP { return commandSInterStoreP{p} }
 func (b commandSInterStoreP) Cmd(destination string, keys ...string) {
@@ -3578,7 +3578,7 @@ func (commandSInterCard) String() string                   { return "SINTERCARD"
 func (commandSInterCard) Class() string                    { return "Set" }
 func (commandSInterCard) RequireVersion() string           { return "7.0.0" }
 func (commandSInterCard) Forbid() bool                     { return false }
-func (commandSInterCard) WarnVersion() string              { return "0.0.0" }
+func (commandSInterCard) WarnVersion() string              { return "" }
 func (commandSInterCard) Warning() string                  { return "" }
 func (commandSInterCard) P(p Pipeliner) commandSInterCardP { return commandSInterCardP{p} }
 func (b commandSInterCardP) Cmd(limit int64, keys ...string) {
@@ -3594,7 +3594,7 @@ func (commandSIsMember) String() string                  { return "SISMEMBER" }
 func (commandSIsMember) Class() string                   { return "Set" }
 func (commandSIsMember) RequireVersion() string          { return "1.0.0" }
 func (commandSIsMember) Forbid() bool                    { return false }
-func (commandSIsMember) WarnVersion() string             { return "0.0.0" }
+func (commandSIsMember) WarnVersion() string             { return "" }
 func (commandSIsMember) Warning() string                 { return "" }
 func (commandSIsMember) P(p Pipeliner) commandSIsMemberP { return commandSIsMemberP{p} }
 func (b commandSIsMemberP) Cmd(key string, member any) {
@@ -3610,7 +3610,7 @@ func (commandSMIsMember) String() string                   { return "SMISMEMBER"
 func (commandSMIsMember) Class() string                    { return "Set" }
 func (commandSMIsMember) RequireVersion() string           { return "6.2.0" }
 func (commandSMIsMember) Forbid() bool                     { return false }
-func (commandSMIsMember) WarnVersion() string              { return "0.0.0" }
+func (commandSMIsMember) WarnVersion() string              { return "" }
 func (commandSMIsMember) Warning() string                  { return "" }
 func (commandSMIsMember) P(p Pipeliner) commandSMIsMemberP { return commandSMIsMemberP{p} }
 func (b commandSMIsMemberP) Cmd(key string, members ...any) {
@@ -3626,7 +3626,7 @@ func (commandSMembers) String() string                 { return "SMEMBERS" }
 func (commandSMembers) Class() string                  { return "Set" }
 func (commandSMembers) RequireVersion() string         { return "1.0.0" }
 func (commandSMembers) Forbid() bool                   { return false }
-func (commandSMembers) WarnVersion() string            { return "0.0.0" }
+func (commandSMembers) WarnVersion() string            { return "" }
 func (commandSMembers) Warning() string                { return "" }
 func (commandSMembers) P(p Pipeliner) commandSMembersP { return commandSMembersP{p} }
 func (b commandSMembersP) Cmd(key string)              { b.p.Cmd(b.p.builder().SMembersCompleted(key)) }
@@ -3640,7 +3640,7 @@ func (commandSMove) String() string              { return "SMOVE" }
 func (commandSMove) Class() string               { return "Set" }
 func (commandSMove) RequireVersion() string      { return "1.0.0" }
 func (commandSMove) Forbid() bool                { return false }
-func (commandSMove) WarnVersion() string         { return "0.0.0" }
+func (commandSMove) WarnVersion() string         { return "" }
 func (commandSMove) Warning() string             { return "" }
 func (commandSMove) P(p Pipeliner) commandSMoveP { return commandSMoveP{p} }
 func (b commandSMoveP) Cmd(source, destination string, member any) {
@@ -3656,7 +3656,7 @@ func (commandSPop) String() string             { return "SPOP" }
 func (commandSPop) Class() string              { return "Set" }
 func (commandSPop) RequireVersion() string     { return "1.0.0" }
 func (commandSPop) Forbid() bool               { return false }
-func (commandSPop) WarnVersion() string        { return "0.0.0" }
+func (commandSPop) WarnVersion() string        { return "" }
 func (commandSPop) Warning() string            { return "" }
 func (commandSPop) P(p Pipeliner) commandSPopP { return commandSPopP{p} }
 func (b commandSPopP) Cmd(key string)          { b.p.Cmd(b.p.builder().SPopCompleted(key)) }
@@ -3670,7 +3670,7 @@ func (commandSPopN) String() string              { return "SPOP" }
 func (commandSPopN) Class() string               { return "Set" }
 func (commandSPopN) RequireVersion() string      { return "3.2.0" }
 func (commandSPopN) Forbid() bool                { return false }
-func (commandSPopN) WarnVersion() string         { return "0.0.0" }
+func (commandSPopN) WarnVersion() string         { return "" }
 func (commandSPopN) Warning() string             { return "" }
 func (commandSPopN) P(p Pipeliner) commandSPopNP { return commandSPopNP{p} }
 func (b commandSPopNP) Cmd(key string, count int64) {
@@ -3686,7 +3686,7 @@ func (commandSRandMember) String() string                    { return "SRANDMEMB
 func (commandSRandMember) Class() string                     { return "Set" }
 func (commandSRandMember) RequireVersion() string            { return "1.0.0" }
 func (commandSRandMember) Forbid() bool                      { return false }
-func (commandSRandMember) WarnVersion() string               { return "0.0.0" }
+func (commandSRandMember) WarnVersion() string               { return "" }
 func (commandSRandMember) Warning() string                   { return "" }
 func (commandSRandMember) P(p Pipeliner) commandSRandMemberP { return commandSRandMemberP{p} }
 func (b commandSRandMemberP) Cmd(key string)                 { b.p.Cmd(b.p.builder().SRandMemberCompleted(key)) }
@@ -3700,7 +3700,7 @@ func (commandSRandMemberN) String() string                     { return "SRANDME
 func (commandSRandMemberN) Class() string                      { return "Set" }
 func (commandSRandMemberN) RequireVersion() string             { return "2.6.0" }
 func (commandSRandMemberN) Forbid() bool                       { return false }
-func (commandSRandMemberN) WarnVersion() string                { return "0.0.0" }
+func (commandSRandMemberN) WarnVersion() string                { return "" }
 func (commandSRandMemberN) Warning() string                    { return "" }
 func (commandSRandMemberN) P(p Pipeliner) commandSRandMemberNP { return commandSRandMemberNP{p} }
 func (b commandSRandMemberNP) Cmd(key string, count int64) {
@@ -3716,7 +3716,7 @@ func (commandSRem) String() string                { return "SREM" }
 func (commandSRem) Class() string                 { return "Set" }
 func (commandSRem) RequireVersion() string        { return "1.0.0" }
 func (commandSRem) Forbid() bool                  { return false }
-func (commandSRem) WarnVersion() string           { return "0.0.0" }
+func (commandSRem) WarnVersion() string           { return "" }
 func (commandSRem) Warning() string               { return "" }
 func (commandSRem) P(p Pipeliner) commandSRemP    { return commandSRemP{p} }
 func (b commandSRemP) Cmd(key string, member any) { b.p.Cmd(b.p.builder().SRemCompleted(key, member)) }
@@ -3730,7 +3730,7 @@ func (commandSMRem) String() string              { return "SREM" }
 func (commandSMRem) Class() string               { return "Set" }
 func (commandSMRem) RequireVersion() string      { return "2.4.0" }
 func (commandSMRem) Forbid() bool                { return false }
-func (commandSMRem) WarnVersion() string         { return "0.0.0" }
+func (commandSMRem) WarnVersion() string         { return "" }
 func (commandSMRem) Warning() string             { return "" }
 func (commandSMRem) P(p Pipeliner) commandSMRemP { return commandSMRemP{p} }
 func (b commandSMRemP) Cmd(key string, members ...any) {
@@ -3746,7 +3746,7 @@ func (commandSScan) String() string              { return "SSCAN" }
 func (commandSScan) Class() string               { return "Set" }
 func (commandSScan) RequireVersion() string      { return "2.8.0" }
 func (commandSScan) Forbid() bool                { return false }
-func (commandSScan) WarnVersion() string         { return "0.0.0" }
+func (commandSScan) WarnVersion() string         { return "" }
 func (commandSScan) Warning() string             { return "" }
 func (commandSScan) P(p Pipeliner) commandSScanP { return commandSScanP{p} }
 func (b commandSScanP) Cmd(key string, cursor uint64, match string, count int64) {
@@ -3762,7 +3762,7 @@ func (commandSUnion) String() string               { return "SUNION" }
 func (commandSUnion) Class() string                { return "Set" }
 func (commandSUnion) RequireVersion() string       { return "1.0.0" }
 func (commandSUnion) Forbid() bool                 { return false }
-func (commandSUnion) WarnVersion() string          { return "0.0.0" }
+func (commandSUnion) WarnVersion() string          { return "" }
 func (commandSUnion) Warning() string              { return "" }
 func (commandSUnion) P(p Pipeliner) commandSUnionP { return commandSUnionP{p} }
 func (b commandSUnionP) Cmd(keys ...string)        { b.p.Cmd(b.p.builder().SUnionCompleted(keys...)) }
@@ -3776,7 +3776,7 @@ func (commandSUnionStore) String() string                    { return "SUNIONSTO
 func (commandSUnionStore) Class() string                     { return "Set" }
 func (commandSUnionStore) RequireVersion() string            { return "1.0.0" }
 func (commandSUnionStore) Forbid() bool                      { return false }
-func (commandSUnionStore) WarnVersion() string               { return "0.0.0" }
+func (commandSUnionStore) WarnVersion() string               { return "" }
 func (commandSUnionStore) Warning() string                   { return "" }
 func (commandSUnionStore) P(p Pipeliner) commandSUnionStoreP { return commandSUnionStoreP{p} }
 func (b commandSUnionStoreP) Cmd(destination string, keys ...string) {
@@ -3791,7 +3791,7 @@ func (commandBZMPop) String() string         { return "BZMPOP" }
 func (commandBZMPop) Class() string          { return "SortedSet" }
 func (commandBZMPop) RequireVersion() string { return "7.0.0" }
 func (commandBZMPop) Forbid() bool           { return false }
-func (commandBZMPop) WarnVersion() string    { return "0.0.0" }
+func (commandBZMPop) WarnVersion() string    { return "" }
 func (commandBZMPop) Warning() string        { return "" }
 
 var CommandBZPopMax commandBZPopMax
@@ -3802,7 +3802,7 @@ func (commandBZPopMax) String() string         { return "BZPOPMAX" }
 func (commandBZPopMax) Class() string          { return "SortedSet" }
 func (commandBZPopMax) RequireVersion() string { return "5.0.0" }
 func (commandBZPopMax) Forbid() bool           { return false }
-func (commandBZPopMax) WarnVersion() string    { return "0.0.0" }
+func (commandBZPopMax) WarnVersion() string    { return "" }
 func (commandBZPopMax) Warning() string        { return "" }
 
 var CommandBZPopMin commandBZPopMin
@@ -3813,7 +3813,7 @@ func (commandBZPopMin) String() string         { return "BZPOPMIN" }
 func (commandBZPopMin) Class() string          { return "SortedSet" }
 func (commandBZPopMin) RequireVersion() string { return "5.0.0" }
 func (commandBZPopMin) Forbid() bool           { return false }
-func (commandBZPopMin) WarnVersion() string    { return "0.0.0" }
+func (commandBZPopMin) WarnVersion() string    { return "" }
 func (commandBZPopMin) Warning() string        { return "" }
 
 var CommandZAdd commandZAdd
@@ -3825,7 +3825,7 @@ func (commandZAdd) String() string              { return "ZADD" }
 func (commandZAdd) Class() string               { return "SortedSet" }
 func (commandZAdd) RequireVersion() string      { return "1.2.0" }
 func (commandZAdd) Forbid() bool                { return false }
-func (commandZAdd) WarnVersion() string         { return "0.0.0" }
+func (commandZAdd) WarnVersion() string         { return "" }
 func (commandZAdd) Warning() string             { return "" }
 func (commandZAdd) P(p Pipeliner) commandZAddP  { return commandZAddP{p} }
 func (b commandZAddP) Cmd(key string, member Z) { b.p.Cmd(b.p.builder().ZAddCompleted(key, member)) }
@@ -3839,7 +3839,7 @@ func (commandZAddArgs) String() string                 { return "ZADD" }
 func (commandZAddArgs) Class() string                  { return "SortedSet" }
 func (commandZAddArgs) RequireVersion() string         { return "6.2.0" }
 func (commandZAddArgs) Forbid() bool                   { return false }
-func (commandZAddArgs) WarnVersion() string            { return "0.0.0" }
+func (commandZAddArgs) WarnVersion() string            { return "" }
 func (commandZAddArgs) Warning() string                { return "" }
 func (commandZAddArgs) P(p Pipeliner) commandZAddArgsP { return commandZAddArgsP{p} }
 func (b commandZAddArgsP) Cmd(key string, args ZAddArgs) {
@@ -3855,7 +3855,7 @@ func (commandZMAdd) String() string              { return "ZADD" }
 func (commandZMAdd) Class() string               { return "SortedSet" }
 func (commandZMAdd) RequireVersion() string      { return "2.4.0" }
 func (commandZMAdd) Forbid() bool                { return false }
-func (commandZMAdd) WarnVersion() string         { return "0.0.0" }
+func (commandZMAdd) WarnVersion() string         { return "" }
 func (commandZMAdd) Warning() string             { return "" }
 func (commandZMAdd) P(p Pipeliner) commandZMAddP { return commandZMAddP{p} }
 func (b commandZMAddP) Cmd(key string, members ...Z) {
@@ -3871,7 +3871,7 @@ func (commandZAddCh) String() string               { return "ZADD CH" }
 func (commandZAddCh) Class() string                { return "SortedSet" }
 func (commandZAddCh) RequireVersion() string       { return "3.0.2" }
 func (commandZAddCh) Forbid() bool                 { return false }
-func (commandZAddCh) WarnVersion() string          { return "0.0.0" }
+func (commandZAddCh) WarnVersion() string          { return "" }
 func (commandZAddCh) Warning() string              { return "" }
 func (commandZAddCh) P(p Pipeliner) commandZAddChP { return commandZAddChP{p} }
 func (b commandZAddChP) Cmd(key string, members ...Z) {
@@ -3887,7 +3887,7 @@ func (commandZAddLT) String() string               { return "ZADD LT" }
 func (commandZAddLT) Class() string                { return "SortedSet" }
 func (commandZAddLT) RequireVersion() string       { return "6.2.0" }
 func (commandZAddLT) Forbid() bool                 { return false }
-func (commandZAddLT) WarnVersion() string          { return "0.0.0" }
+func (commandZAddLT) WarnVersion() string          { return "" }
 func (commandZAddLT) Warning() string              { return "" }
 func (commandZAddLT) P(p Pipeliner) commandZAddLTP { return commandZAddLTP{p} }
 func (b commandZAddLTP) Cmd(key string, members ...Z) {
@@ -3903,7 +3903,7 @@ func (commandZAddGT) String() string               { return "ZADD GT" }
 func (commandZAddGT) Class() string                { return "SortedSet" }
 func (commandZAddGT) RequireVersion() string       { return "6.2.0" }
 func (commandZAddGT) Forbid() bool                 { return false }
-func (commandZAddGT) WarnVersion() string          { return "0.0.0" }
+func (commandZAddGT) WarnVersion() string          { return "" }
 func (commandZAddGT) Warning() string              { return "" }
 func (commandZAddGT) P(p Pipeliner) commandZAddGTP { return commandZAddGTP{p} }
 func (b commandZAddGTP) Cmd(key string, members ...Z) {
@@ -3919,7 +3919,7 @@ func (commandZAddNX) String() string               { return "ZADD NX" }
 func (commandZAddNX) Class() string                { return "SortedSet" }
 func (commandZAddNX) RequireVersion() string       { return "3.0.2" }
 func (commandZAddNX) Forbid() bool                 { return false }
-func (commandZAddNX) WarnVersion() string          { return "0.0.0" }
+func (commandZAddNX) WarnVersion() string          { return "" }
 func (commandZAddNX) Warning() string              { return "" }
 func (commandZAddNX) P(p Pipeliner) commandZAddNXP { return commandZAddNXP{p} }
 func (b commandZAddNXP) Cmd(key string, members ...Z) {
@@ -3935,7 +3935,7 @@ func (commandZAddXX) String() string               { return "ZADD XX" }
 func (commandZAddXX) Class() string                { return "SortedSet" }
 func (commandZAddXX) RequireVersion() string       { return "3.0.2" }
 func (commandZAddXX) Forbid() bool                 { return false }
-func (commandZAddXX) WarnVersion() string          { return "0.0.0" }
+func (commandZAddXX) WarnVersion() string          { return "" }
 func (commandZAddXX) Warning() string              { return "" }
 func (commandZAddXX) P(p Pipeliner) commandZAddXXP { return commandZAddXXP{p} }
 func (b commandZAddXXP) Cmd(key string, members ...Z) {
@@ -3951,7 +3951,7 @@ func (commandZAddINCR) String() string                 { return "ZADD INCR" }
 func (commandZAddINCR) Class() string                  { return "SortedSet" }
 func (commandZAddINCR) RequireVersion() string         { return "3.0.2" }
 func (commandZAddINCR) Forbid() bool                   { return false }
-func (commandZAddINCR) WarnVersion() string            { return "0.0.0" }
+func (commandZAddINCR) WarnVersion() string            { return "" }
 func (commandZAddINCR) Warning() string                { return "" }
 func (commandZAddINCR) P(p Pipeliner) commandZAddINCRP { return commandZAddINCRP{p} }
 func (b commandZAddINCRP) Cmd(key string, args ZAddArgs) {
@@ -3967,7 +3967,7 @@ func (commandZCard) String() string              { return "ZCARD" }
 func (commandZCard) Class() string               { return "SortedSet" }
 func (commandZCard) RequireVersion() string      { return "1.2.0" }
 func (commandZCard) Forbid() bool                { return false }
-func (commandZCard) WarnVersion() string         { return "0.0.0" }
+func (commandZCard) WarnVersion() string         { return "" }
 func (commandZCard) Warning() string             { return "" }
 func (commandZCard) P(p Pipeliner) commandZCardP { return commandZCardP{p} }
 func (b commandZCardP) Cmd(key string)           { b.p.Cmd(b.p.builder().ZCardCompleted(key)) }
@@ -3981,7 +3981,7 @@ func (commandZCount) String() string               { return "ZCOUNT" }
 func (commandZCount) Class() string                { return "SortedSet" }
 func (commandZCount) RequireVersion() string       { return "2.0.0" }
 func (commandZCount) Forbid() bool                 { return false }
-func (commandZCount) WarnVersion() string          { return "0.0.0" }
+func (commandZCount) WarnVersion() string          { return "" }
 func (commandZCount) Warning() string              { return "" }
 func (commandZCount) P(p Pipeliner) commandZCountP { return commandZCountP{p} }
 func (b commandZCountP) Cmd(key, min, max string) {
@@ -3997,7 +3997,7 @@ func (commandZDiff) String() string              { return "ZDIFF" }
 func (commandZDiff) Class() string               { return "SortedSet" }
 func (commandZDiff) RequireVersion() string      { return "6.2.0" }
 func (commandZDiff) Forbid() bool                { return false }
-func (commandZDiff) WarnVersion() string         { return "0.0.0" }
+func (commandZDiff) WarnVersion() string         { return "" }
 func (commandZDiff) Warning() string             { return "" }
 func (commandZDiff) P(p Pipeliner) commandZDiffP { return commandZDiffP{p} }
 func (b commandZDiffP) Cmd(keys ...string)       { b.p.Cmd(b.p.builder().ZDiffCompleted(keys...)) }
@@ -4011,7 +4011,7 @@ func (commandZDiffWithScores) String() string         { return "ZDIFF WITHSCORES
 func (commandZDiffWithScores) Class() string          { return "SortedSet" }
 func (commandZDiffWithScores) RequireVersion() string { return "6.2.0" }
 func (commandZDiffWithScores) Forbid() bool           { return false }
-func (commandZDiffWithScores) WarnVersion() string    { return "0.0.0" }
+func (commandZDiffWithScores) WarnVersion() string    { return "" }
 func (commandZDiffWithScores) Warning() string        { return "" }
 func (commandZDiffWithScores) P(p Pipeliner) commandZDiffWithScoresP {
 	return commandZDiffWithScoresP{p}
@@ -4029,7 +4029,7 @@ func (commandZDiffStore) String() string                   { return "ZDIFFSTORE"
 func (commandZDiffStore) Class() string                    { return "SortedSet" }
 func (commandZDiffStore) RequireVersion() string           { return "6.2.0" }
 func (commandZDiffStore) Forbid() bool                     { return false }
-func (commandZDiffStore) WarnVersion() string              { return "0.0.0" }
+func (commandZDiffStore) WarnVersion() string              { return "" }
 func (commandZDiffStore) Warning() string                  { return "" }
 func (commandZDiffStore) P(p Pipeliner) commandZDiffStoreP { return commandZDiffStoreP{p} }
 func (b commandZDiffStoreP) Cmd(destination string, keys ...string) {
@@ -4045,7 +4045,7 @@ func (commandZIncrBy) String() string                { return "ZINCRBY" }
 func (commandZIncrBy) Class() string                 { return "SortedSet" }
 func (commandZIncrBy) RequireVersion() string        { return "1.2.0" }
 func (commandZIncrBy) Forbid() bool                  { return false }
-func (commandZIncrBy) WarnVersion() string           { return "0.0.0" }
+func (commandZIncrBy) WarnVersion() string           { return "" }
 func (commandZIncrBy) Warning() string               { return "" }
 func (commandZIncrBy) P(p Pipeliner) commandZIncrByP { return commandZIncrByP{p} }
 func (b commandZIncrByP) Cmd(key string, increment float64, member string) {
@@ -4061,7 +4061,7 @@ func (commandZInter) String() string               { return "ZINTER" }
 func (commandZInter) Class() string                { return "SortedSet" }
 func (commandZInter) RequireVersion() string       { return "6.2.0" }
 func (commandZInter) Forbid() bool                 { return false }
-func (commandZInter) WarnVersion() string          { return "0.0.0" }
+func (commandZInter) WarnVersion() string          { return "" }
 func (commandZInter) Warning() string              { return "" }
 func (commandZInter) P(p Pipeliner) commandZInterP { return commandZInterP{p} }
 func (b commandZInterP) Cmd(store ZStore)          { b.p.Cmd(b.p.builder().ZInterCompleted(store)) }
@@ -4075,7 +4075,7 @@ func (commandZInterWithScores) String() string         { return "ZINTER WITHSCOR
 func (commandZInterWithScores) Class() string          { return "SortedSet" }
 func (commandZInterWithScores) RequireVersion() string { return "6.2.0" }
 func (commandZInterWithScores) Forbid() bool           { return false }
-func (commandZInterWithScores) WarnVersion() string    { return "0.0.0" }
+func (commandZInterWithScores) WarnVersion() string    { return "" }
 func (commandZInterWithScores) Warning() string        { return "" }
 func (commandZInterWithScores) P(p Pipeliner) commandZInterWithScoresP {
 	return commandZInterWithScoresP{p}
@@ -4093,7 +4093,7 @@ func (commandZInterStore) String() string                    { return "ZINTERSTO
 func (commandZInterStore) Class() string                     { return "SortedSet" }
 func (commandZInterStore) RequireVersion() string            { return "2.0.0" }
 func (commandZInterStore) Forbid() bool                      { return false }
-func (commandZInterStore) WarnVersion() string               { return "0.0.0" }
+func (commandZInterStore) WarnVersion() string               { return "" }
 func (commandZInterStore) Warning() string                   { return "" }
 func (commandZInterStore) P(p Pipeliner) commandZInterStoreP { return commandZInterStoreP{p} }
 func (b commandZInterStoreP) Cmd(destination string, store ZStore) {
@@ -4109,7 +4109,7 @@ func (commandZInterCard) String() string                   { return "ZINTERCARD"
 func (commandZInterCard) Class() string                    { return "SortedSet" }
 func (commandZInterCard) RequireVersion() string           { return "7.0.0" }
 func (commandZInterCard) Forbid() bool                     { return false }
-func (commandZInterCard) WarnVersion() string              { return "0.0.0" }
+func (commandZInterCard) WarnVersion() string              { return "" }
 func (commandZInterCard) Warning() string                  { return "" }
 func (commandZInterCard) P(p Pipeliner) commandZInterCardP { return commandZInterCardP{p} }
 func (b commandZInterCardP) Cmd(limit int64, keys ...string) {
@@ -4125,7 +4125,7 @@ func (commandZLexCount) String() string                  { return "ZLEXCOUNT" }
 func (commandZLexCount) Class() string                   { return "SortedSet" }
 func (commandZLexCount) RequireVersion() string          { return "2.8.9" }
 func (commandZLexCount) Forbid() bool                    { return false }
-func (commandZLexCount) WarnVersion() string             { return "0.0.0" }
+func (commandZLexCount) WarnVersion() string             { return "" }
 func (commandZLexCount) Warning() string                 { return "" }
 func (commandZLexCount) P(p Pipeliner) commandZLexCountP { return commandZLexCountP{p} }
 func (b commandZLexCountP) Cmd(key, min, max string) {
@@ -4141,7 +4141,7 @@ func (commandZMPop) String() string              { return "ZMPOP" }
 func (commandZMPop) Class() string               { return "SortedSet" }
 func (commandZMPop) RequireVersion() string      { return "7.0.0" }
 func (commandZMPop) Forbid() bool                { return false }
-func (commandZMPop) WarnVersion() string         { return "0.0.0" }
+func (commandZMPop) WarnVersion() string         { return "" }
 func (commandZMPop) Warning() string             { return "" }
 func (commandZMPop) P(p Pipeliner) commandZMPopP { return commandZMPopP{p} }
 func (b commandZMPopP) Cmd(order string, count int64, keys ...string) {
@@ -4157,7 +4157,7 @@ func (commandZMScore) String() string                { return "ZMSCORE" }
 func (commandZMScore) Class() string                 { return "SortedSet" }
 func (commandZMScore) RequireVersion() string        { return "6.2.0" }
 func (commandZMScore) Forbid() bool                  { return false }
-func (commandZMScore) WarnVersion() string           { return "0.0.0" }
+func (commandZMScore) WarnVersion() string           { return "" }
 func (commandZMScore) Warning() string               { return "" }
 func (commandZMScore) P(p Pipeliner) commandZMScoreP { return commandZMScoreP{p} }
 func (b commandZMScoreP) Cmd(key string, members ...string) {
@@ -4173,7 +4173,7 @@ func (commandZPopMax) String() string                { return "ZPOPMAX" }
 func (commandZPopMax) Class() string                 { return "SortedSet" }
 func (commandZPopMax) RequireVersion() string        { return "5.0.0" }
 func (commandZPopMax) Forbid() bool                  { return false }
-func (commandZPopMax) WarnVersion() string           { return "0.0.0" }
+func (commandZPopMax) WarnVersion() string           { return "" }
 func (commandZPopMax) Warning() string               { return "" }
 func (commandZPopMax) P(p Pipeliner) commandZPopMaxP { return commandZPopMaxP{p} }
 func (b commandZPopMaxP) Cmd(key string, count ...int64) {
@@ -4189,7 +4189,7 @@ func (commandZPopMin) String() string                { return "ZPOPMIN" }
 func (commandZPopMin) Class() string                 { return "SortedSet" }
 func (commandZPopMin) RequireVersion() string        { return "5.0.0" }
 func (commandZPopMin) Forbid() bool                  { return false }
-func (commandZPopMin) WarnVersion() string           { return "0.0.0" }
+func (commandZPopMin) WarnVersion() string           { return "" }
 func (commandZPopMin) Warning() string               { return "" }
 func (commandZPopMin) P(p Pipeliner) commandZPopMinP { return commandZPopMinP{p} }
 func (b commandZPopMinP) Cmd(key string, count ...int64) {
@@ -4205,7 +4205,7 @@ func (commandZRandMember) String() string                    { return "ZRANDMEMB
 func (commandZRandMember) Class() string                     { return "SortedSet" }
 func (commandZRandMember) RequireVersion() string            { return "6.2.0" }
 func (commandZRandMember) Forbid() bool                      { return false }
-func (commandZRandMember) WarnVersion() string               { return "0.0.0" }
+func (commandZRandMember) WarnVersion() string               { return "" }
 func (commandZRandMember) Warning() string                   { return "" }
 func (commandZRandMember) P(p Pipeliner) commandZRandMemberP { return commandZRandMemberP{p} }
 func (b commandZRandMemberP) Cmd(key string, count int64) {
@@ -4221,7 +4221,7 @@ func (commandZRandMemberWithScores) String() string         { return "ZRANDMEMBE
 func (commandZRandMemberWithScores) Class() string          { return "SortedSet" }
 func (commandZRandMemberWithScores) RequireVersion() string { return "6.2.0" }
 func (commandZRandMemberWithScores) Forbid() bool           { return false }
-func (commandZRandMemberWithScores) WarnVersion() string    { return "0.0.0" }
+func (commandZRandMemberWithScores) WarnVersion() string    { return "" }
 func (commandZRandMemberWithScores) Warning() string        { return "" }
 func (commandZRandMemberWithScores) P(p Pipeliner) commandZRandMemberWithScoresP {
 	return commandZRandMemberWithScoresP{p}
@@ -4239,7 +4239,7 @@ func (commandZUnion) String() string               { return "ZUNION" }
 func (commandZUnion) Class() string                { return "SortedSet" }
 func (commandZUnion) RequireVersion() string       { return "6.2.0" }
 func (commandZUnion) Forbid() bool                 { return false }
-func (commandZUnion) WarnVersion() string          { return "0.0.0" }
+func (commandZUnion) WarnVersion() string          { return "" }
 func (commandZUnion) Warning() string              { return "" }
 func (commandZUnion) P(p Pipeliner) commandZUnionP { return commandZUnionP{p} }
 func (b commandZUnionP) Cmd(store ZStore)          { b.p.Cmd(b.p.builder().ZUnionCompleted(store)) }
@@ -4253,7 +4253,7 @@ func (commandZUnionWithScores) String() string         { return "ZUNION WITHSCOR
 func (commandZUnionWithScores) Class() string          { return "SortedSet" }
 func (commandZUnionWithScores) RequireVersion() string { return "6.2.0" }
 func (commandZUnionWithScores) Forbid() bool           { return false }
-func (commandZUnionWithScores) WarnVersion() string    { return "0.0.0" }
+func (commandZUnionWithScores) WarnVersion() string    { return "" }
 func (commandZUnionWithScores) Warning() string        { return "" }
 func (commandZUnionWithScores) P(p Pipeliner) commandZUnionWithScoresP {
 	return commandZUnionWithScoresP{p}
@@ -4271,7 +4271,7 @@ func (commandZUnionStore) String() string                    { return "ZUNIONSTO
 func (commandZUnionStore) Class() string                     { return "SortedSet" }
 func (commandZUnionStore) RequireVersion() string            { return "2.0.0" }
 func (commandZUnionStore) Forbid() bool                      { return false }
-func (commandZUnionStore) WarnVersion() string               { return "0.0.0" }
+func (commandZUnionStore) WarnVersion() string               { return "" }
 func (commandZUnionStore) Warning() string                   { return "" }
 func (commandZUnionStore) P(p Pipeliner) commandZUnionStoreP { return commandZUnionStoreP{p} }
 func (b commandZUnionStoreP) Cmd(dest string, store ZStore) {
@@ -4287,7 +4287,7 @@ func (commandZScore) String() string               { return "ZSCORE" }
 func (commandZScore) Class() string                { return "SortedSet" }
 func (commandZScore) RequireVersion() string       { return "1.2.0" }
 func (commandZScore) Forbid() bool                 { return false }
-func (commandZScore) WarnVersion() string          { return "0.0.0" }
+func (commandZScore) WarnVersion() string          { return "" }
 func (commandZScore) Warning() string              { return "" }
 func (commandZScore) P(p Pipeliner) commandZScoreP { return commandZScoreP{p} }
 func (b commandZScoreP) Cmd(key, member string)    { b.p.Cmd(b.p.builder().ZScoreCompleted(key, member)) }
@@ -4301,7 +4301,7 @@ func (commandZScan) String() string              { return "ZSCAN" }
 func (commandZScan) Class() string               { return "SortedSet" }
 func (commandZScan) RequireVersion() string      { return "2.8.0" }
 func (commandZScan) Forbid() bool                { return false }
-func (commandZScan) WarnVersion() string         { return "0.0.0" }
+func (commandZScan) WarnVersion() string         { return "" }
 func (commandZScan) Warning() string             { return "" }
 func (commandZScan) P(p Pipeliner) commandZScanP { return commandZScanP{p} }
 func (b commandZScanP) Cmd(key string, cursor uint64, match string, count int64) {
@@ -4317,7 +4317,7 @@ func (commandZRem) String() string                { return "ZREM" }
 func (commandZRem) Class() string                 { return "SortedSet" }
 func (commandZRem) RequireVersion() string        { return "1.2.0" }
 func (commandZRem) Forbid() bool                  { return false }
-func (commandZRem) WarnVersion() string           { return "0.0.0" }
+func (commandZRem) WarnVersion() string           { return "" }
 func (commandZRem) Warning() string               { return "" }
 func (commandZRem) P(p Pipeliner) commandZRemP    { return commandZRemP{p} }
 func (b commandZRemP) Cmd(key string, member any) { b.p.Cmd(b.p.builder().ZRemCompleted(key, member)) }
@@ -4331,7 +4331,7 @@ func (commandZMRem) String() string              { return "ZREM" }
 func (commandZMRem) Class() string               { return "SortedSet" }
 func (commandZMRem) RequireVersion() string      { return "2.4.0" }
 func (commandZMRem) Forbid() bool                { return false }
-func (commandZMRem) WarnVersion() string         { return "0.0.0" }
+func (commandZMRem) WarnVersion() string         { return "" }
 func (commandZMRem) Warning() string             { return "" }
 func (commandZMRem) P(p Pipeliner) commandZMRemP { return commandZMRemP{p} }
 func (b commandZMRemP) Cmd(key string, members ...any) {
@@ -4347,7 +4347,7 @@ func (commandZRemRangeByLex) String() string                       { return "ZRE
 func (commandZRemRangeByLex) Class() string                        { return "SortedSet" }
 func (commandZRemRangeByLex) RequireVersion() string               { return "2.8.9" }
 func (commandZRemRangeByLex) Forbid() bool                         { return false }
-func (commandZRemRangeByLex) WarnVersion() string                  { return "0.0.0" }
+func (commandZRemRangeByLex) WarnVersion() string                  { return "" }
 func (commandZRemRangeByLex) Warning() string                      { return "" }
 func (commandZRemRangeByLex) P(p Pipeliner) commandZRemRangeByLexP { return commandZRemRangeByLexP{p} }
 func (b commandZRemRangeByLexP) Cmd(key, min, max string) {
@@ -4363,7 +4363,7 @@ func (commandZRemRangeByRank) String() string         { return "ZREMRANGEBYRANK"
 func (commandZRemRangeByRank) Class() string          { return "SortedSet" }
 func (commandZRemRangeByRank) RequireVersion() string { return "2.0.0" }
 func (commandZRemRangeByRank) Forbid() bool           { return false }
-func (commandZRemRangeByRank) WarnVersion() string    { return "0.0.0" }
+func (commandZRemRangeByRank) WarnVersion() string    { return "" }
 func (commandZRemRangeByRank) Warning() string        { return "" }
 func (commandZRemRangeByRank) P(p Pipeliner) commandZRemRangeByRankP {
 	return commandZRemRangeByRankP{p}
@@ -4381,7 +4381,7 @@ func (commandZRemRangeByScore) String() string         { return "ZREMRANGEBYSCOR
 func (commandZRemRangeByScore) Class() string          { return "SortedSet" }
 func (commandZRemRangeByScore) RequireVersion() string { return "1.2.0" }
 func (commandZRemRangeByScore) Forbid() bool           { return false }
-func (commandZRemRangeByScore) WarnVersion() string    { return "0.0.0" }
+func (commandZRemRangeByScore) WarnVersion() string    { return "" }
 func (commandZRemRangeByScore) Warning() string        { return "" }
 func (commandZRemRangeByScore) P(p Pipeliner) commandZRemRangeByScoreP {
 	return commandZRemRangeByScoreP{p}
@@ -4399,7 +4399,7 @@ func (commandZRank) String() string              { return "ZRANK" }
 func (commandZRank) Class() string               { return "SortedSet" }
 func (commandZRank) RequireVersion() string      { return "2.0.0" }
 func (commandZRank) Forbid() bool                { return false }
-func (commandZRank) WarnVersion() string         { return "0.0.0" }
+func (commandZRank) WarnVersion() string         { return "" }
 func (commandZRank) Warning() string             { return "" }
 func (commandZRank) P(p Pipeliner) commandZRankP { return commandZRankP{p} }
 func (b commandZRankP) Cmd(key, member string)   { b.p.Cmd(b.p.builder().ZRankCompleted(key, member)) }
@@ -4413,7 +4413,7 @@ func (commandZRankWithScore) String() string                       { return "ZRA
 func (commandZRankWithScore) Class() string                        { return "SortedSet" }
 func (commandZRankWithScore) RequireVersion() string               { return "7.2.0" }
 func (commandZRankWithScore) Forbid() bool                         { return false }
-func (commandZRankWithScore) WarnVersion() string                  { return "0.0.0" }
+func (commandZRankWithScore) WarnVersion() string                  { return "" }
 func (commandZRankWithScore) Warning() string                      { return "" }
 func (commandZRankWithScore) P(p Pipeliner) commandZRankWithScoreP { return commandZRankWithScoreP{p} }
 func (b commandZRankWithScoreP) Cmd(key, member string) {
@@ -4429,7 +4429,7 @@ func (commandZRevRank) String() string                 { return "ZREVRANK" }
 func (commandZRevRank) Class() string                  { return "SortedSet" }
 func (commandZRevRank) RequireVersion() string         { return "2.0.0" }
 func (commandZRevRank) Forbid() bool                   { return false }
-func (commandZRevRank) WarnVersion() string            { return "0.0.0" }
+func (commandZRevRank) WarnVersion() string            { return "" }
 func (commandZRevRank) Warning() string                { return "" }
 func (commandZRevRank) P(p Pipeliner) commandZRevRankP { return commandZRevRankP{p} }
 func (b commandZRevRankP) Cmd(key, member string) {
@@ -4445,7 +4445,7 @@ func (commandZRevRankWithScore) String() string         { return "ZREVRANK WITHS
 func (commandZRevRankWithScore) Class() string          { return "SortedSet" }
 func (commandZRevRankWithScore) RequireVersion() string { return "7.2.0" }
 func (commandZRevRankWithScore) Forbid() bool           { return false }
-func (commandZRevRankWithScore) WarnVersion() string    { return "0.0.0" }
+func (commandZRevRankWithScore) WarnVersion() string    { return "" }
 func (commandZRevRankWithScore) Warning() string        { return "" }
 func (commandZRevRankWithScore) P(p Pipeliner) commandZRevRankWithScoreP {
 	return commandZRevRankWithScoreP{p}
@@ -4463,7 +4463,7 @@ func (commandZRange) String() string               { return "ZRANGE" }
 func (commandZRange) Class() string                { return "SortedSet" }
 func (commandZRange) RequireVersion() string       { return "1.2.0" }
 func (commandZRange) Forbid() bool                 { return false }
-func (commandZRange) WarnVersion() string          { return "0.0.0" }
+func (commandZRange) WarnVersion() string          { return "" }
 func (commandZRange) Warning() string              { return "" }
 func (commandZRange) P(p Pipeliner) commandZRangeP { return commandZRangeP{p} }
 func (b commandZRangeP) Cmd(key string, start, stop int64) {
@@ -4495,7 +4495,7 @@ func (commandZRangeWithScores) String() string         { return "ZRANGE WITHSCOR
 func (commandZRangeWithScores) Class() string          { return "SortedSet" }
 func (commandZRangeWithScores) RequireVersion() string { return "1.2.0" }
 func (commandZRangeWithScores) Forbid() bool           { return false }
-func (commandZRangeWithScores) WarnVersion() string    { return "0.0.0" }
+func (commandZRangeWithScores) WarnVersion() string    { return "" }
 func (commandZRangeWithScores) Warning() string        { return "" }
 func (commandZRangeWithScores) P(p Pipeliner) commandZRangeWithScoresP {
 	return commandZRangeWithScoresP{p}
@@ -4635,7 +4635,7 @@ func (commandZRangeStore) String() string                    { return "ZRANGESTO
 func (commandZRangeStore) Class() string                     { return "SortedSet" }
 func (commandZRangeStore) RequireVersion() string            { return "6.2.0" }
 func (commandZRangeStore) Forbid() bool                      { return false }
-func (commandZRangeStore) WarnVersion() string               { return "0.0.0" }
+func (commandZRangeStore) WarnVersion() string               { return "" }
 func (commandZRangeStore) Warning() string                   { return "" }
 func (commandZRangeStore) P(p Pipeliner) commandZRangeStoreP { return commandZRangeStoreP{p} }
 func (b commandZRangeStoreP) Cmd(dst string, z ZRangeArgs) {
@@ -4651,7 +4651,7 @@ func (commandZRangeArgsWithOption) String() string         { return "ZRANGE" }
 func (commandZRangeArgsWithOption) Class() string          { return "SortedSet" }
 func (commandZRangeArgsWithOption) RequireVersion() string { return "6.2.0" }
 func (commandZRangeArgsWithOption) Forbid() bool           { return false }
-func (commandZRangeArgsWithOption) WarnVersion() string    { return "0.0.0" }
+func (commandZRangeArgsWithOption) WarnVersion() string    { return "" }
 func (commandZRangeArgsWithOption) Warning() string        { return "" }
 func (commandZRangeArgsWithOption) P(p Pipeliner) commandZRangeArgsWithOptionP {
 	return commandZRangeArgsWithOptionP{p}
@@ -4669,7 +4669,7 @@ func (commandZRangeArgs) String() string                   { return "ZRANGE" }
 func (commandZRangeArgs) Class() string                    { return "SortedSet" }
 func (commandZRangeArgs) RequireVersion() string           { return "1.2.0" }
 func (commandZRangeArgs) Forbid() bool                     { return false }
-func (commandZRangeArgs) WarnVersion() string              { return "0.0.0" }
+func (commandZRangeArgs) WarnVersion() string              { return "" }
 func (commandZRangeArgs) Warning() string                  { return "" }
 func (commandZRangeArgs) P(p Pipeliner) commandZRangeArgsP { return commandZRangeArgsP{p} }
 func (b commandZRangeArgsP) Cmd(z ZRangeArgs)              { b.p.Cmd(b.p.builder().ZRangeArgsCompleted(z)) }
@@ -4683,7 +4683,7 @@ func (commandZRangeArgsWithScoresWithOption) String() string         { return "Z
 func (commandZRangeArgsWithScoresWithOption) Class() string          { return "SortedSet" }
 func (commandZRangeArgsWithScoresWithOption) RequireVersion() string { return "6.2.0" }
 func (commandZRangeArgsWithScoresWithOption) Forbid() bool           { return false }
-func (commandZRangeArgsWithScoresWithOption) WarnVersion() string    { return "0.0.0" }
+func (commandZRangeArgsWithScoresWithOption) WarnVersion() string    { return "" }
 func (commandZRangeArgsWithScoresWithOption) Warning() string        { return "" }
 func (commandZRangeArgsWithScoresWithOption) P(p Pipeliner) commandZRangeArgsWithScoresWithOptionP {
 	return commandZRangeArgsWithScoresWithOptionP{p}
@@ -4701,7 +4701,7 @@ func (commandZRangeArgsWithScores) String() string         { return "ZRANGE WITH
 func (commandZRangeArgsWithScores) Class() string          { return "SortedSet" }
 func (commandZRangeArgsWithScores) RequireVersion() string { return "1.2.0" }
 func (commandZRangeArgsWithScores) Forbid() bool           { return false }
-func (commandZRangeArgsWithScores) WarnVersion() string    { return "0.0.0" }
+func (commandZRangeArgsWithScores) WarnVersion() string    { return "" }
 func (commandZRangeArgsWithScores) Warning() string        { return "" }
 func (commandZRangeArgsWithScores) P(p Pipeliner) commandZRangeArgsWithScoresP {
 	return commandZRangeArgsWithScoresP{p}
@@ -4719,7 +4719,7 @@ func (commandXAck) String() string             { return "XACK" }
 func (commandXAck) Class() string              { return "Stream" }
 func (commandXAck) RequireVersion() string     { return "5.0.0" }
 func (commandXAck) Forbid() bool               { return false }
-func (commandXAck) WarnVersion() string        { return "0.0.0" }
+func (commandXAck) WarnVersion() string        { return "" }
 func (commandXAck) Warning() string            { return "" }
 func (commandXAck) P(p Pipeliner) commandXAckP { return commandXAckP{p} }
 func (b commandXAckP) Cmd(stream, group string, ids ...string) {
@@ -4735,7 +4735,7 @@ func (commandXAdd) String() string             { return "XADD" }
 func (commandXAdd) Class() string              { return "Stream" }
 func (commandXAdd) RequireVersion() string     { return "5.0.0" }
 func (commandXAdd) Forbid() bool               { return false }
-func (commandXAdd) WarnVersion() string        { return "0.0.0" }
+func (commandXAdd) WarnVersion() string        { return "" }
 func (commandXAdd) Warning() string            { return "" }
 func (commandXAdd) P(p Pipeliner) commandXAddP { return commandXAddP{p} }
 func (b commandXAddP) Cmd(a XAddArgs)          { b.p.Cmd(b.p.builder().XAddCompleted(a)) }
@@ -4748,7 +4748,7 @@ func (commandXAddNoMKStream) String() string         { return "XADD NOMKSTREAM" 
 func (commandXAddNoMKStream) Class() string          { return "Stream" }
 func (commandXAddNoMKStream) RequireVersion() string { return "6.2.0" }
 func (commandXAddNoMKStream) Forbid() bool           { return false }
-func (commandXAddNoMKStream) WarnVersion() string    { return "0.0.0" }
+func (commandXAddNoMKStream) WarnVersion() string    { return "" }
 func (commandXAddNoMKStream) Warning() string        { return "" }
 
 var CommandXAddMaxLen commandXAddMaxLen
@@ -4759,7 +4759,7 @@ func (commandXAddMaxLen) String() string         { return "XADD MAXLEN" }
 func (commandXAddMaxLen) Class() string          { return "Stream" }
 func (commandXAddMaxLen) RequireVersion() string { return "6.2.0" }
 func (commandXAddMaxLen) Forbid() bool           { return false }
-func (commandXAddMaxLen) WarnVersion() string    { return "0.0.0" }
+func (commandXAddMaxLen) WarnVersion() string    { return "" }
 func (commandXAddMaxLen) Warning() string        { return "" }
 
 var CommandXAddMinID commandXAddMinID
@@ -4770,7 +4770,7 @@ func (commandXAddMinID) String() string         { return "XADD MINID" }
 func (commandXAddMinID) Class() string          { return "Stream" }
 func (commandXAddMinID) RequireVersion() string { return "6.2.0" }
 func (commandXAddMinID) Forbid() bool           { return false }
-func (commandXAddMinID) WarnVersion() string    { return "0.0.0" }
+func (commandXAddMinID) WarnVersion() string    { return "" }
 func (commandXAddMinID) Warning() string        { return "" }
 
 var CommandXAddLimit commandXAddLimit
@@ -4781,7 +4781,7 @@ func (commandXAddLimit) String() string         { return "XADD LIMIT" }
 func (commandXAddLimit) Class() string          { return "Stream" }
 func (commandXAddLimit) RequireVersion() string { return "6.2.0" }
 func (commandXAddLimit) Forbid() bool           { return false }
-func (commandXAddLimit) WarnVersion() string    { return "0.0.0" }
+func (commandXAddLimit) WarnVersion() string    { return "" }
 func (commandXAddLimit) Warning() string        { return "" }
 
 var CommandXAutoClaim commandXAutoClaim
@@ -4793,7 +4793,7 @@ func (commandXAutoClaim) String() string                   { return "XAUTOCLAIM"
 func (commandXAutoClaim) Class() string                    { return "Stream" }
 func (commandXAutoClaim) RequireVersion() string           { return "6.2.0" }
 func (commandXAutoClaim) Forbid() bool                     { return false }
-func (commandXAutoClaim) WarnVersion() string              { return "0.0.0" }
+func (commandXAutoClaim) WarnVersion() string              { return "" }
 func (commandXAutoClaim) Warning() string                  { return "" }
 func (commandXAutoClaim) P(p Pipeliner) commandXAutoClaimP { return commandXAutoClaimP{p} }
 func (b commandXAutoClaimP) Cmd(a XAutoClaimArgs)          { b.p.Cmd(b.p.builder().XAutoClaimCompleted(a)) }
@@ -4807,7 +4807,7 @@ func (commandXAutoClaimJustID) String() string         { return "XAUTOCLAIM JUST
 func (commandXAutoClaimJustID) Class() string          { return "Stream" }
 func (commandXAutoClaimJustID) RequireVersion() string { return "6.2.0" }
 func (commandXAutoClaimJustID) Forbid() bool           { return false }
-func (commandXAutoClaimJustID) WarnVersion() string    { return "0.0.0" }
+func (commandXAutoClaimJustID) WarnVersion() string    { return "" }
 func (commandXAutoClaimJustID) Warning() string        { return "" }
 func (commandXAutoClaimJustID) P(p Pipeliner) commandXAutoClaimJustIDP {
 	return commandXAutoClaimJustIDP{p}
@@ -4825,7 +4825,7 @@ func (commandXClaim) String() string               { return "XCLAIM" }
 func (commandXClaim) Class() string                { return "Stream" }
 func (commandXClaim) RequireVersion() string       { return "5.0.0" }
 func (commandXClaim) Forbid() bool                 { return false }
-func (commandXClaim) WarnVersion() string          { return "0.0.0" }
+func (commandXClaim) WarnVersion() string          { return "" }
 func (commandXClaim) Warning() string              { return "" }
 func (commandXClaim) P(p Pipeliner) commandXClaimP { return commandXClaimP{p} }
 func (b commandXClaimP) Cmd(a XClaimArgs)          { b.p.Cmd(b.p.builder().XClaimCompleted(a)) }
@@ -4839,7 +4839,7 @@ func (commandXClaimJustID) String() string                     { return "XCLAIM 
 func (commandXClaimJustID) Class() string                      { return "Stream" }
 func (commandXClaimJustID) RequireVersion() string             { return "5.0.0" }
 func (commandXClaimJustID) Forbid() bool                       { return false }
-func (commandXClaimJustID) WarnVersion() string                { return "0.0.0" }
+func (commandXClaimJustID) WarnVersion() string                { return "" }
 func (commandXClaimJustID) Warning() string                    { return "" }
 func (commandXClaimJustID) P(p Pipeliner) commandXClaimJustIDP { return commandXClaimJustIDP{p} }
 func (b commandXClaimJustIDP) Cmd(a XClaimArgs)                { b.p.Cmd(b.p.builder().XClaimJustIDCompleted(a)) }
@@ -4853,7 +4853,7 @@ func (commandXDel) String() string             { return "XDEL" }
 func (commandXDel) Class() string              { return "Stream" }
 func (commandXDel) RequireVersion() string     { return "5.0.0" }
 func (commandXDel) Forbid() bool               { return false }
-func (commandXDel) WarnVersion() string        { return "0.0.0" }
+func (commandXDel) WarnVersion() string        { return "" }
 func (commandXDel) Warning() string            { return "" }
 func (commandXDel) P(p Pipeliner) commandXDelP { return commandXDelP{p} }
 func (b commandXDelP) Cmd(stream string, ids ...string) {
@@ -4869,7 +4869,7 @@ func (commandXGroupCreate) String() string                     { return "XGROUP 
 func (commandXGroupCreate) Class() string                      { return "Stream" }
 func (commandXGroupCreate) RequireVersion() string             { return "5.0.0" }
 func (commandXGroupCreate) Forbid() bool                       { return false }
-func (commandXGroupCreate) WarnVersion() string                { return "0.0.0" }
+func (commandXGroupCreate) WarnVersion() string                { return "" }
 func (commandXGroupCreate) Warning() string                    { return "" }
 func (commandXGroupCreate) P(p Pipeliner) commandXGroupCreateP { return commandXGroupCreateP{p} }
 func (b commandXGroupCreateP) Cmd(stream, group, start string) {
@@ -4885,7 +4885,7 @@ func (commandXGroupCreateMkStream) String() string         { return "XGROUP CREA
 func (commandXGroupCreateMkStream) Class() string          { return "Stream" }
 func (commandXGroupCreateMkStream) RequireVersion() string { return "5.0.0" }
 func (commandXGroupCreateMkStream) Forbid() bool           { return false }
-func (commandXGroupCreateMkStream) WarnVersion() string    { return "0.0.0" }
+func (commandXGroupCreateMkStream) WarnVersion() string    { return "" }
 func (commandXGroupCreateMkStream) Warning() string        { return "" }
 func (commandXGroupCreateMkStream) P(p Pipeliner) commandXGroupCreateMkStreamP {
 	return commandXGroupCreateMkStreamP{p}
@@ -4903,7 +4903,7 @@ func (commandXGroupCreateConsumer) String() string         { return "XGROUP CREA
 func (commandXGroupCreateConsumer) Class() string          { return "Stream" }
 func (commandXGroupCreateConsumer) RequireVersion() string { return "6.2.0" }
 func (commandXGroupCreateConsumer) Forbid() bool           { return false }
-func (commandXGroupCreateConsumer) WarnVersion() string    { return "0.0.0" }
+func (commandXGroupCreateConsumer) WarnVersion() string    { return "" }
 func (commandXGroupCreateConsumer) Warning() string        { return "" }
 func (commandXGroupCreateConsumer) P(p Pipeliner) commandXGroupCreateConsumerP {
 	return commandXGroupCreateConsumerP{p}
@@ -4921,7 +4921,7 @@ func (commandXGroupDelConsumer) String() string         { return "XGROUP DELCONS
 func (commandXGroupDelConsumer) Class() string          { return "Stream" }
 func (commandXGroupDelConsumer) RequireVersion() string { return "5.0.0" }
 func (commandXGroupDelConsumer) Forbid() bool           { return false }
-func (commandXGroupDelConsumer) WarnVersion() string    { return "0.0.0" }
+func (commandXGroupDelConsumer) WarnVersion() string    { return "" }
 func (commandXGroupDelConsumer) Warning() string        { return "" }
 func (commandXGroupDelConsumer) P(p Pipeliner) commandXGroupDelConsumerP {
 	return commandXGroupDelConsumerP{p}
@@ -4939,7 +4939,7 @@ func (commandXGroupDestroy) String() string                      { return "XGROU
 func (commandXGroupDestroy) Class() string                       { return "Stream" }
 func (commandXGroupDestroy) RequireVersion() string              { return "5.0.0" }
 func (commandXGroupDestroy) Forbid() bool                        { return false }
-func (commandXGroupDestroy) WarnVersion() string                 { return "0.0.0" }
+func (commandXGroupDestroy) WarnVersion() string                 { return "" }
 func (commandXGroupDestroy) Warning() string                     { return "" }
 func (commandXGroupDestroy) P(p Pipeliner) commandXGroupDestroyP { return commandXGroupDestroyP{p} }
 func (b commandXGroupDestroyP) Cmd(stream, group string) {
@@ -4955,7 +4955,7 @@ func (commandXGroupSetID) String() string                    { return "XGROUP SE
 func (commandXGroupSetID) Class() string                     { return "Stream" }
 func (commandXGroupSetID) RequireVersion() string            { return "5.0.0" }
 func (commandXGroupSetID) Forbid() bool                      { return false }
-func (commandXGroupSetID) WarnVersion() string               { return "0.0.0" }
+func (commandXGroupSetID) WarnVersion() string               { return "" }
 func (commandXGroupSetID) Warning() string                   { return "" }
 func (commandXGroupSetID) P(p Pipeliner) commandXGroupSetIDP { return commandXGroupSetIDP{p} }
 func (b commandXGroupSetIDP) Cmd(stream, group, start string) {
@@ -4971,7 +4971,7 @@ func (commandXInfoConsumers) String() string                       { return "XIN
 func (commandXInfoConsumers) Class() string                        { return "Stream" }
 func (commandXInfoConsumers) RequireVersion() string               { return "5.0.0" }
 func (commandXInfoConsumers) Forbid() bool                         { return false }
-func (commandXInfoConsumers) WarnVersion() string                  { return "0.0.0" }
+func (commandXInfoConsumers) WarnVersion() string                  { return "" }
 func (commandXInfoConsumers) Warning() string                      { return "" }
 func (commandXInfoConsumers) P(p Pipeliner) commandXInfoConsumersP { return commandXInfoConsumersP{p} }
 func (b commandXInfoConsumersP) Cmd(key, group string) {
@@ -4987,7 +4987,7 @@ func (commandXInfoGroups) String() string                    { return "XINFO GRO
 func (commandXInfoGroups) Class() string                     { return "Stream" }
 func (commandXInfoGroups) RequireVersion() string            { return "5.0.0" }
 func (commandXInfoGroups) Forbid() bool                      { return false }
-func (commandXInfoGroups) WarnVersion() string               { return "0.0.0" }
+func (commandXInfoGroups) WarnVersion() string               { return "" }
 func (commandXInfoGroups) Warning() string                   { return "" }
 func (commandXInfoGroups) P(p Pipeliner) commandXInfoGroupsP { return commandXInfoGroupsP{p} }
 func (b commandXInfoGroupsP) Cmd(key string)                 { b.p.Cmd(b.p.builder().XInfoGroupsCompleted(key)) }
@@ -5001,7 +5001,7 @@ func (commandXInfoStream) String() string                    { return "XINFO STR
 func (commandXInfoStream) Class() string                     { return "Stream" }
 func (commandXInfoStream) RequireVersion() string            { return "5.0.0" }
 func (commandXInfoStream) Forbid() bool                      { return false }
-func (commandXInfoStream) WarnVersion() string               { return "0.0.0" }
+func (commandXInfoStream) WarnVersion() string               { return "" }
 func (commandXInfoStream) Warning() string                   { return "" }
 func (commandXInfoStream) P(p Pipeliner) commandXInfoStreamP { return commandXInfoStreamP{p} }
 func (b commandXInfoStreamP) Cmd(key string)                 { b.p.Cmd(b.p.builder().XInfoStreamCompleted(key)) }
@@ -5015,7 +5015,7 @@ func (commandXInfoStreamFull) String() string         { return "XINFO STREAM FUL
 func (commandXInfoStreamFull) Class() string          { return "Stream" }
 func (commandXInfoStreamFull) RequireVersion() string { return "6.0.0" }
 func (commandXInfoStreamFull) Forbid() bool           { return false }
-func (commandXInfoStreamFull) WarnVersion() string    { return "0.0.0" }
+func (commandXInfoStreamFull) WarnVersion() string    { return "" }
 func (commandXInfoStreamFull) Warning() string        { return "" }
 func (commandXInfoStreamFull) P(p Pipeliner) commandXInfoStreamFullP {
 	return commandXInfoStreamFullP{p}
@@ -5033,7 +5033,7 @@ func (commandXLen) String() string             { return "XLEN" }
 func (commandXLen) Class() string              { return "Stream" }
 func (commandXLen) RequireVersion() string     { return "5.0.0" }
 func (commandXLen) Forbid() bool               { return false }
-func (commandXLen) WarnVersion() string        { return "0.0.0" }
+func (commandXLen) WarnVersion() string        { return "" }
 func (commandXLen) Warning() string            { return "" }
 func (commandXLen) P(p Pipeliner) commandXLenP { return commandXLenP{p} }
 func (b commandXLenP) Cmd(stream string)       { b.p.Cmd(b.p.builder().XLenCompleted(stream)) }
@@ -5047,7 +5047,7 @@ func (commandXPending) String() string                 { return "XPENDING" }
 func (commandXPending) Class() string                  { return "Stream" }
 func (commandXPending) RequireVersion() string         { return "5.0.0" }
 func (commandXPending) Forbid() bool                   { return false }
-func (commandXPending) WarnVersion() string            { return "0.0.0" }
+func (commandXPending) WarnVersion() string            { return "" }
 func (commandXPending) Warning() string                { return "" }
 func (commandXPending) P(p Pipeliner) commandXPendingP { return commandXPendingP{p} }
 func (b commandXPendingP) Cmd(stream, group string) {
@@ -5063,7 +5063,7 @@ func (commandXPendingExt) String() string                    { return "XPENDING"
 func (commandXPendingExt) Class() string                     { return "Stream" }
 func (commandXPendingExt) RequireVersion() string            { return "6.2.0" }
 func (commandXPendingExt) Forbid() bool                      { return false }
-func (commandXPendingExt) WarnVersion() string               { return "0.0.0" }
+func (commandXPendingExt) WarnVersion() string               { return "" }
 func (commandXPendingExt) Warning() string                   { return "" }
 func (commandXPendingExt) P(p Pipeliner) commandXPendingExtP { return commandXPendingExtP{p} }
 func (b commandXPendingExtP) Cmd(a XPendingExtArgs)          { b.p.Cmd(b.p.builder().XPendingExtCompleted(a)) }
@@ -5077,7 +5077,7 @@ func (commandXRange) String() string               { return "XRANGE" }
 func (commandXRange) Class() string                { return "Stream" }
 func (commandXRange) RequireVersion() string       { return "5.0.0" }
 func (commandXRange) Forbid() bool                 { return false }
-func (commandXRange) WarnVersion() string          { return "0.0.0" }
+func (commandXRange) WarnVersion() string          { return "" }
 func (commandXRange) Warning() string              { return "" }
 func (commandXRange) P(p Pipeliner) commandXRangeP { return commandXRangeP{p} }
 func (b commandXRangeP) Cmd(stream, start, stop string) {
@@ -5093,7 +5093,7 @@ func (commandXRangeN) String() string                { return "XRANGE COUNT" }
 func (commandXRangeN) Class() string                 { return "Stream" }
 func (commandXRangeN) RequireVersion() string        { return "6.2.0" }
 func (commandXRangeN) Forbid() bool                  { return false }
-func (commandXRangeN) WarnVersion() string           { return "0.0.0" }
+func (commandXRangeN) WarnVersion() string           { return "" }
 func (commandXRangeN) Warning() string               { return "" }
 func (commandXRangeN) P(p Pipeliner) commandXRangeNP { return commandXRangeNP{p} }
 func (b commandXRangeNP) Cmd(stream, start, stop string, count int64) {
@@ -5109,7 +5109,7 @@ func (commandXRevRange) String() string                  { return "XREVRANGE" }
 func (commandXRevRange) Class() string                   { return "Stream" }
 func (commandXRevRange) RequireVersion() string          { return "5.0.0" }
 func (commandXRevRange) Forbid() bool                    { return false }
-func (commandXRevRange) WarnVersion() string             { return "0.0.0" }
+func (commandXRevRange) WarnVersion() string             { return "" }
 func (commandXRevRange) Warning() string                 { return "" }
 func (commandXRevRange) P(p Pipeliner) commandXRevRangeP { return commandXRevRangeP{p} }
 func (b commandXRevRangeP) Cmd(stream, stop, start string) {
@@ -5125,7 +5125,7 @@ func (commandXRevRangeN) String() string                   { return "XREVRANGE C
 func (commandXRevRangeN) Class() string                    { return "Stream" }
 func (commandXRevRangeN) RequireVersion() string           { return "6.2.0" }
 func (commandXRevRangeN) Forbid() bool                     { return false }
-func (commandXRevRangeN) WarnVersion() string              { return "0.0.0" }
+func (commandXRevRangeN) WarnVersion() string              { return "" }
 func (commandXRevRangeN) Warning() string                  { return "" }
 func (commandXRevRangeN) P(p Pipeliner) commandXRevRangeNP { return commandXRevRangeNP{p} }
 func (b commandXRevRangeNP) Cmd(stream, stop, start string, count int64) {
@@ -5141,7 +5141,7 @@ func (commandXTrim) String() string              { return "XTRIM" }
 func (commandXTrim) Class() string               { return "Stream" }
 func (commandXTrim) RequireVersion() string      { return "5.0.0" }
 func (commandXTrim) Forbid() bool                { return false }
-func (commandXTrim) WarnVersion() string         { return "0.0.0" }
+func (commandXTrim) WarnVersion() string         { return "" }
 func (commandXTrim) Warning() string             { return "" }
 func (commandXTrim) P(p Pipeliner) commandXTrimP { return commandXTrimP{p} }
 func (b commandXTrimP) Cmd(key string, maxLen int64) {
@@ -5157,7 +5157,7 @@ func (commandXTrimMaxLenApprox) String() string         { return "XTRIM LIMIT" }
 func (commandXTrimMaxLenApprox) Class() string          { return "Stream" }
 func (commandXTrimMaxLenApprox) RequireVersion() string { return "6.2.0" }
 func (commandXTrimMaxLenApprox) Forbid() bool           { return false }
-func (commandXTrimMaxLenApprox) WarnVersion() string    { return "0.0.0" }
+func (commandXTrimMaxLenApprox) WarnVersion() string    { return "" }
 func (commandXTrimMaxLenApprox) Warning() string        { return "" }
 func (commandXTrimMaxLenApprox) P(p Pipeliner) commandXTrimMaxLenApproxP {
 	return commandXTrimMaxLenApproxP{p}
@@ -5175,7 +5175,7 @@ func (commandXTrimMinID) String() string                   { return "XTRIM MINID
 func (commandXTrimMinID) Class() string                    { return "Stream" }
 func (commandXTrimMinID) RequireVersion() string           { return "6.2.0" }
 func (commandXTrimMinID) Forbid() bool                     { return false }
-func (commandXTrimMinID) WarnVersion() string              { return "0.0.0" }
+func (commandXTrimMinID) WarnVersion() string              { return "" }
 func (commandXTrimMinID) Warning() string                  { return "" }
 func (commandXTrimMinID) P(p Pipeliner) commandXTrimMinIDP { return commandXTrimMinIDP{p} }
 func (b commandXTrimMinIDP) Cmd(key string, minID string) {
@@ -5191,7 +5191,7 @@ func (commandXTrimMinIDApprox) String() string         { return "XTRIM MINID LIM
 func (commandXTrimMinIDApprox) Class() string          { return "Stream" }
 func (commandXTrimMinIDApprox) RequireVersion() string { return "6.2.0" }
 func (commandXTrimMinIDApprox) Forbid() bool           { return false }
-func (commandXTrimMinIDApprox) WarnVersion() string    { return "0.0.0" }
+func (commandXTrimMinIDApprox) WarnVersion() string    { return "" }
 func (commandXTrimMinIDApprox) Warning() string        { return "" }
 func (commandXTrimMinIDApprox) P(p Pipeliner) commandXTrimMinIDApproxP {
 	return commandXTrimMinIDApproxP{p}
@@ -5208,7 +5208,7 @@ func (commandXRead) String() string         { return "XREAD STREAMS" }
 func (commandXRead) Class() string          { return "Stream" }
 func (commandXRead) RequireVersion() string { return "5.0.0" }
 func (commandXRead) Forbid() bool           { return false }
-func (commandXRead) WarnVersion() string    { return "0.0.0" }
+func (commandXRead) WarnVersion() string    { return "" }
 func (commandXRead) Warning() string        { return "" }
 
 var CommandXReadGroup commandXReadGroup
@@ -5219,7 +5219,7 @@ func (commandXReadGroup) String() string         { return "XREADGROUP GROUP" }
 func (commandXReadGroup) Class() string          { return "Stream" }
 func (commandXReadGroup) RequireVersion() string { return "5.0.0" }
 func (commandXReadGroup) Forbid() bool           { return false }
-func (commandXReadGroup) WarnVersion() string    { return "0.0.0" }
+func (commandXReadGroup) WarnVersion() string    { return "" }
 func (commandXReadGroup) Warning() string        { return "" }
 
 var CommandAppend commandAppend
@@ -5231,7 +5231,7 @@ func (commandAppend) String() string               { return "APPEND" }
 func (commandAppend) Class() string                { return "String" }
 func (commandAppend) RequireVersion() string       { return "2.0.0" }
 func (commandAppend) Forbid() bool                 { return false }
-func (commandAppend) WarnVersion() string          { return "0.0.0" }
+func (commandAppend) WarnVersion() string          { return "" }
 func (commandAppend) Warning() string              { return "" }
 func (commandAppend) P(p Pipeliner) commandAppendP { return commandAppendP{p} }
 func (b commandAppendP) Cmd(key, value string)     { b.p.Cmd(b.p.builder().AppendCompleted(key, value)) }
@@ -5245,7 +5245,7 @@ func (commandDecr) String() string             { return "DECR" }
 func (commandDecr) Class() string              { return "String" }
 func (commandDecr) RequireVersion() string     { return "1.0.0" }
 func (commandDecr) Forbid() bool               { return false }
-func (commandDecr) WarnVersion() string        { return "0.0.0" }
+func (commandDecr) WarnVersion() string        { return "" }
 func (commandDecr) Warning() string            { return "" }
 func (commandDecr) P(p Pipeliner) commandDecrP { return commandDecrP{p} }
 func (b commandDecrP) Cmd(key, value string)   { b.p.Cmd(b.p.builder().DecrCompleted(key)) }
@@ -5259,7 +5259,7 @@ func (commandDecrBy) String() string               { return "DECRBY" }
 func (commandDecrBy) Class() string                { return "String" }
 func (commandDecrBy) RequireVersion() string       { return "1.0.0" }
 func (commandDecrBy) Forbid() bool                 { return false }
-func (commandDecrBy) WarnVersion() string          { return "0.0.0" }
+func (commandDecrBy) WarnVersion() string          { return "" }
 func (commandDecrBy) Warning() string              { return "" }
 func (commandDecrBy) P(p Pipeliner) commandDecrByP { return commandDecrByP{p} }
 func (b commandDecrByP) Cmd(key string, decrement int64) {
@@ -5275,7 +5275,7 @@ func (commandGet) String() string            { return "GET" }
 func (commandGet) Class() string             { return "String" }
 func (commandGet) RequireVersion() string    { return "1.0.0" }
 func (commandGet) Forbid() bool              { return false }
-func (commandGet) WarnVersion() string       { return "0.0.0" }
+func (commandGet) WarnVersion() string       { return "" }
 func (commandGet) Warning() string           { return "" }
 func (commandGet) P(p Pipeliner) commandGetP { return commandGetP{p} }
 func (b commandGetP) Cmd(key string)         { b.p.Cmd(b.p.builder().GetCompleted(key)) }
@@ -5289,7 +5289,7 @@ func (commandGetDel) String() string               { return "GETDEL" }
 func (commandGetDel) Class() string                { return "String" }
 func (commandGetDel) RequireVersion() string       { return "6.2.0" }
 func (commandGetDel) Forbid() bool                 { return false }
-func (commandGetDel) WarnVersion() string          { return "0.0.0" }
+func (commandGetDel) WarnVersion() string          { return "" }
 func (commandGetDel) Warning() string              { return "" }
 func (commandGetDel) P(p Pipeliner) commandGetDelP { return commandGetDelP{p} }
 func (b commandGetDelP) Cmd(key string)            { b.p.Cmd(b.p.builder().GetDelCompleted(key)) }
@@ -5303,7 +5303,7 @@ func (commandGetEx) String() string              { return "GETEX" }
 func (commandGetEx) Class() string               { return "String" }
 func (commandGetEx) RequireVersion() string      { return "6.2.0" }
 func (commandGetEx) Forbid() bool                { return false }
-func (commandGetEx) WarnVersion() string         { return "0.0.0" }
+func (commandGetEx) WarnVersion() string         { return "" }
 func (commandGetEx) Warning() string             { return "" }
 func (commandGetEx) P(p Pipeliner) commandGetExP { return commandGetExP{p} }
 func (b commandGetExP) Cmd(key string, expiration time.Duration) {
@@ -5319,7 +5319,7 @@ func (commandGetRange) String() string                 { return "GETRANGE" }
 func (commandGetRange) Class() string                  { return "String" }
 func (commandGetRange) RequireVersion() string         { return "2.4.0" }
 func (commandGetRange) Forbid() bool                   { return false }
-func (commandGetRange) WarnVersion() string            { return "0.0.0" }
+func (commandGetRange) WarnVersion() string            { return "" }
 func (commandGetRange) Warning() string                { return "" }
 func (commandGetRange) P(p Pipeliner) commandGetRangeP { return commandGetRangeP{p} }
 func (b commandGetRangeP) Cmd(key string, start, end int64) {
@@ -5351,7 +5351,7 @@ func (commandIncr) String() string             { return "INCR" }
 func (commandIncr) Class() string              { return "String" }
 func (commandIncr) RequireVersion() string     { return "1.0.0" }
 func (commandIncr) Forbid() bool               { return false }
-func (commandIncr) WarnVersion() string        { return "0.0.0" }
+func (commandIncr) WarnVersion() string        { return "" }
 func (commandIncr) Warning() string            { return "" }
 func (commandIncr) P(p Pipeliner) commandIncrP { return commandIncrP{p} }
 func (b commandIncrP) Cmd(key string)          { b.p.Cmd(b.p.builder().IncrCompleted(key)) }
@@ -5365,7 +5365,7 @@ func (commandIncrBy) String() string               { return "INCRBY" }
 func (commandIncrBy) Class() string                { return "String" }
 func (commandIncrBy) RequireVersion() string       { return "1.0.0" }
 func (commandIncrBy) Forbid() bool                 { return false }
-func (commandIncrBy) WarnVersion() string          { return "0.0.0" }
+func (commandIncrBy) WarnVersion() string          { return "" }
 func (commandIncrBy) Warning() string              { return "" }
 func (commandIncrBy) P(p Pipeliner) commandIncrByP { return commandIncrByP{p} }
 func (b commandIncrByP) Cmd(key string, value int64) {
@@ -5381,7 +5381,7 @@ func (commandIncrByFloat) String() string                    { return "INCRBYFLO
 func (commandIncrByFloat) Class() string                     { return "String" }
 func (commandIncrByFloat) RequireVersion() string            { return "2.6.0" }
 func (commandIncrByFloat) Forbid() bool                      { return false }
-func (commandIncrByFloat) WarnVersion() string               { return "0.0.0" }
+func (commandIncrByFloat) WarnVersion() string               { return "" }
 func (commandIncrByFloat) Warning() string                   { return "" }
 func (commandIncrByFloat) P(p Pipeliner) commandIncrByFloatP { return commandIncrByFloatP{p} }
 func (b commandIncrByFloatP) Cmd(key string, value float64) {
@@ -5397,7 +5397,7 @@ func (commandMGet) String() string             { return "MGET" }
 func (commandMGet) Class() string              { return "String" }
 func (commandMGet) RequireVersion() string     { return "1.0.0" }
 func (commandMGet) Forbid() bool               { return false }
-func (commandMGet) WarnVersion() string        { return "0.0.0" }
+func (commandMGet) WarnVersion() string        { return "" }
 func (commandMGet) Warning() string            { return "" }
 func (commandMGet) P(p Pipeliner) commandMGetP { return commandMGetP{p} }
 func (b commandMGetP) Cmd(keys ...string)      { b.p.Cmd(b.p.builder().MGetCompleted(keys...)) }
@@ -5411,7 +5411,7 @@ func (commandMSet) String() string             { return "MSET" }
 func (commandMSet) Class() string              { return "String" }
 func (commandMSet) RequireVersion() string     { return "1.0.1" }
 func (commandMSet) Forbid() bool               { return false }
-func (commandMSet) WarnVersion() string        { return "0.0.0" }
+func (commandMSet) WarnVersion() string        { return "" }
 func (commandMSet) Warning() string            { return "" }
 func (commandMSet) P(p Pipeliner) commandMSetP { return commandMSetP{p} }
 func (b commandMSetP) Cmd(values ...any)       { b.p.Cmd(b.p.builder().MSetCompleted(values...)) }
@@ -5425,7 +5425,7 @@ func (commandMSetNX) String() string               { return "MSETNX" }
 func (commandMSetNX) Class() string                { return "String" }
 func (commandMSetNX) RequireVersion() string       { return "1.0.1" }
 func (commandMSetNX) Forbid() bool                 { return false }
-func (commandMSetNX) WarnVersion() string          { return "0.0.0" }
+func (commandMSetNX) WarnVersion() string          { return "" }
 func (commandMSetNX) Warning() string              { return "" }
 func (commandMSetNX) P(p Pipeliner) commandMSetNXP { return commandMSetNXP{p} }
 func (b commandMSetNXP) Cmd(values ...any)         { b.p.Cmd(b.p.builder().MSetNXCompleted(values...)) }
@@ -5439,7 +5439,7 @@ func (commandSet) String() string            { return "SET" }
 func (commandSet) Class() string             { return "String" }
 func (commandSet) RequireVersion() string    { return "1.0.0" }
 func (commandSet) Forbid() bool              { return false }
-func (commandSet) WarnVersion() string       { return "0.0.0" }
+func (commandSet) WarnVersion() string       { return "" }
 func (commandSet) Warning() string           { return "" }
 func (commandSet) P(p Pipeliner) commandSetP { return commandSetP{p} }
 func (b commandSetP) Cmd(key string, value any, expiration time.Duration) {
@@ -5455,7 +5455,7 @@ func (commandSetKeepTTL) String() string                   { return "SET" }
 func (commandSetKeepTTL) Class() string                    { return "String" }
 func (commandSetKeepTTL) RequireVersion() string           { return "6.0.0" }
 func (commandSetKeepTTL) Forbid() bool                     { return false }
-func (commandSetKeepTTL) WarnVersion() string              { return "0.0.0" }
+func (commandSetKeepTTL) WarnVersion() string              { return "" }
 func (commandSetKeepTTL) Warning() string                  { return "" }
 func (commandSetKeepTTL) P(p Pipeliner) commandSetKeepTTLP { return commandSetKeepTTLP{p} }
 func (b commandSetKeepTTLP) Cmd(key string, value any) {
@@ -5487,7 +5487,7 @@ func (commandSetArgsEX) String() string                  { return "SET" }
 func (commandSetArgsEX) Class() string                   { return "String" }
 func (commandSetArgsEX) RequireVersion() string          { return "2.0.0" }
 func (commandSetArgsEX) Forbid() bool                    { return false }
-func (commandSetArgsEX) WarnVersion() string             { return "0.0.0" }
+func (commandSetArgsEX) WarnVersion() string             { return "" }
 func (commandSetArgsEX) Warning() string                 { return "" }
 func (commandSetArgsEX) P(p Pipeliner) commandSetArgsEXP { return commandSetArgsEXP{p} }
 func (b commandSetArgsEXP) Cmd(key string, value any, a SetArgs) {
@@ -5519,7 +5519,7 @@ func (commandSetArgsNX) String() string                  { return "SET" }
 func (commandSetArgsNX) Class() string                   { return "String" }
 func (commandSetArgsNX) RequireVersion() string          { return "1.0.0" }
 func (commandSetArgsNX) Forbid() bool                    { return false }
-func (commandSetArgsNX) WarnVersion() string             { return "0.0.0" }
+func (commandSetArgsNX) WarnVersion() string             { return "" }
 func (commandSetArgsNX) Warning() string                 { return "" }
 func (commandSetArgsNX) P(p Pipeliner) commandSetArgsNXP { return commandSetArgsNXP{p} }
 func (b commandSetArgsNXP) Cmd(key string, value any, a SetArgs) {
@@ -5535,7 +5535,7 @@ func (commandSetXX) String() string              { return "SETXX" }
 func (commandSetXX) Class() string               { return "String" }
 func (commandSetXX) RequireVersion() string      { return "2.6.12" }
 func (commandSetXX) Forbid() bool                { return false }
-func (commandSetXX) WarnVersion() string         { return "0.0.0" }
+func (commandSetXX) WarnVersion() string         { return "" }
 func (commandSetXX) Warning() string             { return "" }
 func (commandSetXX) P(p Pipeliner) commandSetXXP { return commandSetXXP{p} }
 func (b commandSetXXP) Cmd(key string, value any, expiration time.Duration) {
@@ -5551,7 +5551,7 @@ func (commandSetNXGet) String() string                 { return "SET" }
 func (commandSetNXGet) Class() string                  { return "String" }
 func (commandSetNXGet) RequireVersion() string         { return "7.0.0" }
 func (commandSetNXGet) Forbid() bool                   { return false }
-func (commandSetNXGet) WarnVersion() string            { return "0.0.0" }
+func (commandSetNXGet) WarnVersion() string            { return "" }
 func (commandSetNXGet) Warning() string                { return "" }
 func (commandSetNXGet) P(p Pipeliner) commandSetNXGetP { return commandSetNXGetP{p} }
 func (b commandSetNXGetP) Cmd(key string, value any, a SetArgs) {
@@ -5567,7 +5567,7 @@ func (commandSetGet) String() string               { return "SET" }
 func (commandSetGet) Class() string                { return "String" }
 func (commandSetGet) RequireVersion() string       { return "6.2.0" }
 func (commandSetGet) Forbid() bool                 { return false }
-func (commandSetGet) WarnVersion() string          { return "0.0.0" }
+func (commandSetGet) WarnVersion() string          { return "" }
 func (commandSetGet) Warning() string              { return "" }
 func (commandSetGet) P(p Pipeliner) commandSetGetP { return commandSetGetP{p} }
 func (b commandSetGetP) Cmd(key string, value any, a SetArgs) {
@@ -5583,7 +5583,7 @@ func (commandSetRange) String() string                 { return "SETRANGE" }
 func (commandSetRange) Class() string                  { return "String" }
 func (commandSetRange) RequireVersion() string         { return "2.2.0" }
 func (commandSetRange) Forbid() bool                   { return false }
-func (commandSetRange) WarnVersion() string            { return "0.0.0" }
+func (commandSetRange) WarnVersion() string            { return "" }
 func (commandSetRange) Warning() string                { return "" }
 func (commandSetRange) P(p Pipeliner) commandSetRangeP { return commandSetRangeP{p} }
 func (b commandSetRangeP) Cmd(key string, offset int64, value string) {
@@ -5599,7 +5599,7 @@ func (commandStrLen) String() string               { return "STRLEN" }
 func (commandStrLen) Class() string                { return "String" }
 func (commandStrLen) RequireVersion() string       { return "2.2.0" }
 func (commandStrLen) Forbid() bool                 { return false }
-func (commandStrLen) WarnVersion() string          { return "0.0.0" }
+func (commandStrLen) WarnVersion() string          { return "" }
 func (commandStrLen) Warning() string              { return "" }
 func (commandStrLen) P(p Pipeliner) commandStrLenP { return commandStrLenP{p} }
 func (b commandStrLenP) Cmd(key string)            { b.p.Cmd(b.p.builder().StrLenCompleted(key)) }

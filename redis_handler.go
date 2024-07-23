@@ -130,8 +130,10 @@ func (r *baseHandler) beforeWithKeys(ctx context.Context, command Command, getKe
 				panicIfUseMultipleKeySlots(command, getKeys)
 			}
 			// 该命令是否有警告日志输出
-			if r.version != nil && len(command.WarnVersion()) > 0 && mustNewSemVersion(command.WarnVersion()).LessThan(*r.version) {
-				warning(fmt.Sprintf("[%s]: %s", command.String(), command.Warning()))
+			if r.version != nil {
+				if wv := command.WarnVersion(); len(wv) > 0 && mustNewSemVersion(wv).LessThan(*r.version) {
+					warning(fmt.Sprintf("[%s]: %s", command.String(), command.Warning()))
+				}
 			}
 		}
 	}
