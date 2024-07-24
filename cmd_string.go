@@ -443,7 +443,6 @@ func (c *client) SetArgs(ctx context.Context, key string, value any, a SetArgs) 
 	}
 	r := c.adapter.SetArgs(ctx, key, value, a)
 	c.handler.after(ctx, r.Err())
-
 	return r
 }
 
