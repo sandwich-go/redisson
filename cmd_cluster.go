@@ -112,6 +112,14 @@ type ClusterCmdable interface {
 	// 	- Bulk string reply: the serialized cluster configuration.
 	ClusterNodes(ctx context.Context) StringCmd
 
+	// ClusterReplicas
+	// Available since: 5.0.0
+	// Time complexity: O(N) where N is the number of replicas.
+	// ACL categories: @admin @slow @dangerous
+	// RESP2 / RESP3 Reply:
+	// 	- Array reply: a list of replica nodes replicating from the specified master node provided in the same format used by CLUSTER NODES.
+	ClusterReplicas(ctx context.Context, nodeID string) StringSliceCmd
+
 	// ClusterReplicate
 	// Available since: 3.0.0
 	// Time complexity: O(1)
@@ -270,6 +278,13 @@ func (c *client) ClusterMeet(ctx context.Context, host string, port int64) Statu
 func (c *client) ClusterNodes(ctx context.Context) StringCmd {
 	ctx = c.handler.before(ctx, CommandClusterNodes)
 	r := c.adapter.ClusterNodes(ctx)
+	c.handler.after(ctx, r.Err())
+	return r
+}
+
+func (c *client) ClusterReplicas(ctx context.Context, nodeID string) StringSliceCmd {
+	ctx = c.handler.before(ctx, CommandClusterReplicas)
+	r := newStringSliceCmd(c.Do(ctx, c.builder.ClusterReplicasCompleted(nodeID)))
 	c.handler.after(ctx, r.Err())
 	return r
 }

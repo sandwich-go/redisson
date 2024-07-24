@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/coreos/go-semver/semver"
 	"github.com/prometheus/client_golang/prometheus"
+	"sync"
 	"time"
 )
 
@@ -55,10 +56,13 @@ type baseHandler struct {
 	v                                 ConfVisitor
 	version                           *semver.Version
 	cluster                           bool
+
+	mx                 sync.Mutex
+	warningOnceMapping map[string]struct{}
 }
 
 func newBaseHandler(v ConfVisitor) handler {
-	h := &baseHandler{v: v}
+	h := &baseHandler{v: v, warningOnceMapping: make(map[string]struct{})}
 	h.errMetric = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: errorMetric,
 	}, labelKeys)
@@ -132,7 +136,31 @@ func (r *baseHandler) beforeWithKeys(ctx context.Context, command Command, getKe
 			// 该命令是否有警告日志输出
 			if r.version != nil {
 				if wv := command.WarnVersion(); len(wv) > 0 && mustNewSemVersion(wv).LessThan(*r.version) {
-					warning(fmt.Sprintf("[%s]: %s", command.String(), command.Warning()))
+					needWarning := false
+					if command.WarningOnce() {
+						cs := command.String()
+						r.mx.Lock()
+						if _, ok := r.warningOnceMapping[cs]; !ok {
+							needWarning = true
+							r.warningOnceMapping[cs] = struct{}{}
+						}
+						r.mx.Unlock()
+					} else {
+						needWarning = true
+					}
+					if needWarning {
+						instead := command.Instead()
+						etc := command.ETC()
+						if len(instead) > 0 && len(etc) > 0 {
+							warning(fmt.Sprintf("[%s]: %s \n\t\t use '%s' instead. \n\t\t %s, etc.", command.String(), command.Warning(), instead, etc))
+						} else if len(instead) > 0 {
+							warning(fmt.Sprintf("[%s]: %s \n\t\t use '%s' instead.", command.String(), command.Warning(), instead))
+						} else if len(etc) > 0 {
+							warning(fmt.Sprintf("[%s]: %s \n\t\t %s, etc.", command.String(), command.Warning(), etc))
+						} else {
+							warning(fmt.Sprintf("[%s]: %s", command.String(), command.Warning()))
+						}
+					}
 				}
 			}
 		}
