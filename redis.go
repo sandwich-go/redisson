@@ -7,6 +7,7 @@ import (
 )
 
 type XCmdable interface {
+	SafeCmdable
 	RegisterCollector(RegisterCollectorFunc)
 	Cache(ttl time.Duration) CacheCmdable
 	NewLocker(opts ...LockerOption) (Locker, error)
@@ -17,7 +18,6 @@ type XCmdable interface {
 	ForEachNodes(context.Context, func(context.Context, Cmdable) error) error
 	Receive(ctx context.Context, cb func(Message), channels ...string) error
 	PReceive(ctx context.Context, cb func(Message), patterns ...string) error
-	MGetIgnoreSlot(ctx context.Context, keys ...string) SliceCmd
 	Do(ctx context.Context, completed Completed) RedisResult
 }
 

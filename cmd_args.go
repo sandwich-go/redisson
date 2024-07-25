@@ -272,6 +272,12 @@ func newStatusCmd(res rueidis.RedisResult) StatusCmd {
 	return cmd
 }
 
+func newOKStatusCmdr() StatusCmd {
+	cmd := &statusCmd{}
+	cmd.SetVal(OK)
+	return cmd
+}
+
 type FloatCmd interface {
 	BaseCmd
 	Val() float64

@@ -24,6 +24,8 @@ const (
 	commandZRevRangeByScoreWarning           = "As of Redis version 6.2.0, this command is regarded as deprecated.It can be replaced by ZRANGE with the REV and BYSCORE arguments when migrating or writing new code."
 	commandZRevRangeByScoreWithScoresWarning = "As of Redis version 6.2.0, this command is regarded as deprecated.It can be replaced by ZRANGE with the REV and BYSCORE arguments when migrating or writing new code."
 	commandGetSetWarning                     = "As of Redis version 6.2.0, this command is regarded as deprecated.It can be replaced by SET with the GET argument when migrating or writing new code."
+	commandMGetWarning                       = "This command is regarded as unsafe in cluster mode."
+	commandMSetWarning                       = "This command is regarded as unsafe in cluster mode."
 	commandSetEXWarning                      = "As of Redis version 2.6.12, this command is regarded as deprecated.It can be replaced by SET with the EX argument when migrating or writing new code."
 	commandSetNXWarning                      = "As of Redis version 2.6.12, this command is regarded as deprecated.It can be replaced by SET with the NX argument when migrating or writing new code."
 )
@@ -6538,10 +6540,10 @@ func (commandMGet) Class() string              { return "String" }
 func (commandMGet) RequireVersion() string     { return "1.0.0" }
 func (commandMGet) Forbid() bool               { return false }
 func (commandMGet) WarningOnce() bool          { return false }
-func (commandMGet) WarnVersion() string        { return "" }
-func (commandMGet) Warning() string            { return "" }
-func (commandMGet) Instead() string            { return "" }
-func (commandMGet) ETC() string                { return "" }
+func (commandMGet) WarnVersion() string        { return "0.0.0" }
+func (commandMGet) Warning() string            { return commandMGetWarning }
+func (commandMGet) Instead() string            { return "SafeMGet" }
+func (commandMGet) ETC() string                { return "client.SafeMGet(ctx, keys ...)" }
 func (commandMGet) P(p Pipeliner) commandMGetP { return commandMGetP{p} }
 func (b commandMGetP) Cmd(keys ...string)      { b.p.Cmd(b.p.builder().MGetCompleted(keys...)) }
 
@@ -6555,10 +6557,10 @@ func (commandMSet) Class() string              { return "String" }
 func (commandMSet) RequireVersion() string     { return "1.0.1" }
 func (commandMSet) Forbid() bool               { return false }
 func (commandMSet) WarningOnce() bool          { return false }
-func (commandMSet) WarnVersion() string        { return "" }
-func (commandMSet) Warning() string            { return "" }
-func (commandMSet) Instead() string            { return "" }
-func (commandMSet) ETC() string                { return "" }
+func (commandMSet) WarnVersion() string        { return "0.0.0" }
+func (commandMSet) Warning() string            { return commandMSetWarning }
+func (commandMSet) Instead() string            { return "SafeMSet" }
+func (commandMSet) ETC() string                { return "client.SafeMSet(ctx, values...)" }
 func (commandMSet) P(p Pipeliner) commandMSetP { return commandMSetP{p} }
 func (b commandMSetP) Cmd(values ...any)       { b.p.Cmd(b.p.builder().MSetCompleted(values...)) }
 
