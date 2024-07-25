@@ -27,9 +27,9 @@ func (b builder) BitCountCompleted(key string, bc *BitCount) Completed {
 		return b.Bitcount().Key(key).Start(bc.Start).End(bc.End).Build()
 	}
 	switch strings.ToUpper(bc.Unit) {
-	case BitCountIndexByte:
+	case BYTE:
 		return b.Bitcount().Key(key).Start(bc.Start).End(bc.End).Byte().Build()
-	case BitCountIndexBit:
+	case BIT:
 		return b.Bitcount().Key(key).Start(bc.Start).End(bc.End).Bit().Build()
 	default:
 		panic(fmt.Sprintf("invalid unit %s", bc.Unit))
@@ -66,7 +66,7 @@ func (b builder) BitPosCompleted(key string, bit int64, pos ...int64) Completed 
 }
 
 func (b builder) BitPosSpanCompleted(key string, bit, start, end int64, span string) Completed {
-	if strings.ToUpper(span) == BitCountIndexBit {
+	if strings.ToUpper(span) == BIT {
 		return b.Bitpos().Key(key).Bit(bit).Start(start).End(end).Bit().Build()
 	} else {
 		return b.Bitpos().Key(key).Bit(bit).Start(start).End(end).Byte().Build()
@@ -74,7 +74,7 @@ func (b builder) BitPosSpanCompleted(key string, bit, start, end int64, span str
 }
 
 func (b builder) BitFieldCompleted(key string, args ...any) Completed {
-	cmd := b.Arbitrary(BITFIELD).Keys(key)
+	cmd := b.Arbitrary(XXX_BITFIELD).Keys(key)
 	for _, v := range args {
 		cmd = cmd.Args(str(v))
 	}
@@ -237,23 +237,23 @@ func (b builder) RestoreReplaceCompleted(key string, ttl time.Duration, serializ
 }
 
 func (b builder) ScanCompleted(cursor uint64, match string, count int64) Completed {
-	cmd := b.Arbitrary(SCAN, strconv.FormatInt(int64(cursor), 10))
+	cmd := b.Arbitrary(XXX_SCAN, strconv.FormatInt(int64(cursor), 10))
 	if match != "" {
-		cmd = cmd.Args(MATCH, match)
+		cmd = cmd.Args(XXX_MATCH, match)
 	}
 	if count > 0 {
-		cmd = cmd.Args(COUNT, strconv.FormatInt(count, 10))
+		cmd = cmd.Args(XXX_COUNT, strconv.FormatInt(count, 10))
 	}
 	return cmd.ReadOnly()
 }
 
 func (b builder) ScanTypeCompleted(cursor uint64, match string, count int64, keyType string) Completed {
-	cmd := b.Arbitrary(SCAN, strconv.FormatInt(int64(cursor), 10))
+	cmd := b.Arbitrary(XXX_SCAN, strconv.FormatInt(int64(cursor), 10))
 	if match != "" {
-		cmd = cmd.Args(MATCH, match)
+		cmd = cmd.Args(XXX_MATCH, match)
 	}
 	if count > 0 {
-		cmd = cmd.Args(COUNT, strconv.FormatInt(count, 10))
+		cmd = cmd.Args(XXX_COUNT, strconv.FormatInt(count, 10))
 	}
 	return cmd.Args(TYPE, keyType).ReadOnly()
 }
@@ -305,7 +305,7 @@ func (b builder) GeoPosCompleted(key string, members ...string) Completed {
 }
 
 func (b builder) GeoRadiusByMemberCompleted(key, member string, query GeoRadiusQuery) Completed {
-	cmd := b.Arbitrary(GEORADIUSBYMEMBER_RO).Keys(key).Args(member)
+	cmd := b.Arbitrary(XXX_GEORADIUSBYMEMBER_RO).Keys(key).Args(member)
 	if query.Store != "" || query.StoreDist != "" {
 		panic("GeoRadiusByMember does not support Store or StoreDist")
 	}
@@ -313,7 +313,7 @@ func (b builder) GeoRadiusByMemberCompleted(key, member string, query GeoRadiusQ
 }
 
 func (b builder) GeoRadiusByMemberStoreCompleted(key, member string, query GeoRadiusQuery) Completed {
-	cmd := b.Arbitrary(GEORADIUSBYMEMBER).Keys(key).Args(member)
+	cmd := b.Arbitrary(XXX_GEORADIUSBYMEMBER).Keys(key).Args(member)
 	if query.Store == "" && query.StoreDist == "" {
 		panic("GeoRadiusByMemberStore requires Store or StoreDist")
 	}
@@ -321,7 +321,7 @@ func (b builder) GeoRadiusByMemberStoreCompleted(key, member string, query GeoRa
 }
 
 func (b builder) GeoRadiusCompleted(key string, longitude, latitude float64, query GeoRadiusQuery) Completed {
-	cmd := b.Arbitrary(GEORADIUS_RO).Keys(key).Args(strconv.FormatFloat(longitude, 'f', -1, 64), strconv.FormatFloat(latitude, 'f', -1, 64))
+	cmd := b.Arbitrary(XXX_GEORADIUS_RO).Keys(key).Args(strconv.FormatFloat(longitude, 'f', -1, 64), strconv.FormatFloat(latitude, 'f', -1, 64))
 	if query.Store != "" || query.StoreDist != "" {
 		panic("GeoRadius does not support Store or StoreDist")
 	}
@@ -329,7 +329,7 @@ func (b builder) GeoRadiusCompleted(key string, longitude, latitude float64, que
 }
 
 func (b builder) GeoRadiusStoreCompleted(key string, longitude, latitude float64, query GeoRadiusQuery) Completed {
-	cmd := b.Arbitrary(GEORADIUS).Keys(key).Args(strconv.FormatFloat(longitude, 'f', -1, 64), strconv.FormatFloat(latitude, 'f', -1, 64))
+	cmd := b.Arbitrary(XXX_GEORADIUS).Keys(key).Args(strconv.FormatFloat(longitude, 'f', -1, 64), strconv.FormatFloat(latitude, 'f', -1, 64))
 	if query.Store == "" && query.StoreDist == "" {
 		panic("GeoRadiusStore requires Store or StoreDist")
 	}
@@ -337,14 +337,14 @@ func (b builder) GeoRadiusStoreCompleted(key string, longitude, latitude float64
 }
 
 func (b builder) GeoSearchCompleted(key string, q GeoSearchQuery) Completed {
-	return b.Arbitrary(GEOSEARCH).Keys(key).Args(geoSearchQueryArgs(q)...).Build()
+	return b.Arbitrary(XXX_GEOSEARCH).Keys(key).Args(geoSearchQueryArgs(q)...).Build()
 }
 
 func (b builder) GeoSearchStoreCompleted(src, dest string, q GeoSearchStoreQuery) Completed {
-	cmd := b.Arbitrary(GEOSEARCHSTORE).Keys(dest, src)
+	cmd := b.Arbitrary(XXX_GEOSEARCHSTORE).Keys(dest, src)
 	cmd = cmd.Args(geoSearchQueryArgs(q.GeoSearchQuery)...)
 	if q.StoreDist {
-		cmd = cmd.Args(STOREDIST)
+		cmd = cmd.Args(XXX_STOREDIST)
 	}
 	return cmd.Build()
 }
@@ -503,12 +503,12 @@ func (b builder) HRandFieldWithValuesCompleted(key string, count int64) Complete
 }
 
 func (b builder) HScanCompleted(key string, cursor uint64, match string, count int64) Completed {
-	cmd := b.Arbitrary(HSCAN).Keys(key).Args(strconv.FormatInt(int64(cursor), 10))
+	cmd := b.Arbitrary(XXX_HSCAN).Keys(key).Args(strconv.FormatInt(int64(cursor), 10))
 	if match != "" {
-		cmd = cmd.Args(MATCH, match)
+		cmd = cmd.Args(XXX_MATCH, match)
 	}
 	if count > 0 {
-		cmd = cmd.Args(COUNT, strconv.FormatInt(count, 10))
+		cmd = cmd.Args(XXX_COUNT, strconv.FormatInt(count, 10))
 	}
 	return cmd.ReadOnly()
 }
@@ -580,7 +580,7 @@ func (b builder) LLenCompleted(key string) Completed {
 }
 
 func (b builder) LMoveCompleted(source, destination, srcpos, destpos string) Completed {
-	return b.Arbitrary(LMOVE).Keys(source, destination).Args(srcpos, destpos).Build()
+	return b.Arbitrary(XXX_LMOVE).Keys(source, destination).Args(srcpos, destpos).Build()
 }
 
 func (b builder) LPopCompleted(key string) Completed {
@@ -592,32 +592,32 @@ func (b builder) LPopCountCompleted(key string, count int64) Completed {
 }
 
 func (b builder) LMPopCompleted(direction string, count int64, keys ...string) Completed {
-	cmd := b.Arbitrary(LMPOP, strconv.Itoa(len(keys))).Keys(keys...)
+	cmd := b.Arbitrary(XXX_LMPOP, strconv.Itoa(len(keys))).Keys(keys...)
 	cmd = cmd.Args(direction)
 	if count > 0 {
-		cmd = cmd.Args(COUNT, strconv.FormatInt(count, 10))
+		cmd = cmd.Args(XXX_COUNT, strconv.FormatInt(count, 10))
 	}
 	return cmd.Build()
 }
 
 func (b builder) LPosCompleted(key string, element string, a LPosArgs) Completed {
-	cmd := b.Arbitrary(LPOS).Keys(key).Args(element)
+	cmd := b.Arbitrary(XXX_LPOS).Keys(key).Args(element)
 	if a.Rank != 0 {
-		cmd = cmd.Args(RANK, strconv.FormatInt(a.Rank, 10))
+		cmd = cmd.Args(XXX_RANK, strconv.FormatInt(a.Rank, 10))
 	}
 	if a.MaxLen != 0 {
-		cmd = cmd.Args(MAXLEN, strconv.FormatInt(a.MaxLen, 10))
+		cmd = cmd.Args(XXX_MAXLEN, strconv.FormatInt(a.MaxLen, 10))
 	}
 	return cmd.Build()
 }
 
 func (b builder) LPosCountCompleted(key string, element string, count int64, a LPosArgs) Completed {
-	cmd := b.Arbitrary(LPOS).Keys(key).Args(element).Args(COUNT, strconv.FormatInt(count, 10))
+	cmd := b.Arbitrary(XXX_LPOS).Keys(key).Args(element).Args(XXX_COUNT, strconv.FormatInt(count, 10))
 	if a.Rank != 0 {
-		cmd = cmd.Args(RANK, strconv.FormatInt(a.Rank, 10))
+		cmd = cmd.Args(XXX_RANK, strconv.FormatInt(a.Rank, 10))
 	}
 	if a.MaxLen != 0 {
-		cmd = cmd.Args(MAXLEN, strconv.FormatInt(a.MaxLen, 10))
+		cmd = cmd.Args(XXX_MAXLEN, strconv.FormatInt(a.MaxLen, 10))
 	}
 	return cmd.Build()
 }
@@ -727,12 +727,12 @@ func (b builder) EvalShaROCompleted(sha1 string, keys []string, args ...any) Com
 }
 
 func (b builder) FunctionListCompleted(q FunctionListQuery) Completed {
-	cmd := b.Arbitrary(FUNCTION, LIST)
+	cmd := b.Arbitrary(XXX_FUNCTION, XXX_LIST)
 	if q.LibraryNamePattern != "" {
-		cmd = cmd.Args(LIBRARYNAME, q.LibraryNamePattern)
+		cmd = cmd.Args(XXX_LIBRARYNAME, q.LibraryNamePattern)
 	}
 	if q.WithCode {
-		cmd = cmd.Args(WITHCODE)
+		cmd = cmd.Args(XXX_WITHCODE)
 	}
 	return cmd.Build()
 }
@@ -871,12 +871,12 @@ func (b builder) SRemCompleted(key string, members ...any) Completed {
 }
 
 func (b builder) SScanCompleted(key string, cursor uint64, match string, count int64) Completed {
-	cmd := b.Arbitrary(SSCAN).Keys(key).Args(strconv.FormatInt(int64(cursor), 10))
+	cmd := b.Arbitrary(XXX_SSCAN).Keys(key).Args(strconv.FormatInt(int64(cursor), 10))
 	if match != "" {
-		cmd = cmd.Args(MATCH, match)
+		cmd = cmd.Args(XXX_MATCH, match)
 	}
 	if count > 0 {
-		cmd = cmd.Args(COUNT, strconv.FormatInt(count, 10))
+		cmd = cmd.Args(XXX_COUNT, strconv.FormatInt(count, 10))
 	}
 	return cmd.ReadOnly()
 }
@@ -894,26 +894,26 @@ func (b builder) XAckCompleted(stream, group string, ids ...string) Completed {
 }
 
 func (b builder) XAddCompleted(a XAddArgs) Completed {
-	cmd := b.Arbitrary(XADD).Keys(a.Stream)
+	cmd := b.Arbitrary(XXX_XADD).Keys(a.Stream)
 	if a.NoMkStream {
-		cmd = cmd.Args(NOMKSTREAM)
+		cmd = cmd.Args(XXX_NOMKSTREAM)
 	}
 	switch {
 	case a.MaxLen > 0:
 		if a.Approx {
-			cmd = cmd.Args(MAXLEN, "~", strconv.FormatInt(a.MaxLen, 10))
+			cmd = cmd.Args(XXX_MAXLEN, "~", strconv.FormatInt(a.MaxLen, 10))
 		} else {
-			cmd = cmd.Args(MAXLEN, strconv.FormatInt(a.MaxLen, 10))
+			cmd = cmd.Args(XXX_MAXLEN, strconv.FormatInt(a.MaxLen, 10))
 		}
 	case a.MinID != "":
 		if a.Approx {
-			cmd = cmd.Args(MINID, "~", a.MinID)
+			cmd = cmd.Args(XXX_MINID, "~", a.MinID)
 		} else {
-			cmd = cmd.Args(MINID, a.MinID)
+			cmd = cmd.Args(XXX_MINID, a.MinID)
 		}
 	}
 	if a.Limit > 0 {
-		cmd = cmd.Args(LIMIT, strconv.FormatInt(a.Limit, 10))
+		cmd = cmd.Args(XXX_LIMIT, strconv.FormatInt(a.Limit, 10))
 	}
 	if a.ID != "" {
 		cmd = cmd.Args(a.ID)
@@ -1001,9 +1001,9 @@ func (b builder) XPendingCompleted(stream, group string) Completed {
 }
 
 func (b builder) XPendingExtCompleted(a XPendingExtArgs) Completed {
-	cmd := b.Arbitrary(XPENDING).Keys(a.Stream).Args(a.Group)
+	cmd := b.Arbitrary(XXX_XPENDING).Keys(a.Stream).Args(a.Group)
 	if a.Idle != 0 {
-		cmd = cmd.Args(IDLE, strconv.FormatInt(formatMs(a.Idle), 10))
+		cmd = cmd.Args(XXX_IDLE, strconv.FormatInt(formatMs(a.Idle), 10))
 	}
 	cmd = cmd.Args(a.Start, a.End, strconv.FormatInt(a.Count, 10))
 	if a.Consumer != "" {
@@ -1030,31 +1030,31 @@ func (b builder) XRevRangeNCompleted(stream, stop, start string, count int64) Co
 
 func (b builder) xTrim(key, strategy string,
 	approx bool, threshold string, limit int64) Completed {
-	cmd := b.Arbitrary(XTRIM).Keys(key).Args(strategy)
+	cmd := b.Arbitrary(XXX_XTRIM).Keys(key).Args(strategy)
 	if approx {
 		cmd = cmd.Args("~")
 	}
 	cmd = cmd.Args(threshold)
 	if limit > 0 {
-		cmd = cmd.Args(LIMIT, strconv.FormatInt(limit, 10))
+		cmd = cmd.Args(XXX_LIMIT, strconv.FormatInt(limit, 10))
 	}
 	return cmd.Build()
 }
 
 func (b builder) XTrimCompleted(key string, maxLen int64) Completed {
-	return b.xTrim(key, MAXLEN, false, strconv.FormatInt(maxLen, 10), 0)
+	return b.xTrim(key, XXX_MAXLEN, false, strconv.FormatInt(maxLen, 10), 0)
 }
 
 func (b builder) XTrimMaxLenApproxCompleted(key string, maxLen, limit int64) Completed {
-	return b.xTrim(key, MAXLEN, true, strconv.FormatInt(maxLen, 10), limit)
+	return b.xTrim(key, XXX_MAXLEN, true, strconv.FormatInt(maxLen, 10), limit)
 }
 
 func (b builder) XTrimMinIDCompleted(key string, minID string) Completed {
-	return b.xTrim(key, MINID, false, minID, 0)
+	return b.xTrim(key, XXX_MINID, false, minID, 0)
 }
 
 func (b builder) XTrimMinIDApproxCompleted(key string, minID string, limit int64) Completed {
-	return b.xTrim(key, MINID, true, minID, limit)
+	return b.xTrim(key, XXX_MINID, true, minID, limit)
 }
 
 func (b builder) AppendCompleted(key, value string) Completed {
@@ -1150,18 +1150,18 @@ func (b builder) SetCompleted(key string, value any, expiration time.Duration) C
 }
 
 func (b builder) SetArgsCompleted(key string, value any, a SetArgs) Completed {
-	cmd := b.Arbitrary(SET).Keys(key).Args(str(value))
+	cmd := b.Arbitrary(XXX_SET).Keys(key).Args(str(value))
 	if a.KeepTTL {
-		cmd = cmd.Args(KEEPTTL)
+		cmd = cmd.Args(XXX_KEEPTTL)
 	}
 	if !a.ExpireAt.IsZero() {
-		cmd = cmd.Args(EXAT, strconv.FormatInt(a.ExpireAt.Unix(), 10))
+		cmd = cmd.Args(XXX_EXAT, strconv.FormatInt(a.ExpireAt.Unix(), 10))
 	}
 	if a.TTL > 0 {
 		if usePrecise(a.TTL) {
-			cmd = cmd.Args(PX, strconv.FormatInt(formatMs(a.TTL), 10))
+			cmd = cmd.Args(XXX_PX, strconv.FormatInt(formatMs(a.TTL), 10))
 		} else {
-			cmd = cmd.Args(EX, strconv.FormatInt(formatSec(a.TTL), 10))
+			cmd = cmd.Args(XXX_EX, strconv.FormatInt(formatSec(a.TTL), 10))
 		}
 	}
 	switch mode := strings.ToUpper(a.Mode); mode {
@@ -1172,7 +1172,7 @@ func (b builder) SetArgsCompleted(key string, value any, a SetArgs) Completed {
 		panic(fmt.Sprintf("invalid mode for SET: %s", a.Mode))
 	}
 	if a.Get {
-		cmd = cmd.Args(GET)
+		cmd = cmd.Args(XXX_GET)
 	}
 	return cmd.Build()
 }
@@ -1219,7 +1219,7 @@ func (b builder) StrLenCompleted(key string) Completed {
 }
 
 func (b builder) zAddArgs(key string, incr bool, args ZAddArgs) Completed {
-	cmd := b.Arbitrary(ZADD).Keys(key)
+	cmd := b.Arbitrary(XXX_ZADD).Keys(key)
 	// The GT, LT and NX options are mutually exclusive.
 	if args.NX {
 		cmd = cmd.Args(NX)
@@ -1228,16 +1228,16 @@ func (b builder) zAddArgs(key string, incr bool, args ZAddArgs) Completed {
 			cmd = cmd.Args(XX)
 		}
 		if args.GT {
-			cmd = cmd.Args(GT)
+			cmd = cmd.Args(XXX_GT)
 		} else if args.LT {
-			cmd = cmd.Args(LT)
+			cmd = cmd.Args(XXX_LT)
 		}
 	}
 	if args.Ch {
-		cmd = cmd.Args(CH)
+		cmd = cmd.Args(XXX_CH)
 	}
 	if incr {
-		cmd = cmd.Args(INCR)
+		cmd = cmd.Args(XXX_INCR)
 	}
 	for _, v := range args.Members {
 		cmd = cmd.Args(strconv.FormatFloat(v.Score, 'f', -1, 64), v.Member)
@@ -1294,18 +1294,18 @@ func (b builder) ZIncrByCompleted(key string, increment float64, member string) 
 }
 
 func (b builder) zInter(store ZStore, withScores bool) Completed {
-	cmd := b.Arbitrary(ZINTER).Args(strconv.Itoa(len(store.Keys))).Keys(store.Keys...)
+	cmd := b.Arbitrary(XXX_ZINTER).Args(strconv.Itoa(len(store.Keys))).Keys(store.Keys...)
 	if len(store.Weights) > 0 {
-		cmd = cmd.Args(WEIGHTS)
+		cmd = cmd.Args(XXX_WEIGHTS)
 		for _, w := range store.Weights {
 			cmd = cmd.Args(strconv.FormatInt(w, 10))
 		}
 	}
 	if store.Aggregate != "" {
-		cmd = cmd.Args(AGGREGATE, store.Aggregate)
+		cmd = cmd.Args(XXX_AGGREGATE, store.Aggregate)
 	}
 	if withScores {
-		cmd = cmd.Args(WITHSCORES)
+		cmd = cmd.Args(XXX_WITHSCORES)
 	}
 	return cmd.ReadOnly()
 }
@@ -1318,24 +1318,24 @@ func (b builder) ZInterCardCompleted(limit int64, keys ...string) Completed {
 }
 
 func (b builder) ZInterStoreCompleted(destination string, store ZStore) Completed {
-	cmd := b.Arbitrary(ZINTERSTORE).Keys(destination).Args(strconv.Itoa(len(store.Keys))).Keys(store.Keys...)
+	cmd := b.Arbitrary(XXX_ZINTERSTORE).Keys(destination).Args(strconv.Itoa(len(store.Keys))).Keys(store.Keys...)
 	if len(store.Weights) > 0 {
-		cmd = cmd.Args(WEIGHTS)
+		cmd = cmd.Args(XXX_WEIGHTS)
 		for _, w := range store.Weights {
 			cmd = cmd.Args(strconv.FormatInt(w, 10))
 		}
 	}
 	if store.Aggregate != "" {
-		cmd = cmd.Args(AGGREGATE, store.Aggregate)
+		cmd = cmd.Args(XXX_AGGREGATE, store.Aggregate)
 	}
 	return cmd.Build()
 }
 
 func (b builder) ZMPopCompleted(order string, count int64, keys ...string) Completed {
-	cmd := b.Arbitrary(ZMPOP, strconv.Itoa(len(keys))).Keys(keys...)
+	cmd := b.Arbitrary(XXX_ZMPOP, strconv.Itoa(len(keys))).Keys(keys...)
 	cmd = cmd.Args(order)
 	if count > 0 {
-		cmd = cmd.Args(COUNT, strconv.FormatInt(count, 10))
+		cmd = cmd.Args(XXX_COUNT, strconv.FormatInt(count, 10))
 	}
 	return cmd.Build()
 }
@@ -1367,25 +1367,25 @@ func (b builder) ZPopMinCompleted(key string, count ...int64) Completed {
 }
 
 func (b builder) zRangeArgs(withScores bool, z ZRangeArgs) Completed {
-	cmd := b.Arbitrary(ZRANGE).Keys(z.Key)
+	cmd := b.Arbitrary(XXX_ZRANGE).Keys(z.Key)
 	if z.Rev && (z.ByScore || z.ByLex) {
 		cmd = cmd.Args(str(z.Stop), str(z.Start))
 	} else {
 		cmd = cmd.Args(str(z.Start), str(z.Stop))
 	}
 	if z.ByScore {
-		cmd = cmd.Args(BYSCORE)
+		cmd = cmd.Args(XXX_BYSCORE)
 	} else if z.ByLex {
-		cmd = cmd.Args(BYLEX)
+		cmd = cmd.Args(XXX_BYLEX)
 	}
 	if z.Rev {
-		cmd = cmd.Args(REV)
+		cmd = cmd.Args(XXX_REV)
 	}
 	if z.Offset != 0 || z.Count != 0 {
-		cmd = cmd.Args(LIMIT, strconv.FormatInt(z.Offset, 10), strconv.FormatInt(z.Count, 10))
+		cmd = cmd.Args(XXX_LIMIT, strconv.FormatInt(z.Offset, 10), strconv.FormatInt(z.Count, 10))
 	}
 	if withScores {
-		cmd = cmd.Args(WITHSCORES)
+		cmd = cmd.Args(XXX_WITHSCORES)
 	}
 	return cmd.Build()
 }
@@ -1439,22 +1439,22 @@ func (b builder) ZRangeArgsWithScoresCompleted(z ZRangeArgs) Completed {
 }
 
 func (b builder) ZRangeStoreCompleted(dst string, z ZRangeArgs) Completed {
-	cmd := b.Arbitrary(ZRANGESTORE).Keys(dst, z.Key)
+	cmd := b.Arbitrary(XXX_ZRANGESTORE).Keys(dst, z.Key)
 	if z.Rev && (z.ByScore || z.ByLex) {
 		cmd = cmd.Args(str(z.Stop), str(z.Start))
 	} else {
 		cmd = cmd.Args(str(z.Start), str(z.Stop))
 	}
 	if z.ByScore {
-		cmd = cmd.Args(BYSCORE)
+		cmd = cmd.Args(XXX_BYSCORE)
 	} else if z.ByLex {
-		cmd = cmd.Args(BYLEX)
+		cmd = cmd.Args(XXX_BYLEX)
 	}
 	if z.Rev {
-		cmd = cmd.Args(REV)
+		cmd = cmd.Args(XXX_REV)
 	}
 	if z.Offset != 0 || z.Count != 0 {
-		cmd = cmd.Args(LIMIT, strconv.FormatInt(z.Offset, 10), strconv.FormatInt(z.Count, 10))
+		cmd = cmd.Args(XXX_LIMIT, strconv.FormatInt(z.Offset, 10), strconv.FormatInt(z.Count, 10))
 	}
 	return cmd.Build()
 }
@@ -1527,32 +1527,32 @@ func (b builder) ZScoreCompleted(key, member string) Completed {
 }
 
 func (b builder) zUnion(store ZStore, withScores bool) Completed {
-	cmd := b.Arbitrary(ZUNION).Args(strconv.Itoa(len(store.Keys))).Keys(store.Keys...)
+	cmd := b.Arbitrary(XXX_ZUNION).Args(strconv.Itoa(len(store.Keys))).Keys(store.Keys...)
 	if len(store.Weights) > 0 {
-		cmd = cmd.Args(WEIGHTS)
+		cmd = cmd.Args(XXX_WEIGHTS)
 		for _, w := range store.Weights {
 			cmd = cmd.Args(strconv.FormatInt(w, 10))
 		}
 	}
 	if store.Aggregate != "" {
-		cmd = cmd.Args(AGGREGATE, store.Aggregate)
+		cmd = cmd.Args(XXX_AGGREGATE, store.Aggregate)
 	}
 	if withScores {
-		cmd = cmd.Args(WITHSCORES)
+		cmd = cmd.Args(XXX_WITHSCORES)
 	}
 	return cmd.ReadOnly()
 }
 
 func (b builder) ZUnionStoreCompleted(dest string, store ZStore) Completed {
-	cmd := b.Arbitrary(ZUNIONSTORE).Keys(dest).Args(strconv.Itoa(len(store.Keys))).Keys(store.Keys...)
+	cmd := b.Arbitrary(XXX_ZUNIONSTORE).Keys(dest).Args(strconv.Itoa(len(store.Keys))).Keys(store.Keys...)
 	if len(store.Weights) > 0 {
-		cmd = cmd.Args(WEIGHTS)
+		cmd = cmd.Args(XXX_WEIGHTS)
 		for _, w := range store.Weights {
 			cmd = cmd.Args(strconv.FormatInt(w, 10))
 		}
 	}
 	if store.Aggregate != "" {
-		cmd = cmd.Args(AGGREGATE, store.Aggregate)
+		cmd = cmd.Args(XXX_AGGREGATE, store.Aggregate)
 	}
 	return cmd.Build()
 }
@@ -1581,12 +1581,12 @@ func (b builder) ZDiffStoreCompleted(destination string, keys ...string) Complet
 }
 
 func (b builder) ZScanCompleted(key string, cursor uint64, match string, count int64) Completed {
-	cmd := b.Arbitrary(ZSCAN).Keys(key).Args(strconv.FormatInt(int64(cursor), 10))
+	cmd := b.Arbitrary(XXX_ZSCAN).Keys(key).Args(strconv.FormatInt(int64(cursor), 10))
 	if match != "" {
-		cmd = cmd.Args(MATCH, match)
+		cmd = cmd.Args(XXX_MATCH, match)
 	}
 	if count > 0 {
-		cmd = cmd.Args(COUNT, strconv.FormatInt(count, 10))
+		cmd = cmd.Args(XXX_COUNT, strconv.FormatInt(count, 10))
 	}
 	return cmd.ReadOnly()
 }

@@ -87,9 +87,9 @@ func (c *client) BitCount(ctx context.Context, key string, bc *BitCount) IntCmd 
 		ctx = c.handler.before(ctx, CommandBitCount)
 	} else {
 		switch strings.ToUpper(bc.Unit) {
-		case BitCountIndexByte:
+		case BYTE:
 			ctx = c.handler.before(ctx, CommandBitCountByte)
-		case BitCountIndexBit:
+		case BIT:
 			ctx = c.handler.before(ctx, CommandBitCountBit)
 		default:
 			ctx = c.handler.before(ctx, CommandBitCount)
