@@ -22,7 +22,7 @@
 如果不能升级`Golang`至`1.18`，请使用`redisson/version/0.1`版本。
 
 ## 基础库
-使用 [rueian/rueidis](https://github.com/rueian/rueidis)
+使用 [redis/rueidis](https://github.com/redis/rueidis)
 
 ## 链接
 * [English](https://github.com/sandwich-go/redisson/blob/master/README.md)
