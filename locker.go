@@ -16,7 +16,7 @@ type Locker interface {
 	ForceWithContext(ctx context.Context, name string) (context.Context, context.CancelFunc, error)
 }
 
-var fallbackSETPXVersion = "6.2.0"
+const fallbackSETPXVersion = "6.2.0"
 
 // newLocker 新键一个 locker
 func newLocker(c *client, opts ...LockerOption) (Locker, error) {
