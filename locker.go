@@ -2,6 +2,7 @@ package redisson
 
 import (
 	"context"
+	"github.com/redis/rueidis"
 	"github.com/redis/rueidis/rueidislock"
 )
 
@@ -11,13 +12,18 @@ type Locker interface {
 	WithContext(ctx context.Context, name string) (context.Context, context.CancelFunc, error)
 	// TryWithContext tries to acquire a distributed redis lock by name without waiting. It may return ErrNotLocked.
 	TryWithContext(ctx context.Context, name string) (context.Context, context.CancelFunc, error)
-	// Close closes the underlying Client
-	Close()
+	// ForceWithContext takes over a distributed redis lock by canceling the original holder. It may return ErrNotLocked.
+	ForceWithContext(ctx context.Context, name string) (context.Context, context.CancelFunc, error)
 }
 
+var fallbackSETPXVersion = "6.2.0"
+
 // newLocker 新键一个 locker
-func newLocker(v ConfVisitor, opts ...LockerOption) (Locker, error) {
-	clientOption := confVisitor2ClientOption(v)
+func newLocker(c *client, opts ...LockerOption) (Locker, error) {
+	// 校验版本
+	if c.version.LessThan(mustNewSemVersion(fallbackSETPXVersion)) {
+		opts = append(opts, WithFallbackSETPX(true))
+	}
 	cc := newLockerOptions(opts...)
 	return rueidislock.NewLocker(rueidislock.LockerOption{
 		KeyPrefix:      cc.GetKeyPrefix(),
@@ -26,11 +32,14 @@ func newLocker(v ConfVisitor, opts ...LockerOption) (Locker, error) {
 		KeyMajority:    cc.GetKeyMajority(),
 		NoLoopTracking: cc.GetNoLoopTracking(),
 		FallbackSETPX:  cc.GetFallbackSETPX(),
-		ClientOption:   clientOption,
+		ClientOption:   confVisitor2ClientOption(c.v),
+		ClientBuilder: func(option rueidis.ClientOption) (rueidis.Client, error) {
+			return c.cmd, nil
+		},
 	})
 }
 
 // NewLocker 新键一个 locker
 func (c *client) NewLocker(opts ...LockerOption) (Locker, error) {
-	return newLocker(c.v, opts...)
+	return newLocker(c, opts...)
 }
