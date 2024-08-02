@@ -119,7 +119,7 @@ var reconnectErrors = []func(*client, string) bool{
 		return false
 	},
 	func(c *client, errString string) bool {
-		if !c.v.GetAlwaysRESP2() && strings.Contains(errString, "elements in cluster info address, expected 2 or 3") {
+		if !c.v.GetAlwaysRESP2() && strings.Contains(errString, "elements in cluster info address, expected 2 or 3") || strings.Contains(errString, "unsupported command `hello`") {
 			c.v.ApplyOption(WithAlwaysRESP2(true))
 			return true
 		}
