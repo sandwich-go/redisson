@@ -7,6 +7,7 @@ import (
 type Tester interface {
 	Fatalf(string, ...any)
 	Cleanup(func())
+	Logf(format string, args ...interface{})
 }
 
 //go:generate optiongen --new_func=NewConf --xconf=true --empty_composite_nil=true --usage_tag_name=usage
