@@ -31,20 +31,16 @@ func (c *client) SafeMGet(ctx context.Context, keys ...string) SliceCmd {
 	if len(slot2Keys) == 1 {
 		return c.MGet(ctx, keys...)
 	}
-	var wg sync.WaitGroup
+
 	var mx sync.Mutex
 	var scs = make(map[uint16]SliceCmd)
-	wg.Add(len(slot2Keys))
-	for i, sameSlotKeys := range slot2Keys {
-		go func(_i uint16, _keys []string) {
-			ret := c.MGet(WithSkipCheck(context.Background()), _keys...)
-			mx.Lock()
-			scs[_i] = ret
-			mx.Unlock()
-			wg.Done()
-		}(i, sameSlotKeys)
-	}
-	wg.Wait()
+
+	parallelK(c.maxp, slot2Keys, func(k uint16) {
+		ret := c.MGet(WithSkipCheck(context.Background()), slot2Keys[k]...)
+		mx.Lock()
+		scs[k] = ret
+		mx.Unlock()
+	})
 
 	var res = make([]any, len(keys))
 	for i, ret := range scs {

@@ -8,6 +8,7 @@ import (
 	"github.com/redis/rueidis"
 	"github.com/redis/rueidis/rueidiscompat"
 	"regexp"
+	"runtime"
 	"strings"
 )
 
@@ -159,7 +160,7 @@ func (c *client) Close() error {
 }
 
 func Connect(v ConfInterface) (Cmdable, error) {
-	c := &client{v: v, handler: newBaseHandler(v)}
+	c := &client{v: v, handler: newBaseHandler(v), maxp: runtime.GOMAXPROCS(0)}
 	err := c.connect()
 	if err != nil {
 		for i := 0; i < len(reconnectErrors); i++ {

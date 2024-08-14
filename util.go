@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/redis/rueidis"
 	"strconv"
+	"sync"
 	"time"
 )
 
@@ -214,4 +215,34 @@ func toFloat64(val any) (float64, error) {
 	default:
 		return 0, fmt.Errorf("redis: unexpected type=%T for Float64", t)
 	}
+}
+
+func worker[V any](wg *sync.WaitGroup, ch chan V, fn func(V)) {
+	for v := range ch {
+		fn(v)
+	}
+	wg.Done()
+}
+
+func closeThenParallel[V any](maxp int, ch chan V, fn func(V)) {
+	close(ch)
+	concurrency := len(ch)
+	if concurrency > maxp {
+		concurrency = maxp
+	}
+	var wg sync.WaitGroup
+	wg.Add(concurrency)
+	for i := 1; i < concurrency; i++ {
+		go worker(&wg, ch, fn)
+	}
+	worker(&wg, ch, fn)
+	wg.Wait()
+}
+
+func parallelK[K comparable, V any](maxp int, p map[K]V, fn func(K)) {
+	ch := make(chan K, len(p))
+	for k := range p {
+		ch <- k
+	}
+	closeThenParallel(maxp, ch, fn)
 }

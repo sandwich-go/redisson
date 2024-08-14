@@ -30,6 +30,7 @@ type client struct {
 	adapter   rueidiscompat.Cmdable
 	ttl       time.Duration
 	builder   builder
+	maxp      int
 
 	once sync.Once
 }
@@ -58,6 +59,7 @@ func (c *client) ForEachNodes(ctx context.Context, f func(context.Context, Cmdab
 			cmd:       v,
 			adapter:   rueidiscompat.NewAdapter(v),
 			builder:   c.builder,
+			maxp:      c.maxp,
 		})
 		if err != nil {
 			errs.Push(err)
@@ -79,6 +81,7 @@ func (c *client) Cache(ttl time.Duration) CacheCmdable {
 		adapter:   c.adapter,
 		ttl:       ttl,
 		builder:   c.builder,
+		maxp:      c.maxp,
 	}
 	return cp
 }
