@@ -12,6 +12,7 @@ type XCmdable interface {
 	Cache(ttl time.Duration) CacheCmdable
 	NewLocker(opts ...LockerOption) (Locker, error)
 	NewFunnel(key string, capacity, operations int64, seconds time.Duration) funnel.Funnel
+	NewBloomFilter(name string, expectedNumberOfItems uint, falsePositiveRate float64, opts ...BloomOption) (BloomFilter, error)
 	Close() error
 	IsCluster() bool
 	Options() ConfVisitor
