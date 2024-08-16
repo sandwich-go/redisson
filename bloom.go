@@ -2,7 +2,6 @@ package redisson
 
 import (
 	"context"
-	"errors"
 	"github.com/redis/rueidis/rueidisprob"
 )
 
@@ -35,19 +34,17 @@ type BloomFilter interface {
 
 const bloomFilterROVersion = "7.0.0"
 
-var errEnableReadOperationInvalidVersion = errors.New("if enabled read operation, minimum redis version should be " + bloomFilterROVersion)
-
-// newBloomFilter 新键一个布隆过滤器
+// newBloomFilter 新建一个布隆过滤器
 func newBloomFilter(c *client, name string, expectedNumberOfItems uint, falsePositiveRate float64, opts ...BloomOption) (BloomFilter, error) {
 	// 校验版本
-	cc := newBloomOptions(opts...)
-	if cc.GetEnableReadOperation() && c.version.LessThan(mustNewSemVersion(bloomFilterROVersion)) {
-		return nil, errEnableReadOperationInvalidVersion
+	if c.version.LessThan(mustNewSemVersion(bloomFilterROVersion)) {
+		opts = append(opts, WithBloomOptionEnableReadOperation(false))
 	}
+	cc := newBloomOptions(opts...)
 	return rueidisprob.NewBloomFilter(c.cmd, name, expectedNumberOfItems, falsePositiveRate, rueidisprob.WithEnableReadOperation(cc.GetEnableReadOperation()))
 }
 
-// NewBloomFilter 新键一个布隆过滤器
+// NewBloomFilter 新建一个布隆过滤器
 func (c *client) NewBloomFilter(name string, expectedNumberOfItems uint, falsePositiveRate float64, opts ...BloomOption) (BloomFilter, error) {
 	return newBloomFilter(c, name, expectedNumberOfItems, falsePositiveRate, opts...)
 }

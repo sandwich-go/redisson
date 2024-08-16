@@ -10,7 +10,7 @@ const (
 	defaultKeyMajority    = int32(2)
 )
 
-//go:generate optiongen --option_with_struct_name=false --new_func=newLockerOptions --empty_composite_nil=true --usage_tag_name=usage
+//go:generate optiongen --option_with_struct_name=true --new_func=newLockerOptions --empty_composite_nil=true --usage_tag_name=usage
 func LockerOptionsOptionDeclareWithDefault() any {
 	return map[string]any{
 		// annotation@KeyPrefix(KeyPrefix is the prefix of redis key for locks. Default value is defaultKeyPrefix)

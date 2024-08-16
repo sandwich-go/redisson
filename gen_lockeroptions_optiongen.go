@@ -48,57 +48,57 @@ func (cc *LockerOptions) ApplyOption(opts ...LockerOption) []LockerOption {
 // LockerOption option func
 type LockerOption func(cc *LockerOptions) LockerOption
 
-// WithKeyPrefix option func for filed KeyPrefix
-func WithKeyPrefix(v string) LockerOption {
+// WithLockerOptionKeyPrefix option func for filed KeyPrefix
+func WithLockerOptionKeyPrefix(v string) LockerOption {
 	return func(cc *LockerOptions) LockerOption {
 		previous := cc.KeyPrefix
 		cc.KeyPrefix = v
-		return WithKeyPrefix(previous)
+		return WithLockerOptionKeyPrefix(previous)
 	}
 }
 
-// WithKeyValidity option func for filed KeyValidity
-func WithKeyValidity(v time.Duration) LockerOption {
+// WithLockerOptionKeyValidity option func for filed KeyValidity
+func WithLockerOptionKeyValidity(v time.Duration) LockerOption {
 	return func(cc *LockerOptions) LockerOption {
 		previous := cc.KeyValidity
 		cc.KeyValidity = v
-		return WithKeyValidity(previous)
+		return WithLockerOptionKeyValidity(previous)
 	}
 }
 
-// WithTryNextAfter option func for filed TryNextAfter
-func WithTryNextAfter(v time.Duration) LockerOption {
+// WithLockerOptionTryNextAfter option func for filed TryNextAfter
+func WithLockerOptionTryNextAfter(v time.Duration) LockerOption {
 	return func(cc *LockerOptions) LockerOption {
 		previous := cc.TryNextAfter
 		cc.TryNextAfter = v
-		return WithTryNextAfter(previous)
+		return WithLockerOptionTryNextAfter(previous)
 	}
 }
 
-// WithKeyMajority option func for filed KeyMajority
-func WithKeyMajority(v int32) LockerOption {
+// WithLockerOptionKeyMajority option func for filed KeyMajority
+func WithLockerOptionKeyMajority(v int32) LockerOption {
 	return func(cc *LockerOptions) LockerOption {
 		previous := cc.KeyMajority
 		cc.KeyMajority = v
-		return WithKeyMajority(previous)
+		return WithLockerOptionKeyMajority(previous)
 	}
 }
 
-// WithNoLoopTracking option func for filed NoLoopTracking
-func WithNoLoopTracking(v bool) LockerOption {
+// WithLockerOptionNoLoopTracking option func for filed NoLoopTracking
+func WithLockerOptionNoLoopTracking(v bool) LockerOption {
 	return func(cc *LockerOptions) LockerOption {
 		previous := cc.NoLoopTracking
 		cc.NoLoopTracking = v
-		return WithNoLoopTracking(previous)
+		return WithLockerOptionNoLoopTracking(previous)
 	}
 }
 
-// WithFallbackSETPX option func for filed FallbackSETPX
-func WithFallbackSETPX(v bool) LockerOption {
+// WithLockerOptionFallbackSETPX option func for filed FallbackSETPX
+func WithLockerOptionFallbackSETPX(v bool) LockerOption {
 	return func(cc *LockerOptions) LockerOption {
 		previous := cc.FallbackSETPX
 		cc.FallbackSETPX = v
-		return WithFallbackSETPX(previous)
+		return WithLockerOptionFallbackSETPX(previous)
 	}
 }
 
@@ -108,21 +108,24 @@ func InstallLockerOptionsWatchDog(dog func(cc *LockerOptions)) { watchDogLockerO
 // watchDogLockerOptions global watch dog
 var watchDogLockerOptions func(cc *LockerOptions)
 
-// newDefaultLockerOptions new default LockerOptions
-func newDefaultLockerOptions() *LockerOptions {
-	cc := &LockerOptions{}
-
+// setLockerOptionsDefaultValue default LockerOptions value
+func setLockerOptionsDefaultValue(cc *LockerOptions) {
 	for _, opt := range [...]LockerOption{
-		WithKeyPrefix(defaultKeyPrefix),
-		WithKeyValidity(defaultKeyValidity),
-		WithTryNextAfter(defaultTryNextAfter),
-		WithKeyMajority(defaultKeyMajority),
-		WithNoLoopTracking(false),
-		WithFallbackSETPX(false),
+		WithLockerOptionKeyPrefix(defaultKeyPrefix),
+		WithLockerOptionKeyValidity(defaultKeyValidity),
+		WithLockerOptionTryNextAfter(defaultTryNextAfter),
+		WithLockerOptionKeyMajority(defaultKeyMajority),
+		WithLockerOptionNoLoopTracking(false),
+		WithLockerOptionFallbackSETPX(false),
 	} {
 		opt(cc)
 	}
+}
 
+// newDefaultLockerOptions new default LockerOptions
+func newDefaultLockerOptions() *LockerOptions {
+	cc := &LockerOptions{}
+	setLockerOptionsDefaultValue(cc)
 	return cc
 }
 

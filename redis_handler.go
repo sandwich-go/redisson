@@ -10,10 +10,13 @@ import (
 )
 
 const (
-	timingMetric = "redis_exec_timing"
-	errorMetric  = "redis_exec_error"
-	hitsMetric   = "redis_cache_hits"
-	missMetric   = "redis_cache_miss"
+	timingMetric            = "redis_exec_timing"
+	errorMetric             = "redis_exec_error"
+	hitsMetric              = "redis_cache_hits"
+	missMetric              = "redis_cache_miss"
+	delayPollErrorMetric    = "redis_delay_poll_error"
+	delayReclaimErrorMetric = "redis_delay_reclaim_error"
+	delayReclaimCountMetric = "redis_delay_reclaim"
 )
 
 type isSilentError func(error) bool
@@ -29,6 +32,9 @@ type handler interface {
 	after(ctx context.Context, err error)
 	cache(ctx context.Context, hit bool)
 	isCluster() bool
+	delayPollError(name string)
+	delayReclaimError(name string)
+	delayReclaim(name string, count int)
 }
 
 func newSemVersion(version string) (semver.Version, error) {
@@ -47,15 +53,19 @@ func mustNewSemVersion(version string) semver.Version {
 	return v
 }
 
-var labelKeys = []string{"command", "s_command"}
+var (
+	labelKeys      = []string{"command", "s_command"}
+	queueLabelKeys = []string{"queue"}
+)
 
 type baseHandler struct {
-	metric                            *prometheus.SummaryVec
-	errMetric, hitsMetric, missMetric *prometheus.CounterVec
-	silentErrCallback                 isSilentError
-	v                                 ConfVisitor
-	version                           *semver.Version
-	cluster                           bool
+	metric                                                                 *prometheus.SummaryVec
+	errMetric, hitsMetric, missMetric                                      *prometheus.CounterVec
+	delayPollErrorMetric, delayReclaimErrorMetric, delayReclaimCountMetric *prometheus.CounterVec
+	silentErrCallback                                                      isSilentError
+	v                                                                      ConfVisitor
+	version                                                                *semver.Version
+	cluster                                                                bool
 
 	mx                 sync.Mutex
 	warningOnceMapping map[string]struct{}
@@ -72,6 +82,15 @@ func newBaseHandler(v ConfVisitor) handler {
 	h.missMetric = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: missMetric,
 	}, labelKeys)
+	h.delayPollErrorMetric = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: delayPollErrorMetric,
+	}, queueLabelKeys)
+	h.delayReclaimErrorMetric = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: delayReclaimErrorMetric,
+	}, queueLabelKeys)
+	h.delayReclaimCountMetric = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: delayReclaimCountMetric,
+	}, queueLabelKeys)
 	h.metric = prometheus.NewSummaryVec(prometheus.SummaryOpts{
 		Name:       timingMetric,
 		Objectives: map[float64]float64{0.5: 0.05, 0.95: 0.02, 0.99: 0.001, 1: 0},
@@ -196,4 +215,13 @@ func (r *baseHandler) cache(ctx context.Context, hit bool) {
 			r.missMetric.WithLabelValues(ctx.Value(commandContextKey).(string), ctx.Value(subCommandContextKey).(string)).Inc()
 		}
 	}
+}
+func (r *baseHandler) delayPollError(name string) {
+	r.delayPollErrorMetric.WithLabelValues(name).Inc()
+}
+func (r *baseHandler) delayReclaimError(name string) {
+	r.delayReclaimErrorMetric.WithLabelValues(name).Inc()
+}
+func (r *baseHandler) delayReclaim(name string, count int) {
+	r.delayReclaimCountMetric.WithLabelValues(name).Add(float64(count))
 }

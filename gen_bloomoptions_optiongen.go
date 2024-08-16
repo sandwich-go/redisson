@@ -36,12 +36,12 @@ func (cc *BloomOptions) ApplyOption(opts ...BloomOption) []BloomOption {
 // BloomOption option func
 type BloomOption func(cc *BloomOptions) BloomOption
 
-// WithEnableReadOperation option func for filed EnableReadOperation
-func WithEnableReadOperation(v bool) BloomOption {
+// WithBloomOptionEnableReadOperation option func for filed EnableReadOperation
+func WithBloomOptionEnableReadOperation(v bool) BloomOption {
 	return func(cc *BloomOptions) BloomOption {
 		previous := cc.EnableReadOperation
 		cc.EnableReadOperation = v
-		return WithEnableReadOperation(previous)
+		return WithBloomOptionEnableReadOperation(previous)
 	}
 }
 
@@ -54,7 +54,7 @@ var watchDogBloomOptions func(cc *BloomOptions)
 // setBloomOptionsDefaultValue default BloomOptions value
 func setBloomOptionsDefaultValue(cc *BloomOptions) {
 	for _, opt := range [...]BloomOption{
-		WithEnableReadOperation(false),
+		WithBloomOptionEnableReadOperation(false),
 	} {
 		opt(cc)
 	}

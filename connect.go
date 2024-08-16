@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"runtime"
 	"strings"
+	"sync"
 )
 
 var (
@@ -151,6 +152,11 @@ func (c *client) reconnectWhenError(err error) error {
 }
 
 func (c *client) Close() error {
+	c.delayQueues.Range(func(key, value any) bool {
+		_ = value.(*delayQueue).Close()
+		return true
+	})
+	c.delayQueues = sync.Map{}
 	if c.cmd != nil {
 		c.cmd.Close()
 	}

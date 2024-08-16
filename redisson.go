@@ -22,15 +22,16 @@ var Nil = rueidis.Nil
 func IsNil(err error) bool { return errors.Is(err, Nil) }
 
 type client struct {
-	v         ConfInterface
-	version   semver.Version
-	handler   handler
-	isCluster bool
-	cmd       rueidis.Client
-	adapter   rueidiscompat.Cmdable
-	ttl       time.Duration
-	builder   builder
-	maxp      int
+	v           ConfInterface
+	version     semver.Version
+	handler     handler
+	isCluster   bool
+	cmd         rueidis.Client
+	adapter     rueidiscompat.Cmdable
+	ttl         time.Duration
+	builder     builder
+	maxp        int
+	delayQueues sync.Map
 
 	once sync.Once
 }

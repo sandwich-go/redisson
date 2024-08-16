@@ -191,6 +191,10 @@ func warning(msg string) {
 	fmt.Println(msg)
 }
 
+func e(msg string) {
+	fmt.Println(msg)
+}
+
 func toFloat32(val any) (float32, error) {
 	switch t := val.(type) {
 	case int64:

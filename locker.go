@@ -18,11 +18,11 @@ type Locker interface {
 
 const fallbackSETPXVersion = "6.2.0"
 
-// newLocker 新键一个 locker
+// newLocker 新建一个 locker
 func newLocker(c *client, opts ...LockerOption) (Locker, error) {
 	// 校验版本
 	if c.version.LessThan(mustNewSemVersion(fallbackSETPXVersion)) {
-		opts = append(opts, WithFallbackSETPX(true))
+		opts = append(opts, WithLockerOptionFallbackSETPX(true))
 	}
 	cc := newLockerOptions(opts...)
 	return rueidislock.NewLocker(rueidislock.LockerOption{
@@ -39,7 +39,7 @@ func newLocker(c *client, opts ...LockerOption) (Locker, error) {
 	})
 }
 
-// NewLocker 新键一个 locker
+// NewLocker 新建一个 locker
 func (c *client) NewLocker(opts ...LockerOption) (Locker, error) {
 	return newLocker(c, opts...)
 }
