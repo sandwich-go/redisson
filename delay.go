@@ -67,8 +67,12 @@ const (
 )
 
 type DelayQueue interface {
+	// Add 添加任务
+	// bytes 具有唯一性，即相同的 bytes 看做相同的任务，相同的 bytes 会进行覆盖
 	Add(ctx context.Context, bytes []byte, seconds time.Duration) error
+	// Length 队列长度
 	Length(ctx context.Context) (int64, error)
+	// Close 关闭队列
 	Close() error
 }
 
