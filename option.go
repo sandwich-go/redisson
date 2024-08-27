@@ -13,6 +13,7 @@ type Tester interface {
 //go:generate optiongen --new_func=NewConf --xconf=true --empty_composite_nil=true --usage_tag_name=usage
 func ConfOptionDeclareWithDefault() any {
 	return map[string]any{
+		"Net":               "tcp",                           // @MethodComment(网络类型，tcp/unix)
 		"AlwaysRESP2":       bool(false),                     // @MethodComment(always uses RESP2, otherwise it will try using RESP3 first)
 		"Name":              "",                              // @MethodComment(Redis客户端名字)
 		"MasterName":        "",                              // @MethodComment(Redis Sentinel模式下，master名字)

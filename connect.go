@@ -2,11 +2,13 @@ package redisson
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"github.com/alicebob/miniredis/v2"
 	"github.com/redis/rueidis"
 	"github.com/redis/rueidis/rueidiscompat"
+	"net"
 	"regexp"
 	"runtime"
 	"strings"
@@ -70,7 +72,7 @@ func (c *client) revise(ctx context.Context) error {
 }
 
 func confVisitor2ClientOption(v ConfVisitor) rueidis.ClientOption {
-	return rueidis.ClientOption{
+	opt := rueidis.ClientOption{
 		Username:          v.GetUsername(),
 		Password:          v.GetPassword(),
 		InitAddress:       v.GetAddrs(),
@@ -90,6 +92,13 @@ func confVisitor2ClientOption(v ConfVisitor) rueidis.ClientOption {
 			MasterSet:  v.GetMasterName(),
 		},
 	}
+	switch strings.ToLower(v.GetNet()) {
+	case "unix":
+		opt.DialFn = func(s string, dialer *net.Dialer, _ *tls.Config) (net.Conn, error) {
+			return dialer.Dial("unix", s)
+		}
+	}
+	return opt
 }
 
 func (c *client) connect() error {

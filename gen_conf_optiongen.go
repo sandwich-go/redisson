@@ -11,6 +11,7 @@ import (
 
 // Conf should use NewConf to initialize it
 type Conf struct {
+	Net               string        `xconf:"net" usage:"网络类型，tcp/unix"`
 	AlwaysRESP2       bool          `xconf:"always_resp2" usage:"always uses RESP2, otherwise it will try using RESP3 first"`
 	Name              string        `xconf:"name" usage:"Redis客户端名字"`
 	MasterName        string        `xconf:"master_name" usage:"Redis Sentinel模式下，master名字"`
@@ -55,6 +56,15 @@ func (cc *Conf) ApplyOption(opts ...ConfOption) []ConfOption {
 
 // ConfOption option func
 type ConfOption func(cc *Conf) ConfOption
+
+// WithNet 网络类型，tcp/unix
+func WithNet(v string) ConfOption {
+	return func(cc *Conf) ConfOption {
+		previous := cc.Net
+		cc.Net = v
+		return WithNet(previous)
+	}
+}
 
 // WithAlwaysRESP2 always uses RESP2, otherwise it will try using RESP3 first
 func WithAlwaysRESP2(v bool) ConfOption {
@@ -218,6 +228,7 @@ var watchDogConf func(cc *Conf)
 // setConfDefaultValue default Conf value
 func setConfDefaultValue(cc *Conf) {
 	for _, opt := range [...]ConfOption{
+		WithNet("tcp"),
 		WithAlwaysRESP2(false),
 		WithName(""),
 		WithMasterName(""),
@@ -247,7 +258,7 @@ func newDefaultConf() *Conf {
 }
 
 // AtomicSetFunc used for XConf
-func (cc *Conf) AtomicSetFunc() func(any) { return AtomicConfSet }
+func (cc *Conf) AtomicSetFunc() func(interface{}) { return AtomicConfSet }
 
 // atomicConf global *Conf holder
 var atomicConf unsafe.Pointer
@@ -261,7 +272,7 @@ var onAtomicConfSet func(cc ConfInterface) bool
 func InstallCallbackOnAtomicConfSet(callback func(cc ConfInterface) bool) { onAtomicConfSet = callback }
 
 // AtomicConfSet atomic setter for *Conf
-func AtomicConfSet(update any) {
+func AtomicConfSet(update interface{}) {
 	cc := update.(*Conf)
 	if onAtomicConfSet != nil && !onAtomicConfSet(cc) {
 		return
@@ -284,6 +295,7 @@ func AtomicConf() ConfVisitor {
 }
 
 // all getter func
+func (cc *Conf) GetNet() string                 { return cc.Net }
 func (cc *Conf) GetAlwaysRESP2() bool           { return cc.AlwaysRESP2 }
 func (cc *Conf) GetName() string                { return cc.Name }
 func (cc *Conf) GetMasterName() string          { return cc.MasterName }
@@ -303,6 +315,7 @@ func (cc *Conf) GetForceSingleClient() bool     { return cc.ForceSingleClient }
 
 // ConfVisitor visitor interface for Conf
 type ConfVisitor interface {
+	GetNet() string
 	GetAlwaysRESP2() bool
 	GetName() string
 	GetMasterName() string
