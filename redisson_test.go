@@ -7,12 +7,12 @@ import (
 )
 
 func TestRedisson(t *testing.T) {
-	testAddr := ""
+	testAddr := "/tmp/redis.sock"
 	Convey("redisson should work ok", t, func() {
 		for _, v := range []RESP{
 			RESP2, RESP3,
 		} {
-			opts := []ConfOption{WithResp(v), WithCluster(true), WithDevelopment(false)}
+			opts := []ConfOption{WithNet("unix"), WithResp(v), WithCluster(true), WithDevelopment(false)}
 			if len(testAddr) > 0 {
 				opts = append(opts, WithAddrs(testAddr))
 			}

@@ -136,9 +136,11 @@ func (c *client) connect() error {
 			return err
 		}
 		// 初始化
-		if err = c.initialize(); err != nil {
-			_ = c.Close()
-			return err
+		if c.v.GetEnableInit() {
+			if err = c.initialize(); err != nil {
+				_ = c.Close()
+				return err
+			}
 		}
 	} else {
 		c.cmdable, err = connectMock(c.v, c.handler)

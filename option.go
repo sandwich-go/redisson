@@ -13,6 +13,7 @@ type Tester interface {
 func ConfOptionDeclareWithDefault() interface{} {
 	return map[string]interface{}{
 		"Net":               "tcp",                           // @MethodComment(网络连接类型，tcp/unix)
+		"EnableInit":        true,                            // @MethodComment(是否需要进行初始化)
 		"Resp":              RESP(RESP3),                     // @MethodComment(RESP版本)
 		"AlwaysRESP2":       bool(false),                     // @MethodComment(always uses RESP2, otherwise it will try using RESP3 first)
 		"Name":              "",                              // @MethodComment(Redis客户端名字)
