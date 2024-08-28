@@ -11,6 +11,7 @@ import (
 
 // Conf should use NewConf to initialize it
 type Conf struct {
+	Net               string        `xconf:"net" usage:"网络连接类型，tcp/unix"`
 	Resp              RESP          `xconf:"resp" usage:"RESP版本"`
 	AlwaysRESP2       bool          `xconf:"always_resp2" usage:"always uses RESP2, otherwise it will try using RESP3 first"`
 	Name              string        `xconf:"name" usage:"Redis客户端名字"`
@@ -62,6 +63,15 @@ func (cc *Conf) ApplyOption(opts ...ConfOption) []ConfOption {
 
 // ConfOption option func
 type ConfOption func(cc *Conf) ConfOption
+
+// WithNet 网络连接类型，tcp/unix
+func WithNet(v string) ConfOption {
+	return func(cc *Conf) ConfOption {
+		previous := cc.Net
+		cc.Net = v
+		return WithNet(previous)
+	}
+}
 
 // WithResp RESP版本
 func WithResp(v RESP) ConfOption {
@@ -288,6 +298,7 @@ var watchDogConf func(cc *Conf)
 // setConfDefaultValue default Conf value
 func setConfDefaultValue(cc *Conf) {
 	for _, opt := range [...]ConfOption{
+		WithNet("tcp"),
 		WithResp(RESP3),
 		WithAlwaysRESP2(false),
 		WithName(""),
@@ -361,6 +372,7 @@ func AtomicConf() ConfVisitor {
 }
 
 // all getter func
+func (cc *Conf) GetNet() string                    { return cc.Net }
 func (cc *Conf) GetResp() RESP                     { return cc.Resp }
 func (cc *Conf) GetAlwaysRESP2() bool              { return cc.AlwaysRESP2 }
 func (cc *Conf) GetName() string                   { return cc.Name }
@@ -387,6 +399,7 @@ func (cc *Conf) GetForceSingleClient() bool        { return cc.ForceSingleClient
 
 // ConfVisitor visitor interface for Conf
 type ConfVisitor interface {
+	GetNet() string
 	GetResp() RESP
 	GetAlwaysRESP2() bool
 	GetName() string

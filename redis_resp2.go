@@ -2,6 +2,8 @@ package redisson
 
 import (
 	"context"
+	"net"
+	"strings"
 	"sync"
 	"time"
 
@@ -28,6 +30,11 @@ func connectResp2(v ConfVisitor, h handler) (*resp2, error) {
 		IdleTimeout:  v.GetIdleConnTimeout(),
 		PoolTimeout:  v.GetConnPoolTimeout(),
 		MasterName:   v.GetMasterName(),
+	}
+	if strings.ToLower(v.GetNet()) == "unix" {
+		opts.Dialer = func(ctx context.Context, network, addr string) (net.Conn, error) {
+			return net.Dial(network, addr)
+		}
 	}
 	var cmd goredis.UniversalClient
 	if v.GetCluster() {

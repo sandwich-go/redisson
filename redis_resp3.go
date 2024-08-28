@@ -2,9 +2,11 @@ package redisson
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"github.com/redis/rueidis"
 	"github.com/redis/rueidis/rueidiscompat"
+	"net"
 	"strconv"
 	"strings"
 	"sync"
@@ -24,7 +26,7 @@ type resp3Cache struct {
 }
 
 func confVisitor2ClientOption(v ConfVisitor) rueidis.ClientOption {
-	return rueidis.ClientOption{
+	opts := rueidis.ClientOption{
 		Username:          v.GetUsername(),
 		Password:          v.GetPassword(),
 		InitAddress:       v.GetAddrs(),
@@ -44,6 +46,12 @@ func confVisitor2ClientOption(v ConfVisitor) rueidis.ClientOption {
 			MasterSet:  v.GetMasterName(),
 		},
 	}
+	if strings.ToLower(v.GetNet()) == "unix" {
+		opts.DialFn = func(s string, dialer *net.Dialer, _ *tls.Config) (net.Conn, error) {
+			return dialer.Dial("unix", s)
+		}
+	}
+	return opts
 }
 
 func connectResp3(v ConfVisitor, h handler) (*resp3, error) {
