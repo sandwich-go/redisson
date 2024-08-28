@@ -2,6 +2,7 @@ package redisson
 
 import (
 	"context"
+	"github.com/coreos/go-semver/semver"
 	"github.com/redis/rueidis/rueidislock"
 )
 
@@ -15,9 +16,15 @@ type Locker interface {
 	Close()
 }
 
+const fallbackSETPXVersion = "6.2.0"
+
 // newLocker 新键一个 locker
-func newLocker(v ConfVisitor, opts ...LockerOption) (Locker, error) {
+func newLocker(v ConfVisitor, version *semver.Version, opts ...LockerOption) (Locker, error) {
 	clientOption := confVisitor2ClientOption(v)
+	// 校验版本
+	if version != nil && version.LessThan(mustNewSemVersion(fallbackSETPXVersion)) {
+		opts = append(opts, WithFallbackSETPX(true))
+	}
 	cc := newLockerOptions(opts...)
 	return rueidislock.NewLocker(rueidislock.LockerOption{
 		KeyPrefix:      cc.GetKeyPrefix(),
@@ -32,6 +39,6 @@ func newLocker(v ConfVisitor, opts ...LockerOption) (Locker, error) {
 
 // NewLocker 新键一个 locker
 func (r *resp3) NewLocker(opts ...LockerOption) (Locker, error) {
-	return newLocker(r.v, opts...)
+	return newLocker(r.v, r.handler.getVersion(), opts...)
 }
 func (r *resp2) NewLocker(...LockerOption) (Locker, error) { panic("not implemented") }

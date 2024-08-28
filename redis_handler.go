@@ -23,6 +23,7 @@ type handler interface {
 	setSilentErrCallback(isSilentError)
 	setRegisterCollector(RegisterCollectorFunc)
 
+	getVersion() *semver.Version
 	before(ctx context.Context, command Command) context.Context
 	beforeWithKeys(ctx context.Context, command Command, getKeys func() []string) context.Context
 	after(ctx context.Context, err error)
@@ -101,6 +102,7 @@ func WithSkipCheck(ctx context.Context) context.Context {
 	return context.WithValue(ctx, skipCheckContextKey, true)
 }
 
+func (r *baseHandler) getVersion() *semver.Version          { return r.version }
 func (r *baseHandler) isCluster() bool                      { return r.cluster }
 func (r *baseHandler) setIsCluster(b bool)                  { r.cluster = b }
 func (r *baseHandler) setVersion(v *semver.Version)         { r.version = v }
