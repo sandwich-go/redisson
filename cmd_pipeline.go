@@ -22,7 +22,7 @@ func (pipelineCommand) String() string         { return "PIPELINE" }
 func (pipelineCommand) Class() string          { return "Pipeline" }
 func (pipelineCommand) RequireVersion() string { return "0.0.0" }
 func (pipelineCommand) Forbid() bool           { return false }
-func (pipelineCommand) WarnVersion() string    { return "0.0.0" }
+func (pipelineCommand) WarnVersion() string    { return "" }
 func (pipelineCommand) Warning() string        { return "" }
 func (pipelineCommand) WarningOnce() bool      { return false }
 func (pipelineCommand) Instead() string        { return "" }
