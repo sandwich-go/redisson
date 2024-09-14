@@ -340,6 +340,10 @@ func (b builder) GeoSearchCompleted(key string, q GeoSearchQuery) Completed {
 	return b.Arbitrary(XXX_GEOSEARCH).Keys(key).Args(geoSearchQueryArgs(q)...).Build()
 }
 
+func (b builder) GeoSearchLocationCompleted(key string, q GeoSearchLocationQuery) Completed {
+	return b.Arbitrary(XXX_GEOSEARCH).Keys(key).Args(geoSearchLocationQueryArgs(q)...).Build()
+}
+
 func (b builder) GeoSearchStoreCompleted(src, dest string, q GeoSearchStoreQuery) Completed {
 	cmd := b.Arbitrary(XXX_GEOSEARCHSTORE).Keys(dest, src)
 	cmd = cmd.Args(geoSearchQueryArgs(q.GeoSearchQuery)...)

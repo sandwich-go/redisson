@@ -57,7 +57,7 @@ func (commandBitCount) Instead() string                { return "" }
 func (commandBitCount) ETC() string                    { return "" }
 func (commandBitCount) P(p Pipeliner) commandBitCountP { return commandBitCountP{p} }
 func (b commandBitCountP) Cmd(key string, bc *BitCount) {
-	b.p.Cmd(b.p.builder().BitCountCompleted(key, bc))
+	b.p.Cmd(b.p.builder().BitCountCompleted(key, bc), &intCmd{})
 }
 
 var CommandBitCountByte commandBitCountByte
@@ -76,7 +76,7 @@ func (commandBitCountByte) Instead() string                    { return "" }
 func (commandBitCountByte) ETC() string                        { return "" }
 func (commandBitCountByte) P(p Pipeliner) commandBitCountByteP { return commandBitCountByteP{p} }
 func (b commandBitCountByteP) Cmd(key string, bc *BitCount) {
-	b.p.Cmd(b.p.builder().BitCountCompleted(key, bc))
+	b.p.Cmd(b.p.builder().BitCountCompleted(key, bc), &intCmd{})
 }
 
 var CommandBitCountBit commandBitCountBit
@@ -95,7 +95,7 @@ func (commandBitCountBit) Instead() string                   { return "" }
 func (commandBitCountBit) ETC() string                       { return "" }
 func (commandBitCountBit) P(p Pipeliner) commandBitCountBitP { return commandBitCountBitP{p} }
 func (b commandBitCountBitP) Cmd(key string, bc *BitCount) {
-	b.p.Cmd(b.p.builder().BitCountCompleted(key, bc))
+	b.p.Cmd(b.p.builder().BitCountCompleted(key, bc), &intCmd{})
 }
 
 var CommandBitField commandBitField
@@ -114,7 +114,7 @@ func (commandBitField) Instead() string                { return "" }
 func (commandBitField) ETC() string                    { return "" }
 func (commandBitField) P(p Pipeliner) commandBitFieldP { return commandBitFieldP{p} }
 func (b commandBitFieldP) Cmd(key string, args ...any) {
-	b.p.Cmd(b.p.builder().BitFieldCompleted(key, args...))
+	b.p.Cmd(b.p.builder().BitFieldCompleted(key, args...), &intSliceCmd{})
 }
 
 var CommandBitOpAnd commandBitOpAnd
@@ -133,7 +133,7 @@ func (commandBitOpAnd) Instead() string                { return "" }
 func (commandBitOpAnd) ETC() string                    { return "" }
 func (commandBitOpAnd) P(p Pipeliner) commandBitOpAndP { return commandBitOpAndP{p} }
 func (b commandBitOpAndP) Cmd(destKey string, keys ...string) {
-	b.p.Cmd(b.p.builder().BitOpAndCompleted(destKey, keys...))
+	b.p.Cmd(b.p.builder().BitOpAndCompleted(destKey, keys...), &intCmd{})
 }
 
 var CommandBitOpOr commandBitOpOr
@@ -152,7 +152,7 @@ func (commandBitOpOr) Instead() string               { return "" }
 func (commandBitOpOr) ETC() string                   { return "" }
 func (commandBitOpOr) P(p Pipeliner) commandBitOpOrP { return commandBitOpOrP{p} }
 func (b commandBitOpOrP) Cmd(destKey string, keys ...string) {
-	b.p.Cmd(b.p.builder().BitOpOrCompleted(destKey, keys...))
+	b.p.Cmd(b.p.builder().BitOpOrCompleted(destKey, keys...), &intCmd{})
 }
 
 var CommandBitOpXor commandBitOpXor
@@ -171,7 +171,7 @@ func (commandBitOpXor) Instead() string                { return "" }
 func (commandBitOpXor) ETC() string                    { return "" }
 func (commandBitOpXor) P(p Pipeliner) commandBitOpXorP { return commandBitOpXorP{p} }
 func (b commandBitOpXorP) Cmd(destKey string, keys ...string) {
-	b.p.Cmd(b.p.builder().BitOpXorCompleted(destKey, keys...))
+	b.p.Cmd(b.p.builder().BitOpXorCompleted(destKey, keys...), &intCmd{})
 }
 
 var CommandBitOpNot commandBitOpNot
@@ -190,7 +190,7 @@ func (commandBitOpNot) Instead() string                { return "" }
 func (commandBitOpNot) ETC() string                    { return "" }
 func (commandBitOpNot) P(p Pipeliner) commandBitOpNotP { return commandBitOpNotP{p} }
 func (b commandBitOpNotP) Cmd(destKey string, key string) {
-	b.p.Cmd(b.p.builder().BitOpNotCompleted(destKey, key))
+	b.p.Cmd(b.p.builder().BitOpNotCompleted(destKey, key), &intCmd{})
 }
 
 var CommandBitPos commandBitPos
@@ -209,7 +209,7 @@ func (commandBitPos) Instead() string              { return "" }
 func (commandBitPos) ETC() string                  { return "" }
 func (commandBitPos) P(p Pipeliner) commandBitPosP { return commandBitPosP{p} }
 func (b commandBitPosP) Cmd(key string, bit int64, pos ...int64) {
-	b.p.Cmd(b.p.builder().BitPosCompleted(key, bit, pos...))
+	b.p.Cmd(b.p.builder().BitPosCompleted(key, bit, pos...), &intCmd{})
 }
 
 var CommandBitPosSpan commandBitPosSpan
@@ -228,7 +228,7 @@ func (commandBitPosSpan) Instead() string                  { return "" }
 func (commandBitPosSpan) ETC() string                      { return "" }
 func (commandBitPosSpan) P(p Pipeliner) commandBitPosSpanP { return commandBitPosSpanP{p} }
 func (b commandBitPosSpanP) Cmd(key string, bit, start, end int64, span string) {
-	b.p.Cmd(b.p.builder().BitPosSpanCompleted(key, bit, start, end, span))
+	b.p.Cmd(b.p.builder().BitPosSpanCompleted(key, bit, start, end, span), &intCmd{})
 }
 
 var CommandGetBit commandGetBit
@@ -247,7 +247,7 @@ func (commandGetBit) Instead() string              { return "" }
 func (commandGetBit) ETC() string                  { return "" }
 func (commandGetBit) P(p Pipeliner) commandGetBitP { return commandGetBitP{p} }
 func (b commandGetBitP) Cmd(key string, offset int64) {
-	b.p.Cmd(b.p.builder().GetBitCompleted(key, offset))
+	b.p.Cmd(b.p.builder().GetBitCompleted(key, offset), &intCmd{})
 }
 
 var CommandSetBit commandSetBit
@@ -266,7 +266,7 @@ func (commandSetBit) Instead() string              { return "" }
 func (commandSetBit) ETC() string                  { return "" }
 func (commandSetBit) P(p Pipeliner) commandSetBitP { return commandSetBitP{p} }
 func (b commandSetBitP) Cmd(key string, offset int64, value int64) {
-	b.p.Cmd(b.p.builder().SetBitCompleted(key, offset, value))
+	b.p.Cmd(b.p.builder().SetBitCompleted(key, offset, value), &intCmd{})
 }
 
 var CommandClusterAddSlots commandClusterAddSlots
@@ -760,7 +760,7 @@ func (commandEcho) Warning() string            { return "" }
 func (commandEcho) Instead() string            { return "" }
 func (commandEcho) ETC() string                { return "" }
 func (commandEcho) P(p Pipeliner) commandEchoP { return commandEchoP{p} }
-func (b commandEchoP) Cmd(message any)         { b.p.Cmd(b.p.builder().EchoCompleted(message)) }
+func (b commandEchoP) Cmd(message any)         { b.p.Cmd(b.p.builder().EchoCompleted(message), &stringCmd{}) }
 
 var CommandPing commandPing
 
@@ -777,7 +777,7 @@ func (commandPing) Warning() string            { return "" }
 func (commandPing) Instead() string            { return "" }
 func (commandPing) ETC() string                { return "" }
 func (commandPing) P(p Pipeliner) commandPingP { return commandPingP{p} }
-func (b commandPingP) Cmd()                    { b.p.Cmd(b.p.builder().PingCompleted()) }
+func (b commandPingP) Cmd()                    { b.p.Cmd(b.p.builder().PingCompleted(), &statusCmd{}) }
 
 var CommandQuit commandQuit
 
@@ -809,7 +809,7 @@ func (commandCopy) Instead() string            { return "" }
 func (commandCopy) ETC() string                { return "" }
 func (commandCopy) P(p Pipeliner) commandCopyP { return commandCopyP{p} }
 func (b commandCopyP) Cmd(source string, destination string, db int64, replace bool) {
-	b.p.Cmd(b.p.builder().CopyCompleted(source, destination, db, replace))
+	b.p.Cmd(b.p.builder().CopyCompleted(source, destination, db, replace), &intCmd{})
 }
 
 var CommandDel commandDel
@@ -827,7 +827,7 @@ func (commandDel) Warning() string           { return "" }
 func (commandDel) Instead() string           { return "" }
 func (commandDel) ETC() string               { return "" }
 func (commandDel) P(p Pipeliner) commandDelP { return commandDelP{p} }
-func (b commandDelP) Cmd(keys ...string)     { b.p.Cmd(b.p.builder().DelCompleted(keys...)) }
+func (b commandDelP) Cmd(keys ...string)     { b.p.Cmd(b.p.builder().DelCompleted(keys...), &intCmd{}) }
 
 var CommandDump commandDump
 
@@ -844,7 +844,7 @@ func (commandDump) Warning() string            { return "" }
 func (commandDump) Instead() string            { return "" }
 func (commandDump) ETC() string                { return "" }
 func (commandDump) P(p Pipeliner) commandDumpP { return commandDumpP{p} }
-func (b commandDumpP) Cmd(key string)          { b.p.Cmd(b.p.builder().DumpCompleted(key)) }
+func (b commandDumpP) Cmd(key string)          { b.p.Cmd(b.p.builder().DumpCompleted(key), &stringCmd{}) }
 
 var CommandExists commandExists
 
@@ -861,7 +861,7 @@ func (commandExists) Warning() string              { return "" }
 func (commandExists) Instead() string              { return "" }
 func (commandExists) ETC() string                  { return "" }
 func (commandExists) P(p Pipeliner) commandExistsP { return commandExistsP{p} }
-func (b commandExistsP) Cmd(key string)            { b.p.Cmd(b.p.builder().ExistsCompleted(key)) }
+func (b commandExistsP) Cmd(key string)            { b.p.Cmd(b.p.builder().ExistsCompleted(key), &intCmd{}) }
 
 var CommandMExists commandMExists
 
@@ -878,7 +878,9 @@ func (commandMExists) Warning() string               { return "" }
 func (commandMExists) Instead() string               { return "" }
 func (commandMExists) ETC() string                   { return "" }
 func (commandMExists) P(p Pipeliner) commandMExistsP { return commandMExistsP{p} }
-func (b commandMExistsP) Cmd(keys ...string)         { b.p.Cmd(b.p.builder().ExistsCompleted(keys...)) }
+func (b commandMExistsP) Cmd(keys ...string) {
+	b.p.Cmd(b.p.builder().ExistsCompleted(keys...), &intCmd{})
+}
 
 var CommandExpire commandExpire
 
@@ -896,7 +898,7 @@ func (commandExpire) Instead() string              { return "" }
 func (commandExpire) ETC() string                  { return "" }
 func (commandExpire) P(p Pipeliner) commandExpireP { return commandExpireP{p} }
 func (b commandExpireP) Cmd(key string, seconds time.Duration) {
-	b.p.Cmd(b.p.builder().ExpireCompleted(key, seconds))
+	b.p.Cmd(b.p.builder().ExpireCompleted(key, seconds), &boolCmd{})
 }
 
 var CommandExpireNX commandExpireNX
@@ -915,7 +917,7 @@ func (commandExpireNX) Instead() string                { return "" }
 func (commandExpireNX) ETC() string                    { return "" }
 func (commandExpireNX) P(p Pipeliner) commandExpireNXP { return commandExpireNXP{p} }
 func (b commandExpireNXP) Cmd(key string, seconds time.Duration) {
-	b.p.Cmd(b.p.builder().ExpireNXCompleted(key, seconds))
+	b.p.Cmd(b.p.builder().ExpireNXCompleted(key, seconds), &boolCmd{})
 }
 
 var CommandExpireXX commandExpireXX
@@ -934,7 +936,7 @@ func (commandExpireXX) Instead() string                { return "" }
 func (commandExpireXX) ETC() string                    { return "" }
 func (commandExpireXX) P(p Pipeliner) commandExpireXXP { return commandExpireXXP{p} }
 func (b commandExpireXXP) Cmd(key string, seconds time.Duration) {
-	b.p.Cmd(b.p.builder().ExpireXXCompleted(key, seconds))
+	b.p.Cmd(b.p.builder().ExpireXXCompleted(key, seconds), &boolCmd{})
 }
 
 var CommandExpireGT commandExpireGT
@@ -953,7 +955,7 @@ func (commandExpireGT) Instead() string                { return "" }
 func (commandExpireGT) ETC() string                    { return "" }
 func (commandExpireGT) P(p Pipeliner) commandExpireGTP { return commandExpireGTP{p} }
 func (b commandExpireGTP) Cmd(key string, seconds time.Duration) {
-	b.p.Cmd(b.p.builder().ExpireGTCompleted(key, seconds))
+	b.p.Cmd(b.p.builder().ExpireGTCompleted(key, seconds), &boolCmd{})
 }
 
 var CommandExpireLT commandExpireLT
@@ -972,7 +974,7 @@ func (commandExpireLT) Instead() string                { return "" }
 func (commandExpireLT) ETC() string                    { return "" }
 func (commandExpireLT) P(p Pipeliner) commandExpireLTP { return commandExpireLTP{p} }
 func (b commandExpireLTP) Cmd(key string, seconds time.Duration) {
-	b.p.Cmd(b.p.builder().ExpireLTCompleted(key, seconds))
+	b.p.Cmd(b.p.builder().ExpireLTCompleted(key, seconds), &boolCmd{})
 }
 
 var CommandExpireAt commandExpireAt
@@ -991,7 +993,7 @@ func (commandExpireAt) Instead() string                { return "" }
 func (commandExpireAt) ETC() string                    { return "" }
 func (commandExpireAt) P(p Pipeliner) commandExpireAtP { return commandExpireAtP{p} }
 func (b commandExpireAtP) Cmd(key string, timestamp time.Time) {
-	b.p.Cmd(b.p.builder().ExpireAtCompleted(key, timestamp))
+	b.p.Cmd(b.p.builder().ExpireAtCompleted(key, timestamp), &boolCmd{})
 }
 
 var CommandExpireAtNX commandExpireAtNX
@@ -1010,7 +1012,7 @@ func (commandExpireAtNX) Instead() string                  { return "" }
 func (commandExpireAtNX) ETC() string                      { return "" }
 func (commandExpireAtNX) P(p Pipeliner) commandExpireAtNXP { return commandExpireAtNXP{p} }
 func (b commandExpireAtNXP) Cmd(key string, timestamp time.Time) {
-	b.p.Cmd(b.p.builder().ExpireAtNXCompleted(key, timestamp))
+	b.p.Cmd(b.p.builder().ExpireAtNXCompleted(key, timestamp), &boolCmd{})
 }
 
 var CommandExpireAtXX commandExpireAtXX
@@ -1029,7 +1031,7 @@ func (commandExpireAtXX) Instead() string                  { return "" }
 func (commandExpireAtXX) ETC() string                      { return "" }
 func (commandExpireAtXX) P(p Pipeliner) commandExpireAtXXP { return commandExpireAtXXP{p} }
 func (b commandExpireAtXXP) Cmd(key string, timestamp time.Time) {
-	b.p.Cmd(b.p.builder().ExpireAtXXCompleted(key, timestamp))
+	b.p.Cmd(b.p.builder().ExpireAtXXCompleted(key, timestamp), &boolCmd{})
 }
 
 var CommandExpireAtGT commandExpireAtGT
@@ -1048,7 +1050,7 @@ func (commandExpireAtGT) Instead() string                  { return "" }
 func (commandExpireAtGT) ETC() string                      { return "" }
 func (commandExpireAtGT) P(p Pipeliner) commandExpireAtGTP { return commandExpireAtGTP{p} }
 func (b commandExpireAtGTP) Cmd(key string, timestamp time.Time) {
-	b.p.Cmd(b.p.builder().ExpireAtGTCompleted(key, timestamp))
+	b.p.Cmd(b.p.builder().ExpireAtGTCompleted(key, timestamp), &boolCmd{})
 }
 
 var CommandExpireAtLT commandExpireAtLT
@@ -1067,7 +1069,7 @@ func (commandExpireAtLT) Instead() string                  { return "" }
 func (commandExpireAtLT) ETC() string                      { return "" }
 func (commandExpireAtLT) P(p Pipeliner) commandExpireAtLTP { return commandExpireAtLTP{p} }
 func (b commandExpireAtLTP) Cmd(key string, timestamp time.Time) {
-	b.p.Cmd(b.p.builder().ExpireAtLTCompleted(key, timestamp))
+	b.p.Cmd(b.p.builder().ExpireAtLTCompleted(key, timestamp), &boolCmd{})
 }
 
 var CommandExpireTime commandExpireTime
@@ -1085,7 +1087,9 @@ func (commandExpireTime) Warning() string                  { return "" }
 func (commandExpireTime) Instead() string                  { return "" }
 func (commandExpireTime) ETC() string                      { return "" }
 func (commandExpireTime) P(p Pipeliner) commandExpireTimeP { return commandExpireTimeP{p} }
-func (b commandExpireTimeP) Cmd(key string)                { b.p.Cmd(b.p.builder().ExpireTimeCompleted(key)) }
+func (b commandExpireTimeP) Cmd(key string) {
+	b.p.Cmd(b.p.builder().ExpireTimeCompleted(key), &durationCmd{precision: time.Second})
+}
 
 var CommandKeys commandKeys
 
@@ -1117,7 +1121,7 @@ func (commandMigrate) Instead() string               { return "" }
 func (commandMigrate) ETC() string                   { return "" }
 func (commandMigrate) P(p Pipeliner) commandMigrateP { return commandMigrateP{p} }
 func (b commandMigrateP) Cmd(host string, port int64, key string, db int64, timeout time.Duration) {
-	b.p.Cmd(b.p.builder().MigrateCompleted(host, port, key, db, timeout))
+	b.p.Cmd(b.p.builder().MigrateCompleted(host, port, key, db, timeout), &statusCmd{})
 }
 
 var CommandMove commandMove
@@ -1125,17 +1129,19 @@ var CommandMove commandMove
 type commandMove string
 type commandMoveP struct{ p Pipeliner }
 
-func (commandMove) String() string              { return "MOVE" }
-func (commandMove) Class() string               { return "Generic" }
-func (commandMove) RequireVersion() string      { return "1.0.0" }
-func (commandMove) Forbid() bool                { return false }
-func (commandMove) WarningOnce() bool           { return false }
-func (commandMove) WarnVersion() string         { return "" }
-func (commandMove) Warning() string             { return "" }
-func (commandMove) Instead() string             { return "" }
-func (commandMove) ETC() string                 { return "" }
-func (commandMove) P(p Pipeliner) commandMoveP  { return commandMoveP{p} }
-func (b commandMoveP) Cmd(key string, db int64) { b.p.Cmd(b.p.builder().MoveCompleted(key, db)) }
+func (commandMove) String() string             { return "MOVE" }
+func (commandMove) Class() string              { return "Generic" }
+func (commandMove) RequireVersion() string     { return "1.0.0" }
+func (commandMove) Forbid() bool               { return false }
+func (commandMove) WarningOnce() bool          { return false }
+func (commandMove) WarnVersion() string        { return "" }
+func (commandMove) Warning() string            { return "" }
+func (commandMove) Instead() string            { return "" }
+func (commandMove) ETC() string                { return "" }
+func (commandMove) P(p Pipeliner) commandMoveP { return commandMoveP{p} }
+func (b commandMoveP) Cmd(key string, db int64) {
+	b.p.Cmd(b.p.builder().MoveCompleted(key, db), &boolCmd{})
+}
 
 var CommandObjectEncoding commandObjectEncoding
 
@@ -1152,7 +1158,9 @@ func (commandObjectEncoding) Warning() string                      { return "" }
 func (commandObjectEncoding) Instead() string                      { return "" }
 func (commandObjectEncoding) ETC() string                          { return "" }
 func (commandObjectEncoding) P(p Pipeliner) commandObjectEncodingP { return commandObjectEncodingP{p} }
-func (b commandObjectEncodingP) Cmd(key string)                    { b.p.Cmd(b.p.builder().ObjectEncodingCompleted(key)) }
+func (b commandObjectEncodingP) Cmd(key string) {
+	b.p.Cmd(b.p.builder().ObjectEncodingCompleted(key), &stringCmd{})
+}
 
 var CommandObjectIdleTime commandObjectIdleTime
 
@@ -1169,7 +1177,9 @@ func (commandObjectIdleTime) Warning() string                      { return "" }
 func (commandObjectIdleTime) Instead() string                      { return "" }
 func (commandObjectIdleTime) ETC() string                          { return "" }
 func (commandObjectIdleTime) P(p Pipeliner) commandObjectIdleTimeP { return commandObjectIdleTimeP{p} }
-func (b commandObjectIdleTimeP) Cmd(key string)                    { b.p.Cmd(b.p.builder().ObjectIdleTimeCompleted(key)) }
+func (b commandObjectIdleTimeP) Cmd(key string) {
+	b.p.Cmd(b.p.builder().ObjectIdleTimeCompleted(key), &durationCmd{precision: time.Second})
+}
 
 var CommandObjectRefCount commandObjectRefCount
 
@@ -1186,7 +1196,9 @@ func (commandObjectRefCount) Warning() string                      { return "" }
 func (commandObjectRefCount) Instead() string                      { return "" }
 func (commandObjectRefCount) ETC() string                          { return "" }
 func (commandObjectRefCount) P(p Pipeliner) commandObjectRefCountP { return commandObjectRefCountP{p} }
-func (b commandObjectRefCountP) Cmd(key string)                    { b.p.Cmd(b.p.builder().ObjectRefCountCompleted(key)) }
+func (b commandObjectRefCountP) Cmd(key string) {
+	b.p.Cmd(b.p.builder().ObjectRefCountCompleted(key), &intCmd{})
+}
 
 var CommandPersist commandPersist
 
@@ -1203,7 +1215,7 @@ func (commandPersist) Warning() string               { return "" }
 func (commandPersist) Instead() string               { return "" }
 func (commandPersist) ETC() string                   { return "" }
 func (commandPersist) P(p Pipeliner) commandPersistP { return commandPersistP{p} }
-func (b commandPersistP) Cmd(key string)             { b.p.Cmd(b.p.builder().PersistCompleted(key)) }
+func (b commandPersistP) Cmd(key string)             { b.p.Cmd(b.p.builder().PersistCompleted(key), &boolCmd{}) }
 
 var CommandPExpire commandPExpire
 
@@ -1221,7 +1233,7 @@ func (commandPExpire) Instead() string               { return "" }
 func (commandPExpire) ETC() string                   { return "" }
 func (commandPExpire) P(p Pipeliner) commandPExpireP { return commandPExpireP{p} }
 func (b commandPExpireP) Cmd(key string, milliseconds time.Duration) {
-	b.p.Cmd(b.p.builder().PExpireCompleted(key, milliseconds))
+	b.p.Cmd(b.p.builder().PExpireCompleted(key, milliseconds), &boolCmd{})
 }
 
 var CommandPExpireNX commandPExpireNX
@@ -1240,7 +1252,7 @@ func (commandPExpireNX) Instead() string                 { return "" }
 func (commandPExpireNX) ETC() string                     { return "" }
 func (commandPExpireNX) P(p Pipeliner) commandPExpireNXP { return commandPExpireNXP{p} }
 func (b commandPExpireNXP) Cmd(key string, milliseconds time.Duration) {
-	b.p.Cmd(b.p.builder().PExpireNXCompleted(key, milliseconds))
+	b.p.Cmd(b.p.builder().PExpireNXCompleted(key, milliseconds), &boolCmd{})
 }
 
 var CommandPExpireXX commandPExpireXX
@@ -1259,7 +1271,7 @@ func (commandPExpireXX) Instead() string                 { return "" }
 func (commandPExpireXX) ETC() string                     { return "" }
 func (commandPExpireXX) P(p Pipeliner) commandPExpireXXP { return commandPExpireXXP{p} }
 func (b commandPExpireXXP) Cmd(key string, milliseconds time.Duration) {
-	b.p.Cmd(b.p.builder().PExpireXXCompleted(key, milliseconds))
+	b.p.Cmd(b.p.builder().PExpireXXCompleted(key, milliseconds), &boolCmd{})
 }
 
 var CommandPExpireGT commandPExpireGT
@@ -1278,7 +1290,7 @@ func (commandPExpireGT) Instead() string                 { return "" }
 func (commandPExpireGT) ETC() string                     { return "" }
 func (commandPExpireGT) P(p Pipeliner) commandPExpireGTP { return commandPExpireGTP{p} }
 func (b commandPExpireGTP) Cmd(key string, milliseconds time.Duration) {
-	b.p.Cmd(b.p.builder().PExpireGTCompleted(key, milliseconds))
+	b.p.Cmd(b.p.builder().PExpireGTCompleted(key, milliseconds), &boolCmd{})
 }
 
 var CommandPExpireLT commandPExpireLT
@@ -1297,7 +1309,7 @@ func (commandPExpireLT) Instead() string                 { return "" }
 func (commandPExpireLT) ETC() string                     { return "" }
 func (commandPExpireLT) P(p Pipeliner) commandPExpireLTP { return commandPExpireLTP{p} }
 func (b commandPExpireLTP) Cmd(key string, milliseconds time.Duration) {
-	b.p.Cmd(b.p.builder().PExpireLTCompleted(key, milliseconds))
+	b.p.Cmd(b.p.builder().PExpireLTCompleted(key, milliseconds), &boolCmd{})
 }
 
 var CommandPExpireAt commandPExpireAt
@@ -1316,7 +1328,7 @@ func (commandPExpireAt) Instead() string                 { return "" }
 func (commandPExpireAt) ETC() string                     { return "" }
 func (commandPExpireAt) P(p Pipeliner) commandPExpireAtP { return commandPExpireAtP{p} }
 func (b commandPExpireAtP) Cmd(key string, millisecondsTimestamp time.Time) {
-	b.p.Cmd(b.p.builder().PExpireAtCompleted(key, millisecondsTimestamp))
+	b.p.Cmd(b.p.builder().PExpireAtCompleted(key, millisecondsTimestamp), &boolCmd{})
 }
 
 var CommandPExpireAtNX commandPExpireAtNX
@@ -1335,7 +1347,7 @@ func (commandPExpireAtNX) Instead() string                   { return "" }
 func (commandPExpireAtNX) ETC() string                       { return "" }
 func (commandPExpireAtNX) P(p Pipeliner) commandPExpireAtNXP { return commandPExpireAtNXP{p} }
 func (b commandPExpireAtNXP) Cmd(key string, millisecondsTimestamp time.Time) {
-	b.p.Cmd(b.p.builder().PExpireAtNXCompleted(key, millisecondsTimestamp))
+	b.p.Cmd(b.p.builder().PExpireAtNXCompleted(key, millisecondsTimestamp), &boolCmd{})
 }
 
 var CommandPExpireAtXX commandPExpireAtXX
@@ -1354,7 +1366,7 @@ func (commandPExpireAtXX) Instead() string                   { return "" }
 func (commandPExpireAtXX) ETC() string                       { return "" }
 func (commandPExpireAtXX) P(p Pipeliner) commandPExpireAtXXP { return commandPExpireAtXXP{p} }
 func (b commandPExpireAtXXP) Cmd(key string, millisecondsTimestamp time.Time) {
-	b.p.Cmd(b.p.builder().PExpireAtXXCompleted(key, millisecondsTimestamp))
+	b.p.Cmd(b.p.builder().PExpireAtXXCompleted(key, millisecondsTimestamp), &boolCmd{})
 }
 
 var CommandPExpireAtGT commandPExpireAtGT
@@ -1373,7 +1385,7 @@ func (commandPExpireAtGT) Instead() string                   { return "" }
 func (commandPExpireAtGT) ETC() string                       { return "" }
 func (commandPExpireAtGT) P(p Pipeliner) commandPExpireAtGTP { return commandPExpireAtGTP{p} }
 func (b commandPExpireAtGTP) Cmd(key string, millisecondsTimestamp time.Time) {
-	b.p.Cmd(b.p.builder().PExpireAtGTCompleted(key, millisecondsTimestamp))
+	b.p.Cmd(b.p.builder().PExpireAtGTCompleted(key, millisecondsTimestamp), &boolCmd{})
 }
 
 var CommandPExpireAtLT commandPExpireAtLT
@@ -1392,7 +1404,7 @@ func (commandPExpireAtLT) Instead() string                   { return "" }
 func (commandPExpireAtLT) ETC() string                       { return "" }
 func (commandPExpireAtLT) P(p Pipeliner) commandPExpireAtLTP { return commandPExpireAtLTP{p} }
 func (b commandPExpireAtLTP) Cmd(key string, millisecondsTimestamp time.Time) {
-	b.p.Cmd(b.p.builder().PExpireAtLTCompleted(key, millisecondsTimestamp))
+	b.p.Cmd(b.p.builder().PExpireAtLTCompleted(key, millisecondsTimestamp), &boolCmd{})
 }
 
 var CommandPExpireTime commandPExpireTime
@@ -1410,7 +1422,9 @@ func (commandPExpireTime) Warning() string                   { return "" }
 func (commandPExpireTime) Instead() string                   { return "" }
 func (commandPExpireTime) ETC() string                       { return "" }
 func (commandPExpireTime) P(p Pipeliner) commandPExpireTimeP { return commandPExpireTimeP{p} }
-func (b commandPExpireTimeP) Cmd(key string)                 { b.p.Cmd(b.p.builder().PExpireTimeCompleted(key)) }
+func (b commandPExpireTimeP) Cmd(key string) {
+	b.p.Cmd(b.p.builder().PExpireTimeCompleted(key), &durationCmd{precision: time.Millisecond})
+}
 
 var CommandPTTL commandPTTL
 
@@ -1427,7 +1441,9 @@ func (commandPTTL) Warning() string            { return "" }
 func (commandPTTL) Instead() string            { return "" }
 func (commandPTTL) ETC() string                { return "" }
 func (commandPTTL) P(p Pipeliner) commandPTTLP { return commandPTTLP{p} }
-func (b commandPTTLP) Cmd(key string)          { b.p.Cmd(b.p.builder().PTTLCompleted(key)) }
+func (b commandPTTLP) Cmd(key string) {
+	b.p.Cmd(b.p.builder().PTTLCompleted(key), &durationCmd{precision: time.Millisecond})
+}
 
 var CommandRandomKey commandRandomKey
 
@@ -1444,7 +1460,7 @@ func (commandRandomKey) Warning() string                 { return "" }
 func (commandRandomKey) Instead() string                 { return "" }
 func (commandRandomKey) ETC() string                     { return "" }
 func (commandRandomKey) P(p Pipeliner) commandRandomKeyP { return commandRandomKeyP{p} }
-func (b commandRandomKeyP) Cmd()                         { b.p.Cmd(b.p.builder().RandomKeyCompleted()) }
+func (b commandRandomKeyP) Cmd()                         { b.p.Cmd(b.p.builder().RandomKeyCompleted(), &stringCmd{}) }
 
 var CommandRename commandRename
 
@@ -1461,7 +1477,9 @@ func (commandRename) Warning() string              { return "" }
 func (commandRename) Instead() string              { return "" }
 func (commandRename) ETC() string                  { return "" }
 func (commandRename) P(p Pipeliner) commandRenameP { return commandRenameP{p} }
-func (b commandRenameP) Cmd(key, newkey string)    { b.p.Cmd(b.p.builder().RenameCompleted(key, newkey)) }
+func (b commandRenameP) Cmd(key, newkey string) {
+	b.p.Cmd(b.p.builder().RenameCompleted(key, newkey), &statusCmd{})
+}
 
 var CommandRenameNX commandRenameNX
 
@@ -1479,7 +1497,7 @@ func (commandRenameNX) Instead() string                { return "" }
 func (commandRenameNX) ETC() string                    { return "" }
 func (commandRenameNX) P(p Pipeliner) commandRenameNXP { return commandRenameNXP{p} }
 func (b commandRenameNXP) Cmd(key, newkey string) {
-	b.p.Cmd(b.p.builder().RenameNXCompleted(key, newkey))
+	b.p.Cmd(b.p.builder().RenameNXCompleted(key, newkey), &boolCmd{})
 }
 
 var CommandRestore commandRestore
@@ -1498,7 +1516,7 @@ func (commandRestore) Instead() string               { return "" }
 func (commandRestore) ETC() string                   { return "" }
 func (commandRestore) P(p Pipeliner) commandRestoreP { return commandRestoreP{p} }
 func (b commandRestoreP) Cmd(key string, ttl time.Duration, serializedValue string) {
-	b.p.Cmd(b.p.builder().RestoreCompleted(key, ttl, serializedValue))
+	b.p.Cmd(b.p.builder().RestoreCompleted(key, ttl, serializedValue), &statusCmd{})
 }
 
 var CommandRestoreReplace commandRestoreReplace
@@ -1517,7 +1535,7 @@ func (commandRestoreReplace) Instead() string                      { return "" }
 func (commandRestoreReplace) ETC() string                          { return "" }
 func (commandRestoreReplace) P(p Pipeliner) commandRestoreReplaceP { return commandRestoreReplaceP{p} }
 func (b commandRestoreReplaceP) Cmd(key string, ttl time.Duration, serializedValue string) {
-	b.p.Cmd(b.p.builder().RestoreReplaceCompleted(key, ttl, serializedValue))
+	b.p.Cmd(b.p.builder().RestoreReplaceCompleted(key, ttl, serializedValue), &statusCmd{})
 }
 
 var CommandScan commandScan
@@ -1536,7 +1554,7 @@ func (commandScan) Instead() string            { return "" }
 func (commandScan) ETC() string                { return "" }
 func (commandScan) P(p Pipeliner) commandScanP { return commandScanP{p} }
 func (b commandScanP) Cmd(cursor uint64, match string, count int64) {
-	b.p.Cmd(b.p.builder().ScanCompleted(cursor, match, count))
+	b.p.Cmd(b.p.builder().ScanCompleted(cursor, match, count), &scanCmd{})
 }
 
 var CommandScanType commandScanType
@@ -1555,7 +1573,7 @@ func (commandScanType) Instead() string                { return "" }
 func (commandScanType) ETC() string                    { return "" }
 func (commandScanType) P(p Pipeliner) commandScanTypeP { return commandScanTypeP{p} }
 func (b commandScanTypeP) Cmd(cursor uint64, match string, count int64, keyType string) {
-	b.p.Cmd(b.p.builder().ScanTypeCompleted(cursor, match, count, keyType))
+	b.p.Cmd(b.p.builder().ScanTypeCompleted(cursor, match, count, keyType), &scanCmd{})
 }
 
 var CommandSort commandSort
@@ -1615,7 +1633,7 @@ func (commandTouch) Warning() string             { return "" }
 func (commandTouch) Instead() string             { return "" }
 func (commandTouch) ETC() string                 { return "" }
 func (commandTouch) P(p Pipeliner) commandTouchP { return commandTouchP{p} }
-func (b commandTouchP) Cmd(keys ...string)       { b.p.Cmd(b.p.builder().TouchCompleted(keys...)) }
+func (b commandTouchP) Cmd(keys ...string)       { b.p.Cmd(b.p.builder().TouchCompleted(keys...), &intCmd{}) }
 
 var CommandTTL commandTTL
 
@@ -1632,7 +1650,9 @@ func (commandTTL) Warning() string           { return "" }
 func (commandTTL) Instead() string           { return "" }
 func (commandTTL) ETC() string               { return "" }
 func (commandTTL) P(p Pipeliner) commandTTLP { return commandTTLP{p} }
-func (b commandTTLP) Cmd(key string)         { b.p.Cmd(b.p.builder().TTLCompleted(key)) }
+func (b commandTTLP) Cmd(key string) {
+	b.p.Cmd(b.p.builder().TTLCompleted(key), &durationCmd{precision: time.Second})
+}
 
 var CommandType commandType
 
@@ -1649,7 +1669,7 @@ func (commandType) Warning() string            { return "" }
 func (commandType) Instead() string            { return "" }
 func (commandType) ETC() string                { return "" }
 func (commandType) P(p Pipeliner) commandTypeP { return commandTypeP{p} }
-func (b commandTypeP) Cmd(key string)          { b.p.Cmd(b.p.builder().TypeCompleted(key)) }
+func (b commandTypeP) Cmd(key string)          { b.p.Cmd(b.p.builder().TypeCompleted(key), &statusCmd{}) }
 
 var CommandUnlink commandUnlink
 
@@ -1666,7 +1686,9 @@ func (commandUnlink) Warning() string              { return "" }
 func (commandUnlink) Instead() string              { return "" }
 func (commandUnlink) ETC() string                  { return "" }
 func (commandUnlink) P(p Pipeliner) commandUnlinkP { return commandUnlinkP{p} }
-func (b commandUnlinkP) Cmd(keys ...string)        { b.p.Cmd(b.p.builder().UnlinkCompleted(keys...)) }
+func (b commandUnlinkP) Cmd(keys ...string) {
+	b.p.Cmd(b.p.builder().UnlinkCompleted(keys...), &intCmd{})
+}
 
 var CommandGeoAdd commandGeoAdd
 
@@ -1684,7 +1706,7 @@ func (commandGeoAdd) Instead() string              { return "" }
 func (commandGeoAdd) ETC() string                  { return "" }
 func (commandGeoAdd) P(p Pipeliner) commandGeoAddP { return commandGeoAddP{p} }
 func (b commandGeoAddP) Cmd(key string, geoLocation ...GeoLocation) {
-	b.p.Cmd(b.p.builder().GeoAddCompleted(key, geoLocation...))
+	b.p.Cmd(b.p.builder().GeoAddCompleted(key, geoLocation...), &intCmd{})
 }
 
 var CommandGeoDist commandGeoDist
@@ -1703,7 +1725,7 @@ func (commandGeoDist) Instead() string               { return "" }
 func (commandGeoDist) ETC() string                   { return "" }
 func (commandGeoDist) P(p Pipeliner) commandGeoDistP { return commandGeoDistP{p} }
 func (b commandGeoDistP) Cmd(key, member1, member2, unit string) {
-	b.p.Cmd(b.p.builder().GeoDistCompleted(key, member1, member2, unit))
+	b.p.Cmd(b.p.builder().GeoDistCompleted(key, member1, member2, unit), &floatCmd{})
 }
 
 var CommandGeoHash commandGeoHash
@@ -1722,7 +1744,7 @@ func (commandGeoHash) Instead() string               { return "" }
 func (commandGeoHash) ETC() string                   { return "" }
 func (commandGeoHash) P(p Pipeliner) commandGeoHashP { return commandGeoHashP{p} }
 func (b commandGeoHashP) Cmd(key string, members ...string) {
-	b.p.Cmd(b.p.builder().GeoHashCompleted(key, members...))
+	b.p.Cmd(b.p.builder().GeoHashCompleted(key, members...), &floatSliceCmd{})
 }
 
 var CommandGeoPos commandGeoPos
@@ -1741,7 +1763,7 @@ func (commandGeoPos) Instead() string              { return "" }
 func (commandGeoPos) ETC() string                  { return "" }
 func (commandGeoPos) P(p Pipeliner) commandGeoPosP { return commandGeoPosP{p} }
 func (b commandGeoPosP) Cmd(key string, members ...string) {
-	b.p.Cmd(b.p.builder().GeoPosCompleted(key, members...))
+	b.p.Cmd(b.p.builder().GeoPosCompleted(key, members...), &geoPosCmd{})
 }
 
 var CommandGeoRadiusRO commandGeoRadiusRO
@@ -1762,7 +1784,7 @@ func (commandGeoRadiusRO) ETC() string {
 }
 func (commandGeoRadiusRO) P(p Pipeliner) commandGeoRadiusROP { return commandGeoRadiusROP{p} }
 func (b commandGeoRadiusROP) Cmd(key string, longitude, latitude float64, query GeoRadiusQuery) {
-	b.p.Cmd(b.p.builder().GeoRadiusCompleted(key, longitude, latitude, query))
+	b.p.Cmd(b.p.builder().GeoRadiusCompleted(key, longitude, latitude, query), &geoLocationCmd{})
 }
 
 var CommandGeoRadiusStore commandGeoRadiusStore
@@ -1783,7 +1805,7 @@ func (commandGeoRadiusStore) ETC() string {
 }
 func (commandGeoRadiusStore) P(p Pipeliner) commandGeoRadiusStoreP { return commandGeoRadiusStoreP{p} }
 func (b commandGeoRadiusStoreP) Cmd(key string, longitude, latitude float64, query GeoRadiusQuery) {
-	b.p.Cmd(b.p.builder().GeoRadiusStoreCompleted(key, longitude, latitude, query))
+	b.p.Cmd(b.p.builder().GeoRadiusStoreCompleted(key, longitude, latitude, query), &intCmd{})
 }
 
 var CommandGeoRadiusByMemberRO commandGeoRadiusByMemberRO
@@ -1806,7 +1828,7 @@ func (commandGeoRadiusByMemberRO) P(p Pipeliner) commandGeoRadiusByMemberROP {
 	return commandGeoRadiusByMemberROP{p}
 }
 func (b commandGeoRadiusByMemberROP) Cmd(key, member string, query GeoRadiusQuery) {
-	b.p.Cmd(b.p.builder().GeoRadiusByMemberCompleted(key, member, query))
+	b.p.Cmd(b.p.builder().GeoRadiusByMemberCompleted(key, member, query), &geoLocationCmd{})
 }
 
 var CommandGeoRadiusByMemberStore commandGeoRadiusByMemberStore
@@ -1829,7 +1851,7 @@ func (commandGeoRadiusByMemberStore) P(p Pipeliner) commandGeoRadiusByMemberStor
 	return commandGeoRadiusByMemberStoreP{p}
 }
 func (b commandGeoRadiusByMemberStoreP) Cmd(key, member string, query GeoRadiusQuery) {
-	b.p.Cmd(b.p.builder().GeoRadiusByMemberStoreCompleted(key, member, query))
+	b.p.Cmd(b.p.builder().GeoRadiusByMemberStoreCompleted(key, member, query), &intCmd{})
 }
 
 var CommandGeoSearch commandGeoSearch
@@ -1848,7 +1870,28 @@ func (commandGeoSearch) Instead() string                 { return "" }
 func (commandGeoSearch) ETC() string                     { return "" }
 func (commandGeoSearch) P(p Pipeliner) commandGeoSearchP { return commandGeoSearchP{p} }
 func (b commandGeoSearchP) Cmd(key string, q GeoSearchQuery) {
-	b.p.Cmd(b.p.builder().GeoSearchCompleted(key, q))
+	b.p.Cmd(b.p.builder().GeoSearchCompleted(key, q), &stringSliceCmd{})
+}
+
+var CommandGeoSearchLocation commandGeoSearchLocation
+
+type commandGeoSearchLocation string
+type commandGeoSearchLocationP struct{ p Pipeliner }
+
+func (commandGeoSearchLocation) String() string         { return "GEOSEARCH" }
+func (commandGeoSearchLocation) Class() string          { return "Geospatial" }
+func (commandGeoSearchLocation) RequireVersion() string { return "6.2.0" }
+func (commandGeoSearchLocation) Forbid() bool           { return false }
+func (commandGeoSearchLocation) WarningOnce() bool      { return false }
+func (commandGeoSearchLocation) WarnVersion() string    { return "" }
+func (commandGeoSearchLocation) Warning() string        { return "" }
+func (commandGeoSearchLocation) Instead() string        { return "" }
+func (commandGeoSearchLocation) ETC() string            { return "" }
+func (commandGeoSearchLocation) P(p Pipeliner) commandGeoSearchLocationP {
+	return commandGeoSearchLocationP{p}
+}
+func (b commandGeoSearchLocationP) Cmd(key string, q GeoSearchLocationQuery) {
+	b.p.Cmd(b.p.builder().GeoSearchLocationCompleted(key, q), &geoLocationCmd{})
 }
 
 var CommandGeoSearchStore commandGeoSearchStore
@@ -1867,7 +1910,7 @@ func (commandGeoSearchStore) Instead() string                      { return "" }
 func (commandGeoSearchStore) ETC() string                          { return "" }
 func (commandGeoSearchStore) P(p Pipeliner) commandGeoSearchStoreP { return commandGeoSearchStoreP{p} }
 func (b commandGeoSearchStoreP) Cmd(src, dest string, q GeoSearchStoreQuery) {
-	b.p.Cmd(b.p.builder().GeoSearchStoreCompleted(src, dest, q))
+	b.p.Cmd(b.p.builder().GeoSearchStoreCompleted(src, dest, q), &intCmd{})
 }
 
 var CommandHDel commandHDel
@@ -1885,7 +1928,9 @@ func (commandHDel) Warning() string            { return "" }
 func (commandHDel) Instead() string            { return "" }
 func (commandHDel) ETC() string                { return "" }
 func (commandHDel) P(p Pipeliner) commandHDelP { return commandHDelP{p} }
-func (b commandHDelP) Cmd(key, field string)   { b.p.Cmd(b.p.builder().HDelCompleted(key, field)) }
+func (b commandHDelP) Cmd(key, field string) {
+	b.p.Cmd(b.p.builder().HDelCompleted(key, field), &intCmd{})
+}
 
 var CommandHMDel commandHMDel
 
@@ -1903,7 +1948,7 @@ func (commandHMDel) Instead() string             { return "" }
 func (commandHMDel) ETC() string                 { return "" }
 func (commandHMDel) P(p Pipeliner) commandHMDelP { return commandHMDelP{p} }
 func (b commandHMDelP) Cmd(key string, fields ...string) {
-	b.p.Cmd(b.p.builder().HDelCompleted(key, fields...))
+	b.p.Cmd(b.p.builder().HDelCompleted(key, fields...), &intCmd{})
 }
 
 var CommandHExists commandHExists
@@ -1921,7 +1966,9 @@ func (commandHExists) Warning() string               { return "" }
 func (commandHExists) Instead() string               { return "" }
 func (commandHExists) ETC() string                   { return "" }
 func (commandHExists) P(p Pipeliner) commandHExistsP { return commandHExistsP{p} }
-func (b commandHExistsP) Cmd(key, field string)      { b.p.Cmd(b.p.builder().HExistsCompleted(key, field)) }
+func (b commandHExistsP) Cmd(key, field string) {
+	b.p.Cmd(b.p.builder().HExistsCompleted(key, field), &boolCmd{})
+}
 
 var CommandHExpire commandHExpire
 
@@ -1939,7 +1986,7 @@ func (commandHExpire) Instead() string               { return "" }
 func (commandHExpire) ETC() string                   { return "" }
 func (commandHExpire) P(p Pipeliner) commandHExpireP { return commandHExpireP{p} }
 func (b commandHExpireP) Cmd(key string, seconds time.Duration, fields ...string) {
-	b.p.Cmd(b.p.builder().HExpireCompleted(key, seconds, fields...))
+	b.p.Cmd(b.p.builder().HExpireCompleted(key, seconds, fields...), &intSliceCmd{})
 }
 
 var CommandHExpireNX commandHExpireNX
@@ -1958,7 +2005,7 @@ func (commandHExpireNX) Instead() string                 { return "" }
 func (commandHExpireNX) ETC() string                     { return "" }
 func (commandHExpireNX) P(p Pipeliner) commandHExpireNXP { return commandHExpireNXP{p} }
 func (b commandHExpireNXP) Cmd(key string, seconds time.Duration, fields ...string) {
-	b.p.Cmd(b.p.builder().HExpireNXCompleted(key, seconds, fields...))
+	b.p.Cmd(b.p.builder().HExpireNXCompleted(key, seconds, fields...), &intSliceCmd{})
 }
 
 var CommandHExpireXX commandHExpireXX
@@ -1977,7 +2024,7 @@ func (commandHExpireXX) Instead() string                 { return "" }
 func (commandHExpireXX) ETC() string                     { return "" }
 func (commandHExpireXX) P(p Pipeliner) commandHExpireXXP { return commandHExpireXXP{p} }
 func (b commandHExpireXXP) Cmd(key string, seconds time.Duration, fields ...string) {
-	b.p.Cmd(b.p.builder().HExpireXXCompleted(key, seconds, fields...))
+	b.p.Cmd(b.p.builder().HExpireXXCompleted(key, seconds, fields...), &intSliceCmd{})
 }
 
 var CommandHExpireGT commandHExpireGT
@@ -1996,7 +2043,7 @@ func (commandHExpireGT) Instead() string                 { return "" }
 func (commandHExpireGT) ETC() string                     { return "" }
 func (commandHExpireGT) P(p Pipeliner) commandHExpireGTP { return commandHExpireGTP{p} }
 func (b commandHExpireGTP) Cmd(key string, seconds time.Duration, fields ...string) {
-	b.p.Cmd(b.p.builder().HExpireGTCompleted(key, seconds, fields...))
+	b.p.Cmd(b.p.builder().HExpireGTCompleted(key, seconds, fields...), &intSliceCmd{})
 }
 
 var CommandHExpireLT commandHExpireLT
@@ -2015,7 +2062,7 @@ func (commandHExpireLT) Instead() string                 { return "" }
 func (commandHExpireLT) ETC() string                     { return "" }
 func (commandHExpireLT) P(p Pipeliner) commandHExpireLTP { return commandHExpireLTP{p} }
 func (b commandHExpireLTP) Cmd(key string, seconds time.Duration, fields ...string) {
-	b.p.Cmd(b.p.builder().HExpireLTCompleted(key, seconds, fields...))
+	b.p.Cmd(b.p.builder().HExpireLTCompleted(key, seconds, fields...), &intSliceCmd{})
 }
 
 var CommandHExpireAt commandHExpireAt
@@ -2034,7 +2081,7 @@ func (commandHExpireAt) Instead() string                 { return "" }
 func (commandHExpireAt) ETC() string                     { return "" }
 func (commandHExpireAt) P(p Pipeliner) commandHExpireAtP { return commandHExpireAtP{p} }
 func (b commandHExpireAtP) Cmd(key string, tm time.Time, fields ...string) {
-	b.p.Cmd(b.p.builder().HExpireAtCompleted(key, tm, fields...))
+	b.p.Cmd(b.p.builder().HExpireAtCompleted(key, tm, fields...), &intSliceCmd{})
 }
 
 var CommandHExpireAtNX commandHExpireAtNX
@@ -2053,7 +2100,7 @@ func (commandHExpireAtNX) Instead() string                   { return "" }
 func (commandHExpireAtNX) ETC() string                       { return "" }
 func (commandHExpireAtNX) P(p Pipeliner) commandHExpireAtNXP { return commandHExpireAtNXP{p} }
 func (b commandHExpireAtNXP) Cmd(key string, tm time.Time, fields ...string) {
-	b.p.Cmd(b.p.builder().HExpireAtNXCompleted(key, tm, fields...))
+	b.p.Cmd(b.p.builder().HExpireAtNXCompleted(key, tm, fields...), &intSliceCmd{})
 }
 
 var CommandHExpireAtXX commandHExpireAtXX
@@ -2072,7 +2119,7 @@ func (commandHExpireAtXX) Instead() string                   { return "" }
 func (commandHExpireAtXX) ETC() string                       { return "" }
 func (commandHExpireAtXX) P(p Pipeliner) commandHExpireAtXXP { return commandHExpireAtXXP{p} }
 func (b commandHExpireAtXXP) Cmd(key string, tm time.Time, fields ...string) {
-	b.p.Cmd(b.p.builder().HExpireAtXXCompleted(key, tm, fields...))
+	b.p.Cmd(b.p.builder().HExpireAtXXCompleted(key, tm, fields...), &intSliceCmd{})
 }
 
 var CommandHExpireAtGT commandHExpireAtGT
@@ -2091,7 +2138,7 @@ func (commandHExpireAtGT) Instead() string                   { return "" }
 func (commandHExpireAtGT) ETC() string                       { return "" }
 func (commandHExpireAtGT) P(p Pipeliner) commandHExpireAtGTP { return commandHExpireAtGTP{p} }
 func (b commandHExpireAtGTP) Cmd(key string, tm time.Time, fields ...string) {
-	b.p.Cmd(b.p.builder().HExpireAtGTCompleted(key, tm, fields...))
+	b.p.Cmd(b.p.builder().HExpireAtGTCompleted(key, tm, fields...), &intSliceCmd{})
 }
 
 var CommandHExpireAtLT commandHExpireAtLT
@@ -2110,7 +2157,7 @@ func (commandHExpireAtLT) Instead() string                   { return "" }
 func (commandHExpireAtLT) ETC() string                       { return "" }
 func (commandHExpireAtLT) P(p Pipeliner) commandHExpireAtLTP { return commandHExpireAtLTP{p} }
 func (b commandHExpireAtLTP) Cmd(key string, tm time.Time, fields ...string) {
-	b.p.Cmd(b.p.builder().HExpireAtLTCompleted(key, tm, fields...))
+	b.p.Cmd(b.p.builder().HExpireAtLTCompleted(key, tm, fields...), &intSliceCmd{})
 }
 
 var CommandHExpireTime commandHExpireTime
@@ -2129,7 +2176,7 @@ func (commandHExpireTime) Instead() string                   { return "" }
 func (commandHExpireTime) ETC() string                       { return "" }
 func (commandHExpireTime) P(p Pipeliner) commandHExpireTimeP { return commandHExpireTimeP{p} }
 func (b commandHExpireTimeP) Cmd(key string, fields ...string) {
-	b.p.Cmd(b.p.builder().HExpireTimeCompleted(key, fields...))
+	b.p.Cmd(b.p.builder().HExpireTimeCompleted(key, fields...), &durationSliceCmd{precision: time.Second})
 }
 
 var CommandHGet commandHGet
@@ -2147,7 +2194,9 @@ func (commandHGet) Warning() string            { return "" }
 func (commandHGet) Instead() string            { return "" }
 func (commandHGet) ETC() string                { return "" }
 func (commandHGet) P(p Pipeliner) commandHGetP { return commandHGetP{p} }
-func (b commandHGetP) Cmd(key, field string)   { b.p.Cmd(b.p.builder().HGetCompleted(key, field)) }
+func (b commandHGetP) Cmd(key, field string) {
+	b.p.Cmd(b.p.builder().HGetCompleted(key, field), &stringCmd{})
+}
 
 var CommandHGetAll commandHGetAll
 
@@ -2164,7 +2213,9 @@ func (commandHGetAll) Warning() string               { return "" }
 func (commandHGetAll) Instead() string               { return "" }
 func (commandHGetAll) ETC() string                   { return "" }
 func (commandHGetAll) P(p Pipeliner) commandHGetAllP { return commandHGetAllP{p} }
-func (b commandHGetAllP) Cmd(key string)             { b.p.Cmd(b.p.builder().HGetAllCompleted(key)) }
+func (b commandHGetAllP) Cmd(key string) {
+	b.p.Cmd(b.p.builder().HGetAllCompleted(key), &stringStringMapCmd{})
+}
 
 var CommandHIncrBy commandHIncrBy
 
@@ -2182,7 +2233,7 @@ func (commandHIncrBy) Instead() string               { return "" }
 func (commandHIncrBy) ETC() string                   { return "" }
 func (commandHIncrBy) P(p Pipeliner) commandHIncrByP { return commandHIncrByP{p} }
 func (b commandHIncrByP) Cmd(key, field string, incr int64) {
-	b.p.Cmd(b.p.builder().HIncrByCompleted(key, field, incr))
+	b.p.Cmd(b.p.builder().HIncrByCompleted(key, field, incr), &intCmd{})
 }
 
 var CommandHIncrByFloat commandHIncrByFloat
@@ -2201,7 +2252,7 @@ func (commandHIncrByFloat) Instead() string                    { return "" }
 func (commandHIncrByFloat) ETC() string                        { return "" }
 func (commandHIncrByFloat) P(p Pipeliner) commandHIncrByFloatP { return commandHIncrByFloatP{p} }
 func (b commandHIncrByFloatP) Cmd(key, field string, incr float64) {
-	b.p.Cmd(b.p.builder().HIncrByFloatCompleted(key, field, incr))
+	b.p.Cmd(b.p.builder().HIncrByFloatCompleted(key, field, incr), &floatCmd{})
 }
 
 var CommandHKeys commandHKeys
@@ -2219,7 +2270,7 @@ func (commandHKeys) Warning() string             { return "" }
 func (commandHKeys) Instead() string             { return "" }
 func (commandHKeys) ETC() string                 { return "" }
 func (commandHKeys) P(p Pipeliner) commandHKeysP { return commandHKeysP{p} }
-func (b commandHKeysP) Cmd(key string)           { b.p.Cmd(b.p.builder().HKeysCompleted(key)) }
+func (b commandHKeysP) Cmd(key string)           { b.p.Cmd(b.p.builder().HKeysCompleted(key), &stringSliceCmd{}) }
 
 var CommandHLen commandHLen
 
@@ -2236,7 +2287,7 @@ func (commandHLen) Warning() string            { return "" }
 func (commandHLen) Instead() string            { return "" }
 func (commandHLen) ETC() string                { return "" }
 func (commandHLen) P(p Pipeliner) commandHLenP { return commandHLenP{p} }
-func (b commandHLenP) Cmd(key string)          { b.p.Cmd(b.p.builder().HLenCompleted(key)) }
+func (b commandHLenP) Cmd(key string)          { b.p.Cmd(b.p.builder().HLenCompleted(key), &intCmd{}) }
 
 var CommandHMGet commandHMGet
 
@@ -2254,7 +2305,7 @@ func (commandHMGet) Instead() string             { return "" }
 func (commandHMGet) ETC() string                 { return "" }
 func (commandHMGet) P(p Pipeliner) commandHMGetP { return commandHMGetP{p} }
 func (b commandHMGetP) Cmd(key string, fields ...string) {
-	b.p.Cmd(b.p.builder().HMGetCompleted(key, fields...))
+	b.p.Cmd(b.p.builder().HMGetCompleted(key, fields...), &sliceCmd{keys: fields})
 }
 
 var CommandHMSet commandHMSet
@@ -2273,7 +2324,7 @@ func (commandHMSet) Instead() string             { return "HSet" }
 func (commandHMSet) ETC() string                 { return "client.HSet(ctx, key, values...)" }
 func (commandHMSet) P(p Pipeliner) commandHMSetP { return commandHMSetP{p} }
 func (b commandHMSetP) Cmd(key string, values ...any) {
-	b.p.Cmd(b.p.builder().HMSetCompleted(key, values...))
+	b.p.Cmd(b.p.builder().HMSetCompleted(key, values...), &boolCmd{})
 }
 
 var CommandHPersist commandHPersist
@@ -2292,7 +2343,7 @@ func (commandHPersist) Instead() string                { return "" }
 func (commandHPersist) ETC() string                    { return "" }
 func (commandHPersist) P(p Pipeliner) commandHPersistP { return commandHPersistP{p} }
 func (b commandHPersistP) Cmd(key string, fields ...string) {
-	b.p.Cmd(b.p.builder().HPersistCompleted(key, fields...))
+	b.p.Cmd(b.p.builder().HPersistCompleted(key, fields...), &intSliceCmd{})
 }
 
 var CommandHPExpire commandHPExpire
@@ -2311,7 +2362,7 @@ func (commandHPExpire) Instead() string                { return "" }
 func (commandHPExpire) ETC() string                    { return "" }
 func (commandHPExpire) P(p Pipeliner) commandHPExpireP { return commandHPExpireP{p} }
 func (b commandHPExpireP) Cmd(key string, milliseconds time.Duration, fields ...string) {
-	b.p.Cmd(b.p.builder().HPExpireCompleted(key, milliseconds, fields...))
+	b.p.Cmd(b.p.builder().HPExpireCompleted(key, milliseconds, fields...), &intSliceCmd{})
 }
 
 var CommandHPExpireNX commandHPExpireNX
@@ -2330,7 +2381,7 @@ func (commandHPExpireNX) Instead() string                  { return "" }
 func (commandHPExpireNX) ETC() string                      { return "" }
 func (commandHPExpireNX) P(p Pipeliner) commandHPExpireNXP { return commandHPExpireNXP{p} }
 func (b commandHPExpireNXP) Cmd(key string, milliseconds time.Duration, fields ...string) {
-	b.p.Cmd(b.p.builder().HPExpireNXCompleted(key, milliseconds, fields...))
+	b.p.Cmd(b.p.builder().HPExpireNXCompleted(key, milliseconds, fields...), &intSliceCmd{})
 }
 
 var CommandHPExpireXX commandHPExpireXX
@@ -2349,7 +2400,7 @@ func (commandHPExpireXX) Instead() string                  { return "" }
 func (commandHPExpireXX) ETC() string                      { return "" }
 func (commandHPExpireXX) P(p Pipeliner) commandHPExpireXXP { return commandHPExpireXXP{p} }
 func (b commandHPExpireXXP) Cmd(key string, milliseconds time.Duration, fields ...string) {
-	b.p.Cmd(b.p.builder().HPExpireXXCompleted(key, milliseconds, fields...))
+	b.p.Cmd(b.p.builder().HPExpireXXCompleted(key, milliseconds, fields...), &intSliceCmd{})
 }
 
 var CommandHPExpireGT commandHPExpireGT
@@ -2368,7 +2419,7 @@ func (commandHPExpireGT) Instead() string                  { return "" }
 func (commandHPExpireGT) ETC() string                      { return "" }
 func (commandHPExpireGT) P(p Pipeliner) commandHPExpireGTP { return commandHPExpireGTP{p} }
 func (b commandHPExpireGTP) Cmd(key string, milliseconds time.Duration, fields ...string) {
-	b.p.Cmd(b.p.builder().HPExpireGTCompleted(key, milliseconds, fields...))
+	b.p.Cmd(b.p.builder().HPExpireGTCompleted(key, milliseconds, fields...), &intSliceCmd{})
 }
 
 var CommandHPExpireLT commandHPExpireLT
@@ -2387,7 +2438,7 @@ func (commandHPExpireLT) Instead() string                  { return "" }
 func (commandHPExpireLT) ETC() string                      { return "" }
 func (commandHPExpireLT) P(p Pipeliner) commandHPExpireLTP { return commandHPExpireLTP{p} }
 func (b commandHPExpireLTP) Cmd(key string, milliseconds time.Duration, fields ...string) {
-	b.p.Cmd(b.p.builder().HPExpireLTCompleted(key, milliseconds, fields...))
+	b.p.Cmd(b.p.builder().HPExpireLTCompleted(key, milliseconds, fields...), &intSliceCmd{})
 }
 
 var CommandHPExpireAt commandHPExpireAt
@@ -2406,7 +2457,7 @@ func (commandHPExpireAt) Instead() string                  { return "" }
 func (commandHPExpireAt) ETC() string                      { return "" }
 func (commandHPExpireAt) P(p Pipeliner) commandHPExpireAtP { return commandHPExpireAtP{p} }
 func (b commandHPExpireAtP) Cmd(key string, tm time.Time, fields ...string) {
-	b.p.Cmd(b.p.builder().HPExpireAtCompleted(key, tm, fields...))
+	b.p.Cmd(b.p.builder().HPExpireAtCompleted(key, tm, fields...), &intSliceCmd{})
 }
 
 var CommandHPExpireAtNX commandHPExpireAtNX
@@ -2425,7 +2476,7 @@ func (commandHPExpireAtNX) Instead() string                    { return "" }
 func (commandHPExpireAtNX) ETC() string                        { return "" }
 func (commandHPExpireAtNX) P(p Pipeliner) commandHPExpireAtNXP { return commandHPExpireAtNXP{p} }
 func (b commandHPExpireAtNXP) Cmd(key string, tm time.Time, fields ...string) {
-	b.p.Cmd(b.p.builder().HPExpireAtNXCompleted(key, tm, fields...))
+	b.p.Cmd(b.p.builder().HPExpireAtNXCompleted(key, tm, fields...), &intSliceCmd{})
 }
 
 var CommandHPExpireAtXX commandHPExpireAtXX
@@ -2444,7 +2495,7 @@ func (commandHPExpireAtXX) Instead() string                    { return "" }
 func (commandHPExpireAtXX) ETC() string                        { return "" }
 func (commandHPExpireAtXX) P(p Pipeliner) commandHPExpireAtXXP { return commandHPExpireAtXXP{p} }
 func (b commandHPExpireAtXXP) Cmd(key string, tm time.Time, fields ...string) {
-	b.p.Cmd(b.p.builder().HPExpireAtXXCompleted(key, tm, fields...))
+	b.p.Cmd(b.p.builder().HPExpireAtXXCompleted(key, tm, fields...), &intSliceCmd{})
 }
 
 var CommandHPExpireAtGT commandHPExpireAtGT
@@ -2463,7 +2514,7 @@ func (commandHPExpireAtGT) Instead() string                    { return "" }
 func (commandHPExpireAtGT) ETC() string                        { return "" }
 func (commandHPExpireAtGT) P(p Pipeliner) commandHPExpireAtGTP { return commandHPExpireAtGTP{p} }
 func (b commandHPExpireAtGTP) Cmd(key string, tm time.Time, fields ...string) {
-	b.p.Cmd(b.p.builder().HPExpireAtGTCompleted(key, tm, fields...))
+	b.p.Cmd(b.p.builder().HPExpireAtGTCompleted(key, tm, fields...), &intSliceCmd{})
 }
 
 var CommandHPExpireAtLT commandHPExpireAtLT
@@ -2482,7 +2533,7 @@ func (commandHPExpireAtLT) Instead() string                    { return "" }
 func (commandHPExpireAtLT) ETC() string                        { return "" }
 func (commandHPExpireAtLT) P(p Pipeliner) commandHPExpireAtLTP { return commandHPExpireAtLTP{p} }
 func (b commandHPExpireAtLTP) Cmd(key string, tm time.Time, fields ...string) {
-	b.p.Cmd(b.p.builder().HPExpireAtLTCompleted(key, tm, fields...))
+	b.p.Cmd(b.p.builder().HPExpireAtLTCompleted(key, tm, fields...), &intSliceCmd{})
 }
 
 var CommandHPExpireTime commandHPExpireTime
@@ -2501,7 +2552,7 @@ func (commandHPExpireTime) Instead() string                    { return "" }
 func (commandHPExpireTime) ETC() string                        { return "" }
 func (commandHPExpireTime) P(p Pipeliner) commandHPExpireTimeP { return commandHPExpireTimeP{p} }
 func (b commandHPExpireTimeP) Cmd(key string, fields ...string) {
-	b.p.Cmd(b.p.builder().HPExpireTimeCompleted(key, fields...))
+	b.p.Cmd(b.p.builder().HPExpireTimeCompleted(key, fields...), &durationSliceCmd{precision: time.Millisecond})
 }
 
 var CommandHTTL commandHTTL
@@ -2520,7 +2571,7 @@ func (commandHTTL) Instead() string            { return "" }
 func (commandHTTL) ETC() string                { return "" }
 func (commandHTTL) P(p Pipeliner) commandHTTLP { return commandHTTLP{p} }
 func (b commandHTTLP) Cmd(key string, fields ...string) {
-	b.p.Cmd(b.p.builder().HTTLCompleted(key, fields...))
+	b.p.Cmd(b.p.builder().HTTLCompleted(key, fields...), &durationSliceCmd{precision: time.Second})
 }
 
 var CommandHPTTL commandHPTTL
@@ -2539,7 +2590,7 @@ func (commandHPTTL) Instead() string             { return "" }
 func (commandHPTTL) ETC() string                 { return "" }
 func (commandHPTTL) P(p Pipeliner) commandHPTTLP { return commandHPTTLP{p} }
 func (b commandHPTTLP) Cmd(key string, fields ...string) {
-	b.p.Cmd(b.p.builder().HPTTLCompleted(key, fields...))
+	b.p.Cmd(b.p.builder().HPTTLCompleted(key, fields...), &durationSliceCmd{precision: time.Millisecond})
 }
 
 var CommandHRandField commandHRandField
@@ -2558,7 +2609,7 @@ func (commandHRandField) Instead() string                  { return "" }
 func (commandHRandField) ETC() string                      { return "" }
 func (commandHRandField) P(p Pipeliner) commandHRandFieldP { return commandHRandFieldP{p} }
 func (b commandHRandFieldP) Cmd(key string, count int64) {
-	b.p.Cmd(b.p.builder().HRandFieldCompleted(key, count))
+	b.p.Cmd(b.p.builder().HRandFieldCompleted(key, count), &stringSliceCmd{})
 }
 
 var CommandHRandFieldWithValues commandHRandFieldWithValues
@@ -2579,7 +2630,7 @@ func (commandHRandFieldWithValues) P(p Pipeliner) commandHRandFieldWithValuesP {
 	return commandHRandFieldWithValuesP{p}
 }
 func (b commandHRandFieldWithValuesP) Cmd(key string, count int64) {
-	b.p.Cmd(b.p.builder().HRandFieldWithValuesCompleted(key, count))
+	b.p.Cmd(b.p.builder().HRandFieldWithValuesCompleted(key, count), &keyValueSliceCmd{})
 }
 
 var CommandHScan commandHScan
@@ -2598,7 +2649,7 @@ func (commandHScan) Instead() string             { return "" }
 func (commandHScan) ETC() string                 { return "" }
 func (commandHScan) P(p Pipeliner) commandHScanP { return commandHScanP{p} }
 func (b commandHScanP) Cmd(key string, cursor uint64, match string, count int64) {
-	b.p.Cmd(b.p.builder().HScanCompleted(key, cursor, match, count))
+	b.p.Cmd(b.p.builder().HScanCompleted(key, cursor, match, count), &scanCmd{})
 }
 
 var CommandHSet commandHSet
@@ -2617,7 +2668,7 @@ func (commandHSet) Instead() string            { return "" }
 func (commandHSet) ETC() string                { return "" }
 func (commandHSet) P(p Pipeliner) commandHSetP { return commandHSetP{p} }
 func (b commandHSetP) Cmd(key, field string, value any) {
-	b.p.Cmd(b.p.builder().HSetCompleted(key, field, value))
+	b.p.Cmd(b.p.builder().HSetCompleted(key, field, value), &intCmd{})
 }
 
 var CommandHMSetX commandHMSetX
@@ -2636,7 +2687,7 @@ func (commandHMSetX) Instead() string              { return "" }
 func (commandHMSetX) ETC() string                  { return "" }
 func (commandHMSetX) P(p Pipeliner) commandHMSetXP { return commandHMSetXP{p} }
 func (b commandHMSetXP) Cmd(key string, values ...any) {
-	b.p.Cmd(b.p.builder().HMSetXCompleted(key, values...))
+	b.p.Cmd(b.p.builder().HMSetXCompleted(key, values...), &intCmd{})
 }
 
 var CommandHSetNX commandHSetNX
@@ -2655,7 +2706,7 @@ func (commandHSetNX) Instead() string              { return "" }
 func (commandHSetNX) ETC() string                  { return "" }
 func (commandHSetNX) P(p Pipeliner) commandHSetNXP { return commandHSetNXP{p} }
 func (b commandHSetNXP) Cmd(key, field string, value any) {
-	b.p.Cmd(b.p.builder().HSetNXCompleted(key, field, value))
+	b.p.Cmd(b.p.builder().HSetNXCompleted(key, field, value), &boolCmd{})
 }
 
 var CommandHVals commandHVals
@@ -2673,7 +2724,7 @@ func (commandHVals) Warning() string             { return "" }
 func (commandHVals) Instead() string             { return "" }
 func (commandHVals) ETC() string                 { return "" }
 func (commandHVals) P(p Pipeliner) commandHValsP { return commandHValsP{p} }
-func (b commandHValsP) Cmd(key string)           { b.p.Cmd(b.p.builder().HValsCompleted(key)) }
+func (b commandHValsP) Cmd(key string)           { b.p.Cmd(b.p.builder().HValsCompleted(key), &stringSliceCmd{}) }
 
 var CommandHStrLen commandHStrLen
 
@@ -2690,7 +2741,9 @@ func (commandHStrLen) Warning() string               { return "" }
 func (commandHStrLen) Instead() string               { return "" }
 func (commandHStrLen) ETC() string                   { return "" }
 func (commandHStrLen) P(p Pipeliner) commandHStrLenP { return commandHStrLenP{p} }
-func (b commandHStrLenP) Cmd(key, field string)      { b.p.Cmd(b.p.builder().HStrLenCompleted(key, field)) }
+func (b commandHStrLenP) Cmd(key, field string) {
+	b.p.Cmd(b.p.builder().HStrLenCompleted(key, field), &intCmd{})
+}
 
 var CommandPFAdd commandPFAdd
 
@@ -2708,7 +2761,7 @@ func (commandPFAdd) Instead() string             { return "" }
 func (commandPFAdd) ETC() string                 { return "" }
 func (commandPFAdd) P(p Pipeliner) commandPFAddP { return commandPFAddP{p} }
 func (b commandPFAddP) Cmd(key string, els ...any) {
-	b.p.Cmd(b.p.builder().PFAddCompleted(key, els...))
+	b.p.Cmd(b.p.builder().PFAddCompleted(key, els...), &intCmd{})
 }
 
 var CommandPFCount commandPFCount
@@ -2726,7 +2779,9 @@ func (commandPFCount) Warning() string               { return "" }
 func (commandPFCount) Instead() string               { return "" }
 func (commandPFCount) ETC() string                   { return "" }
 func (commandPFCount) P(p Pipeliner) commandPFCountP { return commandPFCountP{p} }
-func (b commandPFCountP) Cmd(keys ...string)         { b.p.Cmd(b.p.builder().PFCountCompleted(keys...)) }
+func (b commandPFCountP) Cmd(keys ...string) {
+	b.p.Cmd(b.p.builder().PFCountCompleted(keys...), &intCmd{})
+}
 
 var CommandPFMerge commandPFMerge
 
@@ -2744,7 +2799,7 @@ func (commandPFMerge) Instead() string               { return "" }
 func (commandPFMerge) ETC() string                   { return "" }
 func (commandPFMerge) P(p Pipeliner) commandPFMergeP { return commandPFMergeP{p} }
 func (b commandPFMergeP) Cmd(dest string, keys ...string) {
-	b.p.Cmd(b.p.builder().PFMergeCompleted(dest, keys...))
+	b.p.Cmd(b.p.builder().PFMergeCompleted(dest, keys...), &statusCmd{})
 }
 
 var CommandBLMove commandBLMove
@@ -2833,7 +2888,7 @@ func (commandLIndex) Instead() string              { return "" }
 func (commandLIndex) ETC() string                  { return "" }
 func (commandLIndex) P(p Pipeliner) commandLIndexP { return commandLIndexP{p} }
 func (b commandLIndexP) Cmd(key string, index int64) {
-	b.p.Cmd(b.p.builder().LIndexCompleted(key, index))
+	b.p.Cmd(b.p.builder().LIndexCompleted(key, index), &stringCmd{})
 }
 
 var CommandLInsert commandLInsert
@@ -2852,7 +2907,7 @@ func (commandLInsert) Instead() string               { return "" }
 func (commandLInsert) ETC() string                   { return "" }
 func (commandLInsert) P(p Pipeliner) commandLInsertP { return commandLInsertP{p} }
 func (b commandLInsertP) Cmd(key, op string, pivot, element any) {
-	b.p.Cmd(b.p.builder().LInsertCompleted(key, op, pivot, element))
+	b.p.Cmd(b.p.builder().LInsertCompleted(key, op, pivot, element), &intCmd{})
 }
 
 var CommandLInsertBefore commandLInsertBefore
@@ -2871,7 +2926,7 @@ func (commandLInsertBefore) Instead() string                     { return "" }
 func (commandLInsertBefore) ETC() string                         { return "" }
 func (commandLInsertBefore) P(p Pipeliner) commandLInsertBeforeP { return commandLInsertBeforeP{p} }
 func (b commandLInsertBeforeP) Cmd(key string, pivot, element any) {
-	b.p.Cmd(b.p.builder().LInsertBeforeCompleted(key, pivot, element))
+	b.p.Cmd(b.p.builder().LInsertBeforeCompleted(key, pivot, element), &intCmd{})
 }
 
 var CommandLInsertAfter commandLInsertAfter
@@ -2890,7 +2945,7 @@ func (commandLInsertAfter) Instead() string                    { return "" }
 func (commandLInsertAfter) ETC() string                        { return "" }
 func (commandLInsertAfter) P(p Pipeliner) commandLInsertAfterP { return commandLInsertAfterP{p} }
 func (b commandLInsertAfterP) Cmd(key string, pivot, element any) {
-	b.p.Cmd(b.p.builder().LInsertAfterCompleted(key, pivot, element))
+	b.p.Cmd(b.p.builder().LInsertAfterCompleted(key, pivot, element), &intCmd{})
 }
 
 var CommandLLen commandLLen
@@ -2908,7 +2963,7 @@ func (commandLLen) Warning() string            { return "" }
 func (commandLLen) Instead() string            { return "" }
 func (commandLLen) ETC() string                { return "" }
 func (commandLLen) P(p Pipeliner) commandLLenP { return commandLLenP{p} }
-func (b commandLLenP) Cmd(key string)          { b.p.Cmd(b.p.builder().LLenCompleted(key)) }
+func (b commandLLenP) Cmd(key string)          { b.p.Cmd(b.p.builder().LLenCompleted(key), &intCmd{}) }
 
 var CommandLMove commandLMove
 
@@ -2926,7 +2981,7 @@ func (commandLMove) Instead() string             { return "" }
 func (commandLMove) ETC() string                 { return "" }
 func (commandLMove) P(p Pipeliner) commandLMoveP { return commandLMoveP{p} }
 func (b commandLMoveP) Cmd(source, destination, srcpos, destpos string) {
-	b.p.Cmd(b.p.builder().LMoveCompleted(source, destination, srcpos, destpos))
+	b.p.Cmd(b.p.builder().LMoveCompleted(source, destination, srcpos, destpos), &stringCmd{})
 }
 
 var CommandLPop commandLPop
@@ -2944,7 +2999,7 @@ func (commandLPop) Warning() string            { return "" }
 func (commandLPop) Instead() string            { return "" }
 func (commandLPop) ETC() string                { return "" }
 func (commandLPop) P(p Pipeliner) commandLPopP { return commandLPopP{p} }
-func (b commandLPopP) Cmd(key string)          { b.p.Cmd(b.p.builder().LPopCompleted(key)) }
+func (b commandLPopP) Cmd(key string)          { b.p.Cmd(b.p.builder().LPopCompleted(key), &stringCmd{}) }
 
 var CommandLPopCount commandLPopCount
 
@@ -2962,7 +3017,7 @@ func (commandLPopCount) Instead() string                 { return "" }
 func (commandLPopCount) ETC() string                     { return "" }
 func (commandLPopCount) P(p Pipeliner) commandLPopCountP { return commandLPopCountP{p} }
 func (b commandLPopCountP) Cmd(key string, count int64) {
-	b.p.Cmd(b.p.builder().LPopCountCompleted(key, count))
+	b.p.Cmd(b.p.builder().LPopCountCompleted(key, count), &stringSliceCmd{})
 }
 
 var CommandLMPop commandLMPop
@@ -2981,7 +3036,7 @@ func (commandLMPop) Instead() string             { return "" }
 func (commandLMPop) ETC() string                 { return "" }
 func (commandLMPop) P(p Pipeliner) commandLMPopP { return commandLMPopP{p} }
 func (b commandLMPopP) Cmd(direction string, count int64, keys ...string) {
-	b.p.Cmd(b.p.builder().LMPopCompleted(direction, count, keys...))
+	b.p.Cmd(b.p.builder().LMPopCompleted(direction, count, keys...), &keyValuesCmd{})
 }
 
 var CommandLPos commandLPos
@@ -3000,7 +3055,7 @@ func (commandLPos) Instead() string            { return "" }
 func (commandLPos) ETC() string                { return "" }
 func (commandLPos) P(p Pipeliner) commandLPosP { return commandLPosP{p} }
 func (b commandLPosP) Cmd(key string, element string, a LPosArgs) {
-	b.p.Cmd(b.p.builder().LPosCompleted(key, element, a))
+	b.p.Cmd(b.p.builder().LPosCompleted(key, element, a), &intCmd{})
 }
 
 var CommandLPosCount commandLPosCount
@@ -3019,7 +3074,7 @@ func (commandLPosCount) Instead() string                 { return "" }
 func (commandLPosCount) ETC() string                     { return "" }
 func (commandLPosCount) P(p Pipeliner) commandLPosCountP { return commandLPosCountP{p} }
 func (b commandLPosCountP) Cmd(key string, element string, count int64, a LPosArgs) {
-	b.p.Cmd(b.p.builder().LPosCountCompleted(key, element, count, a))
+	b.p.Cmd(b.p.builder().LPosCountCompleted(key, element, count, a), &intSliceCmd{})
 }
 
 var CommandLPush commandLPush
@@ -3038,7 +3093,7 @@ func (commandLPush) Instead() string             { return "" }
 func (commandLPush) ETC() string                 { return "" }
 func (commandLPush) P(p Pipeliner) commandLPushP { return commandLPushP{p} }
 func (b commandLPushP) Cmd(key string, element any) {
-	b.p.Cmd(b.p.builder().LPushCompleted(key, element))
+	b.p.Cmd(b.p.builder().LPushCompleted(key, element), &intCmd{})
 }
 
 var CommandLMPush commandLMPush
@@ -3057,7 +3112,7 @@ func (commandLMPush) Instead() string              { return "" }
 func (commandLMPush) ETC() string                  { return "" }
 func (commandLMPush) P(p Pipeliner) commandLMPushP { return commandLMPushP{p} }
 func (b commandLMPushP) Cmd(key string, elements ...any) {
-	b.p.Cmd(b.p.builder().LMPushCompleted(key, elements...))
+	b.p.Cmd(b.p.builder().LMPushCompleted(key, elements...), &intCmd{})
 }
 
 var CommandLPushX commandLPushX
@@ -3076,7 +3131,7 @@ func (commandLPushX) Instead() string              { return "" }
 func (commandLPushX) ETC() string                  { return "" }
 func (commandLPushX) P(p Pipeliner) commandLPushXP { return commandLPushXP{p} }
 func (b commandLPushXP) Cmd(key string, element any) {
-	b.p.Cmd(b.p.builder().LPushXCompleted(key, element))
+	b.p.Cmd(b.p.builder().LPushXCompleted(key, element), &intCmd{})
 }
 
 var CommandLMPushX commandLMPushX
@@ -3095,7 +3150,7 @@ func (commandLMPushX) Instead() string               { return "" }
 func (commandLMPushX) ETC() string                   { return "" }
 func (commandLMPushX) P(p Pipeliner) commandLMPushXP { return commandLMPushXP{p} }
 func (b commandLMPushXP) Cmd(key string, elements ...any) {
-	b.p.Cmd(b.p.builder().LMPushXCompleted(key, elements...))
+	b.p.Cmd(b.p.builder().LMPushXCompleted(key, elements...), &intCmd{})
 }
 
 var CommandLRange commandLRange
@@ -3114,7 +3169,7 @@ func (commandLRange) Instead() string              { return "" }
 func (commandLRange) ETC() string                  { return "" }
 func (commandLRange) P(p Pipeliner) commandLRangeP { return commandLRangeP{p} }
 func (b commandLRangeP) Cmd(key string, start, stop int64) {
-	b.p.Cmd(b.p.builder().LRangeCompleted(key, start, stop))
+	b.p.Cmd(b.p.builder().LRangeCompleted(key, start, stop), &stringSliceCmd{})
 }
 
 var CommandLRem commandLRem
@@ -3133,7 +3188,7 @@ func (commandLRem) Instead() string            { return "" }
 func (commandLRem) ETC() string                { return "" }
 func (commandLRem) P(p Pipeliner) commandLRemP { return commandLRemP{p} }
 func (b commandLRemP) Cmd(key string, count int64, element any) {
-	b.p.Cmd(b.p.builder().LRemCompleted(key, count, element))
+	b.p.Cmd(b.p.builder().LRemCompleted(key, count, element), &intCmd{})
 }
 
 var CommandLSet commandLSet
@@ -3152,7 +3207,7 @@ func (commandLSet) Instead() string            { return "" }
 func (commandLSet) ETC() string                { return "" }
 func (commandLSet) P(p Pipeliner) commandLSetP { return commandLSetP{p} }
 func (b commandLSetP) Cmd(key string, index int64, element any) {
-	b.p.Cmd(b.p.builder().LSetCompleted(key, index, element))
+	b.p.Cmd(b.p.builder().LSetCompleted(key, index, element), &statusCmd{})
 }
 
 var CommandLTrim commandLTrim
@@ -3171,7 +3226,7 @@ func (commandLTrim) Instead() string             { return "" }
 func (commandLTrim) ETC() string                 { return "" }
 func (commandLTrim) P(p Pipeliner) commandLTrimP { return commandLTrimP{p} }
 func (b commandLTrimP) Cmd(key string, start, stop int64) {
-	b.p.Cmd(b.p.builder().LTrimCompleted(key, start, stop))
+	b.p.Cmd(b.p.builder().LTrimCompleted(key, start, stop), &statusCmd{})
 }
 
 var CommandRPop commandRPop
@@ -3189,7 +3244,7 @@ func (commandRPop) Warning() string            { return "" }
 func (commandRPop) Instead() string            { return "" }
 func (commandRPop) ETC() string                { return "" }
 func (commandRPop) P(p Pipeliner) commandRPopP { return commandRPopP{p} }
-func (b commandRPopP) Cmd(key string)          { b.p.Cmd(b.p.builder().RPopCompleted(key)) }
+func (b commandRPopP) Cmd(key string)          { b.p.Cmd(b.p.builder().RPopCompleted(key), &stringCmd{}) }
 
 var CommandRPopCount commandRPopCount
 
@@ -3207,7 +3262,7 @@ func (commandRPopCount) Instead() string                 { return "" }
 func (commandRPopCount) ETC() string                     { return "" }
 func (commandRPopCount) P(p Pipeliner) commandRPopCountP { return commandRPopCountP{p} }
 func (b commandRPopCountP) Cmd(key string, count int64) {
-	b.p.Cmd(b.p.builder().RPopCountCompleted(key, count))
+	b.p.Cmd(b.p.builder().RPopCountCompleted(key, count), &stringSliceCmd{})
 }
 
 var CommandRPopLPush commandRPopLPush
@@ -3228,7 +3283,7 @@ func (commandRPopLPush) ETC() string {
 }
 func (commandRPopLPush) P(p Pipeliner) commandRPopLPushP { return commandRPopLPushP{p} }
 func (b commandRPopLPushP) Cmd(source, destination string) {
-	b.p.Cmd(b.p.builder().RPopLPushCompleted(source, destination))
+	b.p.Cmd(b.p.builder().RPopLPushCompleted(source, destination), &stringCmd{})
 }
 
 var CommandRPush commandRPush
@@ -3247,7 +3302,7 @@ func (commandRPush) Instead() string             { return "" }
 func (commandRPush) ETC() string                 { return "" }
 func (commandRPush) P(p Pipeliner) commandRPushP { return commandRPushP{p} }
 func (b commandRPushP) Cmd(key string, element any) {
-	b.p.Cmd(b.p.builder().RPushCompleted(key, element))
+	b.p.Cmd(b.p.builder().RPushCompleted(key, element), &intCmd{})
 }
 
 var CommandRMPush commandRMPush
@@ -3266,7 +3321,7 @@ func (commandRMPush) Instead() string              { return "" }
 func (commandRMPush) ETC() string                  { return "" }
 func (commandRMPush) P(p Pipeliner) commandRMPushP { return commandRMPushP{p} }
 func (b commandRMPushP) Cmd(key string, elements ...any) {
-	b.p.Cmd(b.p.builder().RMPushCompleted(key, elements...))
+	b.p.Cmd(b.p.builder().RMPushCompleted(key, elements...), &intCmd{})
 }
 
 var CommandRPushX commandRPushX
@@ -3285,7 +3340,7 @@ func (commandRPushX) Instead() string              { return "" }
 func (commandRPushX) ETC() string                  { return "" }
 func (commandRPushX) P(p Pipeliner) commandRPushXP { return commandRPushXP{p} }
 func (b commandRPushXP) Cmd(key string, element any) {
-	b.p.Cmd(b.p.builder().RPushXCompleted(key, element))
+	b.p.Cmd(b.p.builder().RPushXCompleted(key, element), &intCmd{})
 }
 
 var CommandRMPushX commandRMPushX
@@ -3304,7 +3359,7 @@ func (commandRMPushX) Instead() string               { return "" }
 func (commandRMPushX) ETC() string                   { return "" }
 func (commandRMPushX) P(p Pipeliner) commandRMPushXP { return commandRMPushXP{p} }
 func (b commandRMPushXP) Cmd(key string, elements ...any) {
-	b.p.Cmd(b.p.builder().RMPushXCompleted(key, elements...))
+	b.p.Cmd(b.p.builder().RMPushXCompleted(key, elements...), &intCmd{})
 }
 
 var CommandPSubscribe commandPSubscribe
@@ -3337,7 +3392,7 @@ func (commandPublish) Instead() string               { return "" }
 func (commandPublish) ETC() string                   { return "" }
 func (commandPublish) P(p Pipeliner) commandPublishP { return commandPublishP{p} }
 func (b commandPublishP) Cmd(channel string, message any) {
-	b.p.Cmd(b.p.builder().PublishCompleted(channel, message))
+	b.p.Cmd(b.p.builder().PublishCompleted(channel, message), &intCmd{})
 }
 
 var CommandPubSubChannels commandPubSubChannels
@@ -3356,7 +3411,7 @@ func (commandPubSubChannels) Instead() string                      { return "" }
 func (commandPubSubChannels) ETC() string                          { return "" }
 func (commandPubSubChannels) P(p Pipeliner) commandPubSubChannelsP { return commandPubSubChannelsP{p} }
 func (b commandPubSubChannelsP) Cmd(pattern string) {
-	b.p.Cmd(b.p.builder().PubSubChannelsCompleted(pattern))
+	b.p.Cmd(b.p.builder().PubSubChannelsCompleted(pattern), &stringSliceCmd{})
 }
 
 var CommandPubSubNumPat commandPubSubNumPat
@@ -3374,7 +3429,7 @@ func (commandPubSubNumPat) Warning() string                    { return "" }
 func (commandPubSubNumPat) Instead() string                    { return "" }
 func (commandPubSubNumPat) ETC() string                        { return "" }
 func (commandPubSubNumPat) P(p Pipeliner) commandPubSubNumPatP { return commandPubSubNumPatP{p} }
-func (b commandPubSubNumPatP) Cmd()                            { b.p.Cmd(b.p.builder().PubSubNumPatCompleted()) }
+func (b commandPubSubNumPatP) Cmd()                            { b.p.Cmd(b.p.builder().PubSubNumPatCompleted(), &intCmd{}) }
 
 var CommandPubSubNumSub commandPubSubNumSub
 
@@ -3392,7 +3447,7 @@ func (commandPubSubNumSub) Instead() string                    { return "" }
 func (commandPubSubNumSub) ETC() string                        { return "" }
 func (commandPubSubNumSub) P(p Pipeliner) commandPubSubNumSubP { return commandPubSubNumSubP{p} }
 func (b commandPubSubNumSubP) Cmd(channels ...string) {
-	b.p.Cmd(b.p.builder().PubSubNumSubCompleted(channels...))
+	b.p.Cmd(b.p.builder().PubSubNumSubCompleted(channels...), &stringIntMapCmd{})
 }
 
 var CommandPubSubShardChannels commandPubSubShardChannels
@@ -3413,7 +3468,7 @@ func (commandPubSubShardChannels) P(p Pipeliner) commandPubSubShardChannelsP {
 	return commandPubSubShardChannelsP{p}
 }
 func (b commandPubSubShardChannelsP) Cmd(pattern string) {
-	b.p.Cmd(b.p.builder().PubSubShardChannelsCompleted(pattern))
+	b.p.Cmd(b.p.builder().PubSubShardChannelsCompleted(pattern), &stringSliceCmd{})
 }
 
 var CommandPubSubShardNumSub commandPubSubShardNumSub
@@ -3434,7 +3489,7 @@ func (commandPubSubShardNumSub) P(p Pipeliner) commandPubSubShardNumSubP {
 	return commandPubSubShardNumSubP{p}
 }
 func (b commandPubSubShardNumSubP) Cmd(channels ...string) {
-	b.p.Cmd(b.p.builder().PubSubShardNumSubCompleted(channels...))
+	b.p.Cmd(b.p.builder().PubSubShardNumSubCompleted(channels...), &stringIntMapCmd{})
 }
 
 var CommandSPublish commandSPublish
@@ -3453,7 +3508,7 @@ func (commandSPublish) Instead() string                { return "" }
 func (commandSPublish) ETC() string                    { return "" }
 func (commandSPublish) P(p Pipeliner) commandSPublishP { return commandSPublishP{p} }
 func (b commandSPublishP) Cmd(channel string, message any) {
-	b.p.Cmd(b.p.builder().SPublishCompleted(channel, message))
+	b.p.Cmd(b.p.builder().SPublishCompleted(channel, message), &intCmd{})
 }
 
 var CommandSubscribe commandSubscribe
@@ -3501,116 +3556,86 @@ func (commandPUnsubscribe) ETC() string            { return "" }
 var CommandEval commandEval
 
 type commandEval string
-type commandEvalP struct{ p Pipeliner }
 
-func (commandEval) String() string             { return "EVAL" }
-func (commandEval) Class() string              { return "Scripting" }
-func (commandEval) RequireVersion() string     { return "2.6.0" }
-func (commandEval) Forbid() bool               { return false }
-func (commandEval) WarningOnce() bool          { return false }
-func (commandEval) WarnVersion() string        { return "" }
-func (commandEval) Warning() string            { return "" }
-func (commandEval) Instead() string            { return "" }
-func (commandEval) ETC() string                { return "" }
-func (commandEval) P(p Pipeliner) commandEvalP { return commandEvalP{p} }
-func (b commandEvalP) Cmd(script string, keys []string, args ...any) {
-	b.p.Cmd(b.p.builder().EvalCompleted(script, keys, args...))
-}
+func (commandEval) String() string         { return "EVAL" }
+func (commandEval) Class() string          { return "Scripting" }
+func (commandEval) RequireVersion() string { return "2.6.0" }
+func (commandEval) Forbid() bool           { return false }
+func (commandEval) WarningOnce() bool      { return false }
+func (commandEval) WarnVersion() string    { return "" }
+func (commandEval) Warning() string        { return "" }
+func (commandEval) Instead() string        { return "" }
+func (commandEval) ETC() string            { return "" }
 
 var CommandEvalRO commandEvalRO
 
 type commandEvalRO string
-type commandEvalROP struct{ p Pipeliner }
 
-func (commandEvalRO) String() string               { return "EVAL_RO" }
-func (commandEvalRO) Class() string                { return "Scripting" }
-func (commandEvalRO) RequireVersion() string       { return "7.0.0" }
-func (commandEvalRO) Forbid() bool                 { return false }
-func (commandEvalRO) WarningOnce() bool            { return false }
-func (commandEvalRO) WarnVersion() string          { return "" }
-func (commandEvalRO) Warning() string              { return "" }
-func (commandEvalRO) Instead() string              { return "" }
-func (commandEvalRO) ETC() string                  { return "" }
-func (commandEvalRO) P(p Pipeliner) commandEvalROP { return commandEvalROP{p} }
-func (b commandEvalROP) Cmd(script string, keys []string, args ...any) {
-	b.p.Cmd(b.p.builder().EvalROCompleted(script, keys, args...))
-}
+func (commandEvalRO) String() string         { return "EVAL_RO" }
+func (commandEvalRO) Class() string          { return "Scripting" }
+func (commandEvalRO) RequireVersion() string { return "7.0.0" }
+func (commandEvalRO) Forbid() bool           { return false }
+func (commandEvalRO) WarningOnce() bool      { return false }
+func (commandEvalRO) WarnVersion() string    { return "" }
+func (commandEvalRO) Warning() string        { return "" }
+func (commandEvalRO) Instead() string        { return "" }
+func (commandEvalRO) ETC() string            { return "" }
 
 var CommandEvalSha commandEvalSha
 
 type commandEvalSha string
-type commandEvalShaP struct{ p Pipeliner }
 
-func (commandEvalSha) String() string                { return "EVALSHA" }
-func (commandEvalSha) Class() string                 { return "Scripting" }
-func (commandEvalSha) RequireVersion() string        { return "2.6.0" }
-func (commandEvalSha) Forbid() bool                  { return false }
-func (commandEvalSha) WarningOnce() bool             { return false }
-func (commandEvalSha) WarnVersion() string           { return "" }
-func (commandEvalSha) Warning() string               { return "" }
-func (commandEvalSha) Instead() string               { return "" }
-func (commandEvalSha) ETC() string                   { return "" }
-func (commandEvalSha) P(p Pipeliner) commandEvalShaP { return commandEvalShaP{p} }
-func (b commandEvalShaP) Cmd(sha1 string, keys []string, args ...any) {
-	b.p.Cmd(b.p.builder().EvalShaCompleted(sha1, keys, args...))
-}
+func (commandEvalSha) String() string         { return "EVALSHA" }
+func (commandEvalSha) Class() string          { return "Scripting" }
+func (commandEvalSha) RequireVersion() string { return "2.6.0" }
+func (commandEvalSha) Forbid() bool           { return false }
+func (commandEvalSha) WarningOnce() bool      { return false }
+func (commandEvalSha) WarnVersion() string    { return "" }
+func (commandEvalSha) Warning() string        { return "" }
+func (commandEvalSha) Instead() string        { return "" }
+func (commandEvalSha) ETC() string            { return "" }
 
 var CommandEvalShaRO commandEvalShaRO
 
 type commandEvalShaRO string
-type commandEvalShaROP struct{ p Pipeliner }
 
-func (commandEvalShaRO) String() string                  { return "EVALSHA_RO" }
-func (commandEvalShaRO) Class() string                   { return "Scripting" }
-func (commandEvalShaRO) RequireVersion() string          { return "7.0.0" }
-func (commandEvalShaRO) Forbid() bool                    { return false }
-func (commandEvalShaRO) WarningOnce() bool               { return false }
-func (commandEvalShaRO) WarnVersion() string             { return "" }
-func (commandEvalShaRO) Warning() string                 { return "" }
-func (commandEvalShaRO) Instead() string                 { return "" }
-func (commandEvalShaRO) ETC() string                     { return "" }
-func (commandEvalShaRO) P(p Pipeliner) commandEvalShaROP { return commandEvalShaROP{p} }
-func (b commandEvalShaROP) Cmd(sha1 string, keys []string, args ...any) {
-	b.p.Cmd(b.p.builder().EvalShaROCompleted(sha1, keys, args...))
-}
+func (commandEvalShaRO) String() string         { return "EVALSHA_RO" }
+func (commandEvalShaRO) Class() string          { return "Scripting" }
+func (commandEvalShaRO) RequireVersion() string { return "7.0.0" }
+func (commandEvalShaRO) Forbid() bool           { return false }
+func (commandEvalShaRO) WarningOnce() bool      { return false }
+func (commandEvalShaRO) WarnVersion() string    { return "" }
+func (commandEvalShaRO) Warning() string        { return "" }
+func (commandEvalShaRO) Instead() string        { return "" }
+func (commandEvalShaRO) ETC() string            { return "" }
 
 var CommandFCall commandFCall
 
 type commandFCall string
-type commandFCallP struct{ p Pipeliner }
 
-func (commandFCall) String() string              { return "FCALL" }
-func (commandFCall) Class() string               { return "Scripting" }
-func (commandFCall) RequireVersion() string      { return "7.0.0" }
-func (commandFCall) Forbid() bool                { return false }
-func (commandFCall) WarningOnce() bool           { return false }
-func (commandFCall) WarnVersion() string         { return "" }
-func (commandFCall) Warning() string             { return "" }
-func (commandFCall) Instead() string             { return "" }
-func (commandFCall) ETC() string                 { return "" }
-func (commandFCall) P(p Pipeliner) commandFCallP { return commandFCallP{p} }
-func (b commandFCallP) Cmd(function string, keys []string, args ...any) {
-	b.p.Cmd(b.p.builder().FCallCompleted(function, keys, args...))
-}
+func (commandFCall) String() string         { return "FCALL" }
+func (commandFCall) Class() string          { return "Scripting" }
+func (commandFCall) RequireVersion() string { return "7.0.0" }
+func (commandFCall) Forbid() bool           { return false }
+func (commandFCall) WarningOnce() bool      { return false }
+func (commandFCall) WarnVersion() string    { return "" }
+func (commandFCall) Warning() string        { return "" }
+func (commandFCall) Instead() string        { return "" }
+func (commandFCall) ETC() string            { return "" }
 
 var CommandFCallRO commandFCallRO
 
 type commandFCallRO string
-type commandFCallROP struct{ p Pipeliner }
 
-func (commandFCallRO) String() string                { return "FCALL_RO" }
-func (commandFCallRO) Class() string                 { return "Scripting" }
-func (commandFCallRO) RequireVersion() string        { return "7.0.0" }
-func (commandFCallRO) Forbid() bool                  { return false }
-func (commandFCallRO) WarningOnce() bool             { return false }
-func (commandFCallRO) WarnVersion() string           { return "" }
-func (commandFCallRO) Warning() string               { return "" }
-func (commandFCallRO) Instead() string               { return "" }
-func (commandFCallRO) ETC() string                   { return "" }
-func (commandFCallRO) P(p Pipeliner) commandFCallROP { return commandFCallROP{p} }
-func (b commandFCallROP) Cmd(function string, keys []string, args ...any) {
-	b.p.Cmd(b.p.builder().FCallROCompleted(function, keys, args...))
-}
+func (commandFCallRO) String() string         { return "FCALL_RO" }
+func (commandFCallRO) Class() string          { return "Scripting" }
+func (commandFCallRO) RequireVersion() string { return "7.0.0" }
+func (commandFCallRO) Forbid() bool           { return false }
+func (commandFCallRO) WarningOnce() bool      { return false }
+func (commandFCallRO) WarnVersion() string    { return "" }
+func (commandFCallRO) Warning() string        { return "" }
+func (commandFCallRO) Instead() string        { return "" }
+func (commandFCallRO) ETC() string            { return "" }
 
 var CommandFunctionDelete commandFunctionDelete
 
@@ -3629,19 +3654,16 @@ func (commandFunctionDelete) ETC() string            { return "" }
 var CommandFunctionDump commandFunctionDump
 
 type commandFunctionDump string
-type commandFunctionDumpP struct{ p Pipeliner }
 
-func (commandFunctionDump) String() string                     { return "FUNCTION DUMP" }
-func (commandFunctionDump) Class() string                      { return "Scripting" }
-func (commandFunctionDump) RequireVersion() string             { return "7.0.0" }
-func (commandFunctionDump) Forbid() bool                       { return false }
-func (commandFunctionDump) WarningOnce() bool                  { return false }
-func (commandFunctionDump) WarnVersion() string                { return "" }
-func (commandFunctionDump) Warning() string                    { return "" }
-func (commandFunctionDump) Instead() string                    { return "" }
-func (commandFunctionDump) ETC() string                        { return "" }
-func (commandFunctionDump) P(p Pipeliner) commandFunctionDumpP { return commandFunctionDumpP{p} }
-func (b commandFunctionDumpP) Cmd()                            { b.p.Cmd(b.p.builder().FunctionDumpCompleted()) }
+func (commandFunctionDump) String() string         { return "FUNCTION DUMP" }
+func (commandFunctionDump) Class() string          { return "Scripting" }
+func (commandFunctionDump) RequireVersion() string { return "7.0.0" }
+func (commandFunctionDump) Forbid() bool           { return false }
+func (commandFunctionDump) WarningOnce() bool      { return false }
+func (commandFunctionDump) WarnVersion() string    { return "" }
+func (commandFunctionDump) Warning() string        { return "" }
+func (commandFunctionDump) Instead() string        { return "" }
+func (commandFunctionDump) ETC() string            { return "" }
 
 var CommandFunctionFlush commandFunctionFlush
 
@@ -3688,21 +3710,16 @@ func (commandFunctionKill) ETC() string            { return "" }
 var CommandFunctionList commandFunctionList
 
 type commandFunctionList string
-type commandFunctionListP struct{ p Pipeliner }
 
-func (commandFunctionList) String() string                     { return "FUNCTION LIST" }
-func (commandFunctionList) Class() string                      { return "Scripting" }
-func (commandFunctionList) RequireVersion() string             { return "7.0.0" }
-func (commandFunctionList) Forbid() bool                       { return false }
-func (commandFunctionList) WarningOnce() bool                  { return false }
-func (commandFunctionList) WarnVersion() string                { return "" }
-func (commandFunctionList) Warning() string                    { return "" }
-func (commandFunctionList) Instead() string                    { return "" }
-func (commandFunctionList) ETC() string                        { return "" }
-func (commandFunctionList) P(p Pipeliner) commandFunctionListP { return commandFunctionListP{p} }
-func (b commandFunctionListP) Cmd(q FunctionListQuery) {
-	b.p.Cmd(b.p.builder().FunctionListCompleted(q))
-}
+func (commandFunctionList) String() string         { return "FUNCTION LIST" }
+func (commandFunctionList) Class() string          { return "Scripting" }
+func (commandFunctionList) RequireVersion() string { return "7.0.0" }
+func (commandFunctionList) Forbid() bool           { return false }
+func (commandFunctionList) WarningOnce() bool      { return false }
+func (commandFunctionList) WarnVersion() string    { return "" }
+func (commandFunctionList) Warning() string        { return "" }
+func (commandFunctionList) Instead() string        { return "" }
+func (commandFunctionList) ETC() string            { return "" }
 
 var CommandFunctionLoad commandFunctionLoad
 
@@ -3818,7 +3835,7 @@ func (commandACLDryRun) Instead() string                 { return "" }
 func (commandACLDryRun) ETC() string                     { return "" }
 func (commandACLDryRun) P(p Pipeliner) commandACLDryRunP { return commandACLDryRunP{p} }
 func (b commandACLDryRunP) Cmd(username string, command ...any) {
-	b.p.Cmd(b.p.builder().ACLDryRunCompleted(username, command...))
+	b.p.Cmd(b.p.builder().ACLDryRunCompleted(username, command...), &stringCmd{})
 }
 
 var CommandBgRewriteAOF commandBgRewriteAOF
@@ -3864,7 +3881,7 @@ func (commandCommand) Warning() string               { return "" }
 func (commandCommand) Instead() string               { return "" }
 func (commandCommand) ETC() string                   { return "" }
 func (commandCommand) P(p Pipeliner) commandCommandP { return commandCommandP{p} }
-func (b commandCommandP) Cmd()                       { b.p.Cmd(b.p.builder().CommandCompleted()) }
+func (b commandCommandP) Cmd()                       { b.p.Cmd(b.p.builder().CommandCompleted(), &commandsInfoCmd{}) }
 
 var CommandCommandList commandCommandList
 
@@ -3882,7 +3899,7 @@ func (commandCommandList) Instead() string                   { return "" }
 func (commandCommandList) ETC() string                       { return "" }
 func (commandCommandList) P(p Pipeliner) commandCommandListP { return commandCommandListP{p} }
 func (b commandCommandListP) Cmd(filter FilterBy) {
-	b.p.Cmd(b.p.builder().CommandListCompleted(filter))
+	b.p.Cmd(b.p.builder().CommandListCompleted(filter), &stringSliceCmd{})
 }
 
 var CommandCommandGetKeys commandCommandGetKeys
@@ -3901,7 +3918,7 @@ func (commandCommandGetKeys) Instead() string                      { return "" }
 func (commandCommandGetKeys) ETC() string                          { return "" }
 func (commandCommandGetKeys) P(p Pipeliner) commandCommandGetKeysP { return commandCommandGetKeysP{p} }
 func (b commandCommandGetKeysP) Cmd(commands ...any) {
-	b.p.Cmd(b.p.builder().CommandGetKeysCompleted(commands...))
+	b.p.Cmd(b.p.builder().CommandGetKeysCompleted(commands...), &stringSliceCmd{})
 }
 
 var CommandCommandGetKeysAndFlags commandCommandGetKeysAndFlags
@@ -3922,7 +3939,7 @@ func (commandCommandGetKeysAndFlags) P(p Pipeliner) commandCommandGetKeysAndFlag
 	return commandCommandGetKeysAndFlagsP{p}
 }
 func (b commandCommandGetKeysAndFlagsP) Cmd(commands ...any) {
-	b.p.Cmd(b.p.builder().CommandGetKeysAndFlagsCompleted(commands...))
+	b.p.Cmd(b.p.builder().CommandGetKeysAndFlagsCompleted(commands...), &keyFlagsCmd{})
 }
 
 var CommandConfigGet commandConfigGet
@@ -3941,7 +3958,7 @@ func (commandConfigGet) Instead() string                 { return "" }
 func (commandConfigGet) ETC() string                     { return "" }
 func (commandConfigGet) P(p Pipeliner) commandConfigGetP { return commandConfigGetP{p} }
 func (b commandConfigGetP) Cmd(parameter string) {
-	b.p.Cmd(b.p.builder().ConfigGetCompleted(parameter))
+	b.p.Cmd(b.p.builder().ConfigGetCompleted(parameter), &stringStringMapCmd{})
 }
 
 var CommandConfigResetStat commandConfigResetStat
@@ -4071,7 +4088,9 @@ func (commandServerInfo) Warning() string                  { return "" }
 func (commandServerInfo) Instead() string                  { return "" }
 func (commandServerInfo) ETC() string                      { return "" }
 func (commandServerInfo) P(p Pipeliner) commandServerInfoP { return commandServerInfoP{p} }
-func (b commandServerInfoP) Cmd(section string)            { b.p.Cmd(b.p.builder().InfoCompleted(section)) }
+func (b commandServerInfoP) Cmd(section string) {
+	b.p.Cmd(b.p.builder().InfoCompleted(section), &stringCmd{})
+}
 
 var CommandMServerInfo commandMServerInfo
 
@@ -4088,7 +4107,9 @@ func (commandMServerInfo) Warning() string                   { return "" }
 func (commandMServerInfo) Instead() string                   { return "" }
 func (commandMServerInfo) ETC() string                       { return "" }
 func (commandMServerInfo) P(p Pipeliner) commandMServerInfoP { return commandMServerInfoP{p} }
-func (b commandMServerInfoP) Cmd(section ...string)          { b.p.Cmd(b.p.builder().InfoCompleted(section...)) }
+func (b commandMServerInfoP) Cmd(section ...string) {
+	b.p.Cmd(b.p.builder().InfoCompleted(section...), &stringCmd{})
+}
 
 var CommandLastSave commandLastSave
 
@@ -4105,7 +4126,7 @@ func (commandLastSave) Warning() string                { return "" }
 func (commandLastSave) Instead() string                { return "" }
 func (commandLastSave) ETC() string                    { return "" }
 func (commandLastSave) P(p Pipeliner) commandLastSaveP { return commandLastSaveP{p} }
-func (b commandLastSaveP) Cmd()                        { b.p.Cmd(b.p.builder().LastSaveCompleted()) }
+func (b commandLastSaveP) Cmd()                        { b.p.Cmd(b.p.builder().LastSaveCompleted(), &intCmd{}) }
 
 var CommandMemoryUsage commandMemoryUsage
 
@@ -4123,7 +4144,7 @@ func (commandMemoryUsage) Instead() string                   { return "" }
 func (commandMemoryUsage) ETC() string                       { return "" }
 func (commandMemoryUsage) P(p Pipeliner) commandMemoryUsageP { return commandMemoryUsageP{p} }
 func (b commandMemoryUsageP) Cmd(key string, samples ...int64) {
-	b.p.Cmd(b.p.builder().MemoryUsageCompleted(key, samples...))
+	b.p.Cmd(b.p.builder().MemoryUsageCompleted(key, samples...), &intCmd{})
 }
 
 var CommandSave commandSave
@@ -4197,7 +4218,9 @@ func (commandDebugObject) Warning() string                   { return "" }
 func (commandDebugObject) Instead() string                   { return "" }
 func (commandDebugObject) ETC() string                       { return "" }
 func (commandDebugObject) P(p Pipeliner) commandDebugObjectP { return commandDebugObjectP{p} }
-func (b commandDebugObjectP) Cmd(key string)                 { b.p.Cmd(b.p.builder().DebugObjectCompleted(key)) }
+func (b commandDebugObjectP) Cmd(key string) {
+	b.p.Cmd(b.p.builder().DebugObjectCompleted(key), &stringCmd{})
+}
 
 var CommandTime commandTime
 
@@ -4214,24 +4237,26 @@ func (commandTime) Warning() string            { return "" }
 func (commandTime) Instead() string            { return "" }
 func (commandTime) ETC() string                { return "" }
 func (commandTime) P(p Pipeliner) commandTimeP { return commandTimeP{p} }
-func (b commandTimeP) Cmd()                    { b.p.Cmd(b.p.builder().TimeCompleted()) }
+func (b commandTimeP) Cmd()                    { b.p.Cmd(b.p.builder().TimeCompleted(), &timeCmd{}) }
 
 var CommandSAdd commandSAdd
 
 type commandSAdd string
 type commandSAddP struct{ p Pipeliner }
 
-func (commandSAdd) String() string                { return "SADD" }
-func (commandSAdd) Class() string                 { return "Set" }
-func (commandSAdd) RequireVersion() string        { return "1.0.0" }
-func (commandSAdd) Forbid() bool                  { return false }
-func (commandSAdd) WarningOnce() bool             { return false }
-func (commandSAdd) WarnVersion() string           { return "" }
-func (commandSAdd) Warning() string               { return "" }
-func (commandSAdd) Instead() string               { return "" }
-func (commandSAdd) ETC() string                   { return "" }
-func (commandSAdd) P(p Pipeliner) commandSAddP    { return commandSAddP{p} }
-func (b commandSAddP) Cmd(key string, member any) { b.p.Cmd(b.p.builder().SAddCompleted(key, member)) }
+func (commandSAdd) String() string             { return "SADD" }
+func (commandSAdd) Class() string              { return "Set" }
+func (commandSAdd) RequireVersion() string     { return "1.0.0" }
+func (commandSAdd) Forbid() bool               { return false }
+func (commandSAdd) WarningOnce() bool          { return false }
+func (commandSAdd) WarnVersion() string        { return "" }
+func (commandSAdd) Warning() string            { return "" }
+func (commandSAdd) Instead() string            { return "" }
+func (commandSAdd) ETC() string                { return "" }
+func (commandSAdd) P(p Pipeliner) commandSAddP { return commandSAddP{p} }
+func (b commandSAddP) Cmd(key string, member any) {
+	b.p.Cmd(b.p.builder().SAddCompleted(key, member), &intCmd{})
+}
 
 var CommandSMAdd commandSMAdd
 
@@ -4249,7 +4274,7 @@ func (commandSMAdd) Instead() string             { return "" }
 func (commandSMAdd) ETC() string                 { return "" }
 func (commandSMAdd) P(p Pipeliner) commandSMAddP { return commandSMAddP{p} }
 func (b commandSMAddP) Cmd(key string, members ...any) {
-	b.p.Cmd(b.p.builder().SAddCompleted(key, members...))
+	b.p.Cmd(b.p.builder().SAddCompleted(key, members...), &intCmd{})
 }
 
 var CommandSCard commandSCard
@@ -4267,7 +4292,7 @@ func (commandSCard) Warning() string             { return "" }
 func (commandSCard) Instead() string             { return "" }
 func (commandSCard) ETC() string                 { return "" }
 func (commandSCard) P(p Pipeliner) commandSCardP { return commandSCardP{p} }
-func (b commandSCardP) Cmd(key string)           { b.p.Cmd(b.p.builder().SCardCompleted(key)) }
+func (b commandSCardP) Cmd(key string)           { b.p.Cmd(b.p.builder().SCardCompleted(key), &intCmd{}) }
 
 var CommandSDiff commandSDiff
 
@@ -4284,7 +4309,9 @@ func (commandSDiff) Warning() string             { return "" }
 func (commandSDiff) Instead() string             { return "" }
 func (commandSDiff) ETC() string                 { return "" }
 func (commandSDiff) P(p Pipeliner) commandSDiffP { return commandSDiffP{p} }
-func (b commandSDiffP) Cmd(keys ...string)       { b.p.Cmd(b.p.builder().SDiffCompleted(keys...)) }
+func (b commandSDiffP) Cmd(keys ...string) {
+	b.p.Cmd(b.p.builder().SDiffCompleted(keys...), &stringSliceCmd{})
+}
 
 var CommandSDiffStore commandSDiffStore
 
@@ -4302,7 +4329,7 @@ func (commandSDiffStore) Instead() string                  { return "" }
 func (commandSDiffStore) ETC() string                      { return "" }
 func (commandSDiffStore) P(p Pipeliner) commandSDiffStoreP { return commandSDiffStoreP{p} }
 func (b commandSDiffStoreP) Cmd(destination string, keys ...string) {
-	b.p.Cmd(b.p.builder().SDiffStoreCompleted(destination, keys...))
+	b.p.Cmd(b.p.builder().SDiffStoreCompleted(destination, keys...), &intCmd{})
 }
 
 var CommandSInter commandSInter
@@ -4320,7 +4347,9 @@ func (commandSInter) Warning() string              { return "" }
 func (commandSInter) Instead() string              { return "" }
 func (commandSInter) ETC() string                  { return "" }
 func (commandSInter) P(p Pipeliner) commandSInterP { return commandSInterP{p} }
-func (b commandSInterP) Cmd(keys ...string)        { b.p.Cmd(b.p.builder().SInterCompleted(keys...)) }
+func (b commandSInterP) Cmd(keys ...string) {
+	b.p.Cmd(b.p.builder().SInterCompleted(keys...), &stringSliceCmd{})
+}
 
 var CommandSInterStore commandSInterStore
 
@@ -4338,7 +4367,7 @@ func (commandSInterStore) Instead() string                   { return "" }
 func (commandSInterStore) ETC() string                       { return "" }
 func (commandSInterStore) P(p Pipeliner) commandSInterStoreP { return commandSInterStoreP{p} }
 func (b commandSInterStoreP) Cmd(destination string, keys ...string) {
-	b.p.Cmd(b.p.builder().SInterStoreCompleted(destination, keys...))
+	b.p.Cmd(b.p.builder().SInterStoreCompleted(destination, keys...), &intCmd{})
 }
 
 var CommandSInterCard commandSInterCard
@@ -4357,7 +4386,7 @@ func (commandSInterCard) Instead() string                  { return "" }
 func (commandSInterCard) ETC() string                      { return "" }
 func (commandSInterCard) P(p Pipeliner) commandSInterCardP { return commandSInterCardP{p} }
 func (b commandSInterCardP) Cmd(limit int64, keys ...string) {
-	b.p.Cmd(b.p.builder().SInterCardCompleted(limit, keys...))
+	b.p.Cmd(b.p.builder().SInterCardCompleted(limit, keys...), &intCmd{})
 }
 
 var CommandSIsMember commandSIsMember
@@ -4376,7 +4405,7 @@ func (commandSIsMember) Instead() string                 { return "" }
 func (commandSIsMember) ETC() string                     { return "" }
 func (commandSIsMember) P(p Pipeliner) commandSIsMemberP { return commandSIsMemberP{p} }
 func (b commandSIsMemberP) Cmd(key string, member any) {
-	b.p.Cmd(b.p.builder().SIsMemberCompleted(key, member))
+	b.p.Cmd(b.p.builder().SIsMemberCompleted(key, member), &boolCmd{})
 }
 
 var CommandSMIsMember commandSMIsMember
@@ -4395,7 +4424,7 @@ func (commandSMIsMember) Instead() string                  { return "" }
 func (commandSMIsMember) ETC() string                      { return "" }
 func (commandSMIsMember) P(p Pipeliner) commandSMIsMemberP { return commandSMIsMemberP{p} }
 func (b commandSMIsMemberP) Cmd(key string, members ...any) {
-	b.p.Cmd(b.p.builder().SMIsMemberCompleted(key, members...))
+	b.p.Cmd(b.p.builder().SMIsMemberCompleted(key, members...), &boolSliceCmd{})
 }
 
 var CommandSMembers commandSMembers
@@ -4413,7 +4442,9 @@ func (commandSMembers) Warning() string                { return "" }
 func (commandSMembers) Instead() string                { return "" }
 func (commandSMembers) ETC() string                    { return "" }
 func (commandSMembers) P(p Pipeliner) commandSMembersP { return commandSMembersP{p} }
-func (b commandSMembersP) Cmd(key string)              { b.p.Cmd(b.p.builder().SMembersCompleted(key)) }
+func (b commandSMembersP) Cmd(key string) {
+	b.p.Cmd(b.p.builder().SMembersCompleted(key), &stringSliceCmd{})
+}
 
 var CommandSMove commandSMove
 
@@ -4431,7 +4462,7 @@ func (commandSMove) Instead() string             { return "" }
 func (commandSMove) ETC() string                 { return "" }
 func (commandSMove) P(p Pipeliner) commandSMoveP { return commandSMoveP{p} }
 func (b commandSMoveP) Cmd(source, destination string, member any) {
-	b.p.Cmd(b.p.builder().SMoveCompleted(source, destination, member))
+	b.p.Cmd(b.p.builder().SMoveCompleted(source, destination, member), &boolCmd{})
 }
 
 var CommandSPop commandSPop
@@ -4449,7 +4480,7 @@ func (commandSPop) Warning() string            { return "" }
 func (commandSPop) Instead() string            { return "" }
 func (commandSPop) ETC() string                { return "" }
 func (commandSPop) P(p Pipeliner) commandSPopP { return commandSPopP{p} }
-func (b commandSPopP) Cmd(key string)          { b.p.Cmd(b.p.builder().SPopCompleted(key)) }
+func (b commandSPopP) Cmd(key string)          { b.p.Cmd(b.p.builder().SPopCompleted(key), &stringCmd{}) }
 
 var CommandSPopN commandSPopN
 
@@ -4467,7 +4498,7 @@ func (commandSPopN) Instead() string             { return "" }
 func (commandSPopN) ETC() string                 { return "" }
 func (commandSPopN) P(p Pipeliner) commandSPopNP { return commandSPopNP{p} }
 func (b commandSPopNP) Cmd(key string, count int64) {
-	b.p.Cmd(b.p.builder().SPopNCompleted(key, count))
+	b.p.Cmd(b.p.builder().SPopNCompleted(key, count), &stringSliceCmd{})
 }
 
 var CommandSRandMember commandSRandMember
@@ -4485,7 +4516,9 @@ func (commandSRandMember) Warning() string                   { return "" }
 func (commandSRandMember) Instead() string                   { return "" }
 func (commandSRandMember) ETC() string                       { return "" }
 func (commandSRandMember) P(p Pipeliner) commandSRandMemberP { return commandSRandMemberP{p} }
-func (b commandSRandMemberP) Cmd(key string)                 { b.p.Cmd(b.p.builder().SRandMemberCompleted(key)) }
+func (b commandSRandMemberP) Cmd(key string) {
+	b.p.Cmd(b.p.builder().SRandMemberCompleted(key), &stringCmd{})
+}
 
 var CommandSRandMemberN commandSRandMemberN
 
@@ -4503,7 +4536,7 @@ func (commandSRandMemberN) Instead() string                    { return "" }
 func (commandSRandMemberN) ETC() string                        { return "" }
 func (commandSRandMemberN) P(p Pipeliner) commandSRandMemberNP { return commandSRandMemberNP{p} }
 func (b commandSRandMemberNP) Cmd(key string, count int64) {
-	b.p.Cmd(b.p.builder().SRandMemberNCompleted(key, count))
+	b.p.Cmd(b.p.builder().SRandMemberNCompleted(key, count), &stringSliceCmd{})
 }
 
 var CommandSRem commandSRem
@@ -4511,17 +4544,19 @@ var CommandSRem commandSRem
 type commandSRem string
 type commandSRemP struct{ p Pipeliner }
 
-func (commandSRem) String() string                { return "SREM" }
-func (commandSRem) Class() string                 { return "Set" }
-func (commandSRem) RequireVersion() string        { return "1.0.0" }
-func (commandSRem) Forbid() bool                  { return false }
-func (commandSRem) WarningOnce() bool             { return false }
-func (commandSRem) WarnVersion() string           { return "" }
-func (commandSRem) Warning() string               { return "" }
-func (commandSRem) Instead() string               { return "" }
-func (commandSRem) ETC() string                   { return "" }
-func (commandSRem) P(p Pipeliner) commandSRemP    { return commandSRemP{p} }
-func (b commandSRemP) Cmd(key string, member any) { b.p.Cmd(b.p.builder().SRemCompleted(key, member)) }
+func (commandSRem) String() string             { return "SREM" }
+func (commandSRem) Class() string              { return "Set" }
+func (commandSRem) RequireVersion() string     { return "1.0.0" }
+func (commandSRem) Forbid() bool               { return false }
+func (commandSRem) WarningOnce() bool          { return false }
+func (commandSRem) WarnVersion() string        { return "" }
+func (commandSRem) Warning() string            { return "" }
+func (commandSRem) Instead() string            { return "" }
+func (commandSRem) ETC() string                { return "" }
+func (commandSRem) P(p Pipeliner) commandSRemP { return commandSRemP{p} }
+func (b commandSRemP) Cmd(key string, member any) {
+	b.p.Cmd(b.p.builder().SRemCompleted(key, member), &intCmd{})
+}
 
 var CommandSMRem commandSMRem
 
@@ -4539,7 +4574,7 @@ func (commandSMRem) Instead() string             { return "" }
 func (commandSMRem) ETC() string                 { return "" }
 func (commandSMRem) P(p Pipeliner) commandSMRemP { return commandSMRemP{p} }
 func (b commandSMRemP) Cmd(key string, members ...any) {
-	b.p.Cmd(b.p.builder().SRemCompleted(key, members...))
+	b.p.Cmd(b.p.builder().SRemCompleted(key, members...), &intCmd{})
 }
 
 var CommandSScan commandSScan
@@ -4558,7 +4593,7 @@ func (commandSScan) Instead() string             { return "" }
 func (commandSScan) ETC() string                 { return "" }
 func (commandSScan) P(p Pipeliner) commandSScanP { return commandSScanP{p} }
 func (b commandSScanP) Cmd(key string, cursor uint64, match string, count int64) {
-	b.p.Cmd(b.p.builder().SScanCompleted(key, cursor, match, count))
+	b.p.Cmd(b.p.builder().SScanCompleted(key, cursor, match, count), &scanCmd{})
 }
 
 var CommandSUnion commandSUnion
@@ -4576,7 +4611,9 @@ func (commandSUnion) Warning() string              { return "" }
 func (commandSUnion) Instead() string              { return "" }
 func (commandSUnion) ETC() string                  { return "" }
 func (commandSUnion) P(p Pipeliner) commandSUnionP { return commandSUnionP{p} }
-func (b commandSUnionP) Cmd(keys ...string)        { b.p.Cmd(b.p.builder().SUnionCompleted(keys...)) }
+func (b commandSUnionP) Cmd(keys ...string) {
+	b.p.Cmd(b.p.builder().SUnionCompleted(keys...), &stringSliceCmd{})
+}
 
 var CommandSUnionStore commandSUnionStore
 
@@ -4594,7 +4631,7 @@ func (commandSUnionStore) Instead() string                   { return "" }
 func (commandSUnionStore) ETC() string                       { return "" }
 func (commandSUnionStore) P(p Pipeliner) commandSUnionStoreP { return commandSUnionStoreP{p} }
 func (b commandSUnionStoreP) Cmd(destination string, keys ...string) {
-	b.p.Cmd(b.p.builder().SUnionStoreCompleted(destination, keys...))
+	b.p.Cmd(b.p.builder().SUnionStoreCompleted(destination, keys...), &intCmd{})
 }
 
 var CommandBZMPop commandBZMPop
@@ -4644,17 +4681,19 @@ var CommandZAdd commandZAdd
 type commandZAdd string
 type commandZAddP struct{ p Pipeliner }
 
-func (commandZAdd) String() string              { return "ZADD" }
-func (commandZAdd) Class() string               { return "SortedSet" }
-func (commandZAdd) RequireVersion() string      { return "1.2.0" }
-func (commandZAdd) Forbid() bool                { return false }
-func (commandZAdd) WarningOnce() bool           { return false }
-func (commandZAdd) WarnVersion() string         { return "" }
-func (commandZAdd) Warning() string             { return "" }
-func (commandZAdd) Instead() string             { return "" }
-func (commandZAdd) ETC() string                 { return "" }
-func (commandZAdd) P(p Pipeliner) commandZAddP  { return commandZAddP{p} }
-func (b commandZAddP) Cmd(key string, member Z) { b.p.Cmd(b.p.builder().ZAddCompleted(key, member)) }
+func (commandZAdd) String() string             { return "ZADD" }
+func (commandZAdd) Class() string              { return "SortedSet" }
+func (commandZAdd) RequireVersion() string     { return "1.2.0" }
+func (commandZAdd) Forbid() bool               { return false }
+func (commandZAdd) WarningOnce() bool          { return false }
+func (commandZAdd) WarnVersion() string        { return "" }
+func (commandZAdd) Warning() string            { return "" }
+func (commandZAdd) Instead() string            { return "" }
+func (commandZAdd) ETC() string                { return "" }
+func (commandZAdd) P(p Pipeliner) commandZAddP { return commandZAddP{p} }
+func (b commandZAddP) Cmd(key string, member Z) {
+	b.p.Cmd(b.p.builder().ZAddCompleted(key, member), &intCmd{})
+}
 
 var CommandZAddArgs commandZAddArgs
 
@@ -4672,7 +4711,7 @@ func (commandZAddArgs) Instead() string                { return "" }
 func (commandZAddArgs) ETC() string                    { return "" }
 func (commandZAddArgs) P(p Pipeliner) commandZAddArgsP { return commandZAddArgsP{p} }
 func (b commandZAddArgsP) Cmd(key string, args ZAddArgs) {
-	b.p.Cmd(b.p.builder().ZAddArgsCompleted(key, args))
+	b.p.Cmd(b.p.builder().ZAddArgsCompleted(key, args), &intCmd{})
 }
 
 var CommandZMAdd commandZMAdd
@@ -4691,7 +4730,7 @@ func (commandZMAdd) Instead() string             { return "" }
 func (commandZMAdd) ETC() string                 { return "" }
 func (commandZMAdd) P(p Pipeliner) commandZMAddP { return commandZMAddP{p} }
 func (b commandZMAddP) Cmd(key string, members ...Z) {
-	b.p.Cmd(b.p.builder().ZAddCompleted(key, members...))
+	b.p.Cmd(b.p.builder().ZAddCompleted(key, members...), &intCmd{})
 }
 
 var CommandZAddCh commandZAddCh
@@ -4710,7 +4749,7 @@ func (commandZAddCh) Instead() string              { return "" }
 func (commandZAddCh) ETC() string                  { return "" }
 func (commandZAddCh) P(p Pipeliner) commandZAddChP { return commandZAddChP{p} }
 func (b commandZAddChP) Cmd(key string, members ...Z) {
-	b.p.Cmd(b.p.builder().ZAddChCompleted(key, members...))
+	b.p.Cmd(b.p.builder().ZAddChCompleted(key, members...), &intCmd{})
 }
 
 var CommandZAddLT commandZAddLT
@@ -4729,7 +4768,7 @@ func (commandZAddLT) Instead() string              { return "" }
 func (commandZAddLT) ETC() string                  { return "" }
 func (commandZAddLT) P(p Pipeliner) commandZAddLTP { return commandZAddLTP{p} }
 func (b commandZAddLTP) Cmd(key string, members ...Z) {
-	b.p.Cmd(b.p.builder().ZAddLTCompleted(key, members...))
+	b.p.Cmd(b.p.builder().ZAddLTCompleted(key, members...), &intCmd{})
 }
 
 var CommandZAddGT commandZAddGT
@@ -4748,7 +4787,7 @@ func (commandZAddGT) Instead() string              { return "" }
 func (commandZAddGT) ETC() string                  { return "" }
 func (commandZAddGT) P(p Pipeliner) commandZAddGTP { return commandZAddGTP{p} }
 func (b commandZAddGTP) Cmd(key string, members ...Z) {
-	b.p.Cmd(b.p.builder().ZAddGTCompleted(key, members...))
+	b.p.Cmd(b.p.builder().ZAddGTCompleted(key, members...), &intCmd{})
 }
 
 var CommandZAddNX commandZAddNX
@@ -4767,7 +4806,7 @@ func (commandZAddNX) Instead() string              { return "" }
 func (commandZAddNX) ETC() string                  { return "" }
 func (commandZAddNX) P(p Pipeliner) commandZAddNXP { return commandZAddNXP{p} }
 func (b commandZAddNXP) Cmd(key string, members ...Z) {
-	b.p.Cmd(b.p.builder().ZAddNXCompleted(key, members...))
+	b.p.Cmd(b.p.builder().ZAddNXCompleted(key, members...), &intCmd{})
 }
 
 var CommandZAddXX commandZAddXX
@@ -4786,26 +4825,45 @@ func (commandZAddXX) Instead() string              { return "" }
 func (commandZAddXX) ETC() string                  { return "" }
 func (commandZAddXX) P(p Pipeliner) commandZAddXXP { return commandZAddXXP{p} }
 func (b commandZAddXXP) Cmd(key string, members ...Z) {
-	b.p.Cmd(b.p.builder().ZAddXXCompleted(key, members...))
+	b.p.Cmd(b.p.builder().ZAddXXCompleted(key, members...), &intCmd{})
 }
 
-var CommandZAddINCR commandZAddINCR
+var CommandZAddArgsIncr commandZAddArgsIncr
 
-type commandZAddINCR string
-type commandZAddINCRP struct{ p Pipeliner }
+type commandZAddArgsIncr string
+type commandZAddArgsIncrP struct{ p Pipeliner }
 
-func (commandZAddINCR) String() string                 { return "ZADD INCR" }
-func (commandZAddINCR) Class() string                  { return "SortedSet" }
-func (commandZAddINCR) RequireVersion() string         { return "3.0.2" }
-func (commandZAddINCR) Forbid() bool                   { return false }
-func (commandZAddINCR) WarningOnce() bool              { return false }
-func (commandZAddINCR) WarnVersion() string            { return "" }
-func (commandZAddINCR) Warning() string                { return "" }
-func (commandZAddINCR) Instead() string                { return "" }
-func (commandZAddINCR) ETC() string                    { return "" }
-func (commandZAddINCR) P(p Pipeliner) commandZAddINCRP { return commandZAddINCRP{p} }
-func (b commandZAddINCRP) Cmd(key string, args ZAddArgs) {
-	b.p.Cmd(b.p.builder().ZAddArgsIncrCompleted(key, args))
+func (commandZAddArgsIncr) String() string                     { return "ZADD INCR" }
+func (commandZAddArgsIncr) Class() string                      { return "SortedSet" }
+func (commandZAddArgsIncr) RequireVersion() string             { return "3.0.2" }
+func (commandZAddArgsIncr) Forbid() bool                       { return false }
+func (commandZAddArgsIncr) WarningOnce() bool                  { return false }
+func (commandZAddArgsIncr) WarnVersion() string                { return "" }
+func (commandZAddArgsIncr) Warning() string                    { return "" }
+func (commandZAddArgsIncr) Instead() string                    { return "" }
+func (commandZAddArgsIncr) ETC() string                        { return "" }
+func (commandZAddArgsIncr) P(p Pipeliner) commandZAddArgsIncrP { return commandZAddArgsIncrP{p} }
+func (b commandZAddArgsIncrP) Cmd(key string, args ZAddArgs) {
+	b.p.Cmd(b.p.builder().ZAddArgsIncrCompleted(key, args), &floatCmd{})
+}
+
+var CommandZAddIncr commandZAddIncr
+
+type commandZAddIncr string
+type commandZAddIncrP struct{ p Pipeliner }
+
+func (commandZAddIncr) String() string                 { return "ZADD INCR" }
+func (commandZAddIncr) Class() string                  { return "SortedSet" }
+func (commandZAddIncr) RequireVersion() string         { return "3.0.2" }
+func (commandZAddIncr) Forbid() bool                   { return false }
+func (commandZAddIncr) WarningOnce() bool              { return false }
+func (commandZAddIncr) WarnVersion() string            { return "" }
+func (commandZAddIncr) Warning() string                { return "" }
+func (commandZAddIncr) Instead() string                { return "" }
+func (commandZAddIncr) ETC() string                    { return "" }
+func (commandZAddIncr) P(p Pipeliner) commandZAddIncrP { return commandZAddIncrP{p} }
+func (b commandZAddIncrP) Cmd(key string, args ZAddArgs) {
+	b.p.Cmd(b.p.builder().ZAddArgsIncrCompleted(key, args), &floatCmd{})
 }
 
 var CommandZCard commandZCard
@@ -4823,7 +4881,7 @@ func (commandZCard) Warning() string             { return "" }
 func (commandZCard) Instead() string             { return "" }
 func (commandZCard) ETC() string                 { return "" }
 func (commandZCard) P(p Pipeliner) commandZCardP { return commandZCardP{p} }
-func (b commandZCardP) Cmd(key string)           { b.p.Cmd(b.p.builder().ZCardCompleted(key)) }
+func (b commandZCardP) Cmd(key string)           { b.p.Cmd(b.p.builder().ZCardCompleted(key), &intCmd{}) }
 
 var CommandZCount commandZCount
 
@@ -4841,7 +4899,7 @@ func (commandZCount) Instead() string              { return "" }
 func (commandZCount) ETC() string                  { return "" }
 func (commandZCount) P(p Pipeliner) commandZCountP { return commandZCountP{p} }
 func (b commandZCountP) Cmd(key, min, max string) {
-	b.p.Cmd(b.p.builder().ZCountCompleted(key, min, max))
+	b.p.Cmd(b.p.builder().ZCountCompleted(key, min, max), &intCmd{})
 }
 
 var CommandZDiff commandZDiff
@@ -4859,7 +4917,9 @@ func (commandZDiff) Warning() string             { return "" }
 func (commandZDiff) Instead() string             { return "" }
 func (commandZDiff) ETC() string                 { return "" }
 func (commandZDiff) P(p Pipeliner) commandZDiffP { return commandZDiffP{p} }
-func (b commandZDiffP) Cmd(keys ...string)       { b.p.Cmd(b.p.builder().ZDiffCompleted(keys...)) }
+func (b commandZDiffP) Cmd(keys ...string) {
+	b.p.Cmd(b.p.builder().ZDiffCompleted(keys...), &stringSliceCmd{})
+}
 
 var CommandZDiffWithScores commandZDiffWithScores
 
@@ -4879,7 +4939,7 @@ func (commandZDiffWithScores) P(p Pipeliner) commandZDiffWithScoresP {
 	return commandZDiffWithScoresP{p}
 }
 func (b commandZDiffWithScoresP) Cmd(keys ...string) {
-	b.p.Cmd(b.p.builder().ZDiffWithScoresCompleted(keys...))
+	b.p.Cmd(b.p.builder().ZDiffWithScoresCompleted(keys...), &zSliceCmd{})
 }
 
 var CommandZDiffStore commandZDiffStore
@@ -4898,7 +4958,7 @@ func (commandZDiffStore) Instead() string                  { return "" }
 func (commandZDiffStore) ETC() string                      { return "" }
 func (commandZDiffStore) P(p Pipeliner) commandZDiffStoreP { return commandZDiffStoreP{p} }
 func (b commandZDiffStoreP) Cmd(destination string, keys ...string) {
-	b.p.Cmd(b.p.builder().ZDiffStoreCompleted(destination, keys...))
+	b.p.Cmd(b.p.builder().ZDiffStoreCompleted(destination, keys...), &intCmd{})
 }
 
 var CommandZIncrBy commandZIncrBy
@@ -4917,7 +4977,7 @@ func (commandZIncrBy) Instead() string               { return "" }
 func (commandZIncrBy) ETC() string                   { return "" }
 func (commandZIncrBy) P(p Pipeliner) commandZIncrByP { return commandZIncrByP{p} }
 func (b commandZIncrByP) Cmd(key string, increment float64, member string) {
-	b.p.Cmd(b.p.builder().ZIncrByCompleted(key, increment, member))
+	b.p.Cmd(b.p.builder().ZIncrByCompleted(key, increment, member), &floatCmd{})
 }
 
 var CommandZInter commandZInter
@@ -4935,7 +4995,9 @@ func (commandZInter) Warning() string              { return "" }
 func (commandZInter) Instead() string              { return "" }
 func (commandZInter) ETC() string                  { return "" }
 func (commandZInter) P(p Pipeliner) commandZInterP { return commandZInterP{p} }
-func (b commandZInterP) Cmd(store ZStore)          { b.p.Cmd(b.p.builder().ZInterCompleted(store)) }
+func (b commandZInterP) Cmd(store ZStore) {
+	b.p.Cmd(b.p.builder().ZInterCompleted(store), &stringSliceCmd{})
+}
 
 var CommandZInterWithScores commandZInterWithScores
 
@@ -4955,7 +5017,7 @@ func (commandZInterWithScores) P(p Pipeliner) commandZInterWithScoresP {
 	return commandZInterWithScoresP{p}
 }
 func (b commandZInterWithScoresP) Cmd(store ZStore) {
-	b.p.Cmd(b.p.builder().ZInterWithScoresCompleted(store))
+	b.p.Cmd(b.p.builder().ZInterWithScoresCompleted(store), &zSliceCmd{})
 }
 
 var CommandZInterStore commandZInterStore
@@ -4974,7 +5036,7 @@ func (commandZInterStore) Instead() string                   { return "" }
 func (commandZInterStore) ETC() string                       { return "" }
 func (commandZInterStore) P(p Pipeliner) commandZInterStoreP { return commandZInterStoreP{p} }
 func (b commandZInterStoreP) Cmd(destination string, store ZStore) {
-	b.p.Cmd(b.p.builder().ZInterStoreCompleted(destination, store))
+	b.p.Cmd(b.p.builder().ZInterStoreCompleted(destination, store), &intCmd{})
 }
 
 var CommandZInterCard commandZInterCard
@@ -4993,7 +5055,7 @@ func (commandZInterCard) Instead() string                  { return "" }
 func (commandZInterCard) ETC() string                      { return "" }
 func (commandZInterCard) P(p Pipeliner) commandZInterCardP { return commandZInterCardP{p} }
 func (b commandZInterCardP) Cmd(limit int64, keys ...string) {
-	b.p.Cmd(b.p.builder().ZInterCardCompleted(limit, keys...))
+	b.p.Cmd(b.p.builder().ZInterCardCompleted(limit, keys...), &intCmd{})
 }
 
 var CommandZLexCount commandZLexCount
@@ -5012,7 +5074,7 @@ func (commandZLexCount) Instead() string                 { return "" }
 func (commandZLexCount) ETC() string                     { return "" }
 func (commandZLexCount) P(p Pipeliner) commandZLexCountP { return commandZLexCountP{p} }
 func (b commandZLexCountP) Cmd(key, min, max string) {
-	b.p.Cmd(b.p.builder().ZLexCountCompleted(key, min, max))
+	b.p.Cmd(b.p.builder().ZLexCountCompleted(key, min, max), &intCmd{})
 }
 
 var CommandZMPop commandZMPop
@@ -5031,7 +5093,7 @@ func (commandZMPop) Instead() string             { return "" }
 func (commandZMPop) ETC() string                 { return "" }
 func (commandZMPop) P(p Pipeliner) commandZMPopP { return commandZMPopP{p} }
 func (b commandZMPopP) Cmd(order string, count int64, keys ...string) {
-	b.p.Cmd(b.p.builder().ZMPopCompleted(order, count, keys...))
+	b.p.Cmd(b.p.builder().ZMPopCompleted(order, count, keys...), &zSliceWithKeyCmd{})
 }
 
 var CommandZMScore commandZMScore
@@ -5050,7 +5112,7 @@ func (commandZMScore) Instead() string               { return "" }
 func (commandZMScore) ETC() string                   { return "" }
 func (commandZMScore) P(p Pipeliner) commandZMScoreP { return commandZMScoreP{p} }
 func (b commandZMScoreP) Cmd(key string, members ...string) {
-	b.p.Cmd(b.p.builder().ZMScoreCompleted(key, members...))
+	b.p.Cmd(b.p.builder().ZMScoreCompleted(key, members...), &floatSliceCmd{})
 }
 
 var CommandZPopMax commandZPopMax
@@ -5069,7 +5131,7 @@ func (commandZPopMax) Instead() string               { return "" }
 func (commandZPopMax) ETC() string                   { return "" }
 func (commandZPopMax) P(p Pipeliner) commandZPopMaxP { return commandZPopMaxP{p} }
 func (b commandZPopMaxP) Cmd(key string, count ...int64) {
-	b.p.Cmd(b.p.builder().ZPopMaxCompleted(key, count...))
+	b.p.Cmd(b.p.builder().ZPopMaxCompleted(key, count...), &zSliceCmd{})
 }
 
 var CommandZPopMin commandZPopMin
@@ -5088,7 +5150,7 @@ func (commandZPopMin) Instead() string               { return "" }
 func (commandZPopMin) ETC() string                   { return "" }
 func (commandZPopMin) P(p Pipeliner) commandZPopMinP { return commandZPopMinP{p} }
 func (b commandZPopMinP) Cmd(key string, count ...int64) {
-	b.p.Cmd(b.p.builder().ZPopMinCompleted(key, count...))
+	b.p.Cmd(b.p.builder().ZPopMinCompleted(key, count...), &zSliceCmd{})
 }
 
 var CommandZRandMember commandZRandMember
@@ -5107,7 +5169,7 @@ func (commandZRandMember) Instead() string                   { return "" }
 func (commandZRandMember) ETC() string                       { return "" }
 func (commandZRandMember) P(p Pipeliner) commandZRandMemberP { return commandZRandMemberP{p} }
 func (b commandZRandMemberP) Cmd(key string, count int64) {
-	b.p.Cmd(b.p.builder().ZRandMemberCompleted(key, count))
+	b.p.Cmd(b.p.builder().ZRandMemberCompleted(key, count), &stringSliceCmd{})
 }
 
 var CommandZRandMemberWithScores commandZRandMemberWithScores
@@ -5128,7 +5190,7 @@ func (commandZRandMemberWithScores) P(p Pipeliner) commandZRandMemberWithScoresP
 	return commandZRandMemberWithScoresP{p}
 }
 func (b commandZRandMemberWithScoresP) Cmd(key string, count int64) {
-	b.p.Cmd(b.p.builder().ZRandMemberWithScoresCompleted(key, count))
+	b.p.Cmd(b.p.builder().ZRandMemberWithScoresCompleted(key, count), &zSliceCmd{})
 }
 
 var CommandZUnion commandZUnion
@@ -5146,7 +5208,9 @@ func (commandZUnion) Warning() string              { return "" }
 func (commandZUnion) Instead() string              { return "" }
 func (commandZUnion) ETC() string                  { return "" }
 func (commandZUnion) P(p Pipeliner) commandZUnionP { return commandZUnionP{p} }
-func (b commandZUnionP) Cmd(store ZStore)          { b.p.Cmd(b.p.builder().ZUnionCompleted(store)) }
+func (b commandZUnionP) Cmd(store ZStore) {
+	b.p.Cmd(b.p.builder().ZUnionCompleted(store), &stringSliceCmd{})
+}
 
 var CommandZUnionWithScores commandZUnionWithScores
 
@@ -5166,7 +5230,7 @@ func (commandZUnionWithScores) P(p Pipeliner) commandZUnionWithScoresP {
 	return commandZUnionWithScoresP{p}
 }
 func (b commandZUnionWithScoresP) Cmd(store ZStore) {
-	b.p.Cmd(b.p.builder().ZUnionWithScoresCompleted(store))
+	b.p.Cmd(b.p.builder().ZUnionWithScoresCompleted(store), &zSliceCmd{})
 }
 
 var CommandZUnionStore commandZUnionStore
@@ -5185,7 +5249,7 @@ func (commandZUnionStore) Instead() string                   { return "" }
 func (commandZUnionStore) ETC() string                       { return "" }
 func (commandZUnionStore) P(p Pipeliner) commandZUnionStoreP { return commandZUnionStoreP{p} }
 func (b commandZUnionStoreP) Cmd(dest string, store ZStore) {
-	b.p.Cmd(b.p.builder().ZUnionStoreCompleted(dest, store))
+	b.p.Cmd(b.p.builder().ZUnionStoreCompleted(dest, store), &intCmd{})
 }
 
 var CommandZScore commandZScore
@@ -5203,7 +5267,9 @@ func (commandZScore) Warning() string              { return "" }
 func (commandZScore) Instead() string              { return "" }
 func (commandZScore) ETC() string                  { return "" }
 func (commandZScore) P(p Pipeliner) commandZScoreP { return commandZScoreP{p} }
-func (b commandZScoreP) Cmd(key, member string)    { b.p.Cmd(b.p.builder().ZScoreCompleted(key, member)) }
+func (b commandZScoreP) Cmd(key, member string) {
+	b.p.Cmd(b.p.builder().ZScoreCompleted(key, member), &floatCmd{})
+}
 
 var CommandZScan commandZScan
 
@@ -5221,7 +5287,7 @@ func (commandZScan) Instead() string             { return "" }
 func (commandZScan) ETC() string                 { return "" }
 func (commandZScan) P(p Pipeliner) commandZScanP { return commandZScanP{p} }
 func (b commandZScanP) Cmd(key string, cursor uint64, match string, count int64) {
-	b.p.Cmd(b.p.builder().ZScanCompleted(key, cursor, match, count))
+	b.p.Cmd(b.p.builder().ZScanCompleted(key, cursor, match, count), &scanCmd{})
 }
 
 var CommandZRem commandZRem
@@ -5229,17 +5295,19 @@ var CommandZRem commandZRem
 type commandZRem string
 type commandZRemP struct{ p Pipeliner }
 
-func (commandZRem) String() string                { return "ZREM" }
-func (commandZRem) Class() string                 { return "SortedSet" }
-func (commandZRem) RequireVersion() string        { return "1.2.0" }
-func (commandZRem) Forbid() bool                  { return false }
-func (commandZRem) WarningOnce() bool             { return false }
-func (commandZRem) WarnVersion() string           { return "" }
-func (commandZRem) Warning() string               { return "" }
-func (commandZRem) Instead() string               { return "" }
-func (commandZRem) ETC() string                   { return "" }
-func (commandZRem) P(p Pipeliner) commandZRemP    { return commandZRemP{p} }
-func (b commandZRemP) Cmd(key string, member any) { b.p.Cmd(b.p.builder().ZRemCompleted(key, member)) }
+func (commandZRem) String() string             { return "ZREM" }
+func (commandZRem) Class() string              { return "SortedSet" }
+func (commandZRem) RequireVersion() string     { return "1.2.0" }
+func (commandZRem) Forbid() bool               { return false }
+func (commandZRem) WarningOnce() bool          { return false }
+func (commandZRem) WarnVersion() string        { return "" }
+func (commandZRem) Warning() string            { return "" }
+func (commandZRem) Instead() string            { return "" }
+func (commandZRem) ETC() string                { return "" }
+func (commandZRem) P(p Pipeliner) commandZRemP { return commandZRemP{p} }
+func (b commandZRemP) Cmd(key string, member any) {
+	b.p.Cmd(b.p.builder().ZRemCompleted(key, member), &intCmd{})
+}
 
 var CommandZMRem commandZMRem
 
@@ -5257,7 +5325,7 @@ func (commandZMRem) Instead() string             { return "" }
 func (commandZMRem) ETC() string                 { return "" }
 func (commandZMRem) P(p Pipeliner) commandZMRemP { return commandZMRemP{p} }
 func (b commandZMRemP) Cmd(key string, members ...any) {
-	b.p.Cmd(b.p.builder().ZRemCompleted(key, members...))
+	b.p.Cmd(b.p.builder().ZRemCompleted(key, members...), &intCmd{})
 }
 
 var CommandZRemRangeByLex commandZRemRangeByLex
@@ -5276,7 +5344,7 @@ func (commandZRemRangeByLex) Instead() string                      { return "" }
 func (commandZRemRangeByLex) ETC() string                          { return "" }
 func (commandZRemRangeByLex) P(p Pipeliner) commandZRemRangeByLexP { return commandZRemRangeByLexP{p} }
 func (b commandZRemRangeByLexP) Cmd(key, min, max string) {
-	b.p.Cmd(b.p.builder().ZRemRangeByLexCompleted(key, min, max))
+	b.p.Cmd(b.p.builder().ZRemRangeByLexCompleted(key, min, max), &intCmd{})
 }
 
 var CommandZRemRangeByRank commandZRemRangeByRank
@@ -5297,7 +5365,7 @@ func (commandZRemRangeByRank) P(p Pipeliner) commandZRemRangeByRankP {
 	return commandZRemRangeByRankP{p}
 }
 func (b commandZRemRangeByRankP) Cmd(key string, start, stop int64) {
-	b.p.Cmd(b.p.builder().ZRemRangeByRankCompleted(key, start, stop))
+	b.p.Cmd(b.p.builder().ZRemRangeByRankCompleted(key, start, stop), &intCmd{})
 }
 
 var CommandZRemRangeByScore commandZRemRangeByScore
@@ -5318,7 +5386,7 @@ func (commandZRemRangeByScore) P(p Pipeliner) commandZRemRangeByScoreP {
 	return commandZRemRangeByScoreP{p}
 }
 func (b commandZRemRangeByScoreP) Cmd(key, min, max string) {
-	b.p.Cmd(b.p.builder().ZRemRangeByScoreCompleted(key, min, max))
+	b.p.Cmd(b.p.builder().ZRemRangeByScoreCompleted(key, min, max), &intCmd{})
 }
 
 var CommandZRank commandZRank
@@ -5336,7 +5404,9 @@ func (commandZRank) Warning() string             { return "" }
 func (commandZRank) Instead() string             { return "" }
 func (commandZRank) ETC() string                 { return "" }
 func (commandZRank) P(p Pipeliner) commandZRankP { return commandZRankP{p} }
-func (b commandZRankP) Cmd(key, member string)   { b.p.Cmd(b.p.builder().ZRankCompleted(key, member)) }
+func (b commandZRankP) Cmd(key, member string) {
+	b.p.Cmd(b.p.builder().ZRankCompleted(key, member), &intCmd{})
+}
 
 var CommandZRankWithScore commandZRankWithScore
 
@@ -5354,7 +5424,7 @@ func (commandZRankWithScore) Instead() string                      { return "" }
 func (commandZRankWithScore) ETC() string                          { return "" }
 func (commandZRankWithScore) P(p Pipeliner) commandZRankWithScoreP { return commandZRankWithScoreP{p} }
 func (b commandZRankWithScoreP) Cmd(key, member string) {
-	b.p.Cmd(b.p.builder().ZRankWithScoreCompleted(key, member))
+	b.p.Cmd(b.p.builder().ZRankWithScoreCompleted(key, member), &rankWithScoreCmd{})
 }
 
 var CommandZRevRank commandZRevRank
@@ -5373,7 +5443,7 @@ func (commandZRevRank) Instead() string                { return "" }
 func (commandZRevRank) ETC() string                    { return "" }
 func (commandZRevRank) P(p Pipeliner) commandZRevRankP { return commandZRevRankP{p} }
 func (b commandZRevRankP) Cmd(key, member string) {
-	b.p.Cmd(b.p.builder().ZRevRankCompleted(key, member))
+	b.p.Cmd(b.p.builder().ZRevRankCompleted(key, member), &intCmd{})
 }
 
 var CommandZRevRankWithScore commandZRevRankWithScore
@@ -5394,7 +5464,7 @@ func (commandZRevRankWithScore) P(p Pipeliner) commandZRevRankWithScoreP {
 	return commandZRevRankWithScoreP{p}
 }
 func (b commandZRevRankWithScoreP) Cmd(key, member string) {
-	b.p.Cmd(b.p.builder().ZRevRankWithScoreCompleted(key, member))
+	b.p.Cmd(b.p.builder().ZRevRankWithScoreCompleted(key, member), &rankWithScoreCmd{})
 }
 
 var CommandZRange commandZRange
@@ -5413,7 +5483,7 @@ func (commandZRange) Instead() string              { return "" }
 func (commandZRange) ETC() string                  { return "" }
 func (commandZRange) P(p Pipeliner) commandZRangeP { return commandZRangeP{p} }
 func (b commandZRangeP) Cmd(key string, start, stop int64) {
-	b.p.Cmd(b.p.builder().ZRangeCompleted(key, start, stop))
+	b.p.Cmd(b.p.builder().ZRangeCompleted(key, start, stop), &stringSliceCmd{})
 }
 
 var CommandZRangeWithScores commandZRangeWithScores
@@ -5434,7 +5504,7 @@ func (commandZRangeWithScores) P(p Pipeliner) commandZRangeWithScoresP {
 	return commandZRangeWithScoresP{p}
 }
 func (b commandZRangeWithScoresP) Cmd(key string, start, stop int64) {
-	b.p.Cmd(b.p.builder().ZRangeWithScoresCompleted(key, start, stop))
+	b.p.Cmd(b.p.builder().ZRangeWithScoresCompleted(key, start, stop), &zSliceCmd{})
 }
 
 var CommandZRevRange commandZRevRange
@@ -5455,7 +5525,7 @@ func (commandZRevRange) ETC() string {
 }
 func (commandZRevRange) P(p Pipeliner) commandZRevRangeP { return commandZRevRangeP{p} }
 func (b commandZRevRangeP) Cmd(key string, start, stop int64) {
-	b.p.Cmd(b.p.builder().ZRevRangeCompleted(key, start, stop))
+	b.p.Cmd(b.p.builder().ZRevRangeCompleted(key, start, stop), &stringSliceCmd{})
 }
 
 var CommandZRevRangeWithScores commandZRevRangeWithScores
@@ -5478,7 +5548,7 @@ func (commandZRevRangeWithScores) P(p Pipeliner) commandZRevRangeWithScoresP {
 	return commandZRevRangeWithScoresP{p}
 }
 func (b commandZRevRangeWithScoresP) Cmd(key string, start, stop int64) {
-	b.p.Cmd(b.p.builder().ZRevRangeWithScoresCompleted(key, start, stop))
+	b.p.Cmd(b.p.builder().ZRevRangeWithScoresCompleted(key, start, stop), &zSliceCmd{})
 }
 
 var CommandZRangeByLex commandZRangeByLex
@@ -5499,7 +5569,7 @@ func (commandZRangeByLex) ETC() string {
 }
 func (commandZRangeByLex) P(p Pipeliner) commandZRangeByLexP { return commandZRangeByLexP{p} }
 func (b commandZRangeByLexP) Cmd(key string, opt ZRangeBy) {
-	b.p.Cmd(b.p.builder().ZRangeByLexCompleted(key, opt))
+	b.p.Cmd(b.p.builder().ZRangeByLexCompleted(key, opt), &stringSliceCmd{})
 }
 
 var CommandZRevRangeByLex commandZRevRangeByLex
@@ -5520,7 +5590,7 @@ func (commandZRevRangeByLex) ETC() string {
 }
 func (commandZRevRangeByLex) P(p Pipeliner) commandZRevRangeByLexP { return commandZRevRangeByLexP{p} }
 func (b commandZRevRangeByLexP) Cmd(key string, opt ZRangeBy) {
-	b.p.Cmd(b.p.builder().ZRevRangeByLexCompleted(key, opt))
+	b.p.Cmd(b.p.builder().ZRevRangeByLexCompleted(key, opt), &stringSliceCmd{})
 }
 
 var CommandZRangeByScore commandZRangeByScore
@@ -5541,7 +5611,7 @@ func (commandZRangeByScore) ETC() string {
 }
 func (commandZRangeByScore) P(p Pipeliner) commandZRangeByScoreP { return commandZRangeByScoreP{p} }
 func (b commandZRangeByScoreP) Cmd(key string, opt ZRangeBy) {
-	b.p.Cmd(b.p.builder().ZRangeByScoreCompleted(key, opt))
+	b.p.Cmd(b.p.builder().ZRangeByScoreCompleted(key, opt), &stringSliceCmd{})
 }
 
 var CommandZRangeByScoreWithScores commandZRangeByScoreWithScores
@@ -5564,7 +5634,7 @@ func (commandZRangeByScoreWithScores) P(p Pipeliner) commandZRangeByScoreWithSco
 	return commandZRangeByScoreWithScoresP{p}
 }
 func (b commandZRangeByScoreWithScoresP) Cmd(key string, opt ZRangeBy) {
-	b.p.Cmd(b.p.builder().ZRangeByScoreWithScoresCompleted(key, opt))
+	b.p.Cmd(b.p.builder().ZRangeByScoreWithScoresCompleted(key, opt), &zSliceCmd{})
 }
 
 var CommandZRevRangeByScore commandZRevRangeByScore
@@ -5587,7 +5657,7 @@ func (commandZRevRangeByScore) P(p Pipeliner) commandZRevRangeByScoreP {
 	return commandZRevRangeByScoreP{p}
 }
 func (b commandZRevRangeByScoreP) Cmd(key string, opt ZRangeBy) {
-	b.p.Cmd(b.p.builder().ZRevRangeByScoreCompleted(key, opt))
+	b.p.Cmd(b.p.builder().ZRevRangeByScoreCompleted(key, opt), &stringSliceCmd{})
 }
 
 var CommandZRevRangeByScoreWithScores commandZRevRangeByScoreWithScores
@@ -5612,7 +5682,7 @@ func (commandZRevRangeByScoreWithScores) P(p Pipeliner) commandZRevRangeByScoreW
 	return commandZRevRangeByScoreWithScoresP{p}
 }
 func (b commandZRevRangeByScoreWithScoresP) Cmd(key string, opt ZRangeBy) {
-	b.p.Cmd(b.p.builder().ZRevRangeByScoreWithScoresCompleted(key, opt))
+	b.p.Cmd(b.p.builder().ZRevRangeByScoreWithScoresCompleted(key, opt), &zSliceCmd{})
 }
 
 var CommandZRangeStore commandZRangeStore
@@ -5631,7 +5701,7 @@ func (commandZRangeStore) Instead() string                   { return "" }
 func (commandZRangeStore) ETC() string                       { return "" }
 func (commandZRangeStore) P(p Pipeliner) commandZRangeStoreP { return commandZRangeStoreP{p} }
 func (b commandZRangeStoreP) Cmd(dst string, z ZRangeArgs) {
-	b.p.Cmd(b.p.builder().ZRangeStoreCompleted(dst, z))
+	b.p.Cmd(b.p.builder().ZRangeStoreCompleted(dst, z), &intCmd{})
 }
 
 var CommandZRangeArgsWithOption commandZRangeArgsWithOption
@@ -5652,7 +5722,7 @@ func (commandZRangeArgsWithOption) P(p Pipeliner) commandZRangeArgsWithOptionP {
 	return commandZRangeArgsWithOptionP{p}
 }
 func (b commandZRangeArgsWithOptionP) Cmd(z ZRangeArgs) {
-	b.p.Cmd(b.p.builder().ZRangeArgsCompleted(z))
+	b.p.Cmd(b.p.builder().ZRangeArgsCompleted(z), &stringSliceCmd{})
 }
 
 var CommandZRangeArgs commandZRangeArgs
@@ -5670,7 +5740,9 @@ func (commandZRangeArgs) Warning() string                  { return "" }
 func (commandZRangeArgs) Instead() string                  { return "" }
 func (commandZRangeArgs) ETC() string                      { return "" }
 func (commandZRangeArgs) P(p Pipeliner) commandZRangeArgsP { return commandZRangeArgsP{p} }
-func (b commandZRangeArgsP) Cmd(z ZRangeArgs)              { b.p.Cmd(b.p.builder().ZRangeArgsCompleted(z)) }
+func (b commandZRangeArgsP) Cmd(z ZRangeArgs) {
+	b.p.Cmd(b.p.builder().ZRangeArgsCompleted(z), &stringSliceCmd{})
+}
 
 var CommandZRangeArgsWithScoresWithOption commandZRangeArgsWithScoresWithOption
 
@@ -5690,7 +5762,7 @@ func (commandZRangeArgsWithScoresWithOption) P(p Pipeliner) commandZRangeArgsWit
 	return commandZRangeArgsWithScoresWithOptionP{p}
 }
 func (b commandZRangeArgsWithScoresWithOptionP) Cmd(z ZRangeArgs) {
-	b.p.Cmd(b.p.builder().ZRangeArgsCompleted(z))
+	b.p.Cmd(b.p.builder().ZRangeArgsCompleted(z), &zSliceCmd{})
 }
 
 var CommandZRangeArgsWithScores commandZRangeArgsWithScores
@@ -5711,7 +5783,7 @@ func (commandZRangeArgsWithScores) P(p Pipeliner) commandZRangeArgsWithScoresP {
 	return commandZRangeArgsWithScoresP{p}
 }
 func (b commandZRangeArgsWithScoresP) Cmd(z ZRangeArgs) {
-	b.p.Cmd(b.p.builder().ZRangeArgsCompleted(z))
+	b.p.Cmd(b.p.builder().ZRangeArgsCompleted(z), &zSliceCmd{})
 }
 
 var CommandXAck commandXAck
@@ -5730,7 +5802,7 @@ func (commandXAck) Instead() string            { return "" }
 func (commandXAck) ETC() string                { return "" }
 func (commandXAck) P(p Pipeliner) commandXAckP { return commandXAckP{p} }
 func (b commandXAckP) Cmd(stream, group string, ids ...string) {
-	b.p.Cmd(b.p.builder().XAckCompleted(stream, group, ids...))
+	b.p.Cmd(b.p.builder().XAckCompleted(stream, group, ids...), &intCmd{})
 }
 
 var CommandXAdd commandXAdd
@@ -5748,7 +5820,7 @@ func (commandXAdd) Warning() string            { return "" }
 func (commandXAdd) Instead() string            { return "" }
 func (commandXAdd) ETC() string                { return "" }
 func (commandXAdd) P(p Pipeliner) commandXAddP { return commandXAddP{p} }
-func (b commandXAddP) Cmd(a XAddArgs)          { b.p.Cmd(b.p.builder().XAddCompleted(a)) }
+func (b commandXAddP) Cmd(a XAddArgs)          { b.p.Cmd(b.p.builder().XAddCompleted(a), &stringCmd{}) }
 
 var CommandXAddNoMKStream commandXAddNoMKStream
 
@@ -5821,7 +5893,9 @@ func (commandXAutoClaim) Warning() string                  { return "" }
 func (commandXAutoClaim) Instead() string                  { return "" }
 func (commandXAutoClaim) ETC() string                      { return "" }
 func (commandXAutoClaim) P(p Pipeliner) commandXAutoClaimP { return commandXAutoClaimP{p} }
-func (b commandXAutoClaimP) Cmd(a XAutoClaimArgs)          { b.p.Cmd(b.p.builder().XAutoClaimCompleted(a)) }
+func (b commandXAutoClaimP) Cmd(a XAutoClaimArgs) {
+	b.p.Cmd(b.p.builder().XAutoClaimCompleted(a), &xAutoClaimCmd{})
+}
 
 var CommandXAutoClaimJustID commandXAutoClaimJustID
 
@@ -5841,7 +5915,7 @@ func (commandXAutoClaimJustID) P(p Pipeliner) commandXAutoClaimJustIDP {
 	return commandXAutoClaimJustIDP{p}
 }
 func (b commandXAutoClaimJustIDP) Cmd(a XAutoClaimArgs) {
-	b.p.Cmd(b.p.builder().XAutoClaimJustIDCompleted(a))
+	b.p.Cmd(b.p.builder().XAutoClaimJustIDCompleted(a), &xAutoClaimJustIDCmd{})
 }
 
 var CommandXClaim commandXClaim
@@ -5859,7 +5933,9 @@ func (commandXClaim) Warning() string              { return "" }
 func (commandXClaim) Instead() string              { return "" }
 func (commandXClaim) ETC() string                  { return "" }
 func (commandXClaim) P(p Pipeliner) commandXClaimP { return commandXClaimP{p} }
-func (b commandXClaimP) Cmd(a XClaimArgs)          { b.p.Cmd(b.p.builder().XClaimCompleted(a)) }
+func (b commandXClaimP) Cmd(a XClaimArgs) {
+	b.p.Cmd(b.p.builder().XClaimCompleted(a), &xMessageSliceCmd{})
+}
 
 var CommandXClaimJustID commandXClaimJustID
 
@@ -5876,7 +5952,9 @@ func (commandXClaimJustID) Warning() string                    { return "" }
 func (commandXClaimJustID) Instead() string                    { return "" }
 func (commandXClaimJustID) ETC() string                        { return "" }
 func (commandXClaimJustID) P(p Pipeliner) commandXClaimJustIDP { return commandXClaimJustIDP{p} }
-func (b commandXClaimJustIDP) Cmd(a XClaimArgs)                { b.p.Cmd(b.p.builder().XClaimJustIDCompleted(a)) }
+func (b commandXClaimJustIDP) Cmd(a XClaimArgs) {
+	b.p.Cmd(b.p.builder().XClaimJustIDCompleted(a), &stringSliceCmd{})
+}
 
 var CommandXDel commandXDel
 
@@ -5894,7 +5972,7 @@ func (commandXDel) Instead() string            { return "" }
 func (commandXDel) ETC() string                { return "" }
 func (commandXDel) P(p Pipeliner) commandXDelP { return commandXDelP{p} }
 func (b commandXDelP) Cmd(stream string, ids ...string) {
-	b.p.Cmd(b.p.builder().XDelCompleted(stream, ids...))
+	b.p.Cmd(b.p.builder().XDelCompleted(stream, ids...), &intCmd{})
 }
 
 var CommandXGroupCreate commandXGroupCreate
@@ -5913,7 +5991,7 @@ func (commandXGroupCreate) Instead() string                    { return "" }
 func (commandXGroupCreate) ETC() string                        { return "" }
 func (commandXGroupCreate) P(p Pipeliner) commandXGroupCreateP { return commandXGroupCreateP{p} }
 func (b commandXGroupCreateP) Cmd(stream, group, start string) {
-	b.p.Cmd(b.p.builder().XGroupCreateCompleted(stream, group, start))
+	b.p.Cmd(b.p.builder().XGroupCreateCompleted(stream, group, start), &statusCmd{})
 }
 
 var CommandXGroupCreateMkStream commandXGroupCreateMkStream
@@ -5934,7 +6012,7 @@ func (commandXGroupCreateMkStream) P(p Pipeliner) commandXGroupCreateMkStreamP {
 	return commandXGroupCreateMkStreamP{p}
 }
 func (b commandXGroupCreateMkStreamP) Cmd(stream, group, start string) {
-	b.p.Cmd(b.p.builder().XGroupCreateMkStreamCompleted(stream, group, start))
+	b.p.Cmd(b.p.builder().XGroupCreateMkStreamCompleted(stream, group, start), &statusCmd{})
 }
 
 var CommandXGroupCreateConsumer commandXGroupCreateConsumer
@@ -5955,7 +6033,7 @@ func (commandXGroupCreateConsumer) P(p Pipeliner) commandXGroupCreateConsumerP {
 	return commandXGroupCreateConsumerP{p}
 }
 func (b commandXGroupCreateConsumerP) Cmd(stream, group, consumer string) {
-	b.p.Cmd(b.p.builder().XGroupCreateConsumerCompleted(stream, group, consumer))
+	b.p.Cmd(b.p.builder().XGroupCreateConsumerCompleted(stream, group, consumer), &intCmd{})
 }
 
 var CommandXGroupDelConsumer commandXGroupDelConsumer
@@ -5976,7 +6054,7 @@ func (commandXGroupDelConsumer) P(p Pipeliner) commandXGroupDelConsumerP {
 	return commandXGroupDelConsumerP{p}
 }
 func (b commandXGroupDelConsumerP) Cmd(stream, group, consumer string) {
-	b.p.Cmd(b.p.builder().XGroupDelConsumerCompleted(stream, group, consumer))
+	b.p.Cmd(b.p.builder().XGroupDelConsumerCompleted(stream, group, consumer), &intCmd{})
 }
 
 var CommandXGroupDestroy commandXGroupDestroy
@@ -5995,7 +6073,7 @@ func (commandXGroupDestroy) Instead() string                     { return "" }
 func (commandXGroupDestroy) ETC() string                         { return "" }
 func (commandXGroupDestroy) P(p Pipeliner) commandXGroupDestroyP { return commandXGroupDestroyP{p} }
 func (b commandXGroupDestroyP) Cmd(stream, group string) {
-	b.p.Cmd(b.p.builder().XGroupDestroyCompleted(stream, group))
+	b.p.Cmd(b.p.builder().XGroupDestroyCompleted(stream, group), &intCmd{})
 }
 
 var CommandXGroupSetID commandXGroupSetID
@@ -6014,7 +6092,7 @@ func (commandXGroupSetID) Instead() string                   { return "" }
 func (commandXGroupSetID) ETC() string                       { return "" }
 func (commandXGroupSetID) P(p Pipeliner) commandXGroupSetIDP { return commandXGroupSetIDP{p} }
 func (b commandXGroupSetIDP) Cmd(stream, group, start string) {
-	b.p.Cmd(b.p.builder().XGroupSetIDCompleted(stream, group, start))
+	b.p.Cmd(b.p.builder().XGroupSetIDCompleted(stream, group, start), &statusCmd{})
 }
 
 var CommandXInfoConsumers commandXInfoConsumers
@@ -6033,7 +6111,7 @@ func (commandXInfoConsumers) Instead() string                      { return "" }
 func (commandXInfoConsumers) ETC() string                          { return "" }
 func (commandXInfoConsumers) P(p Pipeliner) commandXInfoConsumersP { return commandXInfoConsumersP{p} }
 func (b commandXInfoConsumersP) Cmd(key, group string) {
-	b.p.Cmd(b.p.builder().XInfoConsumersCompleted(key, group))
+	b.p.Cmd(b.p.builder().XInfoConsumersCompleted(key, group), &xInfoConsumersCmd{})
 }
 
 var CommandXInfoGroups commandXInfoGroups
@@ -6051,7 +6129,9 @@ func (commandXInfoGroups) Warning() string                   { return "" }
 func (commandXInfoGroups) Instead() string                   { return "" }
 func (commandXInfoGroups) ETC() string                       { return "" }
 func (commandXInfoGroups) P(p Pipeliner) commandXInfoGroupsP { return commandXInfoGroupsP{p} }
-func (b commandXInfoGroupsP) Cmd(key string)                 { b.p.Cmd(b.p.builder().XInfoGroupsCompleted(key)) }
+func (b commandXInfoGroupsP) Cmd(key string) {
+	b.p.Cmd(b.p.builder().XInfoGroupsCompleted(key), &xInfoGroupsCmd{})
+}
 
 var CommandXInfoStream commandXInfoStream
 
@@ -6068,7 +6148,9 @@ func (commandXInfoStream) Warning() string                   { return "" }
 func (commandXInfoStream) Instead() string                   { return "" }
 func (commandXInfoStream) ETC() string                       { return "" }
 func (commandXInfoStream) P(p Pipeliner) commandXInfoStreamP { return commandXInfoStreamP{p} }
-func (b commandXInfoStreamP) Cmd(key string)                 { b.p.Cmd(b.p.builder().XInfoStreamCompleted(key)) }
+func (b commandXInfoStreamP) Cmd(key string) {
+	b.p.Cmd(b.p.builder().XInfoStreamCompleted(key), &xInfoStreamCmd{})
+}
 
 var CommandXInfoStreamFull commandXInfoStreamFull
 
@@ -6088,7 +6170,7 @@ func (commandXInfoStreamFull) P(p Pipeliner) commandXInfoStreamFullP {
 	return commandXInfoStreamFullP{p}
 }
 func (b commandXInfoStreamFullP) Cmd(key string, count int64) {
-	b.p.Cmd(b.p.builder().XInfoStreamFullCompleted(key, count))
+	b.p.Cmd(b.p.builder().XInfoStreamFullCompleted(key, count), &xInfoStreamCmd{})
 }
 
 var CommandXLen commandXLen
@@ -6106,7 +6188,7 @@ func (commandXLen) Warning() string            { return "" }
 func (commandXLen) Instead() string            { return "" }
 func (commandXLen) ETC() string                { return "" }
 func (commandXLen) P(p Pipeliner) commandXLenP { return commandXLenP{p} }
-func (b commandXLenP) Cmd(stream string)       { b.p.Cmd(b.p.builder().XLenCompleted(stream)) }
+func (b commandXLenP) Cmd(stream string)       { b.p.Cmd(b.p.builder().XLenCompleted(stream), &intCmd{}) }
 
 var CommandXPending commandXPending
 
@@ -6124,7 +6206,7 @@ func (commandXPending) Instead() string                { return "" }
 func (commandXPending) ETC() string                    { return "" }
 func (commandXPending) P(p Pipeliner) commandXPendingP { return commandXPendingP{p} }
 func (b commandXPendingP) Cmd(stream, group string) {
-	b.p.Cmd(b.p.builder().XPendingCompleted(stream, group))
+	b.p.Cmd(b.p.builder().XPendingCompleted(stream, group), &xPendingCmd{})
 }
 
 var CommandXPendingExt commandXPendingExt
@@ -6142,7 +6224,9 @@ func (commandXPendingExt) Warning() string                   { return "" }
 func (commandXPendingExt) Instead() string                   { return "" }
 func (commandXPendingExt) ETC() string                       { return "" }
 func (commandXPendingExt) P(p Pipeliner) commandXPendingExtP { return commandXPendingExtP{p} }
-func (b commandXPendingExtP) Cmd(a XPendingExtArgs)          { b.p.Cmd(b.p.builder().XPendingExtCompleted(a)) }
+func (b commandXPendingExtP) Cmd(a XPendingExtArgs) {
+	b.p.Cmd(b.p.builder().XPendingExtCompleted(a), &xPendingExtCmd{})
+}
 
 var CommandXRange commandXRange
 
@@ -6160,7 +6244,7 @@ func (commandXRange) Instead() string              { return "" }
 func (commandXRange) ETC() string                  { return "" }
 func (commandXRange) P(p Pipeliner) commandXRangeP { return commandXRangeP{p} }
 func (b commandXRangeP) Cmd(stream, start, stop string) {
-	b.p.Cmd(b.p.builder().XRangeCompleted(stream, start, stop))
+	b.p.Cmd(b.p.builder().XRangeCompleted(stream, start, stop), &xMessageSliceCmd{})
 }
 
 var CommandXRangeN commandXRangeN
@@ -6179,7 +6263,7 @@ func (commandXRangeN) Instead() string               { return "" }
 func (commandXRangeN) ETC() string                   { return "" }
 func (commandXRangeN) P(p Pipeliner) commandXRangeNP { return commandXRangeNP{p} }
 func (b commandXRangeNP) Cmd(stream, start, stop string, count int64) {
-	b.p.Cmd(b.p.builder().XRangeNCompleted(stream, start, stop, count))
+	b.p.Cmd(b.p.builder().XRangeNCompleted(stream, start, stop, count), &xMessageSliceCmd{})
 }
 
 var CommandXRevRange commandXRevRange
@@ -6198,7 +6282,7 @@ func (commandXRevRange) Instead() string                 { return "" }
 func (commandXRevRange) ETC() string                     { return "" }
 func (commandXRevRange) P(p Pipeliner) commandXRevRangeP { return commandXRevRangeP{p} }
 func (b commandXRevRangeP) Cmd(stream, stop, start string) {
-	b.p.Cmd(b.p.builder().XRevRangeCompleted(stream, start, stop))
+	b.p.Cmd(b.p.builder().XRevRangeCompleted(stream, start, stop), &xMessageSliceCmd{})
 }
 
 var CommandXRevRangeN commandXRevRangeN
@@ -6217,7 +6301,7 @@ func (commandXRevRangeN) Instead() string                  { return "" }
 func (commandXRevRangeN) ETC() string                      { return "" }
 func (commandXRevRangeN) P(p Pipeliner) commandXRevRangeNP { return commandXRevRangeNP{p} }
 func (b commandXRevRangeNP) Cmd(stream, stop, start string, count int64) {
-	b.p.Cmd(b.p.builder().XRevRangeNCompleted(stream, start, stop, count))
+	b.p.Cmd(b.p.builder().XRevRangeNCompleted(stream, start, stop, count), &xMessageSliceCmd{})
 }
 
 var CommandXTrim commandXTrim
@@ -6236,7 +6320,7 @@ func (commandXTrim) Instead() string             { return "" }
 func (commandXTrim) ETC() string                 { return "" }
 func (commandXTrim) P(p Pipeliner) commandXTrimP { return commandXTrimP{p} }
 func (b commandXTrimP) Cmd(key string, maxLen int64) {
-	b.p.Cmd(b.p.builder().XTrimCompleted(key, maxLen))
+	b.p.Cmd(b.p.builder().XTrimCompleted(key, maxLen), &intCmd{})
 }
 
 var CommandXTrimMaxLenApprox commandXTrimMaxLenApprox
@@ -6257,7 +6341,7 @@ func (commandXTrimMaxLenApprox) P(p Pipeliner) commandXTrimMaxLenApproxP {
 	return commandXTrimMaxLenApproxP{p}
 }
 func (b commandXTrimMaxLenApproxP) Cmd(key string, maxLen, limit int64) {
-	b.p.Cmd(b.p.builder().XTrimMaxLenApproxCompleted(key, maxLen, limit))
+	b.p.Cmd(b.p.builder().XTrimMaxLenApproxCompleted(key, maxLen, limit), &intCmd{})
 }
 
 var CommandXTrimMinID commandXTrimMinID
@@ -6276,7 +6360,7 @@ func (commandXTrimMinID) Instead() string                  { return "" }
 func (commandXTrimMinID) ETC() string                      { return "" }
 func (commandXTrimMinID) P(p Pipeliner) commandXTrimMinIDP { return commandXTrimMinIDP{p} }
 func (b commandXTrimMinIDP) Cmd(key string, minID string) {
-	b.p.Cmd(b.p.builder().XTrimMinIDCompleted(key, minID))
+	b.p.Cmd(b.p.builder().XTrimMinIDCompleted(key, minID), &intCmd{})
 }
 
 var CommandXTrimMinIDApprox commandXTrimMinIDApprox
@@ -6297,7 +6381,7 @@ func (commandXTrimMinIDApprox) P(p Pipeliner) commandXTrimMinIDApproxP {
 	return commandXTrimMinIDApproxP{p}
 }
 func (b commandXTrimMinIDApproxP) Cmd(key string, minID string, limit int64) {
-	b.p.Cmd(b.p.builder().XTrimMinIDApproxCompleted(key, minID, limit))
+	b.p.Cmd(b.p.builder().XTrimMinIDApproxCompleted(key, minID, limit), &intCmd{})
 }
 
 var CommandXRead commandXRead
@@ -6343,7 +6427,9 @@ func (commandAppend) Warning() string              { return "" }
 func (commandAppend) Instead() string              { return "" }
 func (commandAppend) ETC() string                  { return "" }
 func (commandAppend) P(p Pipeliner) commandAppendP { return commandAppendP{p} }
-func (b commandAppendP) Cmd(key, value string)     { b.p.Cmd(b.p.builder().AppendCompleted(key, value)) }
+func (b commandAppendP) Cmd(key, value string) {
+	b.p.Cmd(b.p.builder().AppendCompleted(key, value), &intCmd{})
+}
 
 var CommandDecr commandDecr
 
@@ -6360,7 +6446,7 @@ func (commandDecr) Warning() string            { return "" }
 func (commandDecr) Instead() string            { return "" }
 func (commandDecr) ETC() string                { return "" }
 func (commandDecr) P(p Pipeliner) commandDecrP { return commandDecrP{p} }
-func (b commandDecrP) Cmd(key, value string)   { b.p.Cmd(b.p.builder().DecrCompleted(key)) }
+func (b commandDecrP) Cmd(key, value string)   { b.p.Cmd(b.p.builder().DecrCompleted(key), &intCmd{}) }
 
 var CommandDecrBy commandDecrBy
 
@@ -6378,7 +6464,7 @@ func (commandDecrBy) Instead() string              { return "" }
 func (commandDecrBy) ETC() string                  { return "" }
 func (commandDecrBy) P(p Pipeliner) commandDecrByP { return commandDecrByP{p} }
 func (b commandDecrByP) Cmd(key string, decrement int64) {
-	b.p.Cmd(b.p.builder().DecrByCompleted(key, decrement))
+	b.p.Cmd(b.p.builder().DecrByCompleted(key, decrement), &intCmd{})
 }
 
 var CommandGet commandGet
@@ -6396,7 +6482,7 @@ func (commandGet) Warning() string           { return "" }
 func (commandGet) Instead() string           { return "" }
 func (commandGet) ETC() string               { return "" }
 func (commandGet) P(p Pipeliner) commandGetP { return commandGetP{p} }
-func (b commandGetP) Cmd(key string)         { b.p.Cmd(b.p.builder().GetCompleted(key)) }
+func (b commandGetP) Cmd(key string)         { b.p.Cmd(b.p.builder().GetCompleted(key), &stringCmd{}) }
 
 var CommandGetDel commandGetDel
 
@@ -6413,7 +6499,7 @@ func (commandGetDel) Warning() string              { return "" }
 func (commandGetDel) Instead() string              { return "" }
 func (commandGetDel) ETC() string                  { return "" }
 func (commandGetDel) P(p Pipeliner) commandGetDelP { return commandGetDelP{p} }
-func (b commandGetDelP) Cmd(key string)            { b.p.Cmd(b.p.builder().GetDelCompleted(key)) }
+func (b commandGetDelP) Cmd(key string)            { b.p.Cmd(b.p.builder().GetDelCompleted(key), &stringCmd{}) }
 
 var CommandGetEx commandGetEx
 
@@ -6431,7 +6517,7 @@ func (commandGetEx) Instead() string             { return "" }
 func (commandGetEx) ETC() string                 { return "" }
 func (commandGetEx) P(p Pipeliner) commandGetExP { return commandGetExP{p} }
 func (b commandGetExP) Cmd(key string, expiration time.Duration) {
-	b.p.Cmd(b.p.builder().GetExCompleted(key, expiration))
+	b.p.Cmd(b.p.builder().GetExCompleted(key, expiration), &stringCmd{})
 }
 
 var CommandGetRange commandGetRange
@@ -6450,7 +6536,7 @@ func (commandGetRange) Instead() string                { return "" }
 func (commandGetRange) ETC() string                    { return "" }
 func (commandGetRange) P(p Pipeliner) commandGetRangeP { return commandGetRangeP{p} }
 func (b commandGetRangeP) Cmd(key string, start, end int64) {
-	b.p.Cmd(b.p.builder().GetRangeCompleted(key, start, end))
+	b.p.Cmd(b.p.builder().GetRangeCompleted(key, start, end), &stringCmd{})
 }
 
 var CommandGetSet commandGetSet
@@ -6471,7 +6557,7 @@ func (commandGetSet) ETC() string {
 }
 func (commandGetSet) P(p Pipeliner) commandGetSetP { return commandGetSetP{p} }
 func (b commandGetSetP) Cmd(key string, value any) {
-	b.p.Cmd(b.p.builder().GetSetCompleted(key, value))
+	b.p.Cmd(b.p.builder().GetSetCompleted(key, value), &stringCmd{})
 }
 
 var CommandIncr commandIncr
@@ -6489,7 +6575,7 @@ func (commandIncr) Warning() string            { return "" }
 func (commandIncr) Instead() string            { return "" }
 func (commandIncr) ETC() string                { return "" }
 func (commandIncr) P(p Pipeliner) commandIncrP { return commandIncrP{p} }
-func (b commandIncrP) Cmd(key string)          { b.p.Cmd(b.p.builder().IncrCompleted(key)) }
+func (b commandIncrP) Cmd(key string)          { b.p.Cmd(b.p.builder().IncrCompleted(key), &intCmd{}) }
 
 var CommandIncrBy commandIncrBy
 
@@ -6507,7 +6593,7 @@ func (commandIncrBy) Instead() string              { return "" }
 func (commandIncrBy) ETC() string                  { return "" }
 func (commandIncrBy) P(p Pipeliner) commandIncrByP { return commandIncrByP{p} }
 func (b commandIncrByP) Cmd(key string, value int64) {
-	b.p.Cmd(b.p.builder().IncrByCompleted(key, value))
+	b.p.Cmd(b.p.builder().IncrByCompleted(key, value), &intCmd{})
 }
 
 var CommandIncrByFloat commandIncrByFloat
@@ -6526,7 +6612,7 @@ func (commandIncrByFloat) Instead() string                   { return "" }
 func (commandIncrByFloat) ETC() string                       { return "" }
 func (commandIncrByFloat) P(p Pipeliner) commandIncrByFloatP { return commandIncrByFloatP{p} }
 func (b commandIncrByFloatP) Cmd(key string, value float64) {
-	b.p.Cmd(b.p.builder().IncrByFloatCompleted(key, value))
+	b.p.Cmd(b.p.builder().IncrByFloatCompleted(key, value), &floatCmd{})
 }
 
 var CommandMGet commandMGet
@@ -6544,7 +6630,9 @@ func (commandMGet) Warning() string            { return commandMGetWarning }
 func (commandMGet) Instead() string            { return "SafeMGet" }
 func (commandMGet) ETC() string                { return "client.SafeMGet(ctx, keys ...)" }
 func (commandMGet) P(p Pipeliner) commandMGetP { return commandMGetP{p} }
-func (b commandMGetP) Cmd(keys ...string)      { b.p.Cmd(b.p.builder().MGetCompleted(keys...)) }
+func (b commandMGetP) Cmd(keys ...string) {
+	b.p.Cmd(b.p.builder().MGetCompleted(keys...), &sliceCmd{keys: keys})
+}
 
 var CommandMSet commandMSet
 
@@ -6561,7 +6649,9 @@ func (commandMSet) Warning() string            { return "" }
 func (commandMSet) Instead() string            { return "" }
 func (commandMSet) ETC() string                { return "" }
 func (commandMSet) P(p Pipeliner) commandMSetP { return commandMSetP{p} }
-func (b commandMSetP) Cmd(values ...any)       { b.p.Cmd(b.p.builder().MSetCompleted(values...)) }
+func (b commandMSetP) Cmd(values ...any) {
+	b.p.Cmd(b.p.builder().MSetCompleted(values...), &statusCmd{})
+}
 
 var CommandMSetNX commandMSetNX
 
@@ -6578,7 +6668,9 @@ func (commandMSetNX) Warning() string              { return "" }
 func (commandMSetNX) Instead() string              { return "" }
 func (commandMSetNX) ETC() string                  { return "" }
 func (commandMSetNX) P(p Pipeliner) commandMSetNXP { return commandMSetNXP{p} }
-func (b commandMSetNXP) Cmd(values ...any)         { b.p.Cmd(b.p.builder().MSetNXCompleted(values...)) }
+func (b commandMSetNXP) Cmd(values ...any) {
+	b.p.Cmd(b.p.builder().MSetNXCompleted(values...), &boolCmd{})
+}
 
 var CommandSet commandSet
 
@@ -6596,7 +6688,7 @@ func (commandSet) Instead() string           { return "" }
 func (commandSet) ETC() string               { return "" }
 func (commandSet) P(p Pipeliner) commandSetP { return commandSetP{p} }
 func (b commandSetP) Cmd(key string, value any, expiration time.Duration) {
-	b.p.Cmd(b.p.builder().SetCompleted(key, value, expiration))
+	b.p.Cmd(b.p.builder().SetCompleted(key, value, expiration), &statusCmd{})
 }
 
 var CommandSetKeepTTL commandSetKeepTTL
@@ -6615,7 +6707,7 @@ func (commandSetKeepTTL) Instead() string                  { return "" }
 func (commandSetKeepTTL) ETC() string                      { return "" }
 func (commandSetKeepTTL) P(p Pipeliner) commandSetKeepTTLP { return commandSetKeepTTLP{p} }
 func (b commandSetKeepTTLP) Cmd(key string, value any) {
-	b.p.Cmd(b.p.builder().SetKeepTTLCompleted(key, value))
+	b.p.Cmd(b.p.builder().SetKeepTTLCompleted(key, value), &statusCmd{})
 }
 
 var CommandSetEX commandSetEX
@@ -6636,7 +6728,7 @@ func (commandSetEX) ETC() string {
 }
 func (commandSetEX) P(p Pipeliner) commandSetEXP { return commandSetEXP{p} }
 func (b commandSetEXP) Cmd(key string, value any, expiration time.Duration) {
-	b.p.Cmd(b.p.builder().SetEXCompleted(key, value, expiration))
+	b.p.Cmd(b.p.builder().SetEXCompleted(key, value, expiration), &statusCmd{})
 }
 
 var CommandSetArgsEX commandSetArgsEX
@@ -6655,7 +6747,7 @@ func (commandSetArgsEX) Instead() string                 { return "" }
 func (commandSetArgsEX) ETC() string                     { return "" }
 func (commandSetArgsEX) P(p Pipeliner) commandSetArgsEXP { return commandSetArgsEXP{p} }
 func (b commandSetArgsEXP) Cmd(key string, value any, a SetArgs) {
-	b.p.Cmd(b.p.builder().SetArgsCompleted(key, value, a))
+	b.p.Cmd(b.p.builder().SetArgsCompleted(key, value, a), &statusCmd{})
 }
 
 var CommandSetNX commandSetNX
@@ -6676,7 +6768,7 @@ func (commandSetNX) ETC() string {
 }
 func (commandSetNX) P(p Pipeliner) commandSetNXP { return commandSetNXP{p} }
 func (b commandSetNXP) Cmd(key string, value any, expiration time.Duration) {
-	b.p.Cmd(b.p.builder().SetNXCompleted(key, value, expiration))
+	b.p.Cmd(b.p.builder().SetNXCompleted(key, value, expiration), &boolCmd{})
 }
 
 var CommandSetArgsNX commandSetArgsNX
@@ -6695,7 +6787,7 @@ func (commandSetArgsNX) Instead() string                 { return "" }
 func (commandSetArgsNX) ETC() string                     { return "" }
 func (commandSetArgsNX) P(p Pipeliner) commandSetArgsNXP { return commandSetArgsNXP{p} }
 func (b commandSetArgsNXP) Cmd(key string, value any, a SetArgs) {
-	b.p.Cmd(b.p.builder().SetArgsCompleted(key, value, a))
+	b.p.Cmd(b.p.builder().SetArgsCompleted(key, value, a), &statusCmd{})
 }
 
 var CommandSetXX commandSetXX
@@ -6714,7 +6806,7 @@ func (commandSetXX) Instead() string             { return "" }
 func (commandSetXX) ETC() string                 { return "" }
 func (commandSetXX) P(p Pipeliner) commandSetXXP { return commandSetXXP{p} }
 func (b commandSetXXP) Cmd(key string, value any, expiration time.Duration) {
-	b.p.Cmd(b.p.builder().SetXXCompleted(key, value, expiration))
+	b.p.Cmd(b.p.builder().SetXXCompleted(key, value, expiration), &boolCmd{})
 }
 
 var CommandSetNXGet commandSetNXGet
@@ -6733,7 +6825,7 @@ func (commandSetNXGet) Instead() string                { return "" }
 func (commandSetNXGet) ETC() string                    { return "" }
 func (commandSetNXGet) P(p Pipeliner) commandSetNXGetP { return commandSetNXGetP{p} }
 func (b commandSetNXGetP) Cmd(key string, value any, a SetArgs) {
-	b.p.Cmd(b.p.builder().SetArgsCompleted(key, value, a))
+	b.p.Cmd(b.p.builder().SetArgsCompleted(key, value, a), &statusCmd{})
 }
 
 var CommandSetGet commandSetGet
@@ -6752,7 +6844,7 @@ func (commandSetGet) Instead() string              { return "" }
 func (commandSetGet) ETC() string                  { return "" }
 func (commandSetGet) P(p Pipeliner) commandSetGetP { return commandSetGetP{p} }
 func (b commandSetGetP) Cmd(key string, value any, a SetArgs) {
-	b.p.Cmd(b.p.builder().SetArgsCompleted(key, value, a))
+	b.p.Cmd(b.p.builder().SetArgsCompleted(key, value, a), &statusCmd{})
 }
 
 var CommandSetRange commandSetRange
@@ -6771,7 +6863,7 @@ func (commandSetRange) Instead() string                { return "" }
 func (commandSetRange) ETC() string                    { return "" }
 func (commandSetRange) P(p Pipeliner) commandSetRangeP { return commandSetRangeP{p} }
 func (b commandSetRangeP) Cmd(key string, offset int64, value string) {
-	b.p.Cmd(b.p.builder().SetRangeCompleted(key, offset, value))
+	b.p.Cmd(b.p.builder().SetRangeCompleted(key, offset, value), &intCmd{})
 }
 
 var CommandStrLen commandStrLen
@@ -6789,4 +6881,4 @@ func (commandStrLen) Warning() string              { return "" }
 func (commandStrLen) Instead() string              { return "" }
 func (commandStrLen) ETC() string                  { return "" }
 func (commandStrLen) P(p Pipeliner) commandStrLenP { return commandStrLenP{p} }
-func (b commandStrLenP) Cmd(key string)            { b.p.Cmd(b.p.builder().StrLenCompleted(key)) }
+func (b commandStrLenP) Cmd(key string)            { b.p.Cmd(b.p.builder().StrLenCompleted(key), &intCmd{}) }

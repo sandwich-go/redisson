@@ -151,7 +151,7 @@ type GeospatialCacheCmdable interface {
 	// History:
 	//	- Starting with Redis version 7.0.0: Added support for uppercase unit names.
 	GeoSearch(ctx context.Context, key string, q GeoSearchQuery) StringSliceCmd
-	GeoSearchLocation(ctx context.Context, key string, q GeoSearchLocationQuery) GeoSearchLocationCmd
+	GeoSearchLocation(ctx context.Context, key string, q GeoSearchLocationQuery) GeoLocationCmd
 }
 
 func (c *client) GeoAdd(ctx context.Context, key string, geoLocation ...GeoLocation) IntCmd {
@@ -257,8 +257,8 @@ func (c *client) GeoSearch(ctx context.Context, key string, q GeoSearchQuery) St
 	return r
 }
 
-func (c *client) GeoSearchLocation(ctx context.Context, key string, q GeoSearchLocationQuery) GeoSearchLocationCmd {
-	ctx = c.handler.before(ctx, CommandGeoSearch)
+func (c *client) GeoSearchLocation(ctx context.Context, key string, q GeoSearchLocationQuery) GeoLocationCmd {
+	ctx = c.handler.before(ctx, CommandGeoSearchLocation)
 	r := c.adapter.GeoSearchLocation(ctx, key, q)
 	c.handler.after(ctx, r.Err())
 	return r

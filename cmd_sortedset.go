@@ -513,7 +513,7 @@ func (c *client) ZAddArgsIncr(ctx context.Context, key string, args ZAddArgs) Fl
 	} else if args.LT {
 		ctx = c.handler.before(ctx, CommandZAddLT)
 	} else {
-		ctx = c.handler.before(ctx, CommandZAddINCR)
+		ctx = c.handler.before(ctx, CommandZAddIncr)
 	}
 	r := c.adapter.ZAddArgsIncr(ctx, key, args)
 	c.handler.after(ctx, r.Err())

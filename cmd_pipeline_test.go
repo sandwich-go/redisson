@@ -12,13 +12,16 @@ func (_pipeline) String() string { return "Pipeline" }
 
 func testPipeline(ctx context.Context, c Cmdable) []string {
 	var key1, key2, value1, value2 = "key1", "key2", "value1", "value2"
-	pip := c.Pipeline()
-	CommandSet.P(pip).Cmd(key1, value1, 0)
-	CommandSet.P(pip).Cmd(key2, value2, 0)
-	CommandGet.P(pip).Cmd(key1)
-	CommandGet.P(pip).Cmd(key2)
+	var pip = func() Pipeliner {
+		pip := c.Pipeline()
+		CommandSet.P(pip).Cmd(key1, value1, 0)
+		CommandSet.P(pip).Cmd(key2, value2, 0)
+		CommandGet.P(pip).Cmd(key1)
+		CommandGet.P(pip).Cmd(key2)
+		return pip
+	}
 
-	res, err := pip.Exec(ctx)
+	res, err := pip().Exec(ctx)
 	So(err, ShouldBeNil)
 	So(res, ShouldNotBeNil)
 	So(len(res), ShouldEqual, 4)
@@ -26,6 +29,16 @@ func testPipeline(ctx context.Context, c Cmdable) []string {
 	So(res[1], ShouldEqual, OK)
 	So(res[2], ShouldEqual, value1)
 	So(res[3], ShouldEqual, value2)
+
+	var cmds []CompletedResult
+	cmds, err = pip().ExecCmds(ctx)
+	So(err, ShouldBeNil)
+	So(cmds, ShouldNotBeNil)
+	So(len(cmds), ShouldEqual, 4)
+	So(cmds[0].(StatusCmd).Val(), ShouldEqual, OK)
+	So(cmds[1].(StatusCmd).Val(), ShouldEqual, OK)
+	So(cmds[2].(StringCmd).Val(), ShouldEqual, value1)
+	So(cmds[3].(StringCmd).Val(), ShouldEqual, value2)
 
 	return []string{key1, key2}
 }

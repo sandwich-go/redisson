@@ -12,8 +12,9 @@ type PipelineCmdable interface {
 type Pipeliner interface {
 	builder() builder
 
-	Cmd(...Completed)
+	Cmd(Completed, CompletedResult)
 	Exec(context.Context) ([]any, error)
+	ExecCmds(ctx context.Context) (rets []CompletedResult, err error)
 }
 
 type pipelineCommand struct{}
@@ -33,6 +34,7 @@ var pipelineCmd = &pipelineCommand{}
 type pipeline struct {
 	client   *client
 	commands []Completed
+	rets     []CompletedResult
 
 	mx sync.RWMutex
 }
@@ -40,22 +42,22 @@ type pipeline struct {
 func (c *client) Pipeline() Pipeliner { return &pipeline{client: c} }
 
 func (p *pipeline) builder() builder { return p.client.builder }
-func (p *pipeline) Cmd(cs ...Completed) {
-	if len(cs) == 0 {
-		return
-	}
+func (p *pipeline) Cmd(cs Completed, ret CompletedResult) {
 	p.mx.Lock()
-	p.commands = append(p.commands, cs...)
+	p.commands = append(p.commands, cs)
+	p.rets = append(p.rets, ret)
 	p.mx.Unlock()
 	return
 }
 
-func (p *pipeline) Exec(ctx context.Context) ([]any, error) {
+func (p *pipeline) exec(ctx context.Context, f func([]Completed, []CompletedResult) error) {
 	ctx = p.client.handler.before(ctx, pipelineCmd)
 
 	var cmds []Completed
+	var rets []CompletedResult
 	p.mx.RLock()
 	cmds = p.commands
+	rets = p.rets
 	p.mx.RUnlock()
 
 	var firstError error
@@ -64,30 +66,56 @@ func (p *pipeline) Exec(ctx context.Context) ([]any, error) {
 	}()
 
 	if len(cmds) == 0 {
-		return nil, nil
+		return
 	}
+	firstError = f(cmds, rets)
+	return
+}
 
-	var result = make([]any, len(cmds))
-	if len(cmds) == 1 {
-		r, err := p.client.cmd.Do(ctx, cmds[0]).ToAny()
-		if err != nil {
-			firstError = err
-			result[0] = err
+func (p *pipeline) Exec(ctx context.Context) (result []any, err error) {
+	p.exec(ctx, func(cmds []Completed, _ []CompletedResult) error {
+		result = make([]any, len(cmds))
+		if len(cmds) == 1 {
+			result[0], err = p.client.cmd.Do(ctx, cmds[0]).ToAny()
+			if err != nil && result[0] == nil {
+				result[0] = err
+			}
 		} else {
-			result[0] = r
+			for i, resp := range p.client.cmd.DoMulti(ctx, cmds...) {
+				var err0 error
+				result[i], err0 = resp.ToAny()
+				if err0 == nil {
+					continue
+				}
+				if err == nil {
+					err = err0
+				}
+				if result[i] == nil {
+					result[i] = err0
+				}
+			}
 		}
-		return result, err
-	}
+		return err
+	})
+	return
+}
 
-	resps := p.client.cmd.DoMulti(ctx, cmds...)
-	for i, resp := range resps {
-		r, err := resp.ToAny()
-		if err != nil && firstError == nil {
-			firstError = err
-			result[i] = err
+func (p *pipeline) ExecCmds(ctx context.Context) (rets []CompletedResult, err error) {
+	p.exec(ctx, func(cmds []Completed, in []CompletedResult) error {
+		rets = in
+		if len(cmds) == 1 {
+			resp := p.client.cmd.Do(ctx, cmds[0])
+			err = resp.NonRedisError()
+			rets[0].from(resp)
 		} else {
-			result[i] = r
+			for i, resp := range p.client.cmd.DoMulti(ctx, cmds...) {
+				if err0 := resp.NonRedisError(); err0 != nil && err == nil {
+					err = err0
+				}
+				rets[i].from(resp)
+			}
 		}
-	}
-	return result, firstError
+		return err
+	})
+	return
 }

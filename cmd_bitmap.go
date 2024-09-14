@@ -153,7 +153,7 @@ func (c *client) BitPos(ctx context.Context, key string, bit int64, pos ...int64
 }
 
 func (c *client) BitPosSpan(ctx context.Context, key string, bit, start, end int64, span string) IntCmd {
-	ctx = c.handler.before(ctx, CommandBitPos)
+	ctx = c.handler.before(ctx, CommandBitPosSpan)
 	var r IntCmd
 	if c.ttl > 0 {
 		r = newIntCmd(c.Do(ctx, c.builder.BitPosSpanCompleted(key, bit, start, end, span)))
