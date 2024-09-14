@@ -1744,7 +1744,7 @@ func (commandGeoHash) Instead() string               { return "" }
 func (commandGeoHash) ETC() string                   { return "" }
 func (commandGeoHash) P(p Pipeliner) commandGeoHashP { return commandGeoHashP{p} }
 func (b commandGeoHashP) Cmd(key string, members ...string) {
-	b.p.Cmd(b.p.builder().GeoHashCompleted(key, members...), &floatSliceCmd{})
+	b.p.Cmd(b.p.builder().GeoHashCompleted(key, members...), &stringSliceCmd{})
 }
 
 var CommandGeoPos commandGeoPos
