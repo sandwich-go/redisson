@@ -101,9 +101,7 @@ type BaseCmd interface {
 	Err() error
 }
 
-type CompletedResult interface {
-	BaseCmd
-
+type fromRedisResult interface {
 	from(rueidis.RedisResult)
 }
 

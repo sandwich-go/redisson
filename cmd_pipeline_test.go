@@ -30,7 +30,7 @@ func testPipeline(ctx context.Context, c Cmdable) []string {
 	So(res[2], ShouldEqual, value1)
 	So(res[3], ShouldEqual, value2)
 
-	var cmds []CompletedResult
+	var cmds []BaseCmd
 	cmds, err = pip().ExecCmds(ctx)
 	So(err, ShouldBeNil)
 	So(cmds, ShouldNotBeNil)
