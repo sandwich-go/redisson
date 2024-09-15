@@ -179,7 +179,7 @@ func (c *client) GeoHash(ctx context.Context, key string, members ...string) Str
 	if c.ttl > 0 {
 		r = newStringSliceCmd(c.Do(ctx, c.builder.GeoHashCompleted(key, members...)))
 	} else {
-		r = c.adapter.GeoHash(ctx, key, members...)
+		r = wrapStringSliceCmd(c.adapter.GeoHash(ctx, key, members...))
 	}
 	c.handler.after(ctx, r.Err())
 	return r
@@ -251,7 +251,7 @@ func (c *client) GeoSearch(ctx context.Context, key string, q GeoSearchQuery) St
 	if c.ttl > 0 {
 		r = newStringSliceCmd(c.Do(ctx, c.builder.GeoSearchCompleted(key, q)))
 	} else {
-		r = c.adapter.GeoSearch(ctx, key, q)
+		r = wrapStringSliceCmd(c.adapter.GeoSearch(ctx, key, q))
 	}
 	c.handler.after(ctx, r.Err())
 	return r

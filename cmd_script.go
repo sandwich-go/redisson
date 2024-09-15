@@ -260,35 +260,35 @@ func (c *client) FCallRO(ctx context.Context, function string, keys []string, ar
 
 func (c *client) FunctionDelete(ctx context.Context, libName string) StringCmd {
 	ctx = c.handler.before(ctx, CommandFunctionDelete)
-	r := c.adapter.FunctionDelete(ctx, libName)
+	r := wrapStringCmd(c.adapter.FunctionDelete(ctx, libName))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) FunctionDump(ctx context.Context) StringCmd {
 	ctx = c.handler.before(ctx, CommandFunctionDump)
-	r := c.adapter.FunctionDump(ctx)
+	r := wrapStringCmd(c.adapter.FunctionDump(ctx))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) FunctionFlush(ctx context.Context) StringCmd {
 	ctx = c.handler.before(ctx, CommandFunctionFlush)
-	r := c.adapter.FunctionFlush(ctx)
+	r := wrapStringCmd(c.adapter.FunctionFlush(ctx))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) FunctionFlushAsync(ctx context.Context) StringCmd {
 	ctx = c.handler.before(ctx, CommandFunctionFlushAsync)
-	r := c.adapter.FunctionFlushAsync(ctx)
+	r := wrapStringCmd(c.adapter.FunctionFlushAsync(ctx))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) FunctionKill(ctx context.Context) StringCmd {
 	ctx = c.handler.before(ctx, CommandFunctionKill)
-	r := c.adapter.FunctionKill(ctx)
+	r := wrapStringCmd(c.adapter.FunctionKill(ctx))
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -302,21 +302,21 @@ func (c *client) FunctionList(ctx context.Context, q FunctionListQuery) Function
 
 func (c *client) FunctionLoad(ctx context.Context, code string) StringCmd {
 	ctx = c.handler.before(ctx, CommandFunctionLoad)
-	r := c.adapter.FunctionLoad(ctx, code)
+	r := wrapStringCmd(c.adapter.FunctionLoad(ctx, code))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) FunctionLoadReplace(ctx context.Context, code string) StringCmd {
 	ctx = c.handler.before(ctx, CommandFunctionLoadReplace)
-	r := c.adapter.FunctionLoadReplace(ctx, code)
+	r := wrapStringCmd(c.adapter.FunctionLoadReplace(ctx, code))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) FunctionRestore(ctx context.Context, libDump string) StringCmd {
 	ctx = c.handler.before(ctx, CommandFunctionRestore)
-	r := c.adapter.FunctionRestore(ctx, libDump)
+	r := wrapStringCmd(c.adapter.FunctionRestore(ctx, libDump))
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -344,7 +344,7 @@ func (c *client) ScriptKill(ctx context.Context) StatusCmd {
 
 func (c *client) ScriptLoad(ctx context.Context, script string) StringCmd {
 	ctx = c.handler.before(ctx, CommandScriptLoad)
-	r := c.adapter.ScriptLoad(ctx, script)
+	r := wrapStringCmd(c.adapter.ScriptLoad(ctx, script))
 	c.handler.after(ctx, r.Err())
 	return r
 }

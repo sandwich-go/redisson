@@ -279,7 +279,7 @@ func (c *client) XAdd(ctx context.Context, a XAddArgs) StringCmd {
 	} else {
 		ctx = c.handler.before(ctx, CommandXAdd)
 	}
-	r := c.adapter.XAdd(ctx, a)
+	r := wrapStringCmd(c.adapter.XAdd(ctx, a))
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -307,7 +307,7 @@ func (c *client) XClaim(ctx context.Context, a XClaimArgs) XMessageSliceCmd {
 
 func (c *client) XClaimJustID(ctx context.Context, a XClaimArgs) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandXClaimJustID)
-	r := c.adapter.XClaimJustID(ctx, a)
+	r := wrapStringSliceCmd(c.adapter.XClaimJustID(ctx, a))
 	c.handler.after(ctx, r.Err())
 	return r
 }

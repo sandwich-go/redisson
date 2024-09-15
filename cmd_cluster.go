@@ -249,14 +249,14 @@ func (c *client) ClusterForget(ctx context.Context, nodeID string) StatusCmd {
 
 func (c *client) ClusterGetKeysInSlot(ctx context.Context, slot int64, count int64) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandClusterGetKeysInSlot)
-	r := c.adapter.ClusterGetKeysInSlot(ctx, slot, count)
+	r := wrapStringSliceCmd(c.adapter.ClusterGetKeysInSlot(ctx, slot, count))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ClusterInfo(ctx context.Context) StringCmd {
 	ctx = c.handler.before(ctx, CommandClusterInfo)
-	r := c.adapter.ClusterInfo(ctx)
+	r := wrapStringCmd(c.adapter.ClusterInfo(ctx))
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -277,7 +277,7 @@ func (c *client) ClusterMeet(ctx context.Context, host string, port int64) Statu
 
 func (c *client) ClusterNodes(ctx context.Context) StringCmd {
 	ctx = c.handler.before(ctx, CommandClusterNodes)
-	r := c.adapter.ClusterNodes(ctx)
+	r := wrapStringCmd(c.adapter.ClusterNodes(ctx))
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -319,7 +319,7 @@ func (c *client) ClusterSaveConfig(ctx context.Context) StatusCmd {
 
 func (c *client) ClusterSlaves(ctx context.Context, nodeID string) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandClusterSlaves)
-	r := c.adapter.ClusterSlaves(ctx, nodeID)
+	r := wrapStringSliceCmd(c.adapter.ClusterSlaves(ctx, nodeID))
 	c.handler.after(ctx, r.Err())
 	return r
 }

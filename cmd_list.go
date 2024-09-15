@@ -313,7 +313,7 @@ type ListCacheCmdable interface {
 
 func (c *client) BLMove(ctx context.Context, source, destination, srcpos, destpos string, timeout time.Duration) StringCmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandBLMove, func() []string { return appendString(source, destination) })
-	r := c.adapter.BLMove(ctx, source, destination, srcpos, destpos, timeout)
+	r := wrapStringCmd(c.adapter.BLMove(ctx, source, destination, srcpos, destpos, timeout))
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -327,21 +327,21 @@ func (c *client) BLMPop(ctx context.Context, timeout time.Duration, direction st
 
 func (c *client) BLPop(ctx context.Context, timeout time.Duration, keys ...string) StringSliceCmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandBLPop, func() []string { return keys })
-	r := c.adapter.BLPop(ctx, timeout, keys...)
+	r := wrapStringSliceCmd(c.adapter.BLPop(ctx, timeout, keys...))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) BRPop(ctx context.Context, timeout time.Duration, keys ...string) StringSliceCmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandBRPop, func() []string { return keys })
-	r := c.adapter.BRPop(ctx, timeout, keys...)
+	r := wrapStringSliceCmd(c.adapter.BRPop(ctx, timeout, keys...))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) BRPopLPush(ctx context.Context, source, destination string, timeout time.Duration) StringCmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandBRPopLPush, func() []string { return appendString(source, destination) })
-	r := c.adapter.BRPopLPush(ctx, source, destination, timeout)
+	r := wrapStringCmd(c.adapter.BRPopLPush(ctx, source, destination, timeout))
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -352,7 +352,7 @@ func (c *client) LIndex(ctx context.Context, key string, index int64) StringCmd 
 	if c.ttl > 0 {
 		r = newStringCmd(c.Do(ctx, c.builder.LIndexCompleted(key, index)))
 	} else {
-		r = c.adapter.LIndex(ctx, key, index)
+		r = wrapStringCmd(c.adapter.LIndex(ctx, key, index))
 	}
 	c.handler.after(ctx, r.Err())
 	return r
@@ -400,14 +400,14 @@ func (c *client) LLen(ctx context.Context, key string) IntCmd {
 
 func (c *client) LMove(ctx context.Context, source, destination, srcpos, destpos string) StringCmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandLMove, func() []string { return appendString(source, destination) })
-	r := c.adapter.LMove(ctx, source, destination, srcpos, destpos)
+	r := wrapStringCmd(c.adapter.LMove(ctx, source, destination, srcpos, destpos))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) LPop(ctx context.Context, key string) StringCmd {
 	ctx = c.handler.before(ctx, CommandLPop)
-	r := c.adapter.LPop(ctx, key)
+	r := wrapStringCmd(c.adapter.LPop(ctx, key))
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -421,7 +421,7 @@ func (c *client) LMPop(ctx context.Context, direction string, count int64, keys 
 
 func (c *client) LPopCount(ctx context.Context, key string, count int64) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandLPopCount)
-	r := c.adapter.LPopCount(ctx, key, count)
+	r := wrapStringSliceCmd(c.adapter.LPopCount(ctx, key, count))
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -473,7 +473,7 @@ func (c *client) LRange(ctx context.Context, key string, start, stop int64) Stri
 	if c.ttl > 0 {
 		r = newStringSliceCmd(c.Do(ctx, c.builder.LRangeCompleted(key, start, stop)))
 	} else {
-		r = c.adapter.LRange(ctx, key, start, stop)
+		r = wrapStringSliceCmd(c.adapter.LRange(ctx, key, start, stop))
 	}
 	c.handler.after(ctx, r.Err())
 	return r
@@ -502,21 +502,21 @@ func (c *client) LTrim(ctx context.Context, key string, start, stop int64) Statu
 
 func (c *client) RPop(ctx context.Context, key string) StringCmd {
 	ctx = c.handler.before(ctx, CommandRPop)
-	r := c.adapter.RPop(ctx, key)
+	r := wrapStringCmd(c.adapter.RPop(ctx, key))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) RPopCount(ctx context.Context, key string, count int64) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandRPopCount)
-	r := c.adapter.RPopCount(ctx, key, count)
+	r := wrapStringSliceCmd(c.adapter.RPopCount(ctx, key, count))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) RPopLPush(ctx context.Context, source, destination string) StringCmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandRPopLPush, func() []string { return appendString(source, destination) })
-	r := c.adapter.RPopLPush(ctx, source, destination)
+	r := wrapStringCmd(c.adapter.RPopLPush(ctx, source, destination))
 	c.handler.after(ctx, r.Err())
 	return r
 }

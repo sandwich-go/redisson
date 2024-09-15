@@ -2,10 +2,11 @@ package redisson
 
 import (
 	"fmt"
-	"github.com/redis/rueidis"
-	"github.com/redis/rueidis/rueidiscompat"
 	"strconv"
 	"time"
+
+	"github.com/redis/rueidis"
+	"github.com/redis/rueidis/rueidiscompat"
 )
 
 const (
@@ -190,10 +191,18 @@ type StringCmd interface {
 	Float32() (float32, error)
 	Float64() (float64, error)
 	Time() (time.Time, error)
+	Scan(val interface{}) error
 }
 
 type stringCmd struct {
 	baseCmd[string]
+}
+
+func wrapStringCmd(cmd *rueidiscompat.StringCmd) *stringCmd {
+	c := &stringCmd{}
+	c.SetVal(cmd.Val())
+	c.SetErr(cmd.Err())
+	return c
 }
 
 func (c *stringCmd) Bytes() ([]byte, error) {
@@ -251,6 +260,13 @@ func (c *stringCmd) Time() (time.Time, error) {
 
 func (c *stringCmd) String() string {
 	return c.val
+}
+
+func (c *stringCmd) Scan(val interface{}) error {
+	if c.err != nil {
+		return c.err
+	}
+	return scan([]byte(c.val), val)
 }
 
 func newStringCmd(res rueidis.RedisResult) StringCmd {
@@ -606,6 +622,7 @@ type StringSliceCmd interface {
 	BaseCmd
 	Val() []string
 	Result() ([]string, error)
+	ScanSlice(container interface{}) error
 }
 
 type stringSliceCmd struct {
@@ -622,6 +639,17 @@ func (c *stringSliceCmd) from(res rueidis.RedisResult) {
 	val, err := res.AsStrSlice()
 	c.SetVal(val)
 	c.SetErr(err)
+}
+
+func wrapStringSliceCmd(cmd *rueidiscompat.StringSliceCmd) *stringSliceCmd {
+	c := &stringSliceCmd{}
+	c.SetVal(cmd.Val())
+	c.SetErr(cmd.Err())
+	return c
+}
+
+func (c *stringSliceCmd) ScanSlice(container interface{}) error {
+	return scanSlice(c.Val(), container)
 }
 
 type DurationSliceCmd interface {
