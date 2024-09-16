@@ -238,7 +238,7 @@ func (b builder) sort(command, key string, sort Sort) Completed {
 		cmd = cmd.Args(XXX_GET).Args(get)
 	}
 	switch order := strings.ToUpper(sort.Order); order {
-	case XXX_ASC, XXX_DESC:
+	case ASC, DESC:
 		cmd = cmd.Args(order)
 	case "":
 	default:

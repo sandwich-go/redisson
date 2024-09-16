@@ -80,8 +80,6 @@ const (
 	XXX_ANY                  = "ANY"
 	XXX_SERVER               = "SERVER"
 	XXX_CLUSTER              = "CLUSTER"
-	XXX_ASC                  = "ASC"
-	XXX_DESC                 = "DESC"
 	XXX_ALPHA                = "ALPHA"
 )
 

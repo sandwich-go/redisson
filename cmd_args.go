@@ -26,6 +26,8 @@ const (
 	LEFT    = "LEFT"
 	LADDR   = "LADDR"
 	TYPE    = "TYPE"
+	ASC     = "ASC"
+	DESC    = "DESC"
 	KeepTTL = rueidiscompat.KeepTTL
 )
 
