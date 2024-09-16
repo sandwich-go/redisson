@@ -546,7 +546,7 @@ func (c *client) ZCount(ctx context.Context, key, min, max string) IntCmd {
 
 func (c *client) ZDiff(ctx context.Context, keys ...string) StringSliceCmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandZDiff, func() []string { return keys })
-	r := wrapStringSliceCmd(c.adapter.ZDiff(ctx, keys...))
+	r := newStringSliceCmd(c.Do(ctx, c.builder.ZDiffCompleted(keys...)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -574,7 +574,7 @@ func (c *client) ZIncrBy(ctx context.Context, key string, increment float64, mem
 
 func (c *client) ZInter(ctx context.Context, store ZStore) StringSliceCmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandZInter, func() []string { return store.Keys })
-	r := wrapStringSliceCmd(c.adapter.ZInter(ctx, store))
+	r := newStringSliceCmd(c.Do(ctx, c.builder.ZInterCompleted(store)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -647,7 +647,7 @@ func (c *client) ZPopMin(ctx context.Context, key string, count ...int64) ZSlice
 
 func (c *client) ZRandMember(ctx context.Context, key string, count int64) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandZRandMember)
-	r := wrapStringSliceCmd(c.adapter.ZRandMember(ctx, key, count))
+	r := newStringSliceCmd(c.Do(ctx, c.builder.ZRandMemberCompleted(key, count)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -661,12 +661,7 @@ func (c *client) ZRandMemberWithScores(ctx context.Context, key string, count in
 
 func (c *client) ZRange(ctx context.Context, key string, start, stop int64) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandZRange)
-	var r StringSliceCmd
-	if c.ttl > 0 {
-		r = newStringSliceCmd(c.Do(ctx, c.builder.ZRangeCompleted(key, start, stop)))
-	} else {
-		r = wrapStringSliceCmd(c.adapter.ZRange(ctx, key, start, stop))
-	}
+	r := newStringSliceCmd(c.Do(ctx, c.builder.ZRangeCompleted(key, start, stop)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -689,12 +684,7 @@ func (c *client) ZRangeArgs(ctx context.Context, z ZRangeArgs) StringSliceCmd {
 	} else {
 		ctx = c.handler.before(ctx, CommandZRangeArgs)
 	}
-	var r StringSliceCmd
-	if c.ttl > 0 {
-		r = newStringSliceCmd(c.Do(ctx, c.builder.ZRangeArgsCompleted(z)))
-	} else {
-		r = wrapStringSliceCmd(c.adapter.ZRangeArgs(ctx, z))
-	}
+	r := newStringSliceCmd(c.Do(ctx, c.builder.ZRangeArgsCompleted(z)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -717,24 +707,14 @@ func (c *client) ZRangeArgsWithScores(ctx context.Context, z ZRangeArgs) ZSliceC
 
 func (c *client) ZRangeByLex(ctx context.Context, key string, opt ZRangeBy) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandZRangeByLex)
-	var r StringSliceCmd
-	if c.ttl > 0 {
-		r = newStringSliceCmd(c.Do(ctx, c.builder.ZRangeByLexCompleted(key, opt)))
-	} else {
-		r = wrapStringSliceCmd(c.adapter.ZRangeByLex(ctx, key, opt))
-	}
+	r := newStringSliceCmd(c.Do(ctx, c.builder.ZRangeByLexCompleted(key, opt)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ZRangeByScore(ctx context.Context, key string, opt ZRangeBy) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandZRangeByScore)
-	var r StringSliceCmd
-	if c.ttl > 0 {
-		r = newStringSliceCmd(c.Do(ctx, c.builder.ZRangeByScoreCompleted(key, opt)))
-	} else {
-		r = wrapStringSliceCmd(c.adapter.ZRangeByScore(ctx, key, opt))
-	}
+	r := newStringSliceCmd(c.Do(ctx, c.builder.ZRangeByScoreCompleted(key, opt)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -816,12 +796,7 @@ func (c *client) ZRemRangeByScore(ctx context.Context, key, min, max string) Int
 
 func (c *client) ZRevRange(ctx context.Context, key string, start, stop int64) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandZRevRange)
-	var r StringSliceCmd
-	if c.ttl > 0 {
-		r = newStringSliceCmd(c.Do(ctx, c.builder.ZRevRangeCompleted(key, start, stop)))
-	} else {
-		r = wrapStringSliceCmd(c.adapter.ZRevRange(ctx, key, start, stop))
-	}
+	r := newStringSliceCmd(c.Do(ctx, c.builder.ZRevRangeCompleted(key, start, stop)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -840,24 +815,14 @@ func (c *client) ZRevRangeWithScores(ctx context.Context, key string, start, sto
 
 func (c *client) ZRevRangeByLex(ctx context.Context, key string, opt ZRangeBy) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandZRevRangeByLex)
-	var r StringSliceCmd
-	if c.ttl > 0 {
-		r = newStringSliceCmd(c.Do(ctx, c.builder.ZRevRangeByLexCompleted(key, opt)))
-	} else {
-		r = wrapStringSliceCmd(c.adapter.ZRevRangeByLex(ctx, key, opt))
-	}
+	r := newStringSliceCmd(c.Do(ctx, c.builder.ZRevRangeByLexCompleted(key, opt)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) ZRevRangeByScore(ctx context.Context, key string, opt ZRangeBy) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandZRevRangeByScore)
-	var r StringSliceCmd
-	if c.ttl > 0 {
-		r = newStringSliceCmd(c.Do(ctx, c.builder.ZRevRangeByScoreCompleted(key, opt)))
-	} else {
-		r = wrapStringSliceCmd(c.adapter.ZRevRangeByScore(ctx, key, opt))
-	}
+	r := newStringSliceCmd(c.Do(ctx, c.builder.ZRevRangeByScoreCompleted(key, opt)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -919,7 +884,7 @@ func (c *client) ZScore(ctx context.Context, key, member string) FloatCmd {
 
 func (c *client) ZUnion(ctx context.Context, store ZStore) StringSliceCmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandZUnion, func() []string { return store.Keys })
-	r := wrapStringSliceCmd(c.adapter.ZUnion(ctx, store))
+	r := newStringSliceCmd(c.Do(ctx, c.builder.ZUnionCompleted(store)))
 	c.handler.after(ctx, r.Err())
 	return r
 }

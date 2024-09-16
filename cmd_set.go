@@ -214,7 +214,7 @@ func (c *client) SCard(ctx context.Context, key string) IntCmd {
 
 func (c *client) SDiff(ctx context.Context, keys ...string) StringSliceCmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandSDiff, func() []string { return keys })
-	r := wrapStringSliceCmd(c.adapter.SDiff(ctx, keys...))
+	r := newStringSliceCmd(c.Do(ctx, c.builder.SDiffCompleted(keys...)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -228,7 +228,7 @@ func (c *client) SDiffStore(ctx context.Context, destination string, keys ...str
 
 func (c *client) SInter(ctx context.Context, keys ...string) StringSliceCmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandSInter, func() []string { return keys })
-	r := wrapStringSliceCmd(c.adapter.SInter(ctx, keys...))
+	r := newStringSliceCmd(c.Do(ctx, c.builder.SInterCompleted(keys...)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -273,12 +273,7 @@ func (c *client) SMIsMember(ctx context.Context, key string, members ...any) Boo
 
 func (c *client) SMembers(ctx context.Context, key string) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandSMembers)
-	var r StringSliceCmd
-	if c.ttl > 0 {
-		r = newStringSliceCmd(c.Do(ctx, c.builder.SMembersCompleted(key)))
-	} else {
-		r = wrapStringSliceCmd(c.adapter.SMembers(ctx, key))
-	}
+	r := newStringSliceCmd(c.Do(ctx, c.builder.SMembersCompleted(key)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -292,28 +287,28 @@ func (c *client) SMove(ctx context.Context, source, destination string, member a
 
 func (c *client) SPop(ctx context.Context, key string) StringCmd {
 	ctx = c.handler.before(ctx, CommandSPop)
-	r := wrapStringCmd(c.adapter.SPop(ctx, key))
+	r := newStringCmd(c.Do(ctx, c.builder.SPopCompleted(key)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) SPopN(ctx context.Context, key string, count int64) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandSPopN)
-	r := wrapStringSliceCmd(c.adapter.SPopN(ctx, key, count))
+	r := newStringSliceCmd(c.Do(ctx, c.builder.SPopNCompleted(key, count)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) SRandMember(ctx context.Context, key string) StringCmd {
 	ctx = c.handler.before(ctx, CommandSRandMember)
-	r := wrapStringCmd(c.adapter.SRandMember(ctx, key))
+	r := newStringCmd(c.Do(ctx, c.builder.SRandMemberCompleted(key)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) SRandMemberN(ctx context.Context, key string, count int64) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandSRandMemberN)
-	r := wrapStringSliceCmd(c.adapter.SRandMemberN(ctx, key, count))
+	r := newStringSliceCmd(c.Do(ctx, c.builder.SRandMemberNCompleted(key, count)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -338,7 +333,7 @@ func (c *client) SScan(ctx context.Context, key string, cursor uint64, match str
 
 func (c *client) SUnion(ctx context.Context, keys ...string) StringSliceCmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandSUnion, func() []string { return keys })
-	r := wrapStringSliceCmd(c.adapter.SUnion(ctx, keys...))
+	r := newStringSliceCmd(c.Do(ctx, c.builder.SUnionCompleted(keys...)))
 	c.handler.after(ctx, r.Err())
 	return r
 }

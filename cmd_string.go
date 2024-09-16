@@ -256,45 +256,35 @@ func (c *client) DecrBy(ctx context.Context, key string, decrement int64) IntCmd
 
 func (c *client) Get(ctx context.Context, key string) StringCmd {
 	ctx = c.handler.before(ctx, CommandGet)
-	var r StringCmd
-	if c.ttl > 0 {
-		r = newStringCmd(c.Do(ctx, c.builder.GetCompleted(key)))
-	} else {
-		r = wrapStringCmd(c.adapter.Get(ctx, key))
-	}
+	r := newStringCmd(c.Do(ctx, c.builder.GetCompleted(key)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) GetDel(ctx context.Context, key string) StringCmd {
 	ctx = c.handler.before(ctx, CommandGetDel)
-	r := wrapStringCmd(c.adapter.GetDel(ctx, key))
+	r := newStringCmd(c.Do(ctx, c.builder.GetDelCompleted(key)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) GetEx(ctx context.Context, key string, expiration time.Duration) StringCmd {
 	ctx = c.handler.before(ctx, CommandGetEx)
-	r := wrapStringCmd(c.adapter.GetEx(ctx, key, expiration))
+	r := newStringCmd(c.Do(ctx, c.builder.GetExCompleted(key, expiration)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) GetRange(ctx context.Context, key string, start, end int64) StringCmd {
 	ctx = c.handler.before(ctx, CommandGetRange)
-	var r StringCmd
-	if c.ttl > 0 {
-		r = newStringCmd(c.Do(ctx, c.builder.GetRangeCompleted(key, start, end)))
-	} else {
-		r = wrapStringCmd(c.adapter.GetRange(ctx, key, start, end))
-	}
+	r := newStringCmd(c.Do(ctx, c.builder.GetRangeCompleted(key, start, end)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) GetSet(ctx context.Context, key string, value any) StringCmd {
 	ctx = c.handler.before(ctx, CommandGetSet)
-	r := wrapStringCmd(c.adapter.GetSet(ctx, key, value))
+	r := newStringCmd(c.Do(ctx, c.builder.GetSetCompleted(key, value)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
