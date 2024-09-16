@@ -81,6 +81,7 @@ const (
 	XXX_SERVER               = "SERVER"
 	XXX_CLUSTER              = "CLUSTER"
 	XXX_ALPHA                = "ALPHA"
+	XXX_BLMOVE               = "BLMOVE"
 )
 
 var (

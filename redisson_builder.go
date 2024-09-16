@@ -594,6 +594,22 @@ func (b builder) PFMergeCompleted(dest string, keys ...string) Completed {
 	return b.Pfmerge().Destkey(dest).Sourcekey(keys...).Build()
 }
 
+func (b builder) BLMoveCompleted(source, destination, srcpos, destpos string, timeout time.Duration) Completed {
+	return b.Arbitrary(XXX_BLMOVE).Keys(source, destination).Args(srcpos, destpos, strconv.FormatFloat(float64(formatSec(timeout)), 'f', -1, 64)).Blocking()
+}
+
+func (b builder) BLPopCompleted(timeout time.Duration, keys ...string) Completed {
+	return b.Blpop().Key(keys...).Timeout(float64(formatSec(timeout))).Build()
+}
+
+func (b builder) BRPopCompleted(timeout time.Duration, keys ...string) Completed {
+	return b.Brpop().Key(keys...).Timeout(float64(formatSec(timeout))).Build()
+}
+
+func (b builder) BRPopLPushCompleted(source, destination string, timeout time.Duration) Completed {
+	return b.Brpoplpush().Source(source).Destination(destination).Timeout(float64(formatSec(timeout))).Build()
+}
+
 func (b builder) LIndexCompleted(key string, index int64) Completed {
 	return b.Lindex().Key(key).Index(index).Build()
 }
