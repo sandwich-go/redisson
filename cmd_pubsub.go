@@ -137,7 +137,7 @@ func (c *client) SPublish(ctx context.Context, channel string, message any) IntC
 
 func (c *client) PubSubChannels(ctx context.Context, pattern string) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandPubSubChannels)
-	r := wrapStringSliceCmd(c.adapter.PubSubChannels(ctx, pattern))
+	r := newStringSliceCmd(c.Do(ctx, c.builder.PubSubChannelsCompleted(pattern)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -158,7 +158,7 @@ func (c *client) PubSubNumPat(ctx context.Context) IntCmd {
 
 func (c *client) PubSubShardChannels(ctx context.Context, pattern string) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandPubSubShardChannels)
-	r := wrapStringSliceCmd(c.adapter.PubSubShardChannels(ctx, pattern))
+	r := newStringSliceCmd(c.Do(ctx, c.builder.PubSubShardChannelsCompleted(pattern)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
