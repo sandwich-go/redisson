@@ -218,7 +218,7 @@ type ServerCmdable interface {
 
 func (c *client) ACLDryRun(ctx context.Context, username string, command ...any) StringCmd {
 	ctx = c.handler.before(ctx, CommandACLDryRun)
-	r := wrapStringCmd(c.adapter.ACLDryRun(ctx, username, command...))
+	r := newStringCmd(c.Do(ctx, c.builder.ACLDryRunCompleted(username, command...)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -246,14 +246,14 @@ func (c *client) Command(ctx context.Context) CommandsInfoCmd {
 
 func (c *client) CommandList(ctx context.Context, filter FilterBy) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandCommandList)
-	r := wrapStringSliceCmd(c.adapter.CommandList(ctx, filter))
+	r := newStringSliceCmd(c.Do(ctx, c.builder.CommandListCompleted(filter)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
 
 func (c *client) CommandGetKeys(ctx context.Context, commands ...any) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandCommandGetKeys)
-	r := wrapStringSliceCmd(c.adapter.CommandGetKeys(ctx, commands...))
+	r := newStringSliceCmd(c.Do(ctx, c.builder.CommandGetKeysCompleted(commands...)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -334,7 +334,7 @@ func (c *client) Info(ctx context.Context, section ...string) StringCmd {
 	} else {
 		ctx = c.handler.before(ctx, CommandServerInfo)
 	}
-	r := wrapStringCmd(c.adapter.Info(ctx, section...))
+	r := newStringCmd(c.Do(ctx, c.builder.InfoCompleted(section...)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -390,7 +390,7 @@ func (c *client) Time(ctx context.Context) TimeCmd {
 
 func (c *client) DebugObject(ctx context.Context, key string) StringCmd {
 	ctx = c.handler.before(ctx, CommandDebugObject)
-	r := wrapStringCmd(c.adapter.DebugObject(ctx, key))
+	r := newStringCmd(c.Do(ctx, c.builder.DebugObjectCompleted(key)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
