@@ -119,7 +119,7 @@ type ConnectionCmdable interface {
 
 func (c *client) ClientGetName(ctx context.Context) StringCmd {
 	ctx = c.handler.before(ctx, CommandClientGetName)
-	r := wrapStringCmd(c.adapter.ClientGetName(ctx))
+	r := newStringCmd(c.Do(ctx, c.builder.ClientGetNameCompleted()))
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -192,7 +192,7 @@ func (c *client) ClientUnblockWithError(ctx context.Context, id int64) IntCmd {
 
 func (c *client) Echo(ctx context.Context, message any) StringCmd {
 	ctx = c.handler.before(ctx, CommandEcho)
-	r := wrapStringCmd(c.adapter.Echo(ctx, message))
+	r := newStringCmd(c.Do(ctx, c.builder.EchoCompleted(message)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
