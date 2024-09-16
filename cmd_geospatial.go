@@ -175,12 +175,7 @@ func (c *client) GeoDist(ctx context.Context, key string, member1, member2, unit
 
 func (c *client) GeoHash(ctx context.Context, key string, members ...string) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandGeoHash)
-	var r StringSliceCmd
-	if c.ttl > 0 {
-		r = newStringSliceCmd(c.Do(ctx, c.builder.GeoHashCompleted(key, members...)))
-	} else {
-		r = wrapStringSliceCmd(c.adapter.GeoHash(ctx, key, members...))
-	}
+	r := newStringSliceCmd(c.Do(ctx, c.builder.GeoHashCompleted(key, members...)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -247,12 +242,7 @@ func (c *client) GeoRadiusByMemberStore(ctx context.Context, key, member string,
 
 func (c *client) GeoSearch(ctx context.Context, key string, q GeoSearchQuery) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandGeoSearch)
-	var r StringSliceCmd
-	if c.ttl > 0 {
-		r = newStringSliceCmd(c.Do(ctx, c.builder.GeoSearchCompleted(key, q)))
-	} else {
-		r = wrapStringSliceCmd(c.adapter.GeoSearch(ctx, key, q))
-	}
+	r := newStringSliceCmd(c.Do(ctx, c.builder.GeoSearchCompleted(key, q)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
