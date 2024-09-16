@@ -146,6 +146,10 @@ func (b builder) ExpireTimeCompleted(key string) Completed {
 	return b.Expiretime().Key(key).Build()
 }
 
+func (b builder) KeysCompleted(pattern string) Completed {
+	return b.Keys().Pattern(pattern).Build()
+}
+
 func (b builder) MigrateCompleted(host string, port int64, key string, db int64, timeout time.Duration) Completed {
 	return b.Migrate().Host(host).Port(port).Key(key).DestinationDb(db).Timeout(formatSec(timeout)).Build()
 }
@@ -220,6 +224,38 @@ func (b builder) PTTLCompleted(key string) Completed {
 
 func (b builder) RandomKeyCompleted() Completed {
 	return b.Randomkey().Build()
+}
+
+func (b builder) sort(command, key string, sort Sort) Completed {
+	cmd := b.Arbitrary(command).Keys(key)
+	if sort.By != "" {
+		cmd = cmd.Args(XXX_BY, sort.By)
+	}
+	if sort.Offset != 0 || sort.Count != 0 {
+		cmd = cmd.Args(XXX_LIMIT, strconv.FormatInt(sort.Offset, 10), strconv.FormatInt(sort.Count, 10))
+	}
+	for _, get := range sort.Get {
+		cmd = cmd.Args(XXX_GET).Args(get)
+	}
+	switch order := strings.ToUpper(sort.Order); order {
+	case XXX_ASC, XXX_DESC:
+		cmd = cmd.Args(order)
+	case "":
+	default:
+		panic(fmt.Sprintf("invalid sort order %s", sort.Order))
+	}
+	if sort.Alpha {
+		cmd = cmd.Args(XXX_ALPHA)
+	}
+	return cmd.Build()
+}
+
+func (b builder) SortCompleted(key string, sort Sort) Completed {
+	return b.sort("SORT", key, sort)
+}
+
+func (b builder) SortROCompleted(key string, sort Sort) Completed {
+	return b.sort("SORT_RO", key, sort)
 }
 
 func (b builder) RenameCompleted(key, newkey string) Completed {

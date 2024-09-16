@@ -67,6 +67,7 @@ const (
 	XXX_ZUNION               = "ZUNION"
 	XXX_ZUNIONSTORE          = "ZUNIONSTORE"
 	XXX_BYSCORE              = "BYSCORE"
+	XXX_BY                   = "BY"
 	XXX_BYLEX                = "BYLEX"
 	XXX_REV                  = "REV"
 	XXX_BYRADIUS             = "BYRADIUS"
@@ -79,6 +80,9 @@ const (
 	XXX_ANY                  = "ANY"
 	XXX_SERVER               = "SERVER"
 	XXX_CLUSTER              = "CLUSTER"
+	XXX_ASC                  = "ASC"
+	XXX_DESC                 = "DESC"
+	XXX_ALPHA                = "ALPHA"
 )
 
 var (

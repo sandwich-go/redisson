@@ -416,7 +416,7 @@ func (c *client) Del(ctx context.Context, keys ...string) IntCmd {
 
 func (c *client) Dump(ctx context.Context, key string) StringCmd {
 	ctx = c.handler.before(ctx, CommandDump)
-	r := wrapStringCmd(c.adapter.Dump(ctx, key))
+	r := newStringCmd(c.Do(ctx, c.builder.DumpCompleted(key)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -511,7 +511,7 @@ func (c *client) ExpireTime(ctx context.Context, key string) DurationCmd {
 
 func (c *client) Keys(ctx context.Context, pattern string) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandKeys)
-	r := wrapStringSliceCmd(c.adapter.Keys(ctx, pattern))
+	r := newStringSliceCmd(c.Do(ctx, c.builder.KeysCompleted(pattern)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -539,7 +539,7 @@ func (c *client) ObjectRefCount(ctx context.Context, key string) IntCmd {
 
 func (c *client) ObjectEncoding(ctx context.Context, key string) StringCmd {
 	ctx = c.handler.before(ctx, CommandObjectEncoding)
-	r := wrapStringCmd(c.adapter.ObjectEncoding(ctx, key))
+	r := newStringCmd(c.Do(ctx, c.builder.ObjectEncodingCompleted(key)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -663,7 +663,7 @@ func (c *client) RenameNX(ctx context.Context, key, newkey string) BoolCmd {
 
 func (c *client) RandomKey(ctx context.Context) StringCmd {
 	ctx = c.handler.before(ctx, CommandRandomKey)
-	r := wrapStringCmd(c.adapter.RandomKey(ctx))
+	r := newStringCmd(c.Do(ctx, c.builder.RandomKeyCompleted()))
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -698,7 +698,7 @@ func (c *client) ScanType(ctx context.Context, cursor uint64, match string, coun
 
 func (c *client) Sort(ctx context.Context, key string, sort Sort) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandSort)
-	r := wrapStringSliceCmd(c.adapter.Sort(ctx, key, sort))
+	r := newStringSliceCmd(c.Do(ctx, c.builder.SortCompleted(key, sort)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -719,7 +719,7 @@ func (c *client) SortInterfaces(ctx context.Context, key string, sort Sort) Slic
 
 func (c *client) SortRO(ctx context.Context, key string, sort Sort) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandSortRO)
-	r := wrapStringSliceCmd(c.adapter.SortRO(ctx, key, sort))
+	r := newStringSliceCmd(c.Do(ctx, c.builder.SortROCompleted(key, sort)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
