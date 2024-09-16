@@ -434,12 +434,7 @@ func (c *client) HExpireTime(ctx context.Context, key string, fields ...string) 
 
 func (c *client) HGet(ctx context.Context, key, field string) StringCmd {
 	ctx = c.handler.before(ctx, CommandHGet)
-	var r StringCmd
-	if c.ttl > 0 {
-		r = newStringCmd(c.Do(ctx, c.builder.HGetCompleted(key, field)))
-	} else {
-		r = wrapStringCmd(c.adapter.HGet(ctx, key, field))
-	}
+	r := newStringCmd(c.Do(ctx, c.builder.HGetCompleted(key, field)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -472,12 +467,7 @@ func (c *client) HIncrByFloat(ctx context.Context, key, field string, incr float
 
 func (c *client) HKeys(ctx context.Context, key string) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandHKeys)
-	var r StringSliceCmd
-	if c.ttl > 0 {
-		r = newStringSliceCmd(c.Do(ctx, c.builder.HKeysCompleted(key)))
-	} else {
-		r = wrapStringSliceCmd(c.adapter.HKeys(ctx, key))
-	}
+	r := newStringSliceCmd(c.Do(ctx, c.builder.HKeysCompleted(key)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -613,7 +603,7 @@ func (c *client) HPTTL(ctx context.Context, key string, fields ...string) Durati
 
 func (c *client) HRandField(ctx context.Context, key string, count int64) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandHRandField)
-	r := wrapStringSliceCmd(c.adapter.HRandField(ctx, key, count))
+	r := newStringSliceCmd(c.Do(ctx, c.builder.HRandFieldCompleted(key, count)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
@@ -652,12 +642,7 @@ func (c *client) HSetNX(ctx context.Context, key, field string, value any) BoolC
 
 func (c *client) HVals(ctx context.Context, key string) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandHVals)
-	var r StringSliceCmd
-	if c.ttl > 0 {
-		r = newStringSliceCmd(c.Do(ctx, c.builder.HValsCompleted(key)))
-	} else {
-		r = wrapStringSliceCmd(c.adapter.HVals(ctx, key))
-	}
+	r := newStringSliceCmd(c.Do(ctx, c.builder.HValsCompleted(key)))
 	c.handler.after(ctx, r.Err())
 	return r
 }
