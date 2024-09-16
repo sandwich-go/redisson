@@ -157,7 +157,7 @@ func (c *client) ClientKillByFilter(ctx context.Context, keys ...string) IntCmd 
 
 func (c *client) ClientList(ctx context.Context) StringCmd {
 	ctx = c.handler.before(ctx, CommandClientList)
-	r := wrapStringCmd(c.adapter.ClientList(ctx))
+	r := newStringCmd(c.Do(ctx, c.builder.ClientListCompleted()))
 	c.handler.after(ctx, r.Err())
 	return r
 }
