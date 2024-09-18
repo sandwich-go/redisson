@@ -35,10 +35,10 @@ func testPipeline(ctx context.Context, c Cmdable) []string {
 	So(err, ShouldBeNil)
 	So(cmds, ShouldNotBeNil)
 	So(len(cmds), ShouldEqual, 4)
-	So(cmds[0].(StatusCmd).Val(), ShouldEqual, OK)
-	So(cmds[1].(StatusCmd).Val(), ShouldEqual, OK)
-	So(cmds[2].(StringCmd).Val(), ShouldEqual, value1)
-	So(cmds[3].(StringCmd).Val(), ShouldEqual, value2)
+	So(CommandSet.PR(cmds[0]).Val(), ShouldEqual, OK)
+	So(CommandSet.PR(cmds[1]).Val(), ShouldEqual, OK)
+	So(CommandGet.PR(cmds[2]).Val(), ShouldEqual, value1)
+	So(CommandGet.PR(cmds[3]).Val(), ShouldEqual, value2)
 
 	return []string{key1, key2}
 }

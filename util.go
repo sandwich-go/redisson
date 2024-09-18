@@ -141,6 +141,12 @@ func str(arg any) string {
 		if data, err := v.MarshalBinary(); err == nil {
 			return rueidis.BinaryString(data)
 		}
+	default:
+		vv := reflect.ValueOf(arg)
+		if vv.Kind() == reflect.Struct || vv.Kind() == reflect.Pointer {
+			panic(fmt.Errorf(
+				"redis: can't marshal %T (consider implementing BinaryMarshaler)", v))
+		}
 	}
 	return fmt.Sprint(arg)
 }

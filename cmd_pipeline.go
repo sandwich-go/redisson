@@ -11,9 +11,15 @@ type PipelineCmdable interface {
 
 type Pipeliner interface {
 	builder() builder
+	cmd(Completed, BaseCmd)
 
-	Cmd(Completed, BaseCmd)
+	// Exec 执行，返回结果集
+	// 如果有错误，则 error 不为 nil，除 rueidis.Nil 错误外
+	// 返回的结果集为数组，与执行的命令顺序有关，如果有 error，则数组中也包含 error，除 rueidis.Nil 错误外
 	Exec(context.Context) ([]any, error)
+	// ExecCmds 执行，返回命令结果集
+	// 如果有错误，则 error 不为 nil，除 rueidis.Nil 错误外
+	// 命令结果集
 	ExecCmds(context.Context) ([]BaseCmd, error)
 }
 
@@ -42,7 +48,7 @@ type pipeline struct {
 func (c *client) Pipeline() Pipeliner { return &pipeline{client: c} }
 
 func (p *pipeline) builder() builder { return p.client.builder }
-func (p *pipeline) Cmd(cs Completed, ret BaseCmd) {
+func (p *pipeline) cmd(cs Completed, ret BaseCmd) {
 	p.mx.Lock()
 	p.commands = append(p.commands, cs)
 	p.rets = append(p.rets, ret)
