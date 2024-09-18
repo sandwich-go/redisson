@@ -19,7 +19,7 @@ type Pipeliner interface {
 	Exec(context.Context) ([]any, error)
 	// ExecCmds 执行，返回命令结果集
 	// 如果有错误，则 error 不为 nil，除 rueidis.Nil 错误外
-	// 命令结果集
+	// 命令结果集的类型，可以通过命令的 PR 函数获得，例如 CommandAppend.PR()
 	ExecCmds(context.Context) ([]BaseCmd, error)
 }
 
