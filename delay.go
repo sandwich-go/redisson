@@ -38,6 +38,14 @@ redis.call('ZADD', delay_set, score or 0.0, value)
 return {true}
 `
 
+var delDelayTaskLua = `
+local delay_set, doing_set  = KEYS[1], KEYS[2]
+local value = ARGV[1]
+redis.call('ZREM', doing_set, value)
+redis.call('ZREM', delay_set, value)
+return {true}
+`
+
 var consumeDelayTaskSuccessLua = `
 local doing_set  = KEYS[1]
 local value = ARGV[1]
@@ -70,6 +78,9 @@ type DelayQueue interface {
 	// Add 添加任务
 	// bytes 具有唯一性，即相同的 bytes 看做相同的任务，相同的 bytes 会进行覆盖
 	Add(ctx context.Context, bytes []byte, seconds time.Duration) error
+	// Del 删除任务
+	Del(ctx context.Context, bytes []byte) error
+
 	// Length 队列长度
 	Length(ctx context.Context) (int64, error)
 	// Close 关闭队列
@@ -89,6 +100,7 @@ type delayQueue struct {
 
 	moveScript           Scripter
 	addScript            Scripter
+	delScript            Scripter
 	lengthScript         Scripter
 	consumeSuccessScript Scripter
 	consumeFailedScript  Scripter
@@ -110,6 +122,7 @@ func newDelayQueue(c *client, name string, f func([]byte) error, opts ...DelayOp
 		name:                 name,
 		moveScript:           c.CreateScript(moveDelayTaskLua),
 		addScript:            c.CreateScript(addDelayTaskLua),
+		delScript:            c.CreateScript(delDelayTaskLua),
 		lengthScript:         c.CreateScript(delayTaskLengthLua),
 		consumeSuccessScript: c.CreateScript(consumeDelayTaskSuccessLua),
 		consumeFailedScript:  c.CreateScript(consumeDelayTaskFailedLua),
@@ -134,6 +147,10 @@ func (q *delayQueue) Add(ctx context.Context, bytes []byte, seconds time.Duratio
 	sec := formatSec(seconds)
 	now := nowFunc().Unix()
 	return q.addScript.Run(ctx, q.pollKeys, bytes, now+sec).Err()
+}
+
+func (q *delayQueue) Del(ctx context.Context, bytes []byte) error {
+	return q.delScript.Run(ctx, q.pollKeys, bytes).Err()
 }
 
 func (q *delayQueue) Length(ctx context.Context) (int64, error) {
