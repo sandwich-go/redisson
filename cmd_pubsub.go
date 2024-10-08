@@ -130,7 +130,9 @@ func (c *client) PubSubNumSub(ctx context.Context, channels ...string) StringInt
 }
 
 func (c *client) Subscribe(ctx context.Context, channels ...string) PubSub {
-	return doAny[PubSub](ctx, c.handler, CommandSubscribe, func(ctx context.Context) PubSub {
-		return c.cmdable.Subscribe(ctx, channels...)
-	})
+	ctx, _ = c.handler.before(ctx, CommandSubscribe)
+	r := c.cmdable.Subscribe(ctx, channels...)
+	c.handler.after(ctx, nil)
+	return r
+
 }

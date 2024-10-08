@@ -42,15 +42,6 @@ func do[T BaseCmd](ctx context.Context, h handler, command Command, fn func(cont
 	return res
 }
 
-func doAny[T any](ctx context.Context, h handler, command Command, fn func(context.Context) T, getKeys ...func() []string) T {
-	var cancel context.CancelFunc
-	ctx, cancel = h.before(ctx, command, getKeys...)
-	res := fn(ctx)
-	h.after(ctx, nil)
-	cancel()
-	return res
-}
-
 func newSemVersion(version string) (semver.Version, error) {
 	v := semver.Version{}
 	if err := v.Set(version); err != nil {
