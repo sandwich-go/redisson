@@ -277,192 +277,175 @@ type ListCacheCmdable interface {
 }
 
 func (c *client) BLMove(ctx context.Context, source, destination, srcpos, destpos string, timeout time.Duration) StringCmd {
-	ctx = c.handler.beforeWithKeys(ctx, CommandBLMove, func() []string { return appendString(source, destination) })
-	r := c.cmdable.BLMove(ctx, source, destination, srcpos, destpos, timeout)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[StringCmd](ctx, c.handler, CommandBLMove, func(ctx context.Context) StringCmd {
+		return c.cmdable.BLMove(ctx, source, destination, srcpos, destpos, timeout)
+	}, func() []string { return appendString(source, destination) })
 }
 
 func (c *client) BLPop(ctx context.Context, timeout time.Duration, keys ...string) StringSliceCmd {
-	ctx = c.handler.beforeWithKeys(ctx, CommandBLPop, func() []string { return keys })
-	r := c.cmdable.BLPop(ctx, timeout, keys...)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[StringSliceCmd](ctx, c.handler, CommandBLPop, func(ctx context.Context) StringSliceCmd {
+		return c.cmdable.BLPop(ctx, timeout, keys...)
+	}, func() []string { return keys })
 }
 
 func (c *client) BRPop(ctx context.Context, timeout time.Duration, keys ...string) StringSliceCmd {
-	ctx = c.handler.beforeWithKeys(ctx, CommandBRPop, func() []string { return keys })
-	r := c.cmdable.BRPop(ctx, timeout, keys...)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[StringSliceCmd](ctx, c.handler, CommandBRPop, func(ctx context.Context) StringSliceCmd {
+		return c.cmdable.BRPop(ctx, timeout, keys...)
+	}, func() []string { return keys })
 }
 
 func (c *client) BRPopLPush(ctx context.Context, source, destination string, timeout time.Duration) StringCmd {
-	ctx = c.handler.beforeWithKeys(ctx, CommandBRPopLPush, func() []string { return appendString(source, destination) })
-	r := c.cmdable.BRPopLPush(ctx, source, destination, timeout)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[StringCmd](ctx, c.handler, CommandBRPopLPush, func(ctx context.Context) StringCmd {
+		return c.cmdable.BRPopLPush(ctx, source, destination, timeout)
+	}, func() []string { return appendString(source, destination) })
 }
 
 func (c *client) LIndex(ctx context.Context, key string, index int64) StringCmd {
-	ctx = c.handler.before(ctx, CommandLIndex)
-	r := c.cacheCmdable.LIndex(ctx, key, index)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[StringCmd](ctx, c.handler, CommandLIndex, func(ctx context.Context) StringCmd {
+		return c.cacheCmdable.LIndex(ctx, key, index)
+	})
 }
 
 func (c *client) LInsert(ctx context.Context, key, op string, pivot, value interface{}) IntCmd {
-	ctx = c.handler.before(ctx, CommandLInsert)
-	r := c.cmdable.LInsert(ctx, key, op, pivot, value)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[IntCmd](ctx, c.handler, CommandLInsert, func(ctx context.Context) IntCmd {
+		return c.cmdable.LInsert(ctx, key, op, pivot, value)
+	})
 }
 
 func (c *client) LInsertBefore(ctx context.Context, key string, pivot, value interface{}) IntCmd {
-	ctx = c.handler.before(ctx, CommandLInsert)
-	r := c.cmdable.LInsertBefore(ctx, key, pivot, value)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[IntCmd](ctx, c.handler, CommandLInsert, func(ctx context.Context) IntCmd {
+		return c.cmdable.LInsertBefore(ctx, key, pivot, value)
+	})
 }
 
 func (c *client) LInsertAfter(ctx context.Context, key string, pivot, value interface{}) IntCmd {
-	ctx = c.handler.before(ctx, CommandLInsert)
-	r := c.cmdable.LInsertAfter(ctx, key, pivot, value)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[IntCmd](ctx, c.handler, CommandLInsert, func(ctx context.Context) IntCmd {
+		return c.cmdable.LInsertAfter(ctx, key, pivot, value)
+	})
 }
 
 func (c *client) LLen(ctx context.Context, key string) IntCmd {
-	ctx = c.handler.before(ctx, CommandLLen)
-	r := c.cacheCmdable.LLen(ctx, key)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[IntCmd](ctx, c.handler, CommandLLen, func(ctx context.Context) IntCmd {
+		return c.cacheCmdable.LLen(ctx, key)
+	})
 }
 
 func (c *client) LMove(ctx context.Context, source, destination, srcpos, destpos string) StringCmd {
-	ctx = c.handler.beforeWithKeys(ctx, CommandLMove, func() []string { return appendString(source, destination) })
-	r := c.cmdable.LMove(ctx, source, destination, srcpos, destpos)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[StringCmd](ctx, c.handler, CommandLMove, func(ctx context.Context) StringCmd {
+		return c.cmdable.LMove(ctx, source, destination, srcpos, destpos)
+	}, func() []string { return appendString(source, destination) })
 }
 
 func (c *client) LPop(ctx context.Context, key string) StringCmd {
-	ctx = c.handler.before(ctx, CommandLPop)
-	r := c.cmdable.LPop(ctx, key)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[StringCmd](ctx, c.handler, CommandLPop, func(ctx context.Context) StringCmd {
+		return c.cmdable.LPop(ctx, key)
+	})
 }
 
 func (c *client) LPopCount(ctx context.Context, key string, count int) StringSliceCmd {
-	ctx = c.handler.before(ctx, CommandLPopCount)
-	r := c.cmdable.LPopCount(ctx, key, count)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[StringSliceCmd](ctx, c.handler, CommandLPopCount, func(ctx context.Context) StringSliceCmd {
+		return c.cmdable.LPopCount(ctx, key, count)
+	})
 }
 
 func (c *client) LPos(ctx context.Context, key string, value string, args LPosArgs) IntCmd {
-	ctx = c.handler.before(ctx, CommandLPos)
-	r := c.cacheCmdable.LPos(ctx, key, value, args)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[IntCmd](ctx, c.handler, CommandLPos, func(ctx context.Context) IntCmd {
+		return c.cacheCmdable.LPos(ctx, key, value, args)
+	})
 }
 
 func (c *client) LPosCount(ctx context.Context, key string, value string, count int64, args LPosArgs) IntSliceCmd {
-	ctx = c.handler.before(ctx, CommandLPos)
-	r := c.cacheCmdable.LPosCount(ctx, key, value, count, args)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[IntSliceCmd](ctx, c.handler, CommandLPos, func(ctx context.Context) IntSliceCmd {
+		return c.cacheCmdable.LPosCount(ctx, key, value, count, args)
+	})
 }
 
 func (c *client) LPush(ctx context.Context, key string, values ...interface{}) IntCmd {
+	var cmd Command
 	if len(values) > 1 {
-		ctx = c.handler.before(ctx, CommandLPushMultiple)
+		cmd = CommandLPushMultiple
 	} else {
-		ctx = c.handler.before(ctx, CommandLPush)
+		cmd = CommandLPush
 	}
-	r := c.cmdable.LPush(ctx, key, values...)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[IntCmd](ctx, c.handler, cmd, func(ctx context.Context) IntCmd {
+		return c.cmdable.LPush(ctx, key, values...)
+	})
 }
 
 func (c *client) LPushX(ctx context.Context, key string, values ...interface{}) IntCmd {
+	var cmd Command
 	if len(values) > 1 {
-		ctx = c.handler.before(ctx, CommandLPushXMultiple)
+		cmd = CommandLPushXMultiple
 	} else {
-		ctx = c.handler.before(ctx, CommandLPushX)
+		cmd = CommandLPushX
 	}
-	r := c.cmdable.LPushX(ctx, key, values...)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[IntCmd](ctx, c.handler, cmd, func(ctx context.Context) IntCmd {
+		return c.cmdable.LPushX(ctx, key, values...)
+	})
 }
 
 func (c *client) LRange(ctx context.Context, key string, start, stop int64) StringSliceCmd {
-	ctx = c.handler.before(ctx, CommandLRange)
-	r := c.cacheCmdable.LRange(ctx, key, start, stop)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[StringSliceCmd](ctx, c.handler, CommandLRange, func(ctx context.Context) StringSliceCmd {
+		return c.cacheCmdable.LRange(ctx, key, start, stop)
+	})
 }
 
 func (c *client) LRem(ctx context.Context, key string, count int64, value interface{}) IntCmd {
-	ctx = c.handler.before(ctx, CommandLRem)
-	r := c.cmdable.LRem(ctx, key, count, value)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[IntCmd](ctx, c.handler, CommandLRem, func(ctx context.Context) IntCmd {
+		return c.cmdable.LRem(ctx, key, count, value)
+	})
 }
 
 func (c *client) LSet(ctx context.Context, key string, index int64, value interface{}) StatusCmd {
-	ctx = c.handler.before(ctx, CommandLSet)
-	r := c.cmdable.LSet(ctx, key, index, value)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[StatusCmd](ctx, c.handler, CommandLSet, func(ctx context.Context) StatusCmd {
+		return c.cmdable.LSet(ctx, key, index, value)
+	})
 }
 
 func (c *client) LTrim(ctx context.Context, key string, start, stop int64) StatusCmd {
-	ctx = c.handler.before(ctx, CommandLTrim)
-	r := c.cmdable.LTrim(ctx, key, start, stop)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[StatusCmd](ctx, c.handler, CommandLTrim, func(ctx context.Context) StatusCmd {
+		return c.cmdable.LTrim(ctx, key, start, stop)
+	})
 }
 
 func (c *client) RPop(ctx context.Context, key string) StringCmd {
-	ctx = c.handler.before(ctx, CommandRPop)
-	r := c.cmdable.RPop(ctx, key)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[StringCmd](ctx, c.handler, CommandRPop, func(ctx context.Context) StringCmd {
+		return c.cmdable.RPop(ctx, key)
+	})
 }
 
 func (c *client) RPopCount(ctx context.Context, key string, count int) StringSliceCmd {
-	ctx = c.handler.before(ctx, CommandRPopCount)
-	r := c.cmdable.RPopCount(ctx, key, count)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[StringSliceCmd](ctx, c.handler, CommandRPopCount, func(ctx context.Context) StringSliceCmd {
+		return c.cmdable.RPopCount(ctx, key, count)
+	})
 }
 
 func (c *client) RPopLPush(ctx context.Context, source, destination string) StringCmd {
-	ctx = c.handler.beforeWithKeys(ctx, CommandRPopLPush, func() []string { return appendString(source, destination) })
-	r := c.cmdable.RPopLPush(ctx, source, destination)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[StringCmd](ctx, c.handler, CommandRPopLPush, func(ctx context.Context) StringCmd {
+		return c.cmdable.RPopLPush(ctx, source, destination)
+	}, func() []string { return appendString(source, destination) })
 }
 
 func (c *client) RPush(ctx context.Context, key string, values ...interface{}) IntCmd {
+	var cmd Command
 	if len(values) > 1 {
-		ctx = c.handler.before(ctx, CommandRPushMultiple)
+		cmd = CommandRPushMultiple
 	} else {
-		ctx = c.handler.before(ctx, CommandRPush)
+		cmd = CommandRPush
 	}
-	r := c.cmdable.RPush(ctx, key, values...)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[IntCmd](ctx, c.handler, cmd, func(ctx context.Context) IntCmd {
+		return c.cmdable.RPush(ctx, key, values...)
+	})
 }
 
 func (c *client) RPushX(ctx context.Context, key string, values ...interface{}) IntCmd {
+	var cmd Command
 	if len(values) > 1 {
-		ctx = c.handler.before(ctx, CommandRPushXMultiple)
+		cmd = CommandRPushXMultiple
 	} else {
-		ctx = c.handler.before(ctx, CommandRPushX)
+		cmd = CommandRPushX
 	}
-	r := c.cmdable.RPushX(ctx, key, values...)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[IntCmd](ctx, c.handler, cmd, func(ctx context.Context) IntCmd {
+		return c.cmdable.RPushX(ctx, key, values...)
+	})
 }

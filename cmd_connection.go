@@ -107,31 +107,27 @@ type ConnectionCmdable interface {
 }
 
 func (c *client) Select(ctx context.Context, index int) StatusCmd {
-	ctx = c.handler.before(ctx, CommandSelect)
-	r := c.cmdable.Select(ctx, index)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[StatusCmd](ctx, c.handler, CommandSelect, func(ctx context.Context) StatusCmd {
+		return c.cmdable.Select(ctx, index)
+	})
 }
 
 func (c *client) ClientGetName(ctx context.Context) StringCmd {
-	ctx = c.handler.before(ctx, CommandClientGetName)
-	r := c.cmdable.ClientGetName(ctx)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[StringCmd](ctx, c.handler, CommandClientGetName, func(ctx context.Context) StringCmd {
+		return c.cmdable.ClientGetName(ctx)
+	})
 }
 
 func (c *client) ClientID(ctx context.Context) IntCmd {
-	ctx = c.handler.before(ctx, CommandClientID)
-	r := c.cmdable.ClientID(ctx)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[IntCmd](ctx, c.handler, CommandClientID, func(ctx context.Context) IntCmd {
+		return c.cmdable.ClientID(ctx)
+	})
 }
 
 func (c *client) ClientKill(ctx context.Context, ipPort string) StatusCmd {
-	ctx = c.handler.before(ctx, CommandClientKill)
-	r := c.cmdable.ClientKill(ctx, ipPort)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[StatusCmd](ctx, c.handler, CommandClientKill, func(ctx context.Context) StatusCmd {
+		return c.cmdable.ClientKill(ctx, ipPort)
+	})
 }
 
 func (c *client) ClientKillByFilter(ctx context.Context, keys ...string) IntCmd {
@@ -139,47 +135,43 @@ func (c *client) ClientKillByFilter(ctx context.Context, keys ...string) IntCmd 
 	for i := 0; i < len(keys); i += 2 {
 		opt[strings.ToUpper(keys[i])] = struct{}{}
 	}
+	var cmd Command
 	if _, ok := opt[LADDR]; ok {
-		ctx = c.handler.before(ctx, CommandClientKillByFilterByLAddr)
+		cmd = CommandClientKillByFilterByLAddr
 	} else {
-		ctx = c.handler.before(ctx, CommandClientKillByFilter)
+		cmd = CommandClientKillByFilter
 	}
-	r := c.cmdable.ClientKillByFilter(ctx, keys...)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[IntCmd](ctx, c.handler, cmd, func(ctx context.Context) IntCmd {
+		return c.cmdable.ClientKillByFilter(ctx, keys...)
+	})
 }
 
 func (c *client) ClientList(ctx context.Context) StringCmd {
-	ctx = c.handler.before(ctx, CommandClientList)
-	r := c.cmdable.ClientList(ctx)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[StringCmd](ctx, c.handler, CommandClientList, func(ctx context.Context) StringCmd {
+		return c.cmdable.ClientList(ctx)
+	})
 }
 
 func (c *client) ClientPause(ctx context.Context, dur time.Duration) BoolCmd {
-	ctx = c.handler.before(ctx, CommandClientPause)
-	r := c.cmdable.ClientPause(ctx, dur)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[BoolCmd](ctx, c.handler, CommandClientPause, func(ctx context.Context) BoolCmd {
+		return c.cmdable.ClientPause(ctx, dur)
+	})
 }
 
 func (c *client) Echo(ctx context.Context, message interface{}) StringCmd {
-	ctx = c.handler.before(ctx, CommandEcho)
-	r := c.cmdable.Echo(ctx, message)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[StringCmd](ctx, c.handler, CommandEcho, func(ctx context.Context) StringCmd {
+		return c.cmdable.Echo(ctx, message)
+	})
 }
 
 func (c *client) Ping(ctx context.Context) StatusCmd {
-	ctx = c.handler.before(ctx, CommandPing)
-	r := c.cmdable.Ping(ctx)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[StatusCmd](ctx, c.handler, CommandPing, func(ctx context.Context) StatusCmd {
+		return c.cmdable.Ping(ctx)
+	})
 }
 
 func (c *client) Quit(ctx context.Context) StatusCmd {
-	ctx = c.handler.before(ctx, CommandQuit)
-	r := c.cmdable.Quit(ctx)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[StatusCmd](ctx, c.handler, CommandQuit, func(ctx context.Context) StatusCmd {
+		return c.cmdable.Quit(ctx)
+	})
 }

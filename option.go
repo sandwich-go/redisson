@@ -23,6 +23,7 @@ func ConfOptionDeclareWithDefault() interface{} {
 		"DB":                0,                               // @MethodComment(Redis实例数据库编号，集群下只能用0)
 		"Username":          "",                              // @MethodComment(Redis用户名)
 		"Password":          "",                              // @MethodComment(Redis用户密码)
+		"Timeout":           time.Duration(11 * time.Second), // @MethodComment(Redis连超时时长)
 		"ReadTimeout":       time.Duration(10 * time.Second), // @MethodComment(Redis连接读取的超时时长)
 		"WriteTimeout":      time.Duration(10 * time.Second), // @MethodComment(Redis连接写入的超时时长)
 		"ConnPoolSize":      0,                               // @MethodComment(Redis连接池大小，默认0，RESP2时，即非集群模式下为10*runtime.GOMAXPROCS，集群模式下为5*runtime.GOMAXPROCS。RESP3时，为Block连接池，默认1000)
@@ -38,4 +39,18 @@ func ConfOptionDeclareWithDefault() interface{} {
 		"T":                 (Tester)(nil),                   // @MethodComment(如果设置该值，则启动mock)
 		"ForceSingleClient": false,                           // @MethodComment(ForceSingleClient force the usage of a single client connection, without letting the lib guessing)
 	}
+}
+
+func correctSettings(cc ConfInterface) {
+	var opts []ConfOption
+	if cc.GetReadTimeout() <= 0 {
+		opts = append(opts, WithReadTimeout(10*time.Second))
+	}
+	if cc.GetWriteTimeout() <= 0 {
+		opts = append(opts, WithWriteTimeout(10*time.Second))
+	}
+	if cc.GetTimeout() <= 0 {
+		opts = append(opts, WithTimeout(10*time.Second))
+	}
+	cc.ApplyOption(opts...)
 }

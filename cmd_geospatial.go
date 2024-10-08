@@ -176,42 +176,39 @@ type GeospatialCacheCmdable interface {
 }
 
 func (c *client) GeoAdd(ctx context.Context, key string, geoLocation ...GeoLocation) IntCmd {
-	ctx = c.handler.before(ctx, CommandGeoAdd)
-	r := c.cmdable.GeoAdd(ctx, key, geoLocation...)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[IntCmd](ctx, c.handler, CommandGeoAdd, func(ctx context.Context) IntCmd {
+		return c.cmdable.GeoAdd(ctx, key, geoLocation...)
+	})
 }
 
 func (c *client) GeoDist(ctx context.Context, key string, member1, member2, unit string) FloatCmd {
-	ctx = c.handler.before(ctx, CommandGeoDist)
-	r := c.cacheCmdable.GeoDist(ctx, key, member1, member2, unit)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[FloatCmd](ctx, c.handler, CommandGeoDist, func(ctx context.Context) FloatCmd {
+		return c.cacheCmdable.GeoDist(ctx, key, member1, member2, unit)
+	})
 }
 
 func (c *client) GeoHash(ctx context.Context, key string, members ...string) StringSliceCmd {
-	ctx = c.handler.before(ctx, CommandGeoHash)
-	r := c.cacheCmdable.GeoHash(ctx, key, members...)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[StringSliceCmd](ctx, c.handler, CommandGeoHash, func(ctx context.Context) StringSliceCmd {
+		return c.cacheCmdable.GeoHash(ctx, key, members...)
+	})
 }
 
 func (c *client) GeoPos(ctx context.Context, key string, members ...string) GeoPosCmd {
-	ctx = c.handler.before(ctx, CommandGeoPos)
-	r := c.cacheCmdable.GeoPos(ctx, key, members...)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[GeoPosCmd](ctx, c.handler, CommandGeoPos, func(ctx context.Context) GeoPosCmd {
+		return c.cacheCmdable.GeoPos(ctx, key, members...)
+	})
 }
 
 func (c *client) GeoRadius(ctx context.Context, key string, longitude, latitude float64, query GeoRadiusQuery) GeoLocationCmd {
+	var cmd Command
 	if query.Count > 0 {
-		ctx = c.handler.before(ctx, CommandGeoRadiusROCount)
+		cmd = CommandGeoRadiusROCount
 	} else {
-		ctx = c.handler.before(ctx, CommandGeoRadiusRO)
+		cmd = CommandGeoRadiusRO
 	}
-	r := c.cacheCmdable.GeoRadius(ctx, key, longitude, latitude, query)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[GeoLocationCmd](ctx, c.handler, cmd, func(ctx context.Context) GeoLocationCmd {
+		return c.cacheCmdable.GeoRadius(ctx, key, longitude, latitude, query)
+	})
 }
 
 func (c *client) GeoRadiusStore(ctx context.Context, key string, longitude, latitude float64, query GeoRadiusQuery) IntCmd {
@@ -225,47 +222,43 @@ func (c *client) GeoRadiusStore(ctx context.Context, key string, longitude, lati
 		}
 		return nil
 	}
+	var cmd Command
 	if query.Count > 0 {
-		ctx = c.handler.beforeWithKeys(ctx, CommandGeoRadiusStoreCount, f)
+		cmd = CommandGeoRadiusStoreCount
 	} else {
-		ctx = c.handler.beforeWithKeys(ctx, CommandGeoRadiusStore, f)
+		cmd = CommandGeoRadiusStore
 	}
-	r := c.cmdable.GeoRadiusStore(ctx, key, longitude, latitude, query)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[IntCmd](ctx, c.handler, cmd, func(ctx context.Context) IntCmd {
+		return c.cmdable.GeoRadiusStore(ctx, key, longitude, latitude, query)
+	}, f)
 }
 
 func (c *client) GeoRadiusByMember(ctx context.Context, key, member string, query GeoRadiusQuery) GeoLocationCmd {
-	ctx = c.handler.before(ctx, CommandGeoRadiusByMemberRO)
-	r := c.cacheCmdable.GeoRadiusByMember(ctx, key, member, query)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[GeoLocationCmd](ctx, c.handler, CommandGeoRadiusByMemberRO, func(ctx context.Context) GeoLocationCmd {
+		return c.cacheCmdable.GeoRadiusByMember(ctx, key, member, query)
+	})
 }
 
 func (c *client) GeoRadiusByMemberStore(ctx context.Context, key, member string, query GeoRadiusQuery) IntCmd {
-	ctx = c.handler.before(ctx, CommandGeoRadiusByMemberStore)
-	r := c.cmdable.GeoRadiusByMemberStore(ctx, key, member, query)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[IntCmd](ctx, c.handler, CommandGeoRadiusByMemberStore, func(ctx context.Context) IntCmd {
+		return c.cmdable.GeoRadiusByMemberStore(ctx, key, member, query)
+	})
 }
 
 func (c *client) GeoSearch(ctx context.Context, key string, q GeoSearchQuery) StringSliceCmd {
-	ctx = c.handler.before(ctx, CommandGeoSearch)
-	r := c.cacheCmdable.GeoSearch(ctx, key, q)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[StringSliceCmd](ctx, c.handler, CommandGeoSearch, func(ctx context.Context) StringSliceCmd {
+		return c.cacheCmdable.GeoSearch(ctx, key, q)
+	})
 }
 
 func (c *client) GeoSearchLocation(ctx context.Context, key string, q GeoSearchLocationQuery) GeoSearchLocationCmd {
-	ctx = c.handler.before(ctx, CommandGeoSearch)
-	r := c.cacheCmdable.GeoSearchLocation(ctx, key, q)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[GeoSearchLocationCmd](ctx, c.handler, CommandGeoSearch, func(ctx context.Context) GeoSearchLocationCmd {
+		return c.cacheCmdable.GeoSearchLocation(ctx, key, q)
+	})
 }
 
 func (c *client) GeoSearchStore(ctx context.Context, key, store string, q GeoSearchStoreQuery) IntCmd {
-	ctx = c.handler.before(ctx, CommandGeoSearchStore)
-	r := c.cmdable.GeoSearchStore(ctx, key, store, q)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[IntCmd](ctx, c.handler, CommandGeoSearchStore, func(ctx context.Context) IntCmd {
+		return c.cmdable.GeoSearchStore(ctx, key, store, q)
+	})
 }

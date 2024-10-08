@@ -23,12 +23,32 @@ type handler interface {
 	setSilentErrCallback(isSilentError)
 	setRegisterCollector(RegisterCollectorFunc)
 
-	getVersion() *semver.Version
-	before(ctx context.Context, command Command) context.Context
-	beforeWithKeys(ctx context.Context, command Command, getKeys func() []string) context.Context
+	before(ctx context.Context, command Command, getKeys ...func() []string) (context.Context, context.CancelFunc)
 	after(ctx context.Context, err error)
+
+	getVersion() *semver.Version
 	cache(ctx context.Context, hit bool)
 	isCluster() bool
+}
+
+var emptyCancel context.CancelFunc = func() {}
+
+func do[T BaseCmd](ctx context.Context, h handler, command Command, fn func(context.Context) T, getKeys ...func() []string) T {
+	var cancel context.CancelFunc
+	ctx, cancel = h.before(ctx, command, getKeys...)
+	res := fn(ctx)
+	h.after(ctx, res.Err())
+	cancel()
+	return res
+}
+
+func doAny[T any](ctx context.Context, h handler, command Command, fn func(context.Context) T, getKeys ...func() []string) T {
+	var cancel context.CancelFunc
+	ctx, cancel = h.before(ctx, command, getKeys...)
+	res := fn(ctx)
+	h.after(ctx, nil)
+	cancel()
+	return res
 }
 
 func newSemVersion(version string) (semver.Version, error) {
@@ -113,10 +133,8 @@ func (r *baseHandler) setRegisterCollector(rc RegisterCollectorFunc) {
 	rc(r.missMetric)
 	rc(r.metric)
 }
-func (r *baseHandler) before(ctx context.Context, command Command) context.Context {
-	return r.beforeWithKeys(ctx, command, nil)
-}
-func (r *baseHandler) beforeWithKeys(ctx context.Context, command Command, getKeys func() []string) context.Context {
+
+func (r *baseHandler) before(ctx context.Context, command Command, getKeys ...func() []string) (context.Context, context.CancelFunc) {
 	if r.v.GetDevelopment() {
 		if skipCheck := ctx.Value(skipCheckContextKey); skipCheck == nil {
 			// 需要检验命令是否在黑名单
@@ -129,7 +147,7 @@ func (r *baseHandler) beforeWithKeys(ctx context.Context, command Command, getKe
 			}
 			if r.cluster {
 				// 需要检验所有的key是否均在同一槽位
-				panicIfUseMultipleKeySlots(command, getKeys)
+				panicIfUseMultipleKeySlots(command, getKeys...)
 			}
 			// 该命令是否有警告日志输出
 			if r.version != nil && len(command.WarnVersion()) > 0 && mustNewSemVersion(command.WarnVersion()).LessThan(*r.version) {
@@ -142,7 +160,18 @@ func (r *baseHandler) beforeWithKeys(ctx context.Context, command Command, getKe
 		ctx = context.WithValue(ctx, commandContextKey, command.Class())
 		ctx = context.WithValue(ctx, subCommandContextKey, command.String())
 	}
-	return ctx
+	var cancel context.CancelFunc
+	if timeout := r.v.GetTimeout(); timeout > 0 {
+		if _, ok := ctx.Deadline(); !ok {
+			ctx, cancel = context.WithTimeout(ctx, timeout)
+		}
+	}
+
+	if cancel == nil {
+		cancel = emptyCancel
+	}
+
+	return ctx, cancel
 }
 func (r *baseHandler) isImplicitError(err error) bool {
 	if r.silentErrCallback == nil {

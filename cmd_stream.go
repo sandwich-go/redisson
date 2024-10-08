@@ -330,248 +330,221 @@ type StreamReader interface {
 }
 
 func (c *client) XAck(ctx context.Context, stream, group string, ids ...string) IntCmd {
-	ctx = c.handler.before(ctx, CommandXAck)
-	r := c.cmdable.XAck(ctx, stream, group, ids...)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[IntCmd](ctx, c.handler, CommandXAck, func(ctx context.Context) IntCmd {
+		return c.cmdable.XAck(ctx, stream, group, ids...)
+	})
 }
 
 func (c *client) XAdd(ctx context.Context, a XAddArgs) StringCmd {
+	var cmd Command
 	if a.NoMkStream {
-		ctx = c.handler.before(ctx, CommandXAddNoMkStream)
+		cmd = CommandXAddNoMkStream
 	} else if len(a.MinID) > 0 {
-		ctx = c.handler.before(ctx, CommandXAddMinId)
+		cmd = CommandXAddMinId
 	} else if a.Limit > 0 {
-		ctx = c.handler.before(ctx, CommandXAddLimit)
+		cmd = CommandXAddLimit
 	} else {
-		ctx = c.handler.before(ctx, CommandXAdd)
+		cmd = CommandXAdd
 	}
-	r := c.cmdable.XAdd(ctx, a)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[StringCmd](ctx, c.handler, cmd, func(ctx context.Context) StringCmd {
+		return c.cmdable.XAdd(ctx, a)
+	})
 }
 
 func (c *client) XAutoClaim(ctx context.Context, a XAutoClaimArgs) XAutoClaimCmd {
-	ctx = c.handler.before(ctx, CommandXAutoClaim)
-	r := c.cmdable.XAutoClaim(ctx, a)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[XAutoClaimCmd](ctx, c.handler, CommandXAutoClaim, func(ctx context.Context) XAutoClaimCmd {
+		return c.cmdable.XAutoClaim(ctx, a)
+	})
 }
 
 func (c *client) XAutoClaimJustID(ctx context.Context, a XAutoClaimArgs) XAutoClaimJustIDCmd {
-	ctx = c.handler.before(ctx, CommandXAutoClaim)
-	r := c.cmdable.XAutoClaimJustID(ctx, a)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[XAutoClaimJustIDCmd](ctx, c.handler, CommandXAutoClaim, func(ctx context.Context) XAutoClaimJustIDCmd {
+		return c.cmdable.XAutoClaimJustID(ctx, a)
+	})
 }
 
 func (c *client) XClaim(ctx context.Context, a XClaimArgs) XMessageSliceCmd {
-	ctx = c.handler.before(ctx, CommandXClaim)
-	r := c.cmdable.XClaim(ctx, a)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[XMessageSliceCmd](ctx, c.handler, CommandXClaim, func(ctx context.Context) XMessageSliceCmd {
+		return c.cmdable.XClaim(ctx, a)
+	})
 }
 
 func (c *client) XClaimJustID(ctx context.Context, a XClaimArgs) StringSliceCmd {
-	ctx = c.handler.before(ctx, CommandXClaim)
-	r := c.cmdable.XClaimJustID(ctx, a)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[StringSliceCmd](ctx, c.handler, CommandXClaim, func(ctx context.Context) StringSliceCmd {
+		return c.cmdable.XClaimJustID(ctx, a)
+	})
 }
 
 func (c *client) XDel(ctx context.Context, stream string, ids ...string) IntCmd {
-	ctx = c.handler.before(ctx, CommandXDel)
-	r := c.cmdable.XDel(ctx, stream, ids...)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[IntCmd](ctx, c.handler, CommandXDel, func(ctx context.Context) IntCmd {
+		return c.cmdable.XDel(ctx, stream, ids...)
+	})
 }
 
 func (c *client) XGroupCreate(ctx context.Context, stream, group, start string) StatusCmd {
-	ctx = c.handler.before(ctx, CommandXGroupCreate)
-	r := c.cmdable.XGroupCreate(ctx, stream, group, start)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[StatusCmd](ctx, c.handler, CommandXGroupCreate, func(ctx context.Context) StatusCmd {
+		return c.cmdable.XGroupCreate(ctx, stream, group, start)
+	})
 }
 
 func (c *client) XGroupCreateMkStream(ctx context.Context, stream, group, start string) StatusCmd {
-	ctx = c.handler.before(ctx, CommandXGroupCreate)
-	r := c.cmdable.XGroupCreateMkStream(ctx, stream, group, start)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[StatusCmd](ctx, c.handler, CommandXGroupCreate, func(ctx context.Context) StatusCmd {
+		return c.cmdable.XGroupCreateMkStream(ctx, stream, group, start)
+	})
 }
 
 func (c *client) XGroupCreateConsumer(ctx context.Context, stream, group, consumer string) IntCmd {
-	ctx = c.handler.before(ctx, CommandXGroupCreateConsumer)
-	r := c.cmdable.XGroupCreateConsumer(ctx, stream, group, consumer)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[IntCmd](ctx, c.handler, CommandXGroupCreateConsumer, func(ctx context.Context) IntCmd {
+		return c.cmdable.XGroupCreateConsumer(ctx, stream, group, consumer)
+	})
 }
 
 func (c *client) XGroupDelConsumer(ctx context.Context, stream, group, consumer string) IntCmd {
-	ctx = c.handler.before(ctx, CommandXGroupDelConsumer)
-	r := c.cmdable.XGroupDelConsumer(ctx, stream, group, consumer)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[IntCmd](ctx, c.handler, CommandXGroupDelConsumer, func(ctx context.Context) IntCmd {
+		return c.cmdable.XGroupDelConsumer(ctx, stream, group, consumer)
+	})
 }
 
 func (c *client) XGroupDestroy(ctx context.Context, stream, group string) IntCmd {
-	ctx = c.handler.before(ctx, CommandXGroupDestroy)
-	r := c.cmdable.XGroupDestroy(ctx, stream, group)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[IntCmd](ctx, c.handler, CommandXGroupDestroy, func(ctx context.Context) IntCmd {
+		return c.cmdable.XGroupDestroy(ctx, stream, group)
+	})
 }
 
 func (c *client) XGroupSetID(ctx context.Context, stream, group, start string) StatusCmd {
-	ctx = c.handler.before(ctx, CommandXGroupSetID)
-	r := c.cmdable.XGroupSetID(ctx, stream, group, start)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[StatusCmd](ctx, c.handler, CommandXGroupSetID, func(ctx context.Context) StatusCmd {
+		return c.cmdable.XGroupSetID(ctx, stream, group, start)
+	})
 }
 
 func (c *client) XInfoConsumers(ctx context.Context, key string, group string) XInfoConsumersCmd {
-	ctx = c.handler.before(ctx, CommandXInfoConsumers)
-	r := c.cmdable.XInfoConsumers(ctx, key, group)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[XInfoConsumersCmd](ctx, c.handler, CommandXInfoConsumers, func(ctx context.Context) XInfoConsumersCmd {
+		return c.cmdable.XInfoConsumers(ctx, key, group)
+	})
 }
 
 func (c *client) XInfoGroups(ctx context.Context, key string) XInfoGroupsCmd {
-	ctx = c.handler.before(ctx, CommandXInfoGroups)
-	r := c.cmdable.XInfoGroups(ctx, key)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[XInfoGroupsCmd](ctx, c.handler, CommandXInfoGroups, func(ctx context.Context) XInfoGroupsCmd {
+		return c.cmdable.XInfoGroups(ctx, key)
+	})
 }
 
 func (c *client) XInfoStream(ctx context.Context, key string) XInfoStreamCmd {
-	ctx = c.handler.before(ctx, CommandXInfoStream)
-	r := c.cmdable.XInfoStream(ctx, key)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[XInfoStreamCmd](ctx, c.handler, CommandXInfoStream, func(ctx context.Context) XInfoStreamCmd {
+		return c.cmdable.XInfoStream(ctx, key)
+	})
 }
 
 func (c *client) XInfoStreamFull(ctx context.Context, key string, count int) XInfoStreamFullCmd {
-	ctx = c.handler.before(ctx, CommandXInfoStreamFull)
-	r := c.cmdable.XInfoStreamFull(ctx, key, count)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[XInfoStreamFullCmd](ctx, c.handler, CommandXInfoStreamFull, func(ctx context.Context) XInfoStreamFullCmd {
+		return c.cmdable.XInfoStreamFull(ctx, key, count)
+	})
 }
 
 func (c *client) XLen(ctx context.Context, stream string) IntCmd {
-	ctx = c.handler.before(ctx, CommandXLen)
-	r := c.cmdable.XLen(ctx, stream)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[IntCmd](ctx, c.handler, CommandXLen, func(ctx context.Context) IntCmd {
+		return c.cmdable.XLen(ctx, stream)
+	})
 }
 
 func (c *client) XPending(ctx context.Context, stream, group string) XPendingCmd {
-	ctx = c.handler.before(ctx, CommandXPending)
-	r := c.cmdable.XPending(ctx, stream, group)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[XPendingCmd](ctx, c.handler, CommandXPending, func(ctx context.Context) XPendingCmd {
+		return c.cmdable.XPending(ctx, stream, group)
+	})
 }
 
 func (c *client) XPendingExt(ctx context.Context, a XPendingExtArgs) XPendingExtCmd {
+	var cmd Command
 	if a.Idle != 0 {
-		ctx = c.handler.before(ctx, CommandXPendingIdle)
+		cmd = CommandXPendingIdle
 	} else {
-		ctx = c.handler.before(ctx, CommandXPending)
+		cmd = CommandXPending
 	}
-	r := c.cmdable.XPendingExt(ctx, a)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[XPendingExtCmd](ctx, c.handler, cmd, func(ctx context.Context) XPendingExtCmd {
+		return c.cmdable.XPendingExt(ctx, a)
+	})
 }
 
 func (c *client) XRange(ctx context.Context, stream, start, stop string) XMessageSliceCmd {
-	ctx = c.handler.before(ctx, CommandXRange)
-	r := c.cmdable.XRange(ctx, stream, start, stop)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[XMessageSliceCmd](ctx, c.handler, CommandXRange, func(ctx context.Context) XMessageSliceCmd {
+		return c.cmdable.XRange(ctx, stream, start, stop)
+	})
 }
 
 func (c *client) XRangeN(ctx context.Context, stream, start, stop string, count int64) XMessageSliceCmd {
-	ctx = c.handler.before(ctx, CommandXRange)
-	r := c.cmdable.XRangeN(ctx, stream, start, stop, count)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[XMessageSliceCmd](ctx, c.handler, CommandXRange, func(ctx context.Context) XMessageSliceCmd {
+		return c.cmdable.XRangeN(ctx, stream, start, stop, count)
+	})
 }
 
 func (c *client) XRead(ctx context.Context, a XReadArgs) XStreamSliceCmd {
-	ctx = c.handler.before(ctx, CommandXRead)
-	r := c.cmdable.XRead(ctx, a)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[XStreamSliceCmd](ctx, c.handler, CommandXRead, func(ctx context.Context) XStreamSliceCmd {
+		return c.cmdable.XRead(ctx, a)
+	})
 }
 
 func (c *client) XReadStreams(ctx context.Context, streams ...string) XStreamSliceCmd {
-	ctx = c.handler.before(ctx, CommandXRead)
-	r := c.cmdable.XReadStreams(ctx, streams...)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[XStreamSliceCmd](ctx, c.handler, CommandXRead, func(ctx context.Context) XStreamSliceCmd {
+		return c.cmdable.XReadStreams(ctx, streams...)
+	})
 }
 
 func (c *client) XReadGroup(ctx context.Context, a XReadGroupArgs) XStreamSliceCmd {
-	ctx = c.handler.before(ctx, CommandXReadGroup)
-	r := c.cmdable.XReadGroup(ctx, a)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[XStreamSliceCmd](ctx, c.handler, CommandXReadGroup, func(ctx context.Context) XStreamSliceCmd {
+		return c.cmdable.XReadGroup(ctx, a)
+	})
 }
 
 func (c *client) XRevRange(ctx context.Context, stream string, start, stop string) XMessageSliceCmd {
-	ctx = c.handler.before(ctx, CommandXRevRange)
-	r := c.cmdable.XRevRange(ctx, stream, start, stop)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[XMessageSliceCmd](ctx, c.handler, CommandXRevRange, func(ctx context.Context) XMessageSliceCmd {
+		return c.cmdable.XRevRange(ctx, stream, start, stop)
+	})
 }
 
 func (c *client) XRevRangeN(ctx context.Context, stream string, start, stop string, count int64) XMessageSliceCmd {
-	ctx = c.handler.before(ctx, CommandXRevRange)
-	r := c.cmdable.XRevRangeN(ctx, stream, start, stop, count)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[XMessageSliceCmd](ctx, c.handler, CommandXRevRange, func(ctx context.Context) XMessageSliceCmd {
+		return c.cmdable.XRevRangeN(ctx, stream, start, stop, count)
+	})
 }
 
 func (c *client) XTrim(ctx context.Context, key string, maxLen int64) IntCmd {
-	ctx = c.handler.before(ctx, CommandXTrim)
-	r := c.cmdable.XTrim(ctx, key, maxLen)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[IntCmd](ctx, c.handler, CommandXTrim, func(ctx context.Context) IntCmd {
+		return c.cmdable.XTrim(ctx, key, maxLen)
+	})
 }
 
 func (c *client) XTrimApprox(ctx context.Context, key string, maxLen int64) IntCmd {
-	ctx = c.handler.before(ctx, CommandXTrim)
-	r := c.cmdable.XTrimApprox(ctx, key, maxLen)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[IntCmd](ctx, c.handler, CommandXTrim, func(ctx context.Context) IntCmd {
+		return c.cmdable.XTrimApprox(ctx, key, maxLen)
+	})
 }
 
 func (c *client) XTrimMaxLen(ctx context.Context, key string, maxLen int64) IntCmd {
-	ctx = c.handler.before(ctx, CommandXTrim)
-	r := c.cmdable.XTrimMaxLen(ctx, key, maxLen)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[IntCmd](ctx, c.handler, CommandXTrim, func(ctx context.Context) IntCmd {
+		return c.cmdable.XTrimMaxLen(ctx, key, maxLen)
+	})
 }
 
 func (c *client) XTrimMaxLenApprox(ctx context.Context, key string, maxLen, limit int64) IntCmd {
+	var cmd Command
 	if limit > 0 {
-		ctx = c.handler.before(ctx, CommandXTrimLimit)
+		cmd = CommandXTrimLimit
 	} else {
-		ctx = c.handler.before(ctx, CommandXTrim)
+		cmd = CommandXTrim
 	}
-	r := c.cmdable.XTrimMaxLenApprox(ctx, key, maxLen, limit)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[IntCmd](ctx, c.handler, cmd, func(ctx context.Context) IntCmd {
+		return c.cmdable.XTrimMaxLenApprox(ctx, key, maxLen, limit)
+	})
 }
 
 func (c *client) XTrimMinID(ctx context.Context, key string, minID string) IntCmd {
-	ctx = c.handler.before(ctx, CommandXTrimMinId)
-	r := c.cmdable.XTrimMinID(ctx, key, minID)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[IntCmd](ctx, c.handler, CommandXTrimMinId, func(ctx context.Context) IntCmd {
+		return c.cmdable.XTrimMinID(ctx, key, minID)
+	})
 }
 
 func (c *client) XTrimMinIDApprox(ctx context.Context, key string, minID string, limit int64) IntCmd {
-	ctx = c.handler.before(ctx, CommandXTrimMinId)
-	r := c.cmdable.XTrimMinIDApprox(ctx, key, minID, limit)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[IntCmd](ctx, c.handler, CommandXTrimMinId, func(ctx context.Context) IntCmd {
+		return c.cmdable.XTrimMinIDApprox(ctx, key, minID, limit)
+	})
 }

@@ -221,142 +221,127 @@ type SetCacheCmdable interface {
 }
 
 func (c *client) SAdd(ctx context.Context, key string, members ...interface{}) IntCmd {
+	var cmd Command
 	if len(members) > 1 {
-		ctx = c.handler.before(ctx, CommandSAddMultiple)
+		cmd = CommandSAddMultiple
 	} else {
-		ctx = c.handler.before(ctx, CommandSAdd)
+		cmd = CommandSAdd
 	}
-	r := c.cmdable.SAdd(ctx, key, members...)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[IntCmd](ctx, c.handler, cmd, func(ctx context.Context) IntCmd {
+		return c.cmdable.SAdd(ctx, key, members...)
+	})
 }
 
 func (c *client) SCard(ctx context.Context, key string) IntCmd {
-	ctx = c.handler.before(ctx, CommandSCard)
-	r := c.cacheCmdable.SCard(ctx, key)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[IntCmd](ctx, c.handler, CommandSCard, func(ctx context.Context) IntCmd {
+		return c.cacheCmdable.SCard(ctx, key)
+	})
 }
 
 func (c *client) SDiff(ctx context.Context, keys ...string) StringSliceCmd {
-	ctx = c.handler.beforeWithKeys(ctx, CommandSDiff, func() []string { return keys })
-	r := c.cmdable.SDiff(ctx, keys...)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[StringSliceCmd](ctx, c.handler, CommandSDiff, func(ctx context.Context) StringSliceCmd {
+		return c.cmdable.SDiff(ctx, keys...)
+	}, func() []string { return keys })
 }
 
 func (c *client) SDiffStore(ctx context.Context, destination string, keys ...string) IntCmd {
-	ctx = c.handler.beforeWithKeys(ctx, CommandSDiffStore, func() []string { return appendString(destination, keys...) })
-	r := c.cmdable.SDiffStore(ctx, destination, keys...)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[IntCmd](ctx, c.handler, CommandSDiffStore, func(ctx context.Context) IntCmd {
+		return c.cmdable.SDiffStore(ctx, destination, keys...)
+	}, func() []string { return appendString(destination, keys...) })
 }
 
 func (c *client) SInter(ctx context.Context, keys ...string) StringSliceCmd {
-	ctx = c.handler.beforeWithKeys(ctx, CommandSInter, func() []string { return keys })
-	r := c.cmdable.SInter(ctx, keys...)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[StringSliceCmd](ctx, c.handler, CommandSInter, func(ctx context.Context) StringSliceCmd {
+		return c.cmdable.SInter(ctx, keys...)
+	}, func() []string { return keys })
 }
 
 func (c *client) SInterStore(ctx context.Context, destination string, keys ...string) IntCmd {
-	ctx = c.handler.beforeWithKeys(ctx, CommandSInterStore, func() []string { return appendString(destination, keys...) })
-	r := c.cmdable.SInterStore(ctx, destination, keys...)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[IntCmd](ctx, c.handler, CommandSInterStore, func(ctx context.Context) IntCmd {
+		return c.cmdable.SInterStore(ctx, destination, keys...)
+	}, func() []string { return appendString(destination, keys...) })
 }
 
 func (c *client) SIsMember(ctx context.Context, key string, member interface{}) BoolCmd {
-	ctx = c.handler.before(ctx, CommandSIsMember)
-	r := c.cacheCmdable.SIsMember(ctx, key, member)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[BoolCmd](ctx, c.handler, CommandSIsMember, func(ctx context.Context) BoolCmd {
+		return c.cacheCmdable.SIsMember(ctx, key, member)
+	})
 }
 
 func (c *client) SMIsMember(ctx context.Context, key string, members ...interface{}) BoolSliceCmd {
-	ctx = c.handler.before(ctx, CommandSMIsMember)
-	r := c.cacheCmdable.SMIsMember(ctx, key, members...)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[BoolSliceCmd](ctx, c.handler, CommandSMIsMember, func(ctx context.Context) BoolSliceCmd {
+		return c.cacheCmdable.SMIsMember(ctx, key, members...)
+	})
 }
 
 func (c *client) SMembers(ctx context.Context, key string) StringSliceCmd {
-	ctx = c.handler.before(ctx, CommandSMembers)
-	r := c.cacheCmdable.SMembers(ctx, key)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[StringSliceCmd](ctx, c.handler, CommandSMembers, func(ctx context.Context) StringSliceCmd {
+		return c.cacheCmdable.SMembers(ctx, key)
+	})
 }
 
 func (c *client) SMembersMap(ctx context.Context, key string) StringStructMapCmd {
-	ctx = c.handler.before(ctx, CommandSMembers)
-	r := c.cacheCmdable.SMembersMap(ctx, key)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[StringStructMapCmd](ctx, c.handler, CommandSMembers, func(ctx context.Context) StringStructMapCmd {
+		return c.cacheCmdable.SMembersMap(ctx, key)
+	})
 }
 
 func (c *client) SMove(ctx context.Context, source, destination string, member interface{}) BoolCmd {
-	ctx = c.handler.beforeWithKeys(ctx, CommandSMove, func() []string { return appendString(source, destination) })
-	r := c.cmdable.SMove(ctx, source, destination, member)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[BoolCmd](ctx, c.handler, CommandSMove, func(ctx context.Context) BoolCmd {
+		return c.cmdable.SMove(ctx, source, destination, member)
+	}, func() []string { return appendString(source, destination) })
 }
 
 func (c *client) SPop(ctx context.Context, key string) StringCmd {
-	ctx = c.handler.before(ctx, CommandSPop)
-	r := c.cmdable.SPop(ctx, key)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[StringCmd](ctx, c.handler, CommandSPop, func(ctx context.Context) StringCmd {
+		return c.cmdable.SPop(ctx, key)
+	})
 }
 
 func (c *client) SPopN(ctx context.Context, key string, count int64) StringSliceCmd {
-	ctx = c.handler.before(ctx, CommandSPopN)
-	r := c.cmdable.SPopN(ctx, key, count)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[StringSliceCmd](ctx, c.handler, CommandSPopN, func(ctx context.Context) StringSliceCmd {
+		return c.cmdable.SPopN(ctx, key, count)
+	})
 }
 
 func (c *client) SRandMember(ctx context.Context, key string) StringCmd {
-	ctx = c.handler.before(ctx, CommandSRandMember)
-	r := c.cmdable.SRandMember(ctx, key)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[StringCmd](ctx, c.handler, CommandSRandMember, func(ctx context.Context) StringCmd {
+		return c.cmdable.SRandMember(ctx, key)
+	})
 }
 
 func (c *client) SRandMemberN(ctx context.Context, key string, count int64) StringSliceCmd {
-	ctx = c.handler.before(ctx, CommandSRandMemberN)
-	r := c.cmdable.SRandMemberN(ctx, key, count)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[StringSliceCmd](ctx, c.handler, CommandSRandMemberN, func(ctx context.Context) StringSliceCmd {
+		return c.cmdable.SRandMemberN(ctx, key, count)
+	})
 }
 
 func (c *client) SRem(ctx context.Context, key string, members ...interface{}) IntCmd {
+	var cmd Command
 	if len(members) > 1 {
-		ctx = c.handler.before(ctx, CommandSRemMultiple)
+		cmd = CommandSRemMultiple
 	} else {
-		ctx = c.handler.before(ctx, CommandSRem)
+		cmd = CommandSRem
 	}
-	r := c.cmdable.SRem(ctx, key, members...)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[IntCmd](ctx, c.handler, cmd, func(ctx context.Context) IntCmd {
+		return c.cmdable.SRem(ctx, key, members...)
+	})
 }
 
 func (c *client) SScan(ctx context.Context, key string, cursor uint64, match string, count int64) ScanCmd {
-	ctx = c.handler.before(ctx, CommandSScan)
-	r := c.cmdable.SScan(ctx, key, cursor, match, count)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[ScanCmd](ctx, c.handler, CommandSScan, func(ctx context.Context) ScanCmd {
+		return c.cmdable.SScan(ctx, key, cursor, match, count)
+	})
 }
 
 func (c *client) SUnion(ctx context.Context, keys ...string) StringSliceCmd {
-	ctx = c.handler.beforeWithKeys(ctx, CommandSUnion, func() []string { return keys })
-	r := c.cmdable.SUnion(ctx, keys...)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[StringSliceCmd](ctx, c.handler, CommandSUnion, func(ctx context.Context) StringSliceCmd {
+		return c.cmdable.SUnion(ctx, keys...)
+	}, func() []string { return keys })
 }
 
 func (c *client) SUnionStore(ctx context.Context, destination string, keys ...string) IntCmd {
-	ctx = c.handler.beforeWithKeys(ctx, CommandSUnionStore, func() []string { return appendString(destination, keys...) })
-	r := c.cmdable.SUnionStore(ctx, destination, keys...)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[IntCmd](ctx, c.handler, CommandSUnionStore, func(ctx context.Context) IntCmd {
+		return c.cmdable.SUnionStore(ctx, destination, keys...)
+	}, func() []string { return appendString(destination, keys...) })
 }

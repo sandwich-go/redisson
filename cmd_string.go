@@ -254,174 +254,161 @@ type StringCacheCmdable interface {
 }
 
 func (c *client) Append(ctx context.Context, key, value string) IntCmd {
-	ctx = c.handler.before(ctx, CommandAppend)
-	r := c.cmdable.Append(ctx, key, value)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[IntCmd](ctx, c.handler, CommandAppend, func(ctx context.Context) IntCmd {
+		return c.cmdable.Append(ctx, key, value)
+	})
 }
 
 func (c *client) Decr(ctx context.Context, key string) IntCmd {
-	ctx = c.handler.before(ctx, CommandDecr)
-	r := c.cmdable.Decr(ctx, key)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[IntCmd](ctx, c.handler, CommandDecr, func(ctx context.Context) IntCmd {
+		return c.cmdable.Decr(ctx, key)
+	})
 }
 
 func (c *client) DecrBy(ctx context.Context, key string, decrement int64) IntCmd {
-	ctx = c.handler.before(ctx, CommandDecrBy)
-	r := c.cmdable.DecrBy(ctx, key, decrement)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[IntCmd](ctx, c.handler, CommandDecrBy, func(ctx context.Context) IntCmd {
+		return c.cmdable.DecrBy(ctx, key, decrement)
+	})
 }
 
 func (c *client) Get(ctx context.Context, key string) StringCmd {
-	ctx = c.handler.before(ctx, CommandGet)
-	r := c.cacheCmdable.Get(ctx, key)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[StringCmd](ctx, c.handler, CommandGet, func(ctx context.Context) StringCmd {
+		return c.cacheCmdable.Get(ctx, key)
+	})
 }
 
 func (c *client) GetDel(ctx context.Context, key string) StringCmd {
-	ctx = c.handler.before(ctx, CommandGetDel)
-	r := c.cmdable.GetDel(ctx, key)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[StringCmd](ctx, c.handler, CommandGetDel, func(ctx context.Context) StringCmd {
+		return c.cmdable.GetDel(ctx, key)
+	})
 }
 
 func (c *client) GetEx(ctx context.Context, key string, expiration time.Duration) StringCmd {
-	ctx = c.handler.before(ctx, CommandGetEX)
-	r := c.cmdable.GetEx(ctx, key, expiration)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[StringCmd](ctx, c.handler, CommandGetEX, func(ctx context.Context) StringCmd {
+		return c.cmdable.GetEx(ctx, key, expiration)
+	})
 }
 
 func (c *client) GetRange(ctx context.Context, key string, start, end int64) StringCmd {
-	ctx = c.handler.before(ctx, CommandGetRange)
-	r := c.cacheCmdable.GetRange(ctx, key, start, end)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[StringCmd](ctx, c.handler, CommandGetRange, func(ctx context.Context) StringCmd {
+		return c.cacheCmdable.GetRange(ctx, key, start, end)
+	})
 }
 
 func (c *client) GetSet(ctx context.Context, key string, value interface{}) StringCmd {
-	ctx = c.handler.before(ctx, CommandGetSet)
-	r := c.cmdable.GetSet(ctx, key, value)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[StringCmd](ctx, c.handler, CommandGetSet, func(ctx context.Context) StringCmd {
+		return c.cmdable.GetSet(ctx, key, value)
+	})
 }
 
 func (c *client) Incr(ctx context.Context, key string) IntCmd {
-	ctx = c.handler.before(ctx, CommandIncr)
-	r := c.cmdable.Incr(ctx, key)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[IntCmd](ctx, c.handler, CommandIncr, func(ctx context.Context) IntCmd {
+		return c.cmdable.Incr(ctx, key)
+	})
 }
 
 func (c *client) IncrBy(ctx context.Context, key string, value int64) IntCmd {
-	ctx = c.handler.before(ctx, CommandIncrBy)
-	r := c.cmdable.IncrBy(ctx, key, value)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[IntCmd](ctx, c.handler, CommandIncrBy, func(ctx context.Context) IntCmd {
+		return c.cmdable.IncrBy(ctx, key, value)
+	})
 }
 
 func (c *client) IncrByFloat(ctx context.Context, key string, value float64) FloatCmd {
-	ctx = c.handler.before(ctx, CommandIncrByFloat)
-	r := c.cmdable.IncrByFloat(ctx, key, value)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[FloatCmd](ctx, c.handler, CommandIncrByFloat, func(ctx context.Context) FloatCmd {
+		return c.cmdable.IncrByFloat(ctx, key, value)
+	})
 }
 
 func (c *client) MGet(ctx context.Context, keys ...string) SliceCmd {
-	ctx = c.handler.beforeWithKeys(ctx, CommandMGet, func() []string { return keys })
-	r := c.cacheCmdable.MGet(ctx, keys...)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[SliceCmd](ctx, c.handler, CommandMGet, func(ctx context.Context) SliceCmd {
+		return c.cacheCmdable.MGet(ctx, keys...)
+	}, func() []string { return keys })
 }
 
 func (c *client) MSet(ctx context.Context, values ...interface{}) StatusCmd {
-	ctx = c.handler.beforeWithKeys(ctx, CommandMSet, func() []string { return argsToSliceWithValues(values) })
-	r := c.cmdable.MSet(ctx, values...)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[StatusCmd](ctx, c.handler, CommandMSet, func(ctx context.Context) StatusCmd {
+		return c.cmdable.MSet(ctx, values...)
+	}, func() []string { return argsToSliceWithValues(values) })
 }
 
 func (c *client) MSetNX(ctx context.Context, values ...interface{}) BoolCmd {
-	ctx = c.handler.beforeWithKeys(ctx, CommandMSetNX, func() []string { return argsToSliceWithValues(values) })
-	r := c.cmdable.MSetNX(ctx, values...)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[BoolCmd](ctx, c.handler, CommandMSetNX, func(ctx context.Context) BoolCmd {
+		return c.cmdable.MSetNX(ctx, values...)
+	}, func() []string { return argsToSliceWithValues(values) })
 }
 
 func (c *client) Set(ctx context.Context, key string, value interface{}, expiration time.Duration) StatusCmd {
+	var cmd Command
 	if expiration == KeepTTL {
-		ctx = c.handler.before(ctx, CommandSetKeepTTL)
+		cmd = CommandSetKeepTTL
 	} else {
-		ctx = c.handler.before(ctx, CommandSet)
+		cmd = CommandSet
 	}
-	r := c.cmdable.Set(ctx, key, value, expiration)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[StatusCmd](ctx, c.handler, cmd, func(ctx context.Context) StatusCmd {
+		return c.cmdable.Set(ctx, key, value, expiration)
+	})
 }
 
 func (c *client) SetEX(ctx context.Context, key string, value interface{}, expiration time.Duration) StatusCmd {
-	ctx = c.handler.before(ctx, CommandSetex)
-	r := c.cmdable.SetEX(ctx, key, value, expiration)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[StatusCmd](ctx, c.handler, CommandSetex, func(ctx context.Context) StatusCmd {
+		return c.cmdable.SetEX(ctx, key, value, expiration)
+	})
 }
 
 func (c *client) SetNX(ctx context.Context, key string, value interface{}, expiration time.Duration) BoolCmd {
+	var cmd Command
 	if expiration == KeepTTL {
-		ctx = c.handler.before(ctx, CommandSetKeepTTL)
+		cmd = CommandSetKeepTTL
 	} else {
-		ctx = c.handler.before(ctx, CommandSetnx)
+		cmd = CommandSetnx
 	}
-	r := c.cmdable.SetNX(ctx, key, value, expiration)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[BoolCmd](ctx, c.handler, cmd, func(ctx context.Context) BoolCmd {
+		return c.cmdable.SetNX(ctx, key, value, expiration)
+	})
 }
 
 func (c *client) SetXX(ctx context.Context, key string, value interface{}, expiration time.Duration) BoolCmd {
+	var cmd Command
 	if expiration == KeepTTL {
-		ctx = c.handler.before(ctx, CommandSetKeepTTL)
+		cmd = CommandSetKeepTTL
 	} else {
-		ctx = c.handler.before(ctx, CommandSetXX)
+		cmd = CommandSetXX
 	}
-	r := c.cmdable.SetXX(ctx, key, value, expiration)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[BoolCmd](ctx, c.handler, cmd, func(ctx context.Context) BoolCmd {
+		return c.cmdable.SetXX(ctx, key, value, expiration)
+	})
 }
 
 func (c *client) SetArgs(ctx context.Context, key string, value interface{}, a SetArgs) StatusCmd {
+	var cmd Command
 	if a.KeepTTL {
-		ctx = c.handler.before(ctx, CommandSetKeepTTL)
+		cmd = CommandSetKeepTTL
 	} else if !a.ExpireAt.IsZero() {
-		ctx = c.handler.before(ctx, CommandSetEXAT)
+		cmd = CommandSetEXAT
 	} else if a.Get {
-		ctx = c.handler.before(ctx, CommandSetGet)
+		cmd = CommandSetGet
 	} else if len(a.Mode) > 0 {
 		if strings.ToUpper(a.Mode) == NX {
-			ctx = c.handler.before(ctx, CommandSetNX)
+			cmd = CommandSetNX
 		} else {
-			ctx = c.handler.before(ctx, CommandSetXX)
+			cmd = CommandSetXX
 		}
 	} else {
-		ctx = c.handler.before(ctx, CommandSet)
+		cmd = CommandSet
 	}
-	r := c.cmdable.SetArgs(ctx, key, value, a)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[StatusCmd](ctx, c.handler, cmd, func(ctx context.Context) StatusCmd {
+		return c.cmdable.SetArgs(ctx, key, value, a)
+	})
 }
 
 func (c *client) SetRange(ctx context.Context, key string, offset int64, value string) IntCmd {
-	ctx = c.handler.before(ctx, CommandSetRange)
-	r := c.cmdable.SetRange(ctx, key, offset, value)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[IntCmd](ctx, c.handler, CommandSetRange, func(ctx context.Context) IntCmd {
+		return c.cmdable.SetRange(ctx, key, offset, value)
+	})
 }
 
 func (c *client) StrLen(ctx context.Context, key string) IntCmd {
-	ctx = c.handler.before(ctx, CommandStrLen)
-	r := c.cacheCmdable.StrLen(ctx, key)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[IntCmd](ctx, c.handler, CommandStrLen, func(ctx context.Context) IntCmd {
+		return c.cacheCmdable.StrLen(ctx, key)
+	})
 }

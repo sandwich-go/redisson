@@ -164,114 +164,103 @@ type HashCacheCmdable interface {
 }
 
 func (c *client) HDel(ctx context.Context, key string, fields ...string) IntCmd {
+	var cmd Command
 	if len(fields) > 1 {
-		ctx = c.handler.before(ctx, CommandHDelMultiple)
+		cmd = CommandHDelMultiple
 	} else {
-		ctx = c.handler.before(ctx, CommandHDel)
+		cmd = CommandHDel
 	}
-	r := c.cmdable.HDel(ctx, key, fields...)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[IntCmd](ctx, c.handler, cmd, func(ctx context.Context) IntCmd {
+		return c.cmdable.HDel(ctx, key, fields...)
+	})
 }
 
 func (c *client) HExists(ctx context.Context, key, field string) BoolCmd {
-	ctx = c.handler.before(ctx, CommandHExists)
-	r := c.cacheCmdable.HExists(ctx, key, field)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[BoolCmd](ctx, c.handler, CommandHExists, func(ctx context.Context) BoolCmd {
+		return c.cacheCmdable.HExists(ctx, key, field)
+	})
 }
 
 func (c *client) HGet(ctx context.Context, key, field string) StringCmd {
-	ctx = c.handler.before(ctx, CommandHGet)
-	r := c.cacheCmdable.HGet(ctx, key, field)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[StringCmd](ctx, c.handler, CommandHGet, func(ctx context.Context) StringCmd {
+		return c.cacheCmdable.HGet(ctx, key, field)
+	})
 }
 
 func (c *client) HGetAll(ctx context.Context, key string) StringStringMapCmd {
-	ctx = c.handler.before(ctx, CommandHGetAll)
-	r := c.cacheCmdable.HGetAll(ctx, key)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[StringStringMapCmd](ctx, c.handler, CommandHGetAll, func(ctx context.Context) StringStringMapCmd {
+		return c.cacheCmdable.HGetAll(ctx, key)
+	})
 }
 
 func (c *client) HIncrBy(ctx context.Context, key, field string, incr int64) IntCmd {
-	ctx = c.handler.before(ctx, CommandHIncrBy)
-	r := c.cmdable.HIncrBy(ctx, key, field, incr)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[IntCmd](ctx, c.handler, CommandHIncrBy, func(ctx context.Context) IntCmd {
+		return c.cmdable.HIncrBy(ctx, key, field, incr)
+	})
 }
 
 func (c *client) HIncrByFloat(ctx context.Context, key, field string, incr float64) FloatCmd {
-	ctx = c.handler.before(ctx, CommandHIncrByFloat)
-	r := c.cmdable.HIncrByFloat(ctx, key, field, incr)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[FloatCmd](ctx, c.handler, CommandHIncrByFloat, func(ctx context.Context) FloatCmd {
+		return c.cmdable.HIncrByFloat(ctx, key, field, incr)
+	})
 }
 
 func (c *client) HKeys(ctx context.Context, key string) StringSliceCmd {
-	ctx = c.handler.before(ctx, CommandHKeys)
-	r := c.cacheCmdable.HKeys(ctx, key)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[StringSliceCmd](ctx, c.handler, CommandHKeys, func(ctx context.Context) StringSliceCmd {
+		return c.cacheCmdable.HKeys(ctx, key)
+	})
 }
 
 func (c *client) HLen(ctx context.Context, key string) IntCmd {
-	ctx = c.handler.before(ctx, CommandHLen)
-	r := c.cacheCmdable.HLen(ctx, key)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[IntCmd](ctx, c.handler, CommandHLen, func(ctx context.Context) IntCmd {
+		return c.cacheCmdable.HLen(ctx, key)
+	})
 }
 
 func (c *client) HMGet(ctx context.Context, key string, fields ...string) SliceCmd {
-	ctx = c.handler.before(ctx, CommandHMGet)
-	r := c.cacheCmdable.HMGet(ctx, key, fields...)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[SliceCmd](ctx, c.handler, CommandHMGet, func(ctx context.Context) SliceCmd {
+		return c.cacheCmdable.HMGet(ctx, key, fields...)
+	})
 }
 
 func (c *client) HMSet(ctx context.Context, key string, values ...interface{}) BoolCmd {
-	ctx = c.handler.before(ctx, CommandHMSet)
-	r := c.cmdable.HMSet(ctx, key, values...)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[BoolCmd](ctx, c.handler, CommandHMSet, func(ctx context.Context) BoolCmd {
+		return c.cmdable.HMSet(ctx, key, values...)
+	})
 }
 
 func (c *client) HRandField(ctx context.Context, key string, count int, withValues bool) StringSliceCmd {
-	ctx = c.handler.before(ctx, CommandHRandField)
-	r := c.cmdable.HRandField(ctx, key, count, withValues)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[StringSliceCmd](ctx, c.handler, CommandHRandField, func(ctx context.Context) StringSliceCmd {
+		return c.cmdable.HRandField(ctx, key, count, withValues)
+	})
 }
 
 func (c *client) HScan(ctx context.Context, key string, cursor uint64, match string, count int64) ScanCmd {
-	ctx = c.handler.before(ctx, CommandHScan)
-	r := c.cmdable.HScan(ctx, key, cursor, match, count)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[ScanCmd](ctx, c.handler, CommandHScan, func(ctx context.Context) ScanCmd {
+		return c.cmdable.HScan(ctx, key, cursor, match, count)
+	})
 }
 
 func (c *client) HSet(ctx context.Context, key string, values ...interface{}) IntCmd {
+	var cmd Command
 	if len(values) > 2 {
-		ctx = c.handler.before(ctx, CommandHSetMultiple)
+		cmd = CommandHSetMultiple
 	} else {
-		ctx = c.handler.before(ctx, CommandHSet)
+		cmd = CommandHSet
 	}
-	r := c.cmdable.HSet(ctx, key, values...)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[IntCmd](ctx, c.handler, cmd, func(ctx context.Context) IntCmd {
+		return c.cmdable.HSet(ctx, key, values...)
+	})
 }
 
 func (c *client) HSetNX(ctx context.Context, key, field string, value interface{}) BoolCmd {
-	ctx = c.handler.before(ctx, CommandHSetNX)
-	r := c.cmdable.HSetNX(ctx, key, field, value)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[BoolCmd](ctx, c.handler, CommandHSetNX, func(ctx context.Context) BoolCmd {
+		return c.cmdable.HSetNX(ctx, key, field, value)
+	})
 }
 
 func (c *client) HVals(ctx context.Context, key string) StringSliceCmd {
-	ctx = c.handler.before(ctx, CommandHVals)
-	r := c.cacheCmdable.HVals(ctx, key)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[StringSliceCmd](ctx, c.handler, CommandHVals, func(ctx context.Context) StringSliceCmd {
+		return c.cacheCmdable.HVals(ctx, key)
+	})
 }

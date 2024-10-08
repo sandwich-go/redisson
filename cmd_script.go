@@ -137,45 +137,39 @@ type ScriptCmdable interface {
 func (c *client) CreateScript(src string) Scripter { return newScript(c, src) }
 
 func (c *client) Eval(ctx context.Context, script string, keys []string, args ...interface{}) Cmd {
-	ctx = c.handler.beforeWithKeys(ctx, CommandEval, func() []string { return keys })
-	r := c.cmdable.Eval(ctx, script, keys, args...)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[Cmd](ctx, c.handler, CommandEval, func(ctx context.Context) Cmd {
+		return c.cmdable.Eval(ctx, script, keys, args...)
+	}, func() []string { return keys })
 }
 
 func (c *client) EvalSha(ctx context.Context, sha1 string, keys []string, args ...interface{}) Cmd {
-	ctx = c.handler.beforeWithKeys(ctx, CommandEvalSha, func() []string { return keys })
-	r := c.cmdable.EvalSha(ctx, sha1, keys, args...)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[Cmd](ctx, c.handler, CommandEvalSha, func(ctx context.Context) Cmd {
+		return c.cmdable.EvalSha(ctx, sha1, keys, args...)
+	}, func() []string { return keys })
 }
 
 func (c *client) ScriptExists(ctx context.Context, hashes ...string) BoolSliceCmd {
-	ctx = c.handler.before(ctx, CommandScriptExists)
-	r := c.cmdable.ScriptExists(ctx, hashes...)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[BoolSliceCmd](ctx, c.handler, CommandScriptExists, func(ctx context.Context) BoolSliceCmd {
+		return c.cmdable.ScriptExists(ctx, hashes...)
+	})
 }
 
 func (c *client) ScriptFlush(ctx context.Context) StatusCmd {
-	ctx = c.handler.before(ctx, CommandScriptFlush)
-	r := c.cmdable.ScriptFlush(ctx)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[StatusCmd](ctx, c.handler, CommandScriptFlush, func(ctx context.Context) StatusCmd {
+		return c.cmdable.ScriptFlush(ctx)
+	})
 }
 
 func (c *client) ScriptKill(ctx context.Context) StatusCmd {
-	ctx = c.handler.before(ctx, CommandScriptKill)
-	r := c.cmdable.ScriptKill(ctx)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[StatusCmd](ctx, c.handler, CommandScriptKill, func(ctx context.Context) StatusCmd {
+		return c.cmdable.ScriptKill(ctx)
+	})
 }
 
 func (c *client) ScriptLoad(ctx context.Context, script string) StringCmd {
-	ctx = c.handler.before(ctx, CommandScriptLoad)
-	r := c.cmdable.ScriptLoad(ctx, script)
-	c.handler.after(ctx, r.Err())
-	return r
+	return do[StringCmd](ctx, c.handler, CommandScriptLoad, func(ctx context.Context) StringCmd {
+		return c.cmdable.ScriptLoad(ctx, script)
+	})
 }
 
 type script struct {

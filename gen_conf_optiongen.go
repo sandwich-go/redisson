@@ -22,6 +22,7 @@ type Conf struct {
 	DB                int           `xconf:"db" usage:"Redis实例数据库编号，集群下只能用0"`
 	Username          string        `xconf:"username" usage:"Redis用户名"`
 	Password          string        `xconf:"password" usage:"Redis用户密码"`
+	Timeout           time.Duration `xconf:"timeout" usage:"Redis连超时时长"`
 	ReadTimeout       time.Duration `xconf:"read_timeout" usage:"Redis连接读取的超时时长"`
 	WriteTimeout      time.Duration `xconf:"write_timeout" usage:"Redis连接写入的超时时长"`
 	ConnPoolSize      int           `xconf:"conn_pool_size" usage:"Redis连接池大小，默认0，RESP2时，即非集群模式下为10*runtime.GOMAXPROCS，集群模式下为5*runtime.GOMAXPROCS。RESP3时，为Block连接池，默认1000"`
@@ -42,7 +43,7 @@ type Conf struct {
 func NewConf(opts ...ConfOption) *Conf {
 	cc := newDefaultConf()
 	for _, opt := range opts {
-		opt(cc)
+		opt.Apply(cc)
 	}
 	if watchDogConf != nil {
 		watchDogConf(cc)
@@ -57,17 +58,27 @@ func NewConf(opts ...ConfOption) *Conf {
 func (cc *Conf) ApplyOption(opts ...ConfOption) []ConfOption {
 	var previous []ConfOption
 	for _, opt := range opts {
-		previous = append(previous, opt(cc))
+		previous = append(previous, opt.Apply(cc))
 	}
 	return previous
 }
 
-// ConfOption option func
-type ConfOption func(cc *Conf) ConfOption
+// ConfOptionFunc option func
+type ConfOption interface {
+	Apply(cc *Conf) ConfOption
+}
+
+var _ ConfOption = ConfOptionFunc(nil)
+
+type ConfOptionFunc func(cc *Conf) ConfOptionFunc
+
+func (f ConfOptionFunc) Apply(cc *Conf) ConfOption {
+	return f(cc)
+}
 
 // WithNet 网络连接类型，tcp/unix
-func WithNet(v string) ConfOption {
-	return func(cc *Conf) ConfOption {
+func WithNet(v string) ConfOptionFunc {
+	return func(cc *Conf) ConfOptionFunc {
 		previous := cc.Net
 		cc.Net = v
 		return WithNet(previous)
@@ -75,8 +86,8 @@ func WithNet(v string) ConfOption {
 }
 
 // WithEnableInit 是否需要进行初始化
-func WithEnableInit(v bool) ConfOption {
-	return func(cc *Conf) ConfOption {
+func WithEnableInit(v bool) ConfOptionFunc {
+	return func(cc *Conf) ConfOptionFunc {
 		previous := cc.EnableInit
 		cc.EnableInit = v
 		return WithEnableInit(previous)
@@ -84,8 +95,8 @@ func WithEnableInit(v bool) ConfOption {
 }
 
 // WithResp RESP版本
-func WithResp(v RESP) ConfOption {
-	return func(cc *Conf) ConfOption {
+func WithResp(v RESP) ConfOptionFunc {
+	return func(cc *Conf) ConfOptionFunc {
 		previous := cc.Resp
 		cc.Resp = v
 		return WithResp(previous)
@@ -93,8 +104,8 @@ func WithResp(v RESP) ConfOption {
 }
 
 // WithAlwaysRESP2 always uses RESP2, otherwise it will try using RESP3 first
-func WithAlwaysRESP2(v bool) ConfOption {
-	return func(cc *Conf) ConfOption {
+func WithAlwaysRESP2(v bool) ConfOptionFunc {
+	return func(cc *Conf) ConfOptionFunc {
 		previous := cc.AlwaysRESP2
 		cc.AlwaysRESP2 = v
 		return WithAlwaysRESP2(previous)
@@ -102,8 +113,8 @@ func WithAlwaysRESP2(v bool) ConfOption {
 }
 
 // WithName Redis客户端名字
-func WithName(v string) ConfOption {
-	return func(cc *Conf) ConfOption {
+func WithName(v string) ConfOptionFunc {
+	return func(cc *Conf) ConfOptionFunc {
 		previous := cc.Name
 		cc.Name = v
 		return WithName(previous)
@@ -111,8 +122,8 @@ func WithName(v string) ConfOption {
 }
 
 // WithMasterName Redis Sentinel模式下，master名字
-func WithMasterName(v string) ConfOption {
-	return func(cc *Conf) ConfOption {
+func WithMasterName(v string) ConfOptionFunc {
+	return func(cc *Conf) ConfOptionFunc {
 		previous := cc.MasterName
 		cc.MasterName = v
 		return WithMasterName(previous)
@@ -120,8 +131,8 @@ func WithMasterName(v string) ConfOption {
 }
 
 // WithEnableMonitor 是否开启监控
-func WithEnableMonitor(v bool) ConfOption {
-	return func(cc *Conf) ConfOption {
+func WithEnableMonitor(v bool) ConfOptionFunc {
+	return func(cc *Conf) ConfOptionFunc {
 		previous := cc.EnableMonitor
 		cc.EnableMonitor = v
 		return WithEnableMonitor(previous)
@@ -129,8 +140,8 @@ func WithEnableMonitor(v bool) ConfOption {
 }
 
 // WithAddrs Redis地址列表
-func WithAddrs(v ...string) ConfOption {
-	return func(cc *Conf) ConfOption {
+func WithAddrs(v ...string) ConfOptionFunc {
+	return func(cc *Conf) ConfOptionFunc {
 		previous := cc.Addrs
 		cc.Addrs = v
 		return WithAddrs(previous...)
@@ -138,8 +149,8 @@ func WithAddrs(v ...string) ConfOption {
 }
 
 // AppendAddrs Redis地址列表
-func AppendAddrs(v ...string) ConfOption {
-	return func(cc *Conf) ConfOption {
+func AppendAddrs(v ...string) ConfOptionFunc {
+	return func(cc *Conf) ConfOptionFunc {
 		previous := cc.Addrs
 		cc.Addrs = append(cc.Addrs, v...)
 		return WithAddrs(previous...)
@@ -147,8 +158,8 @@ func AppendAddrs(v ...string) ConfOption {
 }
 
 // WithDB Redis实例数据库编号，集群下只能用0
-func WithDB(v int) ConfOption {
-	return func(cc *Conf) ConfOption {
+func WithDB(v int) ConfOptionFunc {
+	return func(cc *Conf) ConfOptionFunc {
 		previous := cc.DB
 		cc.DB = v
 		return WithDB(previous)
@@ -156,8 +167,8 @@ func WithDB(v int) ConfOption {
 }
 
 // WithUsername Redis用户名
-func WithUsername(v string) ConfOption {
-	return func(cc *Conf) ConfOption {
+func WithUsername(v string) ConfOptionFunc {
+	return func(cc *Conf) ConfOptionFunc {
 		previous := cc.Username
 		cc.Username = v
 		return WithUsername(previous)
@@ -165,17 +176,26 @@ func WithUsername(v string) ConfOption {
 }
 
 // WithPassword Redis用户密码
-func WithPassword(v string) ConfOption {
-	return func(cc *Conf) ConfOption {
+func WithPassword(v string) ConfOptionFunc {
+	return func(cc *Conf) ConfOptionFunc {
 		previous := cc.Password
 		cc.Password = v
 		return WithPassword(previous)
 	}
 }
 
+// WithTimeout Redis连超时时长
+func WithTimeout(v time.Duration) ConfOptionFunc {
+	return func(cc *Conf) ConfOptionFunc {
+		previous := cc.Timeout
+		cc.Timeout = v
+		return WithTimeout(previous)
+	}
+}
+
 // WithReadTimeout Redis连接读取的超时时长
-func WithReadTimeout(v time.Duration) ConfOption {
-	return func(cc *Conf) ConfOption {
+func WithReadTimeout(v time.Duration) ConfOptionFunc {
+	return func(cc *Conf) ConfOptionFunc {
 		previous := cc.ReadTimeout
 		cc.ReadTimeout = v
 		return WithReadTimeout(previous)
@@ -183,8 +203,8 @@ func WithReadTimeout(v time.Duration) ConfOption {
 }
 
 // WithWriteTimeout Redis连接写入的超时时长
-func WithWriteTimeout(v time.Duration) ConfOption {
-	return func(cc *Conf) ConfOption {
+func WithWriteTimeout(v time.Duration) ConfOptionFunc {
+	return func(cc *Conf) ConfOptionFunc {
 		previous := cc.WriteTimeout
 		cc.WriteTimeout = v
 		return WithWriteTimeout(previous)
@@ -192,8 +212,8 @@ func WithWriteTimeout(v time.Duration) ConfOption {
 }
 
 // WithConnPoolSize Redis连接池大小，默认0，RESP2时，即非集群模式下为10*runtime.GOMAXPROCS，集群模式下为5*runtime.GOMAXPROCS。RESP3时，为Block连接池，默认1000
-func WithConnPoolSize(v int) ConfOption {
-	return func(cc *Conf) ConfOption {
+func WithConnPoolSize(v int) ConfOptionFunc {
+	return func(cc *Conf) ConfOptionFunc {
 		previous := cc.ConnPoolSize
 		cc.ConnPoolSize = v
 		return WithConnPoolSize(previous)
@@ -201,8 +221,8 @@ func WithConnPoolSize(v int) ConfOption {
 }
 
 // WithMinIdleConns Redis连接池最小空闲连接数量，RESP2时有效
-func WithMinIdleConns(v int) ConfOption {
-	return func(cc *Conf) ConfOption {
+func WithMinIdleConns(v int) ConfOptionFunc {
+	return func(cc *Conf) ConfOptionFunc {
 		previous := cc.MinIdleConns
 		cc.MinIdleConns = v
 		return WithMinIdleConns(previous)
@@ -210,8 +230,8 @@ func WithMinIdleConns(v int) ConfOption {
 }
 
 // WithConnMaxAge Redis连接生命周期，RESP2时有效
-func WithConnMaxAge(v time.Duration) ConfOption {
-	return func(cc *Conf) ConfOption {
+func WithConnMaxAge(v time.Duration) ConfOptionFunc {
+	return func(cc *Conf) ConfOptionFunc {
 		previous := cc.ConnMaxAge
 		cc.ConnMaxAge = v
 		return WithConnMaxAge(previous)
@@ -219,8 +239,8 @@ func WithConnMaxAge(v time.Duration) ConfOption {
 }
 
 // WithConnPoolTimeout Redis获取连接超时时间，默认0s，表示socket_read_timeout+1s，RESP2时有效
-func WithConnPoolTimeout(v time.Duration) ConfOption {
-	return func(cc *Conf) ConfOption {
+func WithConnPoolTimeout(v time.Duration) ConfOptionFunc {
+	return func(cc *Conf) ConfOptionFunc {
 		previous := cc.ConnPoolTimeout
 		cc.ConnPoolTimeout = v
 		return WithConnPoolTimeout(previous)
@@ -228,8 +248,8 @@ func WithConnPoolTimeout(v time.Duration) ConfOption {
 }
 
 // WithIdleConnTimeout Redis连接空闲超时时间，默认-1s，表示空闲连接不会被回收，RESP2时有效
-func WithIdleConnTimeout(v time.Duration) ConfOption {
-	return func(cc *Conf) ConfOption {
+func WithIdleConnTimeout(v time.Duration) ConfOptionFunc {
+	return func(cc *Conf) ConfOptionFunc {
 		previous := cc.IdleConnTimeout
 		cc.IdleConnTimeout = v
 		return WithIdleConnTimeout(previous)
@@ -237,8 +257,8 @@ func WithIdleConnTimeout(v time.Duration) ConfOption {
 }
 
 // WithEnableCache 是否开启客户端缓存，RESP3时有效
-func WithEnableCache(v bool) ConfOption {
-	return func(cc *Conf) ConfOption {
+func WithEnableCache(v bool) ConfOptionFunc {
+	return func(cc *Conf) ConfOptionFunc {
 		previous := cc.EnableCache
 		cc.EnableCache = v
 		return WithEnableCache(previous)
@@ -246,8 +266,8 @@ func WithEnableCache(v bool) ConfOption {
 }
 
 // WithCacheSizeEachConn 开启客户端缓存时，单个连接缓存大小，默认128 MiB，RESP3时有效
-func WithCacheSizeEachConn(v int) ConfOption {
-	return func(cc *Conf) ConfOption {
+func WithCacheSizeEachConn(v int) ConfOptionFunc {
+	return func(cc *Conf) ConfOptionFunc {
 		previous := cc.CacheSizeEachConn
 		cc.CacheSizeEachConn = v
 		return WithCacheSizeEachConn(previous)
@@ -255,8 +275,8 @@ func WithCacheSizeEachConn(v int) ConfOption {
 }
 
 // WithRingScaleEachConn 单个连接ring buffer大小，默认2 ^ RingScaleEachConn, RingScaleEachConn默认情况下为10，RESP3时有效
-func WithRingScaleEachConn(v int) ConfOption {
-	return func(cc *Conf) ConfOption {
+func WithRingScaleEachConn(v int) ConfOptionFunc {
+	return func(cc *Conf) ConfOptionFunc {
 		previous := cc.RingScaleEachConn
 		cc.RingScaleEachConn = v
 		return WithRingScaleEachConn(previous)
@@ -264,8 +284,8 @@ func WithRingScaleEachConn(v int) ConfOption {
 }
 
 // WithCluster 是否为Redis集群，默认为false，集群需要设置为true
-func WithCluster(v bool) ConfOption {
-	return func(cc *Conf) ConfOption {
+func WithCluster(v bool) ConfOptionFunc {
+	return func(cc *Conf) ConfOptionFunc {
 		previous := cc.Cluster
 		cc.Cluster = v
 		return WithCluster(previous)
@@ -273,8 +293,8 @@ func WithCluster(v bool) ConfOption {
 }
 
 // WithDevelopment 是否为开发模式，开发模式下，使用部分接口会有警告日志输出，会校验多key是否为同一hash槽，会校验部分接口是否满足版本要求
-func WithDevelopment(v bool) ConfOption {
-	return func(cc *Conf) ConfOption {
+func WithDevelopment(v bool) ConfOptionFunc {
+	return func(cc *Conf) ConfOptionFunc {
 		previous := cc.Development
 		cc.Development = v
 		return WithDevelopment(previous)
@@ -282,8 +302,8 @@ func WithDevelopment(v bool) ConfOption {
 }
 
 // WithT 如果设置该值，则启动mock
-func WithT(v Tester) ConfOption {
-	return func(cc *Conf) ConfOption {
+func WithT(v Tester) ConfOptionFunc {
+	return func(cc *Conf) ConfOptionFunc {
 		previous := cc.T
 		cc.T = v
 		return WithT(previous)
@@ -291,8 +311,8 @@ func WithT(v Tester) ConfOption {
 }
 
 // WithForceSingleClient ForceSingleClient force the usage of a single client connection, without letting the lib guessing
-func WithForceSingleClient(v bool) ConfOption {
-	return func(cc *Conf) ConfOption {
+func WithForceSingleClient(v bool) ConfOptionFunc {
+	return func(cc *Conf) ConfOptionFunc {
 		previous := cc.ForceSingleClient
 		cc.ForceSingleClient = v
 		return WithForceSingleClient(previous)
@@ -307,7 +327,7 @@ var watchDogConf func(cc *Conf)
 
 // setConfDefaultValue default Conf value
 func setConfDefaultValue(cc *Conf) {
-	for _, opt := range [...]ConfOption{
+	for _, opt := range [...]ConfOptionFunc{
 		WithNet("tcp"),
 		WithEnableInit(true),
 		WithResp(RESP3),
@@ -319,6 +339,7 @@ func setConfDefaultValue(cc *Conf) {
 		WithDB(0),
 		WithUsername(""),
 		WithPassword(""),
+		WithTimeout(11 * time.Second),
 		WithReadTimeout(10 * time.Second),
 		WithWriteTimeout(10 * time.Second),
 		WithConnPoolSize(0),
@@ -394,6 +415,7 @@ func (cc *Conf) GetAddrs() []string                { return cc.Addrs }
 func (cc *Conf) GetDB() int                        { return cc.DB }
 func (cc *Conf) GetUsername() string               { return cc.Username }
 func (cc *Conf) GetPassword() string               { return cc.Password }
+func (cc *Conf) GetTimeout() time.Duration         { return cc.Timeout }
 func (cc *Conf) GetReadTimeout() time.Duration     { return cc.ReadTimeout }
 func (cc *Conf) GetWriteTimeout() time.Duration    { return cc.WriteTimeout }
 func (cc *Conf) GetConnPoolSize() int              { return cc.ConnPoolSize }
@@ -422,6 +444,7 @@ type ConfVisitor interface {
 	GetDB() int
 	GetUsername() string
 	GetPassword() string
+	GetTimeout() time.Duration
 	GetReadTimeout() time.Duration
 	GetWriteTimeout() time.Duration
 	GetConnPoolSize() int

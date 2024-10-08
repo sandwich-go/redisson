@@ -2,12 +2,14 @@ package redisson
 
 import "fmt"
 
-func panicIfUseMultipleKeySlots(command Command, f func() []string) {
-	if f == nil {
-		return
-	}
-	if err := checkSlots(command, f()...); err != nil {
-		panic(err)
+func panicIfUseMultipleKeySlots(command Command, fs ...func() []string) {
+	for _, f := range fs {
+		if f == nil {
+			continue
+		}
+		if err := checkSlots(command, f()...); err != nil {
+			panic(err)
+		}
 	}
 }
 
