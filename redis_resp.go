@@ -174,12 +174,7 @@ func (c *client) reconnectWhenError(err error) error {
 var retryTimes = 3
 
 func Connect(v ConfInterface) (Cmdable, error) {
-	if v.GetWriteTimeout() == 0 {
-		v.ApplyOption(WithWriteTimeout(defaultWriteTimeout))
-	}
-	if v.GetReadTimeout() == 0 {
-		v.ApplyOption(WithReadTimeout(defaultWriteTimeout))
-	}
+	revise(v)
 	c := &client{v: v, handler: newBaseHandler(v)}
 	err := c.connect()
 	if err == nil && c.isCluster != c.v.GetCluster() {
