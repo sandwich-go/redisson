@@ -601,9 +601,7 @@ func (p *pipelineResp2) Put(_ context.Context, cmd Command, keys []string, args 
 }
 
 func (p *pipelineResp2) Exec(ctx context.Context) ([]interface{}, error) {
-	var cancel context.CancelFunc
-	ctx, cancel = p.resp.handler.before(ctx, pipelineCmd)
-	defer cancel()
+	ctx = p.resp.handler.before(ctx, pipelineCmd)
 	res, err := p.resp.cmd.Pipelined(ctx, func(pip goredis.Pipeliner) error {
 		p.mx.RLock()
 		defer p.mx.RUnlock()
@@ -671,38 +669,30 @@ func newPubSubResp2(cmd *goredis.PubSub, handler handler) PubSub {
 func (p *pubSubResp2) Close() error { return p.cmd.Close() }
 
 func (p *pubSubResp2) Subscribe(ctx context.Context, channels ...string) error {
-	var cancel context.CancelFunc
-	ctx, cancel = p.handler.before(ctx, CommandSubscribe)
+	ctx = p.handler.before(ctx, CommandSubscribe)
 	err := p.cmd.Subscribe(ctx, channels...)
 	p.handler.after(ctx, err)
-	cancel()
 	return err
 }
 
 func (p *pubSubResp2) PSubscribe(ctx context.Context, patterns ...string) error {
-	var cancel context.CancelFunc
-	ctx, cancel = p.handler.before(ctx, CommandPSubscribe)
+	ctx = p.handler.before(ctx, CommandPSubscribe)
 	err := p.cmd.PSubscribe(ctx, patterns...)
 	p.handler.after(ctx, err)
-	cancel()
 	return err
 }
 
 func (p *pubSubResp2) Unsubscribe(ctx context.Context, channels ...string) error {
-	var cancel context.CancelFunc
-	ctx, cancel = p.handler.before(ctx, CommandUnsubscribe)
+	ctx = p.handler.before(ctx, CommandUnsubscribe)
 	err := p.cmd.Unsubscribe(ctx, channels...)
 	p.handler.after(ctx, err)
-	cancel()
 	return err
 }
 
 func (p *pubSubResp2) PUnsubscribe(ctx context.Context, patterns ...string) error {
-	var cancel context.CancelFunc
-	ctx, cancel = p.handler.before(ctx, CommandPUnsubscribe)
+	ctx = p.handler.before(ctx, CommandPUnsubscribe)
 	err := p.cmd.PUnsubscribe(ctx, patterns...)
 	p.handler.after(ctx, err)
-	cancel()
 	return err
 }
 

@@ -174,7 +174,6 @@ func (c *client) reconnectWhenError(err error) error {
 var retryTimes = 3
 
 func Connect(v ConfInterface) (Cmdable, error) {
-	correctSettings(v)
 	c := &client{v: v, handler: newBaseHandler(v)}
 	err := c.connect()
 	if err == nil && c.isCluster != c.v.GetCluster() {

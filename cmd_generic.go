@@ -376,193 +376,219 @@ type GenericCacheCmdable interface {
 }
 
 func (c *client) Copy(ctx context.Context, sourceKey string, destKey string, db int, replace bool) IntCmd {
-	return do[IntCmd](ctx, c.handler, CommandCopy, func(ctx context.Context) IntCmd {
-		return c.cmdable.Copy(ctx, sourceKey, destKey, db, replace)
-	}, func() []string { return appendString(sourceKey, destKey) })
+	ctx = c.handler.beforeWithKeys(ctx, CommandCopy, func() []string { return appendString(sourceKey, destKey) })
+	r := c.cmdable.Copy(ctx, sourceKey, destKey, db, replace)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) Del(ctx context.Context, keys ...string) IntCmd {
-	return do[IntCmd](ctx, c.handler, CommandDel, func(ctx context.Context) IntCmd {
-		return c.cmdable.Del(ctx, keys...)
-	}, func() []string { return keys })
+	ctx = c.handler.beforeWithKeys(ctx, CommandDel, func() []string { return keys })
+	r := c.cmdable.Del(ctx, keys...)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) Dump(ctx context.Context, key string) StringCmd {
-	return do[StringCmd](ctx, c.handler, CommandDump, func(ctx context.Context) StringCmd {
-		return c.cmdable.Dump(ctx, key)
-	})
+	ctx = c.handler.before(ctx, CommandDump)
+	r := c.cmdable.Dump(ctx, key)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) Exists(ctx context.Context, keys ...string) IntCmd {
-	var f func() []string
-	var cmd Command = CommandExists
 	if len(keys) > 1 {
-		f = func() []string { return keys }
-		cmd = CommandExistsMultipleKeys
+		ctx = c.handler.beforeWithKeys(ctx, CommandExistsMultipleKeys, func() []string { return keys })
+	} else {
+		ctx = c.handler.before(ctx, CommandExists)
 	}
-	return do[IntCmd](ctx, c.handler, cmd, func(ctx context.Context) IntCmd {
-		return c.cacheCmdable.Exists(ctx, keys...)
-	}, f)
+	r := c.cacheCmdable.Exists(ctx, keys...)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) Expire(ctx context.Context, key string, expiration time.Duration) BoolCmd {
-	return do[BoolCmd](ctx, c.handler, CommandExpire, func(ctx context.Context) BoolCmd {
-		return c.cmdable.Expire(ctx, key, expiration)
-	})
+	ctx = c.handler.before(ctx, CommandExpire)
+	r := c.cmdable.Expire(ctx, key, expiration)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) ExpireAt(ctx context.Context, key string, tm time.Time) BoolCmd {
-	return do[BoolCmd](ctx, c.handler, CommandExpireAt, func(ctx context.Context) BoolCmd {
-		return c.cmdable.ExpireAt(ctx, key, tm)
-	})
+	ctx = c.handler.before(ctx, CommandExpireAt)
+	r := c.cmdable.ExpireAt(ctx, key, tm)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) Keys(ctx context.Context, pattern string) StringSliceCmd {
-	return do[StringSliceCmd](ctx, c.handler, CommandKeys, func(ctx context.Context) StringSliceCmd {
-		return c.cmdable.Keys(ctx, pattern)
-	})
+	ctx = c.handler.before(ctx, CommandKeys)
+	r := c.cmdable.Keys(ctx, pattern)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) Migrate(ctx context.Context, host, port, key string, db int, timeout time.Duration) StatusCmd {
-	return do[StatusCmd](ctx, c.handler, CommandMigrate, func(ctx context.Context) StatusCmd {
-		return c.cmdable.Migrate(ctx, host, port, key, db, timeout)
-	})
+	ctx = c.handler.before(ctx, CommandMigrate)
+	r := c.cmdable.Migrate(ctx, host, port, key, db, timeout)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) Move(ctx context.Context, key string, db int) BoolCmd {
-	return do[BoolCmd](ctx, c.handler, CommandMove, func(ctx context.Context) BoolCmd {
-		return c.cmdable.Move(ctx, key, db)
-	})
+	ctx = c.handler.before(ctx, CommandMove)
+	r := c.cmdable.Move(ctx, key, db)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) ObjectRefCount(ctx context.Context, key string) IntCmd {
-	return do[IntCmd](ctx, c.handler, CommandObjectRefCount, func(ctx context.Context) IntCmd {
-		return c.cmdable.ObjectRefCount(ctx, key)
-	})
+	ctx = c.handler.before(ctx, CommandObjectRefCount)
+	r := c.cmdable.ObjectRefCount(ctx, key)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) ObjectEncoding(ctx context.Context, key string) StringCmd {
-	return do[StringCmd](ctx, c.handler, CommandObjectEncoding, func(ctx context.Context) StringCmd {
-		return c.cmdable.ObjectEncoding(ctx, key)
-	})
+	ctx = c.handler.before(ctx, CommandObjectEncoding)
+	r := c.cmdable.ObjectEncoding(ctx, key)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) ObjectIdleTime(ctx context.Context, key string) DurationCmd {
-	return do[DurationCmd](ctx, c.handler, CommandObjectIdleTime, func(ctx context.Context) DurationCmd {
-		return c.cmdable.ObjectIdleTime(ctx, key)
-	})
+	ctx = c.handler.before(ctx, CommandObjectIdleTime)
+	r := c.cmdable.ObjectIdleTime(ctx, key)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) Persist(ctx context.Context, key string) BoolCmd {
-	return do[BoolCmd](ctx, c.handler, CommandPersist, func(ctx context.Context) BoolCmd {
-		return c.cmdable.Persist(ctx, key)
-	})
+	ctx = c.handler.before(ctx, CommandPersist)
+	r := c.cmdable.Persist(ctx, key)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) PExpire(ctx context.Context, key string, expiration time.Duration) BoolCmd {
-	return do[BoolCmd](ctx, c.handler, CommandPExpire, func(ctx context.Context) BoolCmd {
-		return c.cmdable.PExpire(ctx, key, expiration)
-	})
+	ctx = c.handler.before(ctx, CommandPExpire)
+	r := c.cmdable.PExpire(ctx, key, expiration)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) PExpireAt(ctx context.Context, key string, tm time.Time) BoolCmd {
-	return do[BoolCmd](ctx, c.handler, CommandPExpireAt, func(ctx context.Context) BoolCmd {
-		return c.cmdable.PExpireAt(ctx, key, tm)
-	})
+	ctx = c.handler.before(ctx, CommandPExpireAt)
+	r := c.cmdable.PExpireAt(ctx, key, tm)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) PTTL(ctx context.Context, key string) DurationCmd {
-	return do[DurationCmd](ctx, c.handler, CommandPTTL, func(ctx context.Context) DurationCmd {
-		return c.cmdable.PTTL(ctx, key)
-	})
+	ctx = c.handler.before(ctx, CommandPTTL)
+	r := c.cmdable.PTTL(ctx, key)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) Rename(ctx context.Context, key, newkey string) StatusCmd {
-	return do[StatusCmd](ctx, c.handler, CommandRename, func(ctx context.Context) StatusCmd {
-		return c.cmdable.Rename(ctx, key, newkey)
-	}, func() []string { return appendString(key, newkey) })
+	ctx = c.handler.beforeWithKeys(ctx, CommandRename, func() []string { return appendString(key, newkey) })
+	r := c.cmdable.Rename(ctx, key, newkey)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) RenameNX(ctx context.Context, key, newkey string) BoolCmd {
-	return do[BoolCmd](ctx, c.handler, CommandRenameNX, func(ctx context.Context) BoolCmd {
-		return c.cmdable.RenameNX(ctx, key, newkey)
-	}, func() []string { return appendString(key, newkey) })
+	ctx = c.handler.beforeWithKeys(ctx, CommandRenameNX, func() []string { return appendString(key, newkey) })
+	r := c.cmdable.RenameNX(ctx, key, newkey)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) RandomKey(ctx context.Context) StringCmd {
-	return do[StringCmd](ctx, c.handler, CommandRandomKey, func(ctx context.Context) StringCmd {
-		return c.cmdable.RandomKey(ctx)
-	})
+	ctx = c.handler.before(ctx, CommandRandomKey)
+	r := c.cmdable.RandomKey(ctx)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) Restore(ctx context.Context, key string, ttl time.Duration, value string) StatusCmd {
-	return do[StatusCmd](ctx, c.handler, CommandRestore, func(ctx context.Context) StatusCmd {
-		return c.cmdable.Restore(ctx, key, ttl, value)
-	})
+	ctx = c.handler.before(ctx, CommandRestore)
+	r := c.cmdable.Restore(ctx, key, ttl, value)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) RestoreReplace(ctx context.Context, key string, ttl time.Duration, value string) StatusCmd {
-	return do[StatusCmd](ctx, c.handler, CommandRestoreReplace, func(ctx context.Context) StatusCmd {
-		return c.cmdable.RestoreReplace(ctx, key, ttl, value)
-	})
+	ctx = c.handler.before(ctx, CommandRestoreReplace)
+	r := c.cmdable.RestoreReplace(ctx, key, ttl, value)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) Scan(ctx context.Context, cursor uint64, match string, count int64) ScanCmd {
-	return do[ScanCmd](ctx, c.handler, CommandScan, func(ctx context.Context) ScanCmd {
-		return c.cmdable.Scan(ctx, cursor, match, count)
-	})
+	ctx = c.handler.before(ctx, CommandScan)
+	r := c.cmdable.Scan(ctx, cursor, match, count)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) ScanType(ctx context.Context, cursor uint64, match string, count int64, keyType string) ScanCmd {
-	var cmd Command
 	if len(keyType) > 0 {
-		cmd = CommandScanType
+		ctx = c.handler.before(ctx, CommandScanType)
 	} else {
-		cmd = CommandScan
+		ctx = c.handler.before(ctx, CommandScan)
 	}
-	return do[ScanCmd](ctx, c.handler, cmd, func(ctx context.Context) ScanCmd {
-		return c.cmdable.ScanType(ctx, cursor, match, count, keyType)
-	})
+	r := c.cmdable.ScanType(ctx, cursor, match, count, keyType)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) Sort(ctx context.Context, key string, sort Sort) StringSliceCmd {
-	return do[StringSliceCmd](ctx, c.handler, CommandSort, func(ctx context.Context) StringSliceCmd {
-		return c.cmdable.Sort(ctx, key, sort)
-	})
+	ctx = c.handler.before(ctx, CommandSort)
+	r := c.cmdable.Sort(ctx, key, sort)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) SortStore(ctx context.Context, key, store string, sort Sort) IntCmd {
-	return do[IntCmd](ctx, c.handler, CommandSort, func(ctx context.Context) IntCmd {
-		return c.cmdable.SortStore(ctx, key, store, sort)
-	}, func() []string { return appendString(key, store) })
+	ctx = c.handler.beforeWithKeys(ctx, CommandSort, func() []string { return appendString(key, store) })
+	r := c.cmdable.SortStore(ctx, key, store, sort)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) SortInterfaces(ctx context.Context, key string, sort Sort) SliceCmd {
-	return do[SliceCmd](ctx, c.handler, CommandSort, func(ctx context.Context) SliceCmd {
-		return c.cmdable.SortInterfaces(ctx, key, sort)
-	})
+	ctx = c.handler.before(ctx, CommandSort)
+	r := c.cmdable.SortInterfaces(ctx, key, sort)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) Touch(ctx context.Context, keys ...string) IntCmd {
-	return do[IntCmd](ctx, c.handler, CommandTouch, func(ctx context.Context) IntCmd {
-		return c.cmdable.Touch(ctx, keys...)
-	}, func() []string { return keys })
+	ctx = c.handler.beforeWithKeys(ctx, CommandTouch, func() []string { return keys })
+	r := c.cmdable.Touch(ctx, keys...)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) TTL(ctx context.Context, key string) DurationCmd {
-	return do[DurationCmd](ctx, c.handler, CommandTTL, func(ctx context.Context) DurationCmd {
-		return c.cmdable.TTL(ctx, key)
-	})
+	ctx = c.handler.before(ctx, CommandTTL)
+	r := c.cmdable.TTL(ctx, key)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) Type(ctx context.Context, key string) StatusCmd {
-	return do[StatusCmd](ctx, c.handler, CommandType, func(ctx context.Context) StatusCmd {
-		return c.cacheCmdable.Type(ctx, key)
-	})
+	ctx = c.handler.before(ctx, CommandType)
+	r := c.cacheCmdable.Type(ctx, key)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) Unlink(ctx context.Context, keys ...string) IntCmd {
-	return do[IntCmd](ctx, c.handler, CommandUnlink, func(ctx context.Context) IntCmd {
-		return c.cmdable.Unlink(ctx, keys...)
-	}, func() []string { return keys })
+	ctx = c.handler.beforeWithKeys(ctx, CommandUnlink, func() []string { return keys })
+	r := c.cmdable.Unlink(ctx, keys...)
+	c.handler.after(ctx, r.Err())
+	return r
 }

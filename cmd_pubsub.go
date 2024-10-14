@@ -106,33 +106,36 @@ type PubSubCmdable interface {
 }
 
 func (c *client) Publish(ctx context.Context, channel string, message interface{}) IntCmd {
-	return do[IntCmd](ctx, c.handler, CommandPublish, func(ctx context.Context) IntCmd {
-		return c.cmdable.Publish(ctx, channel, message)
-	})
+	ctx = c.handler.before(ctx, CommandPublish)
+	r := c.cmdable.Publish(ctx, channel, message)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) PubSubChannels(ctx context.Context, pattern string) StringSliceCmd {
-	return do[StringSliceCmd](ctx, c.handler, CommandPubSubChannels, func(ctx context.Context) StringSliceCmd {
-		return c.cmdable.PubSubChannels(ctx, pattern)
-	})
+	ctx = c.handler.before(ctx, CommandPubSubChannels)
+	r := c.cmdable.PubSubChannels(ctx, pattern)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) PubSubNumPat(ctx context.Context) IntCmd {
-	return do[IntCmd](ctx, c.handler, CommandPubSubNumPat, func(ctx context.Context) IntCmd {
-		return c.cmdable.PubSubNumPat(ctx)
-	})
+	ctx = c.handler.before(ctx, CommandPubSubNumPat)
+	r := c.cmdable.PubSubNumPat(ctx)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) PubSubNumSub(ctx context.Context, channels ...string) StringIntMapCmd {
-	return do[StringIntMapCmd](ctx, c.handler, CommandPubSubNumSub, func(ctx context.Context) StringIntMapCmd {
-		return c.cmdable.PubSubNumSub(ctx, channels...)
-	})
+	ctx = c.handler.before(ctx, CommandPubSubNumSub)
+	r := c.cmdable.PubSubNumSub(ctx, channels...)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) Subscribe(ctx context.Context, channels ...string) PubSub {
-	ctx, _ = c.handler.before(ctx, CommandSubscribe)
+	ctx = c.handler.before(ctx, CommandSubscribe)
 	r := c.cmdable.Subscribe(ctx, channels...)
 	c.handler.after(ctx, nil)
 	return r
-
 }

@@ -18,6 +18,39 @@ type Locker interface {
 
 const fallbackSETPXVersion = "6.2.0"
 
+type wrapLocker struct {
+	v ConfVisitor
+	rueidislock.Locker
+}
+
+func (w *wrapLocker) WithContext(ctx context.Context, name string) (context.Context, context.CancelFunc, error) {
+	if _, ok := ctx.Deadline(); ok {
+		return w.Locker.WithContext(ctx, name)
+	}
+	ctx0, cancel0 := context.WithTimeout(ctx, w.v.GetWriteTimeout())
+	ctx1, cancel1, err := w.Locker.WithContext(ctx0, name)
+	return ctx1, func() {
+		if cancel1 != nil {
+			cancel1()
+		}
+		cancel0()
+	}, err
+}
+
+func (w *wrapLocker) TryWithContext(ctx context.Context, name string) (context.Context, context.CancelFunc, error) {
+	if _, ok := ctx.Deadline(); ok {
+		return w.Locker.TryWithContext(ctx, name)
+	}
+	ctx0, cancel0 := context.WithTimeout(ctx, w.v.GetWriteTimeout())
+	ctx1, cancel1, err := w.Locker.TryWithContext(ctx0, name)
+	return ctx1, func() {
+		if cancel1 != nil {
+			cancel1()
+		}
+		cancel0()
+	}, err
+}
+
 // newLocker 新键一个 locker
 func newLocker(v ConfVisitor, version *semver.Version, opts ...LockerOption) (Locker, error) {
 	clientOption := confVisitor2ClientOption(v)
@@ -26,7 +59,7 @@ func newLocker(v ConfVisitor, version *semver.Version, opts ...LockerOption) (Lo
 		opts = append(opts, WithFallbackSETPX(true))
 	}
 	cc := newLockerOptions(opts...)
-	return rueidislock.NewLocker(rueidislock.LockerOption{
+	l, err := rueidislock.NewLocker(rueidislock.LockerOption{
 		KeyPrefix:      cc.GetKeyPrefix(),
 		KeyValidity:    cc.GetKeyValidity(),
 		TryNextAfter:   cc.GetTryNextAfter(),
@@ -35,6 +68,10 @@ func newLocker(v ConfVisitor, version *semver.Version, opts ...LockerOption) (Lo
 		FallbackSETPX:  cc.GetFallbackSETPX(),
 		ClientOption:   clientOption,
 	})
+	if err != nil {
+		return nil, err
+	}
+	return &wrapLocker{v: v, Locker: l}, nil
 }
 
 // NewLocker 新键一个 locker

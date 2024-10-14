@@ -946,9 +946,7 @@ func (p *pipelineResp3) Put(_ context.Context, cmd Command, keys []string, args 
 }
 
 func (p *pipelineResp3) Exec(ctx context.Context) ([]interface{}, error) {
-	var cancel context.CancelFunc
-	ctx, cancel = p.resp.handler.before(ctx, pipelineCmd)
-	defer cancel()
+	ctx = p.resp.handler.before(ctx, pipelineCmd)
 
 	p.mx.RLock()
 	defer p.mx.RUnlock()
@@ -1018,8 +1016,7 @@ func (p *pubSubResp3) Close() error {
 }
 
 func (p *pubSubResp3) PSubscribe(ctx context.Context, patterns ...string) error {
-	var cancel context.CancelFunc
-	ctx, cancel = p.handler.before(ctx, CommandPSubscribe)
+	ctx = p.handler.before(ctx, CommandPSubscribe)
 	var err error
 	go func() {
 		err = p.cmd.Receive(p.ctx, p.cmd.B().Psubscribe().Pattern(patterns...).Build(), func(m rueidis.PubSubMessage) {
@@ -1031,13 +1028,11 @@ func (p *pubSubResp3) PSubscribe(ctx context.Context, patterns ...string) error 
 		})
 	}()
 	p.handler.after(ctx, err)
-	cancel()
 	return err
 }
 
 func (p *pubSubResp3) Subscribe(ctx context.Context, channels ...string) error {
-	var cancel context.CancelFunc
-	ctx, cancel = p.handler.before(ctx, CommandSubscribe)
+	ctx = p.handler.before(ctx, CommandSubscribe)
 	var err error
 	go func() {
 		err = p.cmd.Receive(p.ctx, p.cmd.B().Subscribe().Channel(channels...).Build(), func(m rueidis.PubSubMessage) {
@@ -1049,25 +1044,20 @@ func (p *pubSubResp3) Subscribe(ctx context.Context, channels ...string) error {
 		})
 	}()
 	p.handler.after(ctx, err)
-	cancel()
 	return err
 }
 
 func (p *pubSubResp3) Unsubscribe(ctx context.Context, channels ...string) error {
-	var cancel context.CancelFunc
-	ctx, cancel = p.handler.before(ctx, CommandUnsubscribe)
+	ctx = p.handler.before(ctx, CommandUnsubscribe)
 	err := p.cmd.Do(ctx, p.cmd.B().Unsubscribe().Channel(channels...).Build()).Error()
 	p.handler.after(ctx, err)
-	cancel()
 	return err
 }
 
 func (p *pubSubResp3) PUnsubscribe(ctx context.Context, patterns ...string) error {
-	var cancel context.CancelFunc
-	ctx, cancel = p.handler.before(ctx, CommandPUnsubscribe)
+	ctx = p.handler.before(ctx, CommandPUnsubscribe)
 	err := p.cmd.Do(ctx, p.cmd.B().Punsubscribe().Pattern(patterns...).Build()).Error()
 	p.handler.after(ctx, err)
-	cancel()
 	return err
 }
 

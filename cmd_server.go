@@ -306,139 +306,159 @@ type ServerCmdable interface {
 }
 
 func (c *client) BgRewriteAOF(ctx context.Context) StatusCmd {
-	return do[StatusCmd](ctx, c.handler, CommandBgRewriteAOF, func(ctx context.Context) StatusCmd {
-		return c.cmdable.BgRewriteAOF(ctx)
-	})
+	ctx = c.handler.before(ctx, CommandBgRewriteAOF)
+	r := c.cmdable.BgRewriteAOF(ctx)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) BgSave(ctx context.Context) StatusCmd {
-	return do[StatusCmd](ctx, c.handler, CommandBgSave, func(ctx context.Context) StatusCmd {
-		return c.cmdable.BgSave(ctx)
-	})
+	ctx = c.handler.before(ctx, CommandBgSave)
+	r := c.cmdable.BgSave(ctx)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) Command(ctx context.Context) CommandsInfoCmd {
-	return do[CommandsInfoCmd](ctx, c.handler, CommandCommand, func(ctx context.Context) CommandsInfoCmd {
-		return c.cmdable.Command(ctx)
-	})
+	ctx = c.handler.before(ctx, CommandCommand)
+	r := c.cmdable.Command(ctx)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) ConfigGet(ctx context.Context, parameter string) SliceCmd {
-	return do[SliceCmd](ctx, c.handler, CommandConfigGet, func(ctx context.Context) SliceCmd {
-		return c.cmdable.ConfigGet(ctx, parameter)
-	})
+	ctx = c.handler.before(ctx, CommandConfigGet)
+	r := c.cmdable.ConfigGet(ctx, parameter)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) ConfigResetStat(ctx context.Context) StatusCmd {
-	return do[StatusCmd](ctx, c.handler, CommandConfigResetStat, func(ctx context.Context) StatusCmd {
-		return c.cmdable.ConfigResetStat(ctx)
-	})
+	ctx = c.handler.before(ctx, CommandConfigResetStat)
+	r := c.cmdable.ConfigResetStat(ctx)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) ConfigRewrite(ctx context.Context) StatusCmd {
-	return do[StatusCmd](ctx, c.handler, CommandConfigRewrite, func(ctx context.Context) StatusCmd {
-		return c.cmdable.ConfigRewrite(ctx)
-	})
+	ctx = c.handler.before(ctx, CommandConfigRewrite)
+	r := c.cmdable.ConfigRewrite(ctx)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) ConfigSet(ctx context.Context, parameter, value string) StatusCmd {
-	return do[StatusCmd](ctx, c.handler, CommandConfigSet, func(ctx context.Context) StatusCmd {
-		return c.cmdable.ConfigSet(ctx, parameter, value)
-	})
+	ctx = c.handler.before(ctx, CommandConfigSet)
+	r := c.cmdable.ConfigSet(ctx, parameter, value)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) DBSize(ctx context.Context) IntCmd {
-	return do[IntCmd](ctx, c.handler, CommandDBSize, func(ctx context.Context) IntCmd {
-		return c.cmdable.DBSize(ctx)
-	})
+	ctx = c.handler.before(ctx, CommandDBSize)
+	r := c.cmdable.DBSize(ctx)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) FlushAll(ctx context.Context) StatusCmd {
-	return do[StatusCmd](ctx, c.handler, CommandFlushAll, func(ctx context.Context) StatusCmd {
-		return c.cmdable.FlushAll(ctx)
-	})
+	ctx = c.handler.before(ctx, CommandFlushAll)
+	r := c.cmdable.FlushAll(ctx)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) FlushAllAsync(ctx context.Context) StatusCmd {
-	return do[StatusCmd](ctx, c.handler, CommandFlushAllAsync, func(ctx context.Context) StatusCmd {
-		return c.cmdable.FlushAllAsync(ctx)
-	})
+	ctx = c.handler.before(ctx, CommandFlushAllAsync)
+	r := c.cmdable.FlushAllAsync(ctx)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) FlushDB(ctx context.Context) StatusCmd {
-	return do[StatusCmd](ctx, c.handler, CommandFlushDB, func(ctx context.Context) StatusCmd {
-		return c.cmdable.FlushDB(ctx)
-	})
+	ctx = c.handler.before(ctx, CommandFlushDB)
+	r := c.cmdable.FlushDB(ctx)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) FlushDBAsync(ctx context.Context) StatusCmd {
-	return do[StatusCmd](ctx, c.handler, CommandFlushDBAsync, func(ctx context.Context) StatusCmd {
-		return c.cmdable.FlushDBAsync(ctx)
-	})
+	ctx = c.handler.before(ctx, CommandFlushDBAsync)
+	r := c.cmdable.FlushDBAsync(ctx)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) Info(ctx context.Context, section ...string) StringCmd {
-	var cmd Command
 	if len(section) > 1 {
-		cmd = CommandInfoMultiple
+		ctx = c.handler.before(ctx, CommandInfoMultiple)
 	} else {
-		cmd = CommandInfos
+		ctx = c.handler.before(ctx, CommandInfos)
 	}
-	return do[StringCmd](ctx, c.handler, cmd, func(ctx context.Context) StringCmd {
-		return c.cmdable.Info(ctx, section...)
-	})
+	r := c.cmdable.Info(ctx, section...)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) LastSave(ctx context.Context) IntCmd {
-	return do[IntCmd](ctx, c.handler, CommandLastSave, func(ctx context.Context) IntCmd {
-		return c.cmdable.LastSave(ctx)
-	})
+	ctx = c.handler.before(ctx, CommandLastSave)
+	r := c.cmdable.LastSave(ctx)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) MemoryUsage(ctx context.Context, key string, samples ...int) IntCmd {
-	return do[IntCmd](ctx, c.handler, CommandMemoryUsage, func(ctx context.Context) IntCmd {
-		return c.cmdable.MemoryUsage(ctx, key, samples...)
-	})
+	ctx = c.handler.before(ctx, CommandMemoryUsage)
+	r := c.cmdable.MemoryUsage(ctx, key, samples...)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) Save(ctx context.Context) StatusCmd {
-	return do[StatusCmd](ctx, c.handler, CommandSave, func(ctx context.Context) StatusCmd {
-		return c.cmdable.Save(ctx)
-	})
+	ctx = c.handler.before(ctx, CommandSave)
+	r := c.cmdable.Save(ctx)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) Shutdown(ctx context.Context) StatusCmd {
-	return do[StatusCmd](ctx, c.handler, CommandShutdown, func(ctx context.Context) StatusCmd {
-		return c.cmdable.Shutdown(ctx)
-	})
+	ctx = c.handler.before(ctx, CommandShutdown)
+	r := c.cmdable.Shutdown(ctx)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) ShutdownSave(ctx context.Context) StatusCmd {
-	return do[StatusCmd](ctx, c.handler, CommandShutdownSave, func(ctx context.Context) StatusCmd {
-		return c.cmdable.ShutdownSave(ctx)
-	})
+	ctx = c.handler.before(ctx, CommandShutdownSave)
+	r := c.cmdable.ShutdownSave(ctx)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) ShutdownNoSave(ctx context.Context) StatusCmd {
-	return do[StatusCmd](ctx, c.handler, CommandShutdownNoSave, func(ctx context.Context) StatusCmd {
-		return c.cmdable.ShutdownNoSave(ctx)
-	})
+	ctx = c.handler.before(ctx, CommandShutdownNoSave)
+	r := c.cmdable.ShutdownNoSave(ctx)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) SlaveOf(ctx context.Context, host, port string) StatusCmd {
-	return do[StatusCmd](ctx, c.handler, CommandSlaveOf, func(ctx context.Context) StatusCmd {
-		return c.cmdable.SlaveOf(ctx, host, port)
-	})
+	ctx = c.handler.before(ctx, CommandSlaveOf)
+	r := c.cmdable.SlaveOf(ctx, host, port)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) Time(ctx context.Context) TimeCmd {
-	return do[TimeCmd](ctx, c.handler, CommandTime, func(ctx context.Context) TimeCmd {
-		return c.cmdable.Time(ctx)
-	})
+	ctx = c.handler.before(ctx, CommandTime)
+	r := c.cmdable.Time(ctx)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) DebugObject(ctx context.Context, key string) StringCmd {
-	return do[StringCmd](ctx, c.handler, CommandDebug, func(ctx context.Context) StringCmd {
-		return c.cmdable.DebugObject(ctx, key)
-	})
+	ctx = c.handler.before(ctx, CommandDebug)
+	r := c.cmdable.DebugObject(ctx, key)
+	c.handler.after(ctx, r.Err())
+	return r
 }

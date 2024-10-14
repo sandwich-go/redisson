@@ -285,127 +285,148 @@ type ClusterCmdable interface {
 }
 
 func (c *client) ClusterAddSlots(ctx context.Context, slots ...int) StatusCmd {
-	return do[StatusCmd](ctx, c.handler, CommandClusterAddSlots, func(ctx context.Context) StatusCmd {
-		return c.cmdable.ClusterAddSlots(ctx, slots...)
-	})
+	ctx = c.handler.before(ctx, CommandClusterAddSlots)
+	r := c.cmdable.ClusterAddSlots(ctx, slots...)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) ClusterAddSlotsRange(ctx context.Context, min, max int) StatusCmd {
-	return do[StatusCmd](ctx, c.handler, CommandClusterAddSlotsRange, func(ctx context.Context) StatusCmd {
-		return c.cmdable.ClusterAddSlotsRange(ctx, min, max)
-	})
+	ctx = c.handler.before(ctx, CommandClusterAddSlotsRange)
+	r := c.cmdable.ClusterAddSlotsRange(ctx, min, max)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) ClusterCountFailureReports(ctx context.Context, nodeID string) IntCmd {
-	return do[IntCmd](ctx, c.handler, CommandClusterCountFailureReports, func(ctx context.Context) IntCmd {
-		return c.cmdable.ClusterCountFailureReports(ctx, nodeID)
-	})
+	ctx = c.handler.before(ctx, CommandClusterCountFailureReports)
+	r := c.cmdable.ClusterCountFailureReports(ctx, nodeID)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) ClusterCountKeysInSlot(ctx context.Context, slot int) IntCmd {
-	return do[IntCmd](ctx, c.handler, CommandClusterCountKeysInSlot, func(ctx context.Context) IntCmd {
-		return c.cmdable.ClusterCountKeysInSlot(ctx, slot)
-	})
+	ctx = c.handler.before(ctx, CommandClusterCountKeysInSlot)
+	r := c.cmdable.ClusterCountKeysInSlot(ctx, slot)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) ClusterDelSlots(ctx context.Context, slots ...int) StatusCmd {
-	return do[StatusCmd](ctx, c.handler, CommandClusterDelSlots, func(ctx context.Context) StatusCmd {
-		return c.cmdable.ClusterDelSlots(ctx, slots...)
-	})
+	ctx = c.handler.before(ctx, CommandClusterDelSlots)
+	r := c.cmdable.ClusterDelSlots(ctx, slots...)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) ClusterDelSlotsRange(ctx context.Context, min, max int) StatusCmd {
-	return do[StatusCmd](ctx, c.handler, CommandClusterDelSlotsRange, func(ctx context.Context) StatusCmd {
-		return c.cmdable.ClusterDelSlotsRange(ctx, min, max)
-	})
+	ctx = c.handler.before(ctx, CommandClusterDelSlotsRange)
+	r := c.cmdable.ClusterDelSlotsRange(ctx, min, max)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) ClusterFailover(ctx context.Context) StatusCmd {
-	return do[StatusCmd](ctx, c.handler, CommandClusterFailover, func(ctx context.Context) StatusCmd {
-		return c.cmdable.ClusterFailover(ctx)
-	})
+	ctx = c.handler.before(ctx, CommandClusterFailover)
+	r := c.cmdable.ClusterFailover(ctx)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) ClusterForget(ctx context.Context, nodeID string) StatusCmd {
-	return do[StatusCmd](ctx, c.handler, CommandClusterForget, func(ctx context.Context) StatusCmd {
-		return c.cmdable.ClusterForget(ctx, nodeID)
-	})
+	ctx = c.handler.before(ctx, CommandClusterForget)
+	r := c.cmdable.ClusterForget(ctx, nodeID)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) ClusterGetKeysInSlot(ctx context.Context, slot int, count int) StringSliceCmd {
-	return do[StringSliceCmd](ctx, c.handler, CommandClusterGetKeysInSlot, func(ctx context.Context) StringSliceCmd {
-		return c.cmdable.ClusterGetKeysInSlot(ctx, slot, count)
-	})
+	ctx = c.handler.before(ctx, CommandClusterGetKeysInSlot)
+	r := c.cmdable.ClusterGetKeysInSlot(ctx, slot, count)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) ClusterInfo(ctx context.Context) StringCmd {
-	return do[StringCmd](ctx, c.handler, CommandClusterInfo, func(ctx context.Context) StringCmd {
-		return c.cmdable.ClusterInfo(ctx)
-	})
+	ctx = c.handler.before(ctx, CommandClusterInfo)
+	r := c.cmdable.ClusterInfo(ctx)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) ClusterKeySlot(ctx context.Context, key string) IntCmd {
-	return do[IntCmd](ctx, c.handler, CommandClusterKeySlot, func(ctx context.Context) IntCmd {
-		return c.cmdable.ClusterKeySlot(ctx, key)
-	})
+	ctx = c.handler.before(ctx, CommandClusterKeySlot)
+	r := c.cmdable.ClusterKeySlot(ctx, key)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) ClusterMeet(ctx context.Context, host, port string) StatusCmd {
-	return do[StatusCmd](ctx, c.handler, CommandClusterMeet, func(ctx context.Context) StatusCmd {
-		return c.cmdable.ClusterMeet(ctx, host, port)
-	})
+	ctx = c.handler.before(ctx, CommandClusterMeet)
+	r := c.cmdable.ClusterMeet(ctx, host, port)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) ClusterNodes(ctx context.Context) StringCmd {
-	return do[StringCmd](ctx, c.handler, CommandClusterNodes, func(ctx context.Context) StringCmd {
-		return c.cmdable.ClusterNodes(ctx)
-	})
+	ctx = c.handler.before(ctx, CommandClusterNodes)
+	r := c.cmdable.ClusterNodes(ctx)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) ClusterReplicate(ctx context.Context, nodeID string) StatusCmd {
-	return do[StatusCmd](ctx, c.handler, CommandClusterReplicate, func(ctx context.Context) StatusCmd {
-		return c.cmdable.ClusterReplicate(ctx, nodeID)
-	})
+	ctx = c.handler.before(ctx, CommandClusterReplicate)
+	r := c.cmdable.ClusterReplicate(ctx, nodeID)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) ClusterResetSoft(ctx context.Context) StatusCmd {
-	return do[StatusCmd](ctx, c.handler, CommandClusterResetSoft, func(ctx context.Context) StatusCmd {
-		return c.cmdable.ClusterResetSoft(ctx)
-	})
+	ctx = c.handler.before(ctx, CommandClusterResetSoft)
+	r := c.cmdable.ClusterResetSoft(ctx)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) ClusterResetHard(ctx context.Context) StatusCmd {
-	return do[StatusCmd](ctx, c.handler, CommandClusterResetHard, func(ctx context.Context) StatusCmd {
-		return c.cmdable.ClusterResetHard(ctx)
-	})
+	ctx = c.handler.before(ctx, CommandClusterResetHard)
+	r := c.cmdable.ClusterResetHard(ctx)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) ClusterSaveConfig(ctx context.Context) StatusCmd {
-	return do[StatusCmd](ctx, c.handler, CommandClusterSaveConfig, func(ctx context.Context) StatusCmd {
-		return c.cmdable.ClusterSaveConfig(ctx)
-	})
+	ctx = c.handler.before(ctx, CommandClusterSaveConfig)
+	r := c.cmdable.ClusterSaveConfig(ctx)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) ClusterSlaves(ctx context.Context, nodeID string) StringSliceCmd {
-	return do[StringSliceCmd](ctx, c.handler, CommandClusterSlaves, func(ctx context.Context) StringSliceCmd {
-		return c.cmdable.ClusterSlaves(ctx, nodeID)
-	})
+	ctx = c.handler.before(ctx, CommandClusterSlaves)
+	r := c.cmdable.ClusterSlaves(ctx, nodeID)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) ClusterSlots(ctx context.Context) ClusterSlotsCmd {
-	return do[ClusterSlotsCmd](ctx, c.handler, CommandClusterSlots, func(ctx context.Context) ClusterSlotsCmd {
-		return c.cmdable.ClusterSlots(ctx)
-	})
+	ctx = c.handler.before(ctx, CommandClusterSlots)
+	r := c.cmdable.ClusterSlots(ctx)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) ReadOnly(ctx context.Context) StatusCmd {
-	return do[StatusCmd](ctx, c.handler, CommandReadOnly, func(ctx context.Context) StatusCmd {
-		return c.cmdable.ReadOnly(ctx)
-	})
+	ctx = c.handler.before(ctx, CommandReadOnly)
+	r := c.cmdable.ReadOnly(ctx)
+	c.handler.after(ctx, r.Err())
+	return r
 }
 
 func (c *client) ReadWrite(ctx context.Context) StatusCmd {
-	return do[StatusCmd](ctx, c.handler, CommandReadWrite, func(ctx context.Context) StatusCmd {
-		return c.cmdable.ReadWrite(ctx)
-	})
+	ctx = c.handler.before(ctx, CommandReadWrite)
+	r := c.cmdable.ReadWrite(ctx)
+	c.handler.after(ctx, r.Err())
+	return r
 }
