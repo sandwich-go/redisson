@@ -175,6 +175,7 @@ func (c *client) Close() error {
 }
 
 func Connect(v ConfInterface) (Cmdable, error) {
+	revise(v)
 	c := &client{v: v, handler: newBaseHandler(v), maxp: runtime.GOMAXPROCS(0)}
 	err := c.connect()
 	if err != nil {
