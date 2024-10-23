@@ -72,7 +72,7 @@ func newLocker(c *client, opts ...LockerOption) (Locker, error) {
 		opts = append(opts, WithLockerOptionFallbackSETPX(true))
 	}
 	cc := newLockerOptions(opts...)
-	return rueidislock.NewLocker(rueidislock.LockerOption{
+	l, err := rueidislock.NewLocker(rueidislock.LockerOption{
 		KeyPrefix:      cc.GetKeyPrefix(),
 		KeyValidity:    cc.GetKeyValidity(),
 		TryNextAfter:   cc.GetTryNextAfter(),
@@ -84,6 +84,10 @@ func newLocker(c *client, opts ...LockerOption) (Locker, error) {
 			return c.cmd, nil
 		},
 	})
+	if err != nil {
+		return nil, err
+	}
+	return &wrapLocker{Locker: l, v: c.v}, nil
 }
 
 // NewLocker 新建一个 locker
