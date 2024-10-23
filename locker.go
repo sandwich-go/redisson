@@ -23,12 +23,12 @@ type wrapLocker struct {
 	rueidislock.Locker
 }
 
-func (w *wrapLocker) wrap(ctx context.Context, name string, f func(ctx context.Context, name string) (context.Context, context.CancelFunc, error)) (context.Context, context.CancelFunc, error) {
+func (w *wrapLocker) WithContext(ctx context.Context, name string) (context.Context, context.CancelFunc, error) {
 	if _, ok := ctx.Deadline(); ok {
-		return f(ctx, name)
+		return w.Locker.WithContext(ctx, name)
 	}
 	ctx0, cancel0 := context.WithTimeout(ctx, w.v.GetWriteTimeout())
-	ctx1, cancel1, err := f(ctx0, name)
+	ctx1, cancel1, err := w.Locker.WithContext(ctx0, name)
 	return ctx1, func() {
 		if cancel1 != nil {
 			cancel1()
@@ -37,18 +37,32 @@ func (w *wrapLocker) wrap(ctx context.Context, name string, f func(ctx context.C
 	}, err
 }
 
-func (w *wrapLocker) WithContext(ctx context.Context, name string) (context.Context, context.CancelFunc, error) {
-	return w.wrap(ctx, name, w.Locker.WithContext)
-}
-
-// TryWithContext tries to acquire a distributed redis lock by name without waiting. It may return ErrNotLocked.
 func (w *wrapLocker) TryWithContext(ctx context.Context, name string) (context.Context, context.CancelFunc, error) {
-	return w.wrap(ctx, name, w.Locker.TryWithContext)
+	if _, ok := ctx.Deadline(); ok {
+		return w.Locker.TryWithContext(ctx, name)
+	}
+	ctx0, cancel0 := context.WithTimeout(ctx, w.v.GetWriteTimeout())
+	ctx1, cancel1, err := w.Locker.TryWithContext(ctx0, name)
+	return ctx1, func() {
+		if cancel1 != nil {
+			cancel1()
+		}
+		cancel0()
+	}, err
 }
 
-// ForceWithContext takes over a distributed redis lock by canceling the original holder. It may return ErrNotLocked.
 func (w *wrapLocker) ForceWithContext(ctx context.Context, name string) (context.Context, context.CancelFunc, error) {
-	return w.wrap(ctx, name, w.Locker.ForceWithContext)
+	if _, ok := ctx.Deadline(); ok {
+		return w.Locker.ForceWithContext(ctx, name)
+	}
+	ctx0, cancel0 := context.WithTimeout(ctx, w.v.GetWriteTimeout())
+	ctx1, cancel1, err := w.Locker.ForceWithContext(ctx0, name)
+	return ctx1, func() {
+		if cancel1 != nil {
+			cancel1()
+		}
+		cancel0()
+	}, err
 }
 
 // newLocker 新建一个 locker
