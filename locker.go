@@ -2,6 +2,7 @@ package redisson
 
 import (
 	"context"
+
 	"github.com/redis/rueidis"
 	"github.com/redis/rueidis/rueidislock"
 )
@@ -67,7 +68,7 @@ func newLocker(c *client, opts ...LockerOption) (Locker, error) {
 		FallbackSETPX:  cc.GetFallbackSETPX(),
 		ClientOption:   confVisitor2ClientOption(c.v),
 		ClientBuilder: func(option rueidis.ClientOption) (rueidis.Client, error) {
-			return c.cmd, nil
+			return rueidis.NewClient(option)
 		},
 	})
 	if err != nil {
