@@ -4,19 +4,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/coreos/go-semver/semver"
-	"github.com/prometheus/client_golang/prometheus"
 	"sync"
 	"time"
-)
-
-const (
-	timingMetric            = "redis_exec_timing"
-	errorMetric             = "redis_exec_error"
-	hitsMetric              = "redis_cache_hits"
-	missMetric              = "redis_cache_miss"
-	delayPollErrorMetric    = "redis_delay_poll_error"
-	delayReclaimErrorMetric = "redis_delay_reclaim_error"
-	delayReclaimCountMetric = "redis_delay_reclaim"
 )
 
 type isSilentError func(error) bool
@@ -53,50 +42,18 @@ func mustNewSemVersion(version string) semver.Version {
 	return v
 }
 
-var (
-	labelKeys      = []string{"command", "s_command"}
-	queueLabelKeys = []string{"queue"}
-)
-
 type baseHandler struct {
-	metric                                                                 *prometheus.SummaryVec
-	errMetric, hitsMetric, missMetric                                      *prometheus.CounterVec
-	delayPollErrorMetric, delayReclaimErrorMetric, delayReclaimCountMetric *prometheus.CounterVec
-	silentErrCallback                                                      isSilentError
-	v                                                                      ConfVisitor
-	version                                                                *semver.Version
-	cluster                                                                bool
+	silentErrCallback isSilentError
+	v                 ConfVisitor
+	version           *semver.Version
+	cluster           bool
 
 	mx                 sync.Mutex
 	warningOnceMapping map[string]struct{}
 }
 
 func newBaseHandler(v ConfVisitor) handler {
-	h := &baseHandler{v: v, warningOnceMapping: make(map[string]struct{})}
-	h.errMetric = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Name: errorMetric,
-	}, labelKeys)
-	h.hitsMetric = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Name: hitsMetric,
-	}, labelKeys)
-	h.missMetric = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Name: missMetric,
-	}, labelKeys)
-	h.delayPollErrorMetric = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Name: delayPollErrorMetric,
-	}, queueLabelKeys)
-	h.delayReclaimErrorMetric = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Name: delayReclaimErrorMetric,
-	}, queueLabelKeys)
-	h.delayReclaimCountMetric = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Name: delayReclaimCountMetric,
-	}, queueLabelKeys)
-	h.metric = prometheus.NewSummaryVec(prometheus.SummaryOpts{
-		Name:       timingMetric,
-		Objectives: map[float64]float64{0.5: 0.05, 0.95: 0.02, 0.99: 0.001, 1: 0},
-		MaxAge:     time.Minute,
-	}, labelKeys)
-	return h
+	return &baseHandler{v: v, warningOnceMapping: make(map[string]struct{})}
 }
 
 type (
@@ -124,16 +81,11 @@ func WithSkipCheck(ctx context.Context) context.Context {
 	return context.WithValue(ctx, skipCheckContextKey, true)
 }
 
-func (r *baseHandler) isCluster() bool                      { return r.cluster }
-func (r *baseHandler) setIsCluster(b bool)                  { r.cluster = b }
-func (r *baseHandler) setVersion(v *semver.Version)         { r.version = v }
-func (r *baseHandler) setSilentErrCallback(b isSilentError) { r.silentErrCallback = b }
-func (r *baseHandler) setRegisterCollector(rc RegisterCollectorFunc) {
-	rc(r.errMetric)
-	rc(r.hitsMetric)
-	rc(r.missMetric)
-	rc(r.metric)
-}
+func (r *baseHandler) isCluster() bool                               { return r.cluster }
+func (r *baseHandler) setIsCluster(b bool)                           { r.cluster = b }
+func (r *baseHandler) setVersion(v *semver.Version)                  { r.version = v }
+func (r *baseHandler) setSilentErrCallback(b isSilentError)          { r.silentErrCallback = b }
+func (r *baseHandler) setRegisterCollector(rc RegisterCollectorFunc) { registerMetric(rc) }
 func (r *baseHandler) before(ctx context.Context, command Command) context.Context {
 	return r.beforeWithKeys(ctx, command, nil)
 }
@@ -200,9 +152,9 @@ func (r *baseHandler) isImplicitError(err error) bool {
 func (r *baseHandler) after(ctx context.Context, err error) {
 	if r.v.GetEnableMonitor() {
 		if err != nil && !r.isImplicitError(err) {
-			r.errMetric.WithLabelValues(ctx.Value(commandContextKey).(string), ctx.Value(subCommandContextKey).(string)).Inc()
+			errMetric.WithLabelValues(ctx.Value(commandContextKey).(string), ctx.Value(subCommandContextKey).(string)).Inc()
 		} else {
-			r.metric.WithLabelValues(ctx.Value(commandContextKey).(string), ctx.Value(subCommandContextKey).(string)).
+			metric.WithLabelValues(ctx.Value(commandContextKey).(string), ctx.Value(subCommandContextKey).(string)).
 				Observe(sinceFunc(ctx.Value(startTimeContextKey).(time.Time)).Seconds())
 		}
 	}
@@ -210,18 +162,25 @@ func (r *baseHandler) after(ctx context.Context, err error) {
 func (r *baseHandler) cache(ctx context.Context, hit bool) {
 	if r.v.GetEnableMonitor() {
 		if hit {
-			r.hitsMetric.WithLabelValues(ctx.Value(commandContextKey).(string), ctx.Value(subCommandContextKey).(string)).Inc()
+			hitsMetric.WithLabelValues(ctx.Value(commandContextKey).(string), ctx.Value(subCommandContextKey).(string)).Inc()
 		} else {
-			r.missMetric.WithLabelValues(ctx.Value(commandContextKey).(string), ctx.Value(subCommandContextKey).(string)).Inc()
+			missMetric.WithLabelValues(ctx.Value(commandContextKey).(string), ctx.Value(subCommandContextKey).(string)).Inc()
 		}
 	}
 }
 func (r *baseHandler) delayPollError(name string) {
-	r.delayPollErrorMetric.WithLabelValues(name).Inc()
+	if r.v.GetEnableMonitor() {
+		delayPollErrorMetric.WithLabelValues(name).Inc()
+	}
+
 }
 func (r *baseHandler) delayReclaimError(name string) {
-	r.delayReclaimErrorMetric.WithLabelValues(name).Inc()
+	if r.v.GetEnableMonitor() {
+		delayReclaimErrorMetric.WithLabelValues(name).Inc()
+	}
 }
 func (r *baseHandler) delayReclaim(name string, count int) {
-	r.delayReclaimCountMetric.WithLabelValues(name).Add(float64(count))
+	if r.v.GetEnableMonitor() {
+		delayReclaimCountMetric.WithLabelValues(name).Add(float64(count))
+	}
 }

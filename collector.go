@@ -3,6 +3,7 @@ package redisson
 import (
 	"context"
 	"github.com/prometheus/client_golang/prometheus"
+	"sync"
 )
 
 const (
@@ -17,41 +18,54 @@ func (c *client) RegisterCollector(rc RegisterCollectorFunc) {
 			c.handler.setRegisterCollector(rc)
 		}
 		if c.v.GetEnableMonitor() {
-			rc(newCollector(c))
+			registerCollector(rc, c)
 		}
 	})
 }
 
+var colOnceMap sync.Map
+var col = &collector{
+	delayLengthDesc: prometheus.NewDesc(
+		prometheus.BuildFQName(namespace, "delay", "queue_length"),
+		"length of delay queue.",
+		[]string{"queue"},
+		prometheus.Labels{},
+	),
+}
+
 type collector struct {
-	c               *client
+	cs              sync.Map
 	delayLengthDesc *prometheus.Desc
 }
 
-func newCollector(c *client) prometheus.Collector {
-	return &collector{
-		c: c,
-		delayLengthDesc: prometheus.NewDesc(
-			prometheus.BuildFQName(namespace, "delay", "queue_length"),
-			"length of delay queue.",
-			[]string{"queue"},
-			prometheus.Labels{},
-		),
-	}
+func registerCollector(rc RegisterCollectorFunc, c *client) {
+	col.cs.Store(c, struct{}{})
+	m, _ := colOnceMap.LoadOrStore(rc, &sync.Once{})
+	m.(*sync.Once).Do(func() {
+		rc(col)
+	})
 }
 
-func (c collector) Describe(ch chan<- *prometheus.Desc) {
+func (c *collector) Describe(ch chan<- *prometheus.Desc) {
 	ch <- c.delayLengthDesc
 }
 
-func (c collector) Collect(ch chan<- prometheus.Metric) {
-	c.c.delayQueues.Range(func(key, value any) bool {
-		l, _ := value.(*delayQueue).Length(context.Background())
-		ch <- prometheus.MustNewConstMetric(
-			c.delayLengthDesc,
-			prometheus.GaugeValue,
-			float64(l),
-			key.(string),
-		)
+func (c *collector) Collect(ch chan<- prometheus.Metric) {
+	c.cs.Range(func(key, value any) bool {
+		cli := key.(*client)
+		if cli == nil {
+			return true
+		}
+		cli.delayQueues.Range(func(key, value any) bool {
+			l, _ := value.(*delayQueue).Length(context.Background())
+			ch <- prometheus.MustNewConstMetric(
+				c.delayLengthDesc,
+				prometheus.GaugeValue,
+				float64(l),
+				key.(string),
+			)
+			return true
+		})
 		return true
 	})
 }
