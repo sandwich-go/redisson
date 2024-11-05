@@ -23,7 +23,7 @@ func (c *client) RegisterCollector(rc RegisterCollectorFunc) {
 	})
 }
 
-var colOnceMap sync.Map
+var colOnce sync.Once
 var col = &collector{
 	delayLengthDesc: prometheus.NewDesc(
 		prometheus.BuildFQName(namespace, "delay", "queue_length"),
@@ -40,8 +40,7 @@ type collector struct {
 
 func registerCollector(rc RegisterCollectorFunc, c *client) {
 	col.cs.Store(c, struct{}{})
-	m, _ := colOnceMap.LoadOrStore(rc, &sync.Once{})
-	m.(*sync.Once).Do(func() {
+	colOnce.Do(func() {
 		rc(col)
 	})
 }

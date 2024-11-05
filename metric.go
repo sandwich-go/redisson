@@ -17,7 +17,7 @@ const (
 )
 
 var (
-	metricOnceMap                                                          sync.Map
+	metricOnce                                                             sync.Once
 	metric                                                                 *prometheus.SummaryVec
 	errMetric, hitsMetric, missMetric                                      *prometheus.CounterVec
 	delayPollErrorMetric, delayReclaimErrorMetric, delayReclaimCountMetric *prometheus.CounterVec
@@ -55,8 +55,7 @@ func init() {
 }
 
 func registerMetric(rc RegisterCollectorFunc) {
-	m, _ := metricOnceMap.LoadOrStore(rc, &sync.Once{})
-	m.(*sync.Once).Do(func() {
+	metricOnce.Do(func() {
 		rc(errMetric)
 		rc(hitsMetric)
 		rc(missMetric)
