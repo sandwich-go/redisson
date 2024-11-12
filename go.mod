@@ -8,7 +8,7 @@ require (
 	github.com/alicebob/miniredis/v2 v2.30.5
 	github.com/coreos/go-semver v0.3.0
 	github.com/prometheus/client_golang v1.11.0
-	github.com/redis/rueidis v1.0.49
+	github.com/redis/rueidis v1.0.50-alpha.3
 	github.com/redis/rueidis/rueidiscompat v1.0.49
 	github.com/redis/rueidis/rueidisprob v1.0.49
 	github.com/sandwich-go/funnel v0.0.1
