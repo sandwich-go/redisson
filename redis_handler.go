@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/coreos/go-semver/semver"
+	"github.com/sandwich-go/logbus"
 	"sync"
 	"time"
 )
@@ -152,7 +153,10 @@ func (r *baseHandler) isImplicitError(err error) bool {
 func (r *baseHandler) after(ctx context.Context, err error) {
 	if r.v.GetEnableMonitor() {
 		if err != nil && !r.isImplicitError(err) {
-			errMetric.WithLabelValues(ctx.Value(commandContextKey).(string), ctx.Value(subCommandContextKey).(string)).Inc()
+			cmd := ctx.Value(commandContextKey).(string)
+			subCmd := ctx.Value(subCommandContextKey).(string)
+			errMetric.WithLabelValues(cmd, subCmd).Inc()
+			logger.Error("exec error", logbus.String("command", cmd), logbus.String("sub_command", subCmd), logbus.ErrorField(err))
 		} else {
 			metric.WithLabelValues(ctx.Value(commandContextKey).(string), ctx.Value(subCommandContextKey).(string)).
 				Observe(sinceFunc(ctx.Value(startTimeContextKey).(time.Time)).Seconds())
