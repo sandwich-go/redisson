@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/coreos/go-semver/semver"
-	"github.com/sandwich-go/logbus"
 	"sync"
 	"time"
 )
@@ -156,7 +155,7 @@ func (r *baseHandler) after(ctx context.Context, err error) {
 			cmd := ctx.Value(commandContextKey).(string)
 			subCmd := ctx.Value(subCommandContextKey).(string)
 			errMetric.WithLabelValues(cmd, subCmd).Inc()
-			logger.Error("exec error", logbus.String("command", cmd), logbus.String("sub_command", subCmd), logbus.ErrorField(err))
+			logger.Error("redis command exec error", _a("command", cmd), _a("sub_command", subCmd), _e(err))
 		} else {
 			metric.WithLabelValues(ctx.Value(commandContextKey).(string), ctx.Value(subCommandContextKey).(string)).
 				Observe(sinceFunc(ctx.Value(startTimeContextKey).(time.Time)).Seconds())
