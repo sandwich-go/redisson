@@ -82,3 +82,10 @@ var ListFormatFunc = func(es []error) string {
 		"%d errors occurred:\n%s",
 		len(es), strings.Join(points, "\n"))
 }
+
+func isNoScriptError(err error) bool {
+	if err == nil {
+		return false
+	}
+	return strings.HasPrefix(err.Error(), "NOSCRIPT ")
+}

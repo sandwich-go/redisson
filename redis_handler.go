@@ -81,6 +81,14 @@ func WithSkipCheck(ctx context.Context) context.Context {
 	return context.WithValue(ctx, skipCheckContextKey, true)
 }
 
+// WithSubCommandName 指定 sub command
+func WithSubCommandName(ctx context.Context, s string) context.Context {
+	if len(s) == 0 {
+		return ctx
+	}
+	return context.WithValue(ctx, subCommandContextKey, s)
+}
+
 func (r *baseHandler) isCluster() bool                               { return r.cluster }
 func (r *baseHandler) setIsCluster(b bool)                           { r.cluster = b }
 func (r *baseHandler) setVersion(v *semver.Version)                  { r.version = v }
@@ -151,14 +159,12 @@ func (r *baseHandler) isImplicitError(err error) bool {
 }
 func (r *baseHandler) after(ctx context.Context, err error) {
 	if r.v.GetEnableMonitor() {
+		cmd := ctx.Value(commandContextKey).(string)
+		subCmd := ctx.Value(subCommandContextKey).(string)
 		if err != nil && !r.isImplicitError(err) {
-			cmd := ctx.Value(commandContextKey).(string)
-			subCmd := ctx.Value(subCommandContextKey).(string)
 			errMetric.WithLabelValues(cmd, subCmd).Inc()
-			logger.Error("redis command exec error", _a("command", cmd), _a("sub_command", subCmd), _e(err))
 		} else {
-			metric.WithLabelValues(ctx.Value(commandContextKey).(string), ctx.Value(subCommandContextKey).(string)).
-				Observe(sinceFunc(ctx.Value(startTimeContextKey).(time.Time)).Seconds())
+			metric.WithLabelValues(cmd, subCmd).Observe(sinceFunc(ctx.Value(startTimeContextKey).(time.Time)).Seconds())
 		}
 	}
 }

@@ -200,8 +200,8 @@ func argToSlice(a any) []string {
 	}
 }
 
-func warning(msg string) { logger.Warn(msg) }
-func e(msg string)       { logger.Error(msg) }
+func warning(msg string) { fmt.Println(msg) }
+func e(msg string)       { fmt.Println(msg) }
 
 func toFloat32(val any) (float32, error) {
 	switch t := val.(type) {
