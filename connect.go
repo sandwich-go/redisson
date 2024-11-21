@@ -59,12 +59,10 @@ func (c *client) reviseVersion(ctx context.Context, info string) (err error) {
 }
 
 func (c *client) revise(ctx context.Context) error {
-	//info, err := c.Info(ctx, XXX_CLUSTER, XXX_SERVER).Result()
-	//if err != nil {
-	//	info = ""
-	//}
-	var info string
-	var err error
+	info, err := c.Info(ctx, XXX_CLUSTER, XXX_SERVER).Result()
+	if err != nil {
+		info = ""
+	}
 	if err = c.reviseVersion(ctx, info); err != nil {
 		return err
 	}
