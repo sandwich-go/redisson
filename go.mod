@@ -7,6 +7,7 @@ toolchain go1.23.0
 require (
 	github.com/alicebob/miniredis/v2 v2.30.5
 	github.com/coreos/go-semver v0.3.1
+	github.com/modern-go/reflect2 v1.0.2
 	github.com/prometheus/client_golang v1.14.0
 	github.com/redis/rueidis v1.0.50-alpha.3
 	github.com/redis/rueidis/rueidiscompat v1.0.49

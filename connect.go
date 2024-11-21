@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/alicebob/miniredis/v2"
+	"github.com/modern-go/reflect2"
 	"github.com/redis/rueidis"
 	"github.com/redis/rueidis/rueidiscompat"
 	"net"
@@ -58,10 +59,12 @@ func (c *client) reviseVersion(ctx context.Context, info string) (err error) {
 }
 
 func (c *client) revise(ctx context.Context) error {
-	info, err := c.Info(ctx, XXX_CLUSTER, XXX_SERVER).Result()
-	if err != nil {
-		info = ""
-	}
+	//info, err := c.Info(ctx, XXX_CLUSTER, XXX_SERVER).Result()
+	//if err != nil {
+	//	info = ""
+	//}
+	var info string
+	var err error
 	if err = c.reviseVersion(ctx, info); err != nil {
 		return err
 	}
@@ -111,13 +114,13 @@ func (c *client) connect() error {
 		return err
 	}
 	c.adapter = rueidiscompat.NewAdapter(c.cmd)
+	c.builder = builder{c.cmd.B()}
 	if t := c.v.GetT(); t == nil {
 		if err = c.revise(context.Background()); err != nil {
 			_ = c.Close()
 			return err
 		}
 	}
-	c.builder = builder{c.cmd.B()}
 	return nil
 }
 
@@ -166,7 +169,7 @@ func (c *client) Close() error {
 		return true
 	})
 	c.delayQueues = sync.Map{}
-	if c.cmd != nil {
+	if c.cmd != nil && !reflect2.IsNil(c.cmd) {
 		c.cmd.Close()
 	}
 	c.cmd = nil
