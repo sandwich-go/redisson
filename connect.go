@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/alicebob/miniredis/v2"
+	"github.com/coreos/go-semver/semver"
 	"github.com/modern-go/reflect2"
 	"github.com/redis/rueidis"
 	"github.com/redis/rueidis/rueidiscompat"
@@ -160,6 +161,8 @@ func (c *client) reconnectWhenError(err error) error {
 	}
 	return err
 }
+
+func (c *client) Version() *semver.Version { return &c.version }
 
 func (c *client) Close() error {
 	c.delayQueues.Range(func(key, value any) bool {

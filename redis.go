@@ -2,6 +2,7 @@ package redisson
 
 import (
 	"context"
+	"github.com/coreos/go-semver/semver"
 	"github.com/sandwich-go/funnel"
 	"time"
 )
@@ -21,6 +22,7 @@ type XCmdable interface {
 	Receive(ctx context.Context, cb func(Message), channels ...string) error
 	PReceive(ctx context.Context, cb func(Message), patterns ...string) error
 	Do(ctx context.Context, completed Completed) RedisResult
+	Version() *semver.Version
 }
 
 type Cmdable interface {
