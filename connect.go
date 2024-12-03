@@ -5,16 +5,17 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
-	"github.com/alicebob/miniredis/v2"
-	"github.com/coreos/go-semver/semver"
-	"github.com/modern-go/reflect2"
-	"github.com/redis/rueidis"
-	"github.com/redis/rueidis/rueidiscompat"
 	"net"
 	"regexp"
 	"runtime"
 	"strings"
 	"sync"
+
+	"github.com/alicebob/miniredis/v2"
+	"github.com/coreos/go-semver/semver"
+	"github.com/modern-go/reflect2"
+	"github.com/redis/rueidis"
+	"github.com/redis/rueidis/rueidiscompat"
 )
 
 var (
@@ -99,6 +100,9 @@ func confVisitor2ClientOption(v ConfVisitor) rueidis.ClientOption {
 		opt.DialFn = func(s string, dialer *net.Dialer, _ *tls.Config) (net.Conn, error) {
 			return dialer.Dial("unix", s)
 		}
+	}
+	if v.GetEnableMonitor() {
+		rueidis.EnableTrace = true
 	}
 	return opt
 }

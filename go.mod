@@ -1,8 +1,8 @@
 module github.com/sandwich-go/redisson
 
-go 1.21
+go 1.22
 
-toolchain go1.23.0
+toolchain go1.23.3
 
 require (
 	github.com/alicebob/miniredis/v2 v2.30.5
@@ -16,10 +16,17 @@ require (
 	github.com/smartystreets/goconvey v1.7.2
 )
 
+replace (
+	github.com/redis/rueidis => github.com/sandwich-go/rueidis v1.0.50-0.20241203042228-c5bea22c8ba3
+	github.com/redis/rueidis/rueidiscompat => github.com/sandwich-go/rueidis/rueidiscompat v1.0.50-0.20241203042228-c5bea22c8ba3
+)
+
 require (
 	github.com/alicebob/gopher-json v0.0.0-20200520072559-a9ecdc9d1d3a // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
+	github.com/go-logr/logr v1.4.2 // indirect
+	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/gopherjs/gopherjs v0.0.0-20181017120253-0766667cb4d1 // indirect
 	github.com/jtolds/gls v4.20.0+incompatible // indirect
@@ -30,6 +37,9 @@ require (
 	github.com/smartystreets/assertions v1.2.0 // indirect
 	github.com/twmb/murmur3 v1.1.8 // indirect
 	github.com/yuin/gopher-lua v1.1.0 // indirect
+	go.opentelemetry.io/otel v1.32.0 // indirect
+	go.opentelemetry.io/otel/metric v1.32.0 // indirect
+	go.opentelemetry.io/otel/trace v1.32.0 // indirect
 	golang.org/x/sys v0.24.0 // indirect
 	google.golang.org/protobuf v1.34.2 // indirect
 )

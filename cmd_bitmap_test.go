@@ -2,9 +2,10 @@ package redisson
 
 import (
 	"context"
-	. "github.com/smartystreets/goconvey/convey"
 	"testing"
 	"time"
+
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 const testCacheTTL = 1 * time.Minute
@@ -285,7 +286,8 @@ func _doTestUnits(t *testing.T, c Cmdable, unitsFunc func() []TestUnit) {
 }
 
 func doTestUnits(t *testing.T, unitsFunc func() []TestUnit) {
-	c := MustNewClient(NewConf(WithDevelopment(false)))
+	c := MustNewClient(NewConf(WithDevelopment(false),
+		WithAddrs("127.0.0.1:7001", "127.0.0.1:7002", "127.0.0.1:7003")))
 	_doTestUnits(t, c, unitsFunc)
 }
 

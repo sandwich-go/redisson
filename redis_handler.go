@@ -3,9 +3,11 @@ package redisson
 import (
 	"context"
 	"fmt"
-	"github.com/coreos/go-semver/semver"
 	"sync"
 	"time"
+
+	"github.com/coreos/go-semver/semver"
+	"github.com/redis/rueidis"
 )
 
 type isSilentError func(error) bool
@@ -145,9 +147,16 @@ func (r *baseHandler) beforeWithKeys(ctx context.Context, command Command, getKe
 		}
 	}
 	if r.v.GetEnableMonitor() {
+		var keys []string
+		if getKeys != nil {
+			keys = getKeys()
+		}
 		ctx = context.WithValue(ctx, startTimeContextKey, nowFunc())
 		ctx = context.WithValue(ctx, commandContextKey, command.Class())
 		ctx = context.WithValue(ctx, subCommandContextKey, command.String())
+		ctx = context.WithValue(ctx, rueidis.CtxKeyCommand, command.Class())
+		ctx = context.WithValue(ctx, rueidis.CtxKeySubCommand, command.String())
+		ctx = context.WithValue(ctx, rueidis.CtxKeyKeys, keys)
 	}
 	return ctx
 }
