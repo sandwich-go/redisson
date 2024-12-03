@@ -17,9 +17,14 @@ require (
 )
 
 replace (
-	github.com/redis/rueidis => github.com/sandwich-go/rueidis v1.0.50-0.20241203060037-4ff748c96e81
-	github.com/redis/rueidis/rueidiscompat => github.com/sandwich-go/rueidis/rueidiscompat v1.0.50-0.20241203060037-4ff748c96e81
+	github.com/redis/rueidis => github.com/sandwich-go/rueidis v1.0.50-0.20241203070424-17992444f236
+	github.com/redis/rueidis/rueidiscompat => github.com/sandwich-go/rueidis/rueidiscompat v1.0.50-0.20241203070424-17992444f236
 )
+
+//replace (
+//	github.com/redis/rueidis => ../rueidis
+//	github.com/redis/rueidis/rueidiscompat => ../rueidis/rueidiscompat
+//)
 
 require (
 	github.com/alicebob/gopher-json v0.0.0-20200520072559-a9ecdc9d1d3a // indirect
