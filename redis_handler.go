@@ -157,6 +157,9 @@ func (r *baseHandler) beforeWithKeys(ctx context.Context, command Command, getKe
 		ctx = context.WithValue(ctx, rueidis.CtxKeyCommand, command.Class())
 		ctx = context.WithValue(ctx, rueidis.CtxKeySubCommand, command.String())
 		ctx = context.WithValue(ctx, rueidis.CtxKeyKeys, keys)
+		var finish func(error)
+		ctx, finish = rueidis.StartTrace(ctx, "redisson.cmd")
+		ctx = context.WithValue(ctx, "finishFunc", finish)
 	}
 	return ctx
 }
@@ -168,6 +171,9 @@ func (r *baseHandler) isImplicitError(err error) bool {
 }
 func (r *baseHandler) after(ctx context.Context, err error) {
 	if r.v.GetEnableMonitor() {
+		if f := ctx.Value("finishFunc"); f != nil {
+			f.(func(error))(err)
+		}
 		cmd := ctx.Value(commandContextKey).(string)
 		subCmd := ctx.Value(subCommandContextKey).(string)
 		if err != nil && !r.isImplicitError(err) {
