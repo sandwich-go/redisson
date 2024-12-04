@@ -5,6 +5,8 @@ import (
 	"crypto/sha1"
 	"encoding/hex"
 	"io"
+
+	"github.com/redis/rueidis"
 )
 
 type Scripter interface {
@@ -224,6 +226,7 @@ func (c *client) CreateScriptWithName(name, src string) Scripter {
 func (c *client) CreateScript(src string) Scripter { return newScript(c, src) }
 
 func (c *client) eval(ctx context.Context, name, script string, keys []string, args ...any) Cmd {
+	ctx = context.WithValue(ctx, rueidis.CtxKeySubCommand, name)
 	ctx = c.handler.beforeWithKeys(ctx, CommandEval, func() []string { return keys })
 	r := c.adapter.Eval(ctx, script, keys, args...)
 	c.handler.after(WithSubCommandName(ctx, name), r.Err())
@@ -231,6 +234,7 @@ func (c *client) eval(ctx context.Context, name, script string, keys []string, a
 }
 
 func (c *client) evalRO(ctx context.Context, name, script string, keys []string, args ...any) Cmd {
+	ctx = context.WithValue(ctx, rueidis.CtxKeySubCommand, name)
 	ctx = c.handler.beforeWithKeys(ctx, CommandEvalRO, func() []string { return keys })
 	r := c.adapter.EvalRO(ctx, script, keys, args...)
 	c.handler.after(WithSubCommandName(ctx, name), r.Err())
@@ -238,6 +242,7 @@ func (c *client) evalRO(ctx context.Context, name, script string, keys []string,
 }
 
 func (c *client) evalSha(ctx context.Context, name, sha1 string, keys []string, args ...any) Cmd {
+	ctx = context.WithValue(ctx, rueidis.CtxKeySubCommand, name)
 	ctx = c.handler.beforeWithKeys(ctx, CommandEvalSha, func() []string { return keys })
 	r := c.adapter.EvalSha(ctx, sha1, keys, args...)
 	c.handler.after(WithSubCommandName(ctx, name), r.Err())
@@ -245,6 +250,7 @@ func (c *client) evalSha(ctx context.Context, name, sha1 string, keys []string, 
 }
 
 func (c *client) evalShaRO(ctx context.Context, name, sha1 string, keys []string, args ...any) Cmd {
+	ctx = context.WithValue(ctx, rueidis.CtxKeySubCommand, name)
 	ctx = c.handler.beforeWithKeys(ctx, CommandEvalShaRO, func() []string { return keys })
 	r := c.adapter.EvalShaRO(ctx, sha1, keys, args...)
 	c.handler.after(WithSubCommandName(ctx, name), r.Err())

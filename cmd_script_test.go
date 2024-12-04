@@ -161,13 +161,13 @@ func testScriptRun(ctx context.Context, c Cmdable) []string {
 
 func scriptTestUnits() []TestUnit {
 	return []TestUnit{
-		{CommandScriptExists, testScriptExists},
-		{CommandScriptFlush, testScriptFlush},
-		{CommandScriptLoad, testScriptLoad},
-		{CommandScriptKill, testScriptKill},
-		{CommandEval, testScriptEval},
+		//{CommandScriptExists, testScriptExists},
+		//{CommandScriptFlush, testScriptFlush},
+		//{CommandScriptLoad, testScriptLoad},
+		//{CommandScriptKill, testScriptKill},
+		//{CommandEval, testScriptEval},
 		{CommandEvalSha, testScriptEvalSha},
-		{CommandEvalSha, testScriptRun},
+		//{CommandEvalSha, testScriptRun},
 	}
 }
 

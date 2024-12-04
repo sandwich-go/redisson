@@ -17,8 +17,8 @@ require (
 )
 
 replace (
-	github.com/redis/rueidis => github.com/sandwich-go/rueidis v1.0.50-0.20241203070424-17992444f236
-	github.com/redis/rueidis/rueidiscompat => github.com/sandwich-go/rueidis/rueidiscompat v1.0.50-0.20241203070424-17992444f236
+	github.com/redis/rueidis => github.com/sandwich-go/rueidis v1.0.50-0.20241204022705-fdf8fea61bc3
+	github.com/redis/rueidis/rueidiscompat => github.com/sandwich-go/rueidis/rueidiscompat v1.0.50-0.20241204022705-fdf8fea61bc3
 )
 
 //replace (

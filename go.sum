@@ -217,10 +217,10 @@ github.com/redis/rueidis/rueidisprob v1.0.49/go.mod h1:bQjEPF200JIuQY7Sm8ckhz+x9
 github.com/rogpeppe/go-internal v1.3.0/go.mod h1:M8bDsm7K2OlrFYOpmOWEs/qY81heoFRclV5y23lUDJ4=
 github.com/sandwich-go/funnel v0.0.1 h1:iAQQv2NhsqK6pmb+k81h14qSrE1VazR3DZ8BqxUyP/8=
 github.com/sandwich-go/funnel v0.0.1/go.mod h1:i+Ic0l78rwAqFV2CxdrK9FZNk2JU73jamUFfk/wogGM=
-github.com/sandwich-go/rueidis v1.0.50-0.20241203070424-17992444f236 h1:auQSqnc4tUE6glOdLHzfNesSz9sCns5yIerHchgQuc4=
-github.com/sandwich-go/rueidis v1.0.50-0.20241203070424-17992444f236/go.mod h1:r7QuOV7PWUkePAM1r/8o88qqD5StObGWzU7vi9oa0QI=
-github.com/sandwich-go/rueidis/rueidiscompat v1.0.50-0.20241203070424-17992444f236 h1:ujSkMJZZ0EOaIKdvlFGLBUcYuw9km/epys5j07LSMec=
-github.com/sandwich-go/rueidis/rueidiscompat v1.0.50-0.20241203070424-17992444f236/go.mod h1:Wepg5l4B2fjGxEiPEg9uzLea+G6D9EGjDSB4/x7VXbw=
+github.com/sandwich-go/rueidis v1.0.50-0.20241204022705-fdf8fea61bc3 h1:HtsULINn71a+Z9AvuF5qAsnAP/7esg8NYSWwMKb4HWc=
+github.com/sandwich-go/rueidis v1.0.50-0.20241204022705-fdf8fea61bc3/go.mod h1:r7QuOV7PWUkePAM1r/8o88qqD5StObGWzU7vi9oa0QI=
+github.com/sandwich-go/rueidis/rueidiscompat v1.0.50-0.20241204022705-fdf8fea61bc3 h1:f1viiXLWsdexYkray1HluUUmAq7KvD5NIOmL6M56djo=
+github.com/sandwich-go/rueidis/rueidiscompat v1.0.50-0.20241204022705-fdf8fea61bc3/go.mod h1:2j80nlANcmuaKJ9diM31BZDbz0KOqEyCyTIN86dPHNg=
 github.com/sirupsen/logrus v1.2.0/go.mod h1:LxeOpSwHxABJmUn/MG1IvRgCAasNZTLOkJPxbbu5VWo=
 github.com/sirupsen/logrus v1.4.2/go.mod h1:tLMulIdttU9McNUspp0xgXVQah82FyeX6MwdIuYE2rE=
 github.com/sirupsen/logrus v1.6.0/go.mod h1:7uNnSEd1DgxDLC74fIahvMZmmYsHGZGEOFrfsX/uA88=

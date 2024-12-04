@@ -155,7 +155,9 @@ func (r *baseHandler) beforeWithKeys(ctx context.Context, command Command, getKe
 		ctx = context.WithValue(ctx, commandContextKey, command.Class())
 		ctx = context.WithValue(ctx, subCommandContextKey, command.String())
 		ctx = context.WithValue(ctx, rueidis.CtxKeyCommand, command.Class())
-		ctx = context.WithValue(ctx, rueidis.CtxKeySubCommand, command.String())
+		if val := ctx.Value(rueidis.CtxKeySubCommand); val == nil {
+			ctx = context.WithValue(ctx, rueidis.CtxKeySubCommand, command.String())
+		}
 		ctx = context.WithValue(ctx, rueidis.CtxKeyKeys, keys)
 		var finish func(error)
 		ctx, finish = rueidis.StartTrace(ctx, "redisson.cmd")
