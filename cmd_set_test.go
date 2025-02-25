@@ -478,4 +478,4 @@ func setTestUnits() []TestUnit {
 	}
 }
 
-func TestClient_Set(t *testing.T) { doTestUnits(t, scriptTestUnits) }
+func TestClient_Set(t *testing.T) { doTestUnits(t, setTestUnits) }
