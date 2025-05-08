@@ -25,6 +25,21 @@ type PubSub interface {
 	//		Instead, for each channel, one message with the first element being the string unsubscribe is pushed as a confirmation that the command succeeded.
 	Unsubscribe(ctx context.Context, channels ...string) error
 
+	// SSubscribe
+	// Available since: 7.0.0
+	// Time complexity: O(N) where N is the number of shard channels to subscribe to.
+	// ACL categories: @pubsub @slow
+	SSubscribe(ctx context.Context, channels ...string) error
+
+	// SUnsubscribe
+	// Available since: 7.0.0
+	// Time complexity: O(N) where N is the number of shard channels to unsubscribe
+	// ACL categories: @pubsub @slow
+	// RESP2 / RESP3 Reply:
+	// 	- When successful, this command doesn't return anything. Instead, for each shard channel,
+	//		one message with the first element being the string sunsubscribe is pushed as a confirmation that the command succeeded.
+	SUnsubscribe(ctx context.Context, channels ...string) error
+
 	// PSubscribe
 	// Available since: 2.0.0
 	// Time complexity: O(N) where N is the number of patterns the client is already subscribed to.
@@ -104,6 +119,21 @@ type PubSubCmdable interface {
 	//		Instead, for each channel, one message with the first element being the string subscribe is pushed as a confirmation that the command succeeded.
 	Subscribe(ctx context.Context, channels ...string) PubSub
 
+	// SSubscribe
+	// Available since: 7.0.0
+	// Time complexity: O(N) where N is the number of shard channels to subscribe to.
+	// ACL categories: @pubsub @slow
+	SSubscribe(ctx context.Context, channels ...string) PubSub
+
+	// PSubscribe
+	// Available since: 2.0.0
+	// Time complexity: O(N) where N is the number of patterns the client is already subscribed to.
+	// ACL categories: @pubsub @slow
+	// RESP2 / RESP3 Reply:
+	// 	- When successful, this command doesn't return anything.
+	//		Instead, for each pattern, one message with the first element being the string psubscribe is pushed as a confirmation that the command succeeded.
+	PSubscribe(ctx context.Context, patterns ...string) PubSub
+
 	// PubSubShardChannels
 	// Available since: 7.0.0
 	// Time complexity: O(N) where N is the number of active shard channels, and assuming constant time pattern matching (relatively short shard channels).
@@ -172,8 +202,40 @@ func (c *client) PubSubShardNumSub(ctx context.Context, channels ...string) Stri
 
 func (c *client) Subscribe(ctx context.Context, channels ...string) PubSub {
 	ctx = c.handler.before(ctx, CommandSubscribe)
-	r := newPubSub(ctx, c, c.handler, channels...)
-	c.handler.after(ctx, nil)
+	r := newPubSub(ctx, c, c.handler)
+
+	var err error
+	if len(channels) > 0 {
+		err = r.SSubscribe(ctx, channels...)
+	}
+
+	c.handler.after(ctx, err)
+	return r
+}
+
+func (c *client) SSubscribe(ctx context.Context, channels ...string) PubSub {
+	ctx = c.handler.before(ctx, CommandSSubscribe)
+	r := newPubSub(ctx, c, c.handler)
+
+	var err error
+	if len(channels) > 0 {
+		err = r.SSubscribe(ctx, channels...)
+	}
+
+	c.handler.after(ctx, err)
+	return r
+}
+
+func (c *client) PSubscribe(ctx context.Context, patterns ...string) PubSub {
+	ctx = c.handler.before(ctx, CommandPSubscribe)
+	r := newPubSub(ctx, c, c.handler)
+
+	var err error
+	if len(patterns) > 0 {
+		err = r.PSubscribe(ctx, patterns...)
+	}
+
+	c.handler.after(ctx, err)
 	return r
 }
 
@@ -198,13 +260,10 @@ type pubSub struct {
 	cancel context.CancelFunc
 }
 
-func newPubSub(ctx context.Context, client *client, handler handler, channels ...string) PubSub {
+func newPubSub(ctx context.Context, client *client, handler handler) PubSub {
 	// chan size todo, use goredis.ChannelOption?
 	p := &pubSub{client: client, msgCh: make(chan Message, 100), handler: handler}
 	p.ctx, p.cancel = context.WithCancel(ctx)
-	if len(channels) > 0 {
-		_ = p.Subscribe(ctx, channels...)
-	}
 	return p
 }
 
@@ -234,6 +293,25 @@ func (p *pubSub) Subscribe(ctx context.Context, channels ...string) error {
 			p.msgCh <- m
 		})
 	}()
+	p.handler.after(ctx, err)
+	return err
+}
+
+func (p *pubSub) SSubscribe(ctx context.Context, channels ...string) error {
+	ctx = p.handler.before(ctx, CommandSSubscribe)
+	var err error
+	go func() {
+		err = p.client.cmd.Receive(p.ctx, p.client.cmd.B().Ssubscribe().Channel(channels...).Build(), func(m rueidis.PubSubMessage) {
+			p.msgCh <- m
+		})
+	}()
+	p.handler.after(ctx, err)
+	return err
+}
+
+func (p *pubSub) SUnsubscribe(ctx context.Context, channels ...string) error {
+	ctx = p.handler.before(ctx, CommandSUnsubscribe)
+	err := p.client.cmd.Do(ctx, p.client.cmd.B().Sunsubscribe().Channel(channels...).Build()).Error()
 	p.handler.after(ctx, err)
 	return err
 }

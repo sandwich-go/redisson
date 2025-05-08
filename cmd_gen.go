@@ -3675,6 +3675,34 @@ func (commandSubscribe) Warning() string        { return "" }
 func (commandSubscribe) Instead() string        { return "" }
 func (commandSubscribe) ETC() string            { return "" }
 
+var CommandSSubscribe commandSSubscribe
+
+type commandSSubscribe string
+
+func (commandSSubscribe) String() string         { return "SSUBSCRIBE" }
+func (commandSSubscribe) Class() string          { return "PubSub" }
+func (commandSSubscribe) RequireVersion() string { return "7.0.0" }
+func (commandSSubscribe) Forbid() bool           { return false }
+func (commandSSubscribe) WarningOnce() bool      { return false }
+func (commandSSubscribe) WarnVersion() string    { return "" }
+func (commandSSubscribe) Warning() string        { return "" }
+func (commandSSubscribe) Instead() string        { return "" }
+func (commandSSubscribe) ETC() string            { return "" }
+
+var CommandSUnsubscribe commandSUnsubscribe
+
+type commandSUnsubscribe string
+
+func (commandSUnsubscribe) String() string         { return "SUNSUBSCRIBE" }
+func (commandSUnsubscribe) Class() string          { return "PubSub" }
+func (commandSUnsubscribe) RequireVersion() string { return "7.0.0" }
+func (commandSUnsubscribe) Forbid() bool           { return false }
+func (commandSUnsubscribe) WarningOnce() bool      { return false }
+func (commandSUnsubscribe) WarnVersion() string    { return "" }
+func (commandSUnsubscribe) Warning() string        { return "" }
+func (commandSUnsubscribe) Instead() string        { return "" }
+func (commandSUnsubscribe) ETC() string            { return "" }
+
 var CommandUnsubscribe commandUnsubscribe
 
 type commandUnsubscribe string
