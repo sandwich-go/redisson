@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"strconv"
 	"sync"
+	"sync/atomic"
 	"time"
 	"unsafe"
 
@@ -462,4 +463,27 @@ func makeSliceNextElemFunc(v reflect.Value) func() reflect.Value {
 		v.Set(reflect.Append(v, zero))
 		return v.Index(v.Len() - 1)
 	}
+}
+
+// AtomicInt32 is an atomic type-safe wrapper for int32 values.
+type AtomicInt32 int32
+
+// Add atomically adds n to *AtomicInt32 and returns the new value.
+func (i *AtomicInt32) Add(n int32) int32 {
+	return atomic.AddInt32((*int32)(i), n)
+}
+
+// Set Store atomically stores the passed int32.
+func (i *AtomicInt32) Set(n int32) {
+	atomic.StoreInt32((*int32)(i), n)
+}
+
+// Get Load atomically loads the wrapped int32.
+func (i *AtomicInt32) Get() int32 {
+	return atomic.LoadInt32((*int32)(i))
+}
+
+// CompareAndSwap executes the compare-and-swap operation for a int32 value.
+func (i *AtomicInt32) CompareAndSwap(oldval, newval int32) (swapped bool) {
+	return atomic.CompareAndSwapInt32((*int32)(i), oldval, newval)
 }

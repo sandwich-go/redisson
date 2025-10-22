@@ -257,6 +257,7 @@ type pubSub struct {
 	handler handler
 
 	ctx    context.Context
+	closed AtomicInt32
 	cancel context.CancelFunc
 }
 
@@ -267,9 +268,12 @@ func newPubSub(ctx context.Context, client *client, handler handler) PubSub {
 	return p
 }
 
+func (p *pubSub) isClosed() bool { return p.closed.Get() == 1 }
 func (p *pubSub) Close() error {
-	close(p.msgCh)
-	p.cancel()
+	if p.closed.CompareAndSwap(0, 1) {
+		close(p.msgCh)
+		p.cancel()
+	}
 	return nil
 }
 
@@ -278,7 +282,9 @@ func (p *pubSub) PSubscribe(ctx context.Context, patterns ...string) error {
 	var err error
 	go func() {
 		err = p.client.cmd.Receive(p.ctx, p.client.cmd.B().Psubscribe().Pattern(patterns...).Build(), func(m rueidis.PubSubMessage) {
-			p.msgCh <- m
+			if !p.isClosed() {
+				p.msgCh <- m
+			}
 		})
 	}()
 	p.handler.after(ctx, err)
@@ -290,7 +296,9 @@ func (p *pubSub) Subscribe(ctx context.Context, channels ...string) error {
 	var err error
 	go func() {
 		err = p.client.cmd.Receive(p.ctx, p.client.cmd.B().Subscribe().Channel(channels...).Build(), func(m rueidis.PubSubMessage) {
-			p.msgCh <- m
+			if !p.isClosed() {
+				p.msgCh <- m
+			}
 		})
 	}()
 	p.handler.after(ctx, err)
@@ -302,7 +310,9 @@ func (p *pubSub) SSubscribe(ctx context.Context, channels ...string) error {
 	var err error
 	go func() {
 		err = p.client.cmd.Receive(p.ctx, p.client.cmd.B().Ssubscribe().Channel(channels...).Build(), func(m rueidis.PubSubMessage) {
-			p.msgCh <- m
+			if !p.isClosed() {
+				p.msgCh <- m
+			}
 		})
 	}()
 	p.handler.after(ctx, err)
