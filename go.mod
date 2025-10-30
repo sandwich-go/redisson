@@ -9,9 +9,9 @@ require (
 	github.com/coreos/go-semver v0.3.1
 	github.com/modern-go/reflect2 v1.0.2
 	github.com/prometheus/client_golang v1.14.0
-	github.com/redis/rueidis v1.0.57
-	github.com/redis/rueidis/rueidiscompat v1.0.57
-	github.com/redis/rueidis/rueidisprob v1.0.57
+	github.com/redis/rueidis v1.0.67
+	github.com/redis/rueidis/rueidiscompat v1.0.67
+	github.com/redis/rueidis/rueidisprob v1.0.67
 	github.com/sandwich-go/funnel v0.0.1
 	github.com/smartystreets/goconvey v1.7.2
 )
