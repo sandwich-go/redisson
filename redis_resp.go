@@ -13,7 +13,10 @@ import (
 
 type RESP = string
 
-const RESP2 RESP = "RESP2"
+const (
+	RESP2 RESP = "RESP2"
+	RESP3 RESP = "RESP3"
+)
 
 const Nil = goredis.Nil
 
@@ -110,14 +113,21 @@ func (c *client) reconnectWhenError(err error) error {
 	if err == nil {
 		return nil
 	}
-	if errString := err.Error(); strings.Contains(errString, "ERR This instance has cluster support disabled") ||
+	errString := err.Error()
+	if strings.Contains(errString, "ERR This instance has cluster support disabled") ||
 		strings.Contains(errString, "ERR Cluster setting conflict") {
 		warning(fmt.Sprintf("%s, reconnect...", errString))
 		c.v.ApplyOption(WithCluster(!c.v.GetCluster()))
 		return c.connect()
+	} else if c.v.GetResp() == RESP2 && strings.Contains(errString, "elements in cluster info address, expected 2 or 3") {
+		warning(fmt.Sprintf("%s, using always resp2, reconnect...", errString))
+		c.v.ApplyOption(WithResp(RESP3))
+		return c.connect()
 	}
 	return err
 }
+
+var retryTimes = 3
 
 func Connect(v ConfInterface) (Cmdable, error) {
 	c := &client{v: v, handler: newBaseHandler(v)}
@@ -125,10 +135,16 @@ func Connect(v ConfInterface) (Cmdable, error) {
 	if err == nil && c.isCluster != c.v.GetCluster() {
 		err = fmt.Errorf("ERR Cluster setting conflict, server's cluster_enabled is %t, but client's cluster_enabled is %t", c.isCluster, c.v.GetCluster())
 	}
-	err = c.reconnectWhenError(err)
+	for i := 0; i < retryTimes; i++ {
+		err = c.reconnectWhenError(err)
+		if err == nil {
+			break
+		}
+	}
 	if err != nil {
 		return nil, err
 	}
+	
 	c.cacheCmdable = c.cmdable
 	c.handler.setSilentErrCallback(func(err error) bool { return err == Nil })
 	return c, nil

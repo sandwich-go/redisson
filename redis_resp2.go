@@ -25,6 +25,7 @@ func connectResp2(v ConfVisitor, h handler) (*resp2, error) {
 		ConnMaxLifetime: v.GetConnMaxAge(),
 		ConnMaxIdleTime: v.GetIdleConnTimeout(),
 		PoolTimeout:     v.GetConnPoolTimeout(),
+		UnstableResp3:   v.GetResp() == RESP3,
 	}
 	var cmd goredis.UniversalClient
 	if v.GetCluster() {
