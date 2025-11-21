@@ -85,7 +85,7 @@ type HashReader interface {
 	// Return:
 	// 	Bulk string reply: without the additional count argument, the command returns a Bulk Reply with the randomly selected field, or nil when key does not exist.
 	// 	Array reply: when the additional count argument is passed, the command returns an array of fields, or an empty array when key does not exist. If the WITHVALUES modifier is used, the reply is a list fields and their values from the hash.
-	HRandField(ctx context.Context, key string, count int, withValues bool) StringSliceCmd
+	HRandField(ctx context.Context, key string, count int) StringSliceCmd
 
 	// HScan
 	// Available since: 2.8.0
@@ -237,9 +237,9 @@ func (c *client) HMSet(ctx context.Context, key string, values ...interface{}) B
 	return r
 }
 
-func (c *client) HRandField(ctx context.Context, key string, count int, withValues bool) StringSliceCmd {
+func (c *client) HRandField(ctx context.Context, key string, count int) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandHRandField)
-	r := c.cmdable.HRandField(ctx, key, count, withValues)
+	r := c.cmdable.HRandField(ctx, key, count)
 	c.handler.after(ctx, r.Err())
 	return r
 }

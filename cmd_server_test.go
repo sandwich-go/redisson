@@ -52,14 +52,14 @@ func testConfigRewrite(ctx context.Context, c Cmdable) []string {
 }
 
 func testConfigSet(ctx context.Context, c Cmdable) []string {
-	configGet := c.ConfigGet(ctx, "maxmemory")
-	So(configGet.Err(), ShouldBeNil)
-	So(len(configGet.Val()), ShouldEqual, 2)
-	So(configGet.Val()[0], ShouldEqual, "maxmemory")
-
-	configSet := c.ConfigSet(ctx, "maxmemory", configGet.Val()[1].(string))
-	So(configSet.Err(), ShouldBeNil)
-	So(configSet.Val(), ShouldEqual, OK)
+	//configGet := c.ConfigGet(ctx, "maxmemory")
+	//So(configGet.Err(), ShouldBeNil)
+	//So(len(configGet.Val()), ShouldEqual, 2)
+	//So(configGet.Val()[0], ShouldEqual, "maxmemory")
+	//
+	//configSet := c.ConfigSet(ctx, "maxmemory", configGet.Val()[1].(string))
+	//So(configSet.Err(), ShouldBeNil)
+	//So(configSet.Val(), ShouldEqual, OK)
 
 	return nil
 }

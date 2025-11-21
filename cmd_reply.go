@@ -2,7 +2,7 @@ package redisson
 
 import (
 	"context"
-	goredis "github.com/go-redis/redis/v8"
+	goredis "github.com/redis/go-redis/v9"
 	"time"
 )
 
@@ -335,4 +335,10 @@ type CommandsInfoCmd interface {
 	BaseCmd
 	Val() map[string]*CommandInfo
 	Result() (map[string]*CommandInfo, error)
+}
+
+type MapStringStringCmd interface {
+	BaseCmd
+	Val() map[string]string
+	Result() (map[string]string, error)
 }

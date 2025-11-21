@@ -171,7 +171,7 @@ type StringWriter interface {
 	// An error is returned when seconds is invalid.
 	// Return:
 	//	Simple string reply
-	SetEX(ctx context.Context, key string, value interface{}, expiration time.Duration) StatusCmd
+	//SetEX(ctx context.Context, key string, value interface{}, expiration time.Duration) StatusCmd
 
 	// SetNX
 	// Available since: 1.0.0
@@ -362,12 +362,12 @@ func (c *client) Set(ctx context.Context, key string, value interface{}, expirat
 	return r
 }
 
-func (c *client) SetEX(ctx context.Context, key string, value interface{}, expiration time.Duration) StatusCmd {
-	ctx = c.handler.before(ctx, CommandSetex)
-	r := c.cmdable.SetEX(ctx, key, value, expiration)
-	c.handler.after(ctx, r.Err())
-	return r
-}
+//func (c *client) SetEX(ctx context.Context, key string, value interface{}, expiration time.Duration) StatusCmd {
+//	ctx = c.handler.before(ctx, CommandSetex)
+//	r := c.cmdable.SetEX(ctx, key, value, expiration)
+//	c.handler.after(ctx, r.Err())
+//	return r
+//}
 
 func (c *client) SetNX(ctx context.Context, key string, value interface{}, expiration time.Duration) BoolCmd {
 	if expiration == KeepTTL {

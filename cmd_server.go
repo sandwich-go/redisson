@@ -72,7 +72,7 @@ type ServerCmdable interface {
 	// Note that you should look at the redis.conf file relevant to the version you're working with as configuration options might change between versions. The link above is to the latest development version.
 	// Return:
 	//	The return type of the command is a Array reply.
-	ConfigGet(ctx context.Context, parameter string) SliceCmd
+	ConfigGet(ctx context.Context, parameter string) MapStringStringCmd
 
 	// ConfigResetStat
 	// Available since: 2.0.0
@@ -326,7 +326,7 @@ func (c *client) Command(ctx context.Context) CommandsInfoCmd {
 	return r
 }
 
-func (c *client) ConfigGet(ctx context.Context, parameter string) SliceCmd {
+func (c *client) ConfigGet(ctx context.Context, parameter string) MapStringStringCmd {
 	ctx = c.handler.before(ctx, CommandConfigGet)
 	r := c.cmdable.ConfigGet(ctx, parameter)
 	c.handler.after(ctx, r.Err())

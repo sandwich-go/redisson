@@ -155,19 +155,19 @@ type StreamWriter interface {
 	// See https://redis.io/commands/xreadgroup/
 	XReadGroup(ctx context.Context, a XReadGroupArgs) XStreamSliceCmd
 
-	// XTrim
-	// Available since: 5.0.0
-	// Time complexity: O(N), with N being the number of evicted entries. Constant times are very small however, since entries are organized in macro nodes containing multiple entries that can be released with a single deallocation.
-	// ACL categories: @write @stream @slow
-	// See https://redis.io/commands/xtrim/
-	XTrim(ctx context.Context, key string, maxLen int64) IntCmd
-
-	// XTrimApprox
-	// Available since: 5.0.0
-	// Time complexity: O(N), with N being the number of evicted entries. Constant times are very small however, since entries are organized in macro nodes containing multiple entries that can be released with a single deallocation.
-	// ACL categories: @write @stream @slow
-	// See https://redis.io/commands/xtrim/
-	XTrimApprox(ctx context.Context, key string, maxLen int64) IntCmd
+	//// XTrim
+	//// Available since: 5.0.0
+	//// Time complexity: O(N), with N being the number of evicted entries. Constant times are very small however, since entries are organized in macro nodes containing multiple entries that can be released with a single deallocation.
+	//// ACL categories: @write @stream @slow
+	//// See https://redis.io/commands/xtrim/
+	//XTrim(ctx context.Context, key string, maxLen int64) IntCmd
+	//
+	//// XTrimApprox
+	//// Available since: 5.0.0
+	//// Time complexity: O(N), with N being the number of evicted entries. Constant times are very small however, since entries are organized in macro nodes containing multiple entries that can be released with a single deallocation.
+	//// ACL categories: @write @stream @slow
+	//// See https://redis.io/commands/xtrim/
+	//XTrimApprox(ctx context.Context, key string, maxLen int64) IntCmd
 
 	// XTrimMaxLen
 	// Available since: 5.0.0
@@ -530,19 +530,19 @@ func (c *client) XRevRangeN(ctx context.Context, stream string, start, stop stri
 	return r
 }
 
-func (c *client) XTrim(ctx context.Context, key string, maxLen int64) IntCmd {
-	ctx = c.handler.before(ctx, CommandXTrim)
-	r := c.cmdable.XTrim(ctx, key, maxLen)
-	c.handler.after(ctx, r.Err())
-	return r
-}
-
-func (c *client) XTrimApprox(ctx context.Context, key string, maxLen int64) IntCmd {
-	ctx = c.handler.before(ctx, CommandXTrim)
-	r := c.cmdable.XTrimApprox(ctx, key, maxLen)
-	c.handler.after(ctx, r.Err())
-	return r
-}
+//func (c *client) XTrim(ctx context.Context, key string, maxLen int64) IntCmd {
+//	ctx = c.handler.before(ctx, CommandXTrim)
+//	r := c.cmdable.XTrim(ctx, key, maxLen)
+//	c.handler.after(ctx, r.Err())
+//	return r
+//}
+//
+//func (c *client) XTrimApprox(ctx context.Context, key string, maxLen int64) IntCmd {
+//	ctx = c.handler.before(ctx, CommandXTrim)
+//	r := c.cmdable.XTrimApprox(ctx, key, maxLen)
+//	c.handler.after(ctx, r.Err())
+//	return r
+//}
 
 func (c *client) XTrimMaxLen(ctx context.Context, key string, maxLen int64) IntCmd {
 	ctx = c.handler.before(ctx, CommandXTrim)

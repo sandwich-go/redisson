@@ -62,41 +62,41 @@ type SortedSetWriter interface {
 	// See https://redis.io/commands/zadd/
 	ZAddNX(ctx context.Context, key string, members ...Z) IntCmd
 
-	// ZAddXX
-	// Available since: 3.0.2
-	// Time complexity: O(log(N)) for each item added, where N is the number of elements in the sorted set.
-	// ACL categories: @write @sortedset @fast
-	// See https://redis.io/commands/zadd/
-	ZAddXX(ctx context.Context, key string, members ...Z) IntCmd
-
-	// ZAddCh
-	// Available since:3.0.2
-	// Time complexity: O(log(N)) for each item added, where N is the number of elements in the sorted set.
-	// ACL categories: @write @sortedset @fast
-	// See https://redis.io/commands/zadd/
-	ZAddCh(ctx context.Context, key string, members ...Z) IntCmd
-
-	// ZAddNXCh
-	// Available since: 3.0.2
-	// Time complexity: O(log(N)) for each item added, where N is the number of elements in the sorted set.
-	// ACL categories: @write @sortedset @fast
-	// See https://redis.io/commands/zadd/
-	ZAddNXCh(ctx context.Context, key string, members ...Z) IntCmd
-
-	// ZAddXXCh
-	// Available since: 3.0.2
-	// Time complexity: O(log(N)) for each item added, where N is the number of elements in the sorted set.
-	// ACL categories: @write @sortedset @fast
-	// See https://redis.io/commands/zadd/
-	ZAddXXCh(ctx context.Context, key string, members ...Z) IntCmd
-
-	// ZAddArgs
-	// Available since: 3.0.2
-	// Time complexity: O(log(N)) for each item added, where N is the number of elements in the sorted set.
-	// ACL categories: @write @sortedset @fast
-	// Starting with Redis version 6.2.0: Added the GT and LT options.
-	// See https://redis.io/commands/zadd/
-	ZAddArgs(ctx context.Context, key string, args ZAddArgs) IntCmd
+	//// ZAddXX
+	//// Available since: 3.0.2
+	//// Time complexity: O(log(N)) for each item added, where N is the number of elements in the sorted set.
+	//// ACL categories: @write @sortedset @fast
+	//// See https://redis.io/commands/zadd/
+	//ZAddXX(ctx context.Context, key string, members ...Z) IntCmd
+	//
+	//// ZAddCh
+	//// Available since:3.0.2
+	//// Time complexity: O(log(N)) for each item added, where N is the number of elements in the sorted set.
+	//// ACL categories: @write @sortedset @fast
+	//// See https://redis.io/commands/zadd/
+	//ZAddCh(ctx context.Context, key string, members ...Z) IntCmd
+	//
+	//// ZAddNXCh
+	//// Available since: 3.0.2
+	//// Time complexity: O(log(N)) for each item added, where N is the number of elements in the sorted set.
+	//// ACL categories: @write @sortedset @fast
+	//// See https://redis.io/commands/zadd/
+	//ZAddNXCh(ctx context.Context, key string, members ...Z) IntCmd
+	//
+	//// ZAddXXCh
+	//// Available since: 3.0.2
+	//// Time complexity: O(log(N)) for each item added, where N is the number of elements in the sorted set.
+	//// ACL categories: @write @sortedset @fast
+	//// See https://redis.io/commands/zadd/
+	//ZAddXXCh(ctx context.Context, key string, members ...Z) IntCmd
+	//
+	//// ZAddArgs
+	//// Available since: 3.0.2
+	//// Time complexity: O(log(N)) for each item added, where N is the number of elements in the sorted set.
+	//// ACL categories: @write @sortedset @fast
+	//// Starting with Redis version 6.2.0: Added the GT and LT options.
+	//// See https://redis.io/commands/zadd/
+	//ZAddArgs(ctx context.Context, key string, args ZAddArgs) IntCmd
 
 	// ZAddArgsIncr
 	// Available since: 3.0.2
@@ -106,29 +106,29 @@ type SortedSetWriter interface {
 	// See https://redis.io/commands/zadd/
 	ZAddArgsIncr(ctx context.Context, key string, args ZAddArgs) FloatCmd
 
-	// ZIncr
-	// Available since: 3.0.2
-	// Time complexity: O(log(N)) for each item added, where N is the number of elements in the sorted set.
-	// ACL categories: @write @sortedset @fast
-	// Starting with Redis version 6.2.0: Added the GT and LT options.
-	// See https://redis.io/commands/zadd/
-	ZIncr(ctx context.Context, key string, member Z) FloatCmd
-
-	// ZIncrNX
-	// Available since: 3.0.2
-	// Time complexity: O(log(N)) for each item added, where N is the number of elements in the sorted set.
-	// ACL categories: @write @sortedset @fast
-	// Starting with Redis version 6.2.0: Added the GT and LT options.
-	// See https://redis.io/commands/zadd/
-	ZIncrNX(ctx context.Context, key string, member Z) FloatCmd
-
-	// ZIncrXX
-	// Available since: 3.0.2
-	// Time complexity: O(log(N)) for each item added, where N is the number of elements in the sorted set.
-	// ACL categories: @write @sortedset @fast
-	// Starting with Redis version 6.2.0: Added the GT and LT options.
-	// See https://redis.io/commands/zadd/
-	ZIncrXX(ctx context.Context, key string, member Z) FloatCmd
+	//// ZIncr
+	//// Available since: 3.0.2
+	//// Time complexity: O(log(N)) for each item added, where N is the number of elements in the sorted set.
+	//// ACL categories: @write @sortedset @fast
+	//// Starting with Redis version 6.2.0: Added the GT and LT options.
+	//// See https://redis.io/commands/zadd/
+	//ZIncr(ctx context.Context, key string, member Z) FloatCmd
+	//
+	//// ZIncrNX
+	//// Available since: 3.0.2
+	//// Time complexity: O(log(N)) for each item added, where N is the number of elements in the sorted set.
+	//// ACL categories: @write @sortedset @fast
+	//// Starting with Redis version 6.2.0: Added the GT and LT options.
+	//// See https://redis.io/commands/zadd/
+	//ZIncrNX(ctx context.Context, key string, member Z) FloatCmd
+	//
+	//// ZIncrXX
+	//// Available since: 3.0.2
+	//// Time complexity: O(log(N)) for each item added, where N is the number of elements in the sorted set.
+	//// ACL categories: @write @sortedset @fast
+	//// Starting with Redis version 6.2.0: Added the GT and LT options.
+	//// See https://redis.io/commands/zadd/
+	//ZIncrXX(ctx context.Context, key string, member Z) FloatCmd
 
 	// ZDiffStore
 	// Available since: 6.2.0
@@ -274,7 +274,7 @@ type SortedSetReader interface {
 	// Return:
 	// Bulk string reply: without the additional count argument, the command returns a Bulk Reply with the randomly selected element, or nil when key does not exist.
 	//	Array reply: when the additional count argument is passed, the command returns an array of elements, or an empty array when key does not exist. If the WITHSCORES modifier is used, the reply is a list elements and their scores from the sorted set.
-	ZRandMember(ctx context.Context, key string, count int, withScores bool) StringSliceCmd
+	ZRandMember(ctx context.Context, key string, count int) StringSliceCmd
 
 	// ZScan
 	// Available since: 2.8.0
@@ -545,52 +545,52 @@ func (c *client) ZAddNX(ctx context.Context, key string, members ...Z) IntCmd {
 	return r
 }
 
-func (c *client) ZAddXX(ctx context.Context, key string, members ...Z) IntCmd {
-	ctx = c.handler.before(ctx, CommandZAddXX)
-	r := c.cmdable.ZAddXX(ctx, key, members...)
-	c.handler.after(ctx, r.Err())
-	return r
-}
-
-func (c *client) ZAddCh(ctx context.Context, key string, members ...Z) IntCmd {
-	ctx = c.handler.before(ctx, CommandZAddCh)
-	r := c.cmdable.ZAddCh(ctx, key, members...)
-	c.handler.after(ctx, r.Err())
-	return r
-}
-
-func (c *client) ZAddNXCh(ctx context.Context, key string, members ...Z) IntCmd {
-	ctx = c.handler.before(ctx, CommandZAddNX)
-	r := c.cmdable.ZAddNXCh(ctx, key, members...)
-	c.handler.after(ctx, r.Err())
-	return r
-}
-
-func (c *client) ZAddXXCh(ctx context.Context, key string, members ...Z) IntCmd {
-	ctx = c.handler.before(ctx, CommandZAddXX)
-	r := c.cmdable.ZAddXXCh(ctx, key, members...)
-	c.handler.after(ctx, r.Err())
-	return r
-}
-
-func (c *client) ZAddArgs(ctx context.Context, key string, args ZAddArgs) IntCmd {
-	if args.GT {
-		ctx = c.handler.before(ctx, CommandZAddGT)
-	} else if args.LT {
-		ctx = c.handler.before(ctx, CommandZAddLT)
-	} else if args.Ch {
-		ctx = c.handler.before(ctx, CommandZAddCh)
-	} else if args.NX {
-		ctx = c.handler.before(ctx, CommandZAddNX)
-	} else if args.XX {
-		ctx = c.handler.before(ctx, CommandZAddXX)
-	} else {
-		ctx = c.handler.before(ctx, CommandZAdd)
-	}
-	r := c.cmdable.ZAddArgs(ctx, key, args)
-	c.handler.after(ctx, r.Err())
-	return r
-}
+//func (c *client) ZAddXX(ctx context.Context, key string, members ...Z) IntCmd {
+//	ctx = c.handler.before(ctx, CommandZAddXX)
+//	r := c.cmdable.ZAddXX(ctx, key, members...)
+//	c.handler.after(ctx, r.Err())
+//	return r
+//}
+//
+//func (c *client) ZAddCh(ctx context.Context, key string, members ...Z) IntCmd {
+//	ctx = c.handler.before(ctx, CommandZAddCh)
+//	r := c.cmdable.ZAddCh(ctx, key, members...)
+//	c.handler.after(ctx, r.Err())
+//	return r
+//}
+//
+//func (c *client) ZAddNXCh(ctx context.Context, key string, members ...Z) IntCmd {
+//	ctx = c.handler.before(ctx, CommandZAddNX)
+//	r := c.cmdable.ZAddNXCh(ctx, key, members...)
+//	c.handler.after(ctx, r.Err())
+//	return r
+//}
+//
+//func (c *client) ZAddXXCh(ctx context.Context, key string, members ...Z) IntCmd {
+//	ctx = c.handler.before(ctx, CommandZAddXX)
+//	r := c.cmdable.ZAddXXCh(ctx, key, members...)
+//	c.handler.after(ctx, r.Err())
+//	return r
+//}
+//
+//func (c *client) ZAddArgs(ctx context.Context, key string, args ZAddArgs) IntCmd {
+//	if args.GT {
+//		ctx = c.handler.before(ctx, CommandZAddGT)
+//	} else if args.LT {
+//		ctx = c.handler.before(ctx, CommandZAddLT)
+//	} else if args.Ch {
+//		ctx = c.handler.before(ctx, CommandZAddCh)
+//	} else if args.NX {
+//		ctx = c.handler.before(ctx, CommandZAddNX)
+//	} else if args.XX {
+//		ctx = c.handler.before(ctx, CommandZAddXX)
+//	} else {
+//		ctx = c.handler.before(ctx, CommandZAdd)
+//	}
+//	r := c.cmdable.ZAddArgs(ctx, key, args)
+//	c.handler.after(ctx, r.Err())
+//	return r
+//}
 
 func (c *client) ZAddArgsIncr(ctx context.Context, key string, args ZAddArgs) FloatCmd {
 	if args.GT {
@@ -605,26 +605,26 @@ func (c *client) ZAddArgsIncr(ctx context.Context, key string, args ZAddArgs) Fl
 	return r
 }
 
-func (c *client) ZIncr(ctx context.Context, key string, member Z) FloatCmd {
-	ctx = c.handler.before(ctx, CommandZAddIncr)
-	r := c.cmdable.ZIncr(ctx, key, member)
-	c.handler.after(ctx, r.Err())
-	return r
-}
-
-func (c *client) ZIncrNX(ctx context.Context, key string, member Z) FloatCmd {
-	ctx = c.handler.before(ctx, CommandZAddIncr)
-	r := c.cmdable.ZIncrNX(ctx, key, member)
-	c.handler.after(ctx, r.Err())
-	return r
-}
-
-func (c *client) ZIncrXX(ctx context.Context, key string, member Z) FloatCmd {
-	ctx = c.handler.before(ctx, CommandZAddIncr)
-	r := c.cmdable.ZIncrXX(ctx, key, member)
-	c.handler.after(ctx, r.Err())
-	return r
-}
+//func (c *client) ZIncr(ctx context.Context, key string, member Z) FloatCmd {
+//	ctx = c.handler.before(ctx, CommandZAddIncr)
+//	r := c.cmdable.ZIncr(ctx, key, member)
+//	c.handler.after(ctx, r.Err())
+//	return r
+//}
+//
+//func (c *client) ZIncrNX(ctx context.Context, key string, member Z) FloatCmd {
+//	ctx = c.handler.before(ctx, CommandZAddIncr)
+//	r := c.cmdable.ZIncrNX(ctx, key, member)
+//	c.handler.after(ctx, r.Err())
+//	return r
+//}
+//
+//func (c *client) ZIncrXX(ctx context.Context, key string, member Z) FloatCmd {
+//	ctx = c.handler.before(ctx, CommandZAddIncr)
+//	r := c.cmdable.ZIncrXX(ctx, key, member)
+//	c.handler.after(ctx, r.Err())
+//	return r
+//}
 
 func (c *client) ZCard(ctx context.Context, key string) IntCmd {
 	ctx = c.handler.before(ctx, CommandZCard)
@@ -717,9 +717,9 @@ func (c *client) ZPopMin(ctx context.Context, key string, count ...int64) ZSlice
 	return r
 }
 
-func (c *client) ZRandMember(ctx context.Context, key string, count int, withScores bool) StringSliceCmd {
+func (c *client) ZRandMember(ctx context.Context, key string, count int) StringSliceCmd {
 	ctx = c.handler.before(ctx, CommandZRandMember)
-	r := c.cmdable.ZRandMember(ctx, key, count, withScores)
+	r := c.cmdable.ZRandMember(ctx, key, count)
 	c.handler.after(ctx, r.Err())
 	return r
 }

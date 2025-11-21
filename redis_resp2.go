@@ -2,7 +2,7 @@ package redisson
 
 import (
 	"context"
-	goredis "github.com/go-redis/redis/v8"
+	goredis "github.com/redis/go-redis/v9"
 	"sync"
 	"time"
 )
@@ -14,17 +14,17 @@ type resp2 struct {
 
 func connectResp2(v ConfVisitor, h handler) (*resp2, error) {
 	var opts = &goredis.UniversalOptions{
-		Addrs:        v.GetAddrs(),
-		DB:           v.GetDB(),
-		Username:     v.GetUsername(),
-		Password:     v.GetPassword(),
-		ReadTimeout:  v.GetReadTimeout(),
-		WriteTimeout: v.GetWriteTimeout(),
-		PoolSize:     v.GetConnPoolSize(),
-		MinIdleConns: v.GetMinIdleConns(),
-		MaxConnAge:   v.GetConnMaxAge(),
-		IdleTimeout:  v.GetIdleConnTimeout(),
-		PoolTimeout:  v.GetConnPoolTimeout(),
+		Addrs:           v.GetAddrs(),
+		DB:              v.GetDB(),
+		Username:        v.GetUsername(),
+		Password:        v.GetPassword(),
+		ReadTimeout:     v.GetReadTimeout(),
+		WriteTimeout:    v.GetWriteTimeout(),
+		PoolSize:        v.GetConnPoolSize(),
+		MinIdleConns:    v.GetMinIdleConns(),
+		ConnMaxLifetime: v.GetConnMaxAge(),
+		ConnMaxIdleTime: v.GetIdleConnTimeout(),
+		PoolTimeout:     v.GetConnPoolTimeout(),
 	}
 	var cmd goredis.UniversalClient
 	if v.GetCluster() {
@@ -417,8 +417,8 @@ func (r *resp2) HMSet(ctx context.Context, key string, values ...interface{}) Bo
 	return r.cmd.HMSet(ctx, key, values...)
 }
 
-func (r *resp2) HRandField(ctx context.Context, key string, count int, withValues bool) StringSliceCmd {
-	return r.cmd.HRandField(ctx, key, count, withValues)
+func (r *resp2) HRandField(ctx context.Context, key string, count int) StringSliceCmd {
+	return r.cmd.HRandField(ctx, key, count)
 }
 
 func (r *resp2) HScan(ctx context.Context, key string, cursor uint64, match string, count int64) ScanCmd {
@@ -720,7 +720,7 @@ func (r *resp2) Command(ctx context.Context) CommandsInfoCmd {
 	return r.cmd.Command(ctx)
 }
 
-func (r *resp2) ConfigGet(ctx context.Context, parameter string) SliceCmd {
+func (r *resp2) ConfigGet(ctx context.Context, parameter string) MapStringStringCmd {
 	return r.cmd.ConfigGet(ctx, parameter)
 }
 
@@ -880,10 +880,10 @@ func (r *resp2) BZPopMin(ctx context.Context, timeout time.Duration, keys ...str
 	return r.cmd.BZPopMin(ctx, timeout, keys...)
 }
 
-func (r *resp2) toZs(members ...Z) []*Z {
-	zs := make([]*Z, 0, len(members))
+func (r *resp2) toZs(members ...Z) []Z {
+	zs := make([]Z, 0, len(members))
 	for _, v := range members {
-		zs = append(zs, &Z{Score: v.Score, Member: v.Member})
+		zs = append(zs, Z{Score: v.Score, Member: v.Member})
 	}
 	return zs
 }
@@ -896,25 +896,25 @@ func (r *resp2) ZAddNX(ctx context.Context, key string, members ...Z) IntCmd {
 	return r.cmd.ZAddNX(ctx, key, r.toZs(members...)...)
 }
 
-func (r *resp2) ZAddXX(ctx context.Context, key string, members ...Z) IntCmd {
-	return r.cmd.ZAddXX(ctx, key, r.toZs(members...)...)
-}
-
-func (r *resp2) ZAddCh(ctx context.Context, key string, members ...Z) IntCmd {
-	return r.cmd.ZAddCh(ctx, key, r.toZs(members...)...)
-}
-
-func (r *resp2) ZAddNXCh(ctx context.Context, key string, members ...Z) IntCmd {
-	return r.cmd.ZAddNXCh(ctx, key, r.toZs(members...)...)
-}
-
-func (r *resp2) ZAddXXCh(ctx context.Context, key string, members ...Z) IntCmd {
-	return r.cmd.ZAddXXCh(ctx, key, r.toZs(members...)...)
-}
-
-func (r *resp2) ZAddArgs(ctx context.Context, key string, args ZAddArgs) IntCmd {
-	return r.cmd.ZAddArgs(ctx, key, args)
-}
+//func (r *resp2) ZAddXX(ctx context.Context, key string, members ...Z) IntCmd {
+//	return r.cmd.ZAddXX(ctx, key, r.toZs(members...)...)
+//}
+//
+//func (r *resp2) ZAddCh(ctx context.Context, key string, members ...Z) IntCmd {
+//	return r.cmd.ZAddCh(ctx, key, r.toZs(members...)...)
+//}
+//
+//func (r *resp2) ZAddNXCh(ctx context.Context, key string, members ...Z) IntCmd {
+//	return r.cmd.ZAddNXCh(ctx, key, r.toZs(members...)...)
+//}
+//
+//func (r *resp2) ZAddXXCh(ctx context.Context, key string, members ...Z) IntCmd {
+//	return r.cmd.ZAddXXCh(ctx, key, r.toZs(members...)...)
+//}
+//
+//func (r *resp2) ZAddArgs(ctx context.Context, key string, args ZAddArgs) IntCmd {
+//	return r.cmd.ZAddArgs(ctx, key, args)
+//}
 
 func (r *resp2) ZAddArgsIncr(ctx context.Context, key string, args ZAddArgs) FloatCmd {
 	return r.cmd.ZAddArgsIncr(ctx, key, args)
@@ -940,17 +940,17 @@ func (r *resp2) ZDiffStore(ctx context.Context, destination string, keys ...stri
 	return r.cmd.ZDiffStore(ctx, destination, keys...)
 }
 
-func (r *resp2) ZIncr(ctx context.Context, key string, member Z) FloatCmd {
-	return r.cmd.ZIncr(ctx, key, &member)
-}
-
-func (r *resp2) ZIncrNX(ctx context.Context, key string, member Z) FloatCmd {
-	return r.cmd.ZIncrNX(ctx, key, &member)
-}
-
-func (r *resp2) ZIncrXX(ctx context.Context, key string, member Z) FloatCmd {
-	return r.cmd.ZIncrXX(ctx, key, &member)
-}
+//func (r *resp2) ZIncr(ctx context.Context, key string, member Z) FloatCmd {
+//	return r.cmd.ZIncr(ctx, key, &member)
+//}
+//
+//func (r *resp2) ZIncrNX(ctx context.Context, key string, member Z) FloatCmd {
+//	return r.cmd.ZIncrNX(ctx, key, &member)
+//}
+//
+//func (r *resp2) ZIncrXX(ctx context.Context, key string, member Z) FloatCmd {
+//	return r.cmd.ZIncrXX(ctx, key, &member)
+//}
 
 func (r *resp2) ZIncrBy(ctx context.Context, key string, increment float64, member string) FloatCmd {
 	return r.cmd.ZIncrBy(ctx, key, increment, member)
@@ -984,8 +984,8 @@ func (r *resp2) ZPopMin(ctx context.Context, key string, count ...int64) ZSliceC
 	return r.cmd.ZPopMin(ctx, key, count...)
 }
 
-func (r *resp2) ZRandMember(ctx context.Context, key string, count int, withScores bool) StringSliceCmd {
-	return r.cmd.ZRandMember(ctx, key, count, withScores)
+func (r *resp2) ZRandMember(ctx context.Context, key string, count int) StringSliceCmd {
+	return r.cmd.ZRandMember(ctx, key, count)
 }
 
 func (r *resp2) ZRange(ctx context.Context, key string, start, stop int64) StringSliceCmd {
@@ -1192,13 +1192,13 @@ func (r *resp2) XRevRangeN(ctx context.Context, stream string, start, stop strin
 	return r.cmd.XRevRangeN(ctx, stream, start, stop, count)
 }
 
-func (r *resp2) XTrim(ctx context.Context, key string, maxLen int64) IntCmd {
-	return r.cmd.XTrim(ctx, key, maxLen)
-}
-
-func (r *resp2) XTrimApprox(ctx context.Context, key string, maxLen int64) IntCmd {
-	return r.cmd.XTrimApprox(ctx, key, maxLen)
-}
+//func (r *resp2) XTrim(ctx context.Context, key string, maxLen int64) IntCmd {
+//	return r.cmd.XTrim(ctx, key, maxLen)
+//}
+//
+//func (r *resp2) XTrimApprox(ctx context.Context, key string, maxLen int64) IntCmd {
+//	return r.cmd.XTrimApprox(ctx, key, maxLen)
+//}
 
 func (r *resp2) XTrimMaxLen(ctx context.Context, key string, maxLen int64) IntCmd {
 	return r.cmd.XTrimMaxLen(ctx, key, maxLen)
@@ -1276,9 +1276,9 @@ func (r *resp2) Set(ctx context.Context, key string, value interface{}, expirati
 	return r.cmd.Set(ctx, key, value, expiration)
 }
 
-func (r *resp2) SetEX(ctx context.Context, key string, value interface{}, expiration time.Duration) StatusCmd {
-	return r.cmd.SetEX(ctx, key, value, expiration)
-}
+//func (r *resp2) SetEX(ctx context.Context, key string, value interface{}, expiration time.Duration) StatusCmd {
+//	return r.cmd.SetEX(ctx, key, value, expiration)
+//}
 
 func (r *resp2) SetNX(ctx context.Context, key string, value interface{}, expiration time.Duration) BoolCmd {
 	return r.cmd.SetNX(ctx, key, value, expiration)
