@@ -253,7 +253,7 @@ func (c *client) PReceive(ctx context.Context, cb func(Message), patterns ...str
 
 type pubSub struct {
 	client  *client
-	msgCh   chan Message
+	msgCh   *unboundedChan[Message]
 	handler handler
 
 	ctx    context.Context
@@ -262,8 +262,7 @@ type pubSub struct {
 }
 
 func newPubSub(ctx context.Context, client *client, handler handler) PubSub {
-	// chan size todo, use goredis.ChannelOption?
-	p := &pubSub{client: client, msgCh: make(chan Message, 100), handler: handler}
+	p := &pubSub{client: client, msgCh: newUnboundedChan[Message](ctx, client.v.GetPubSubChanSize()), handler: handler}
 	p.ctx, p.cancel = context.WithCancel(ctx)
 	return p
 }
@@ -271,7 +270,6 @@ func newPubSub(ctx context.Context, client *client, handler handler) PubSub {
 func (p *pubSub) isClosed() bool { return p.closed.Get() == 1 }
 func (p *pubSub) Close() error {
 	if p.closed.CompareAndSwap(0, 1) {
-		close(p.msgCh)
 		p.cancel()
 	}
 	return nil
@@ -283,7 +281,7 @@ func (p *pubSub) PSubscribe(ctx context.Context, patterns ...string) error {
 	go func() {
 		err = p.client.cmd.Receive(p.ctx, p.client.cmd.B().Psubscribe().Pattern(patterns...).Build(), func(m rueidis.PubSubMessage) {
 			if !p.isClosed() {
-				p.msgCh <- m
+				p.msgCh.In <- m
 			}
 		})
 	}()
@@ -297,7 +295,7 @@ func (p *pubSub) Subscribe(ctx context.Context, channels ...string) error {
 	go func() {
 		err = p.client.cmd.Receive(p.ctx, p.client.cmd.B().Subscribe().Channel(channels...).Build(), func(m rueidis.PubSubMessage) {
 			if !p.isClosed() {
-				p.msgCh <- m
+				p.msgCh.In <- m
 			}
 		})
 	}()
@@ -311,7 +309,7 @@ func (p *pubSub) SSubscribe(ctx context.Context, channels ...string) error {
 	go func() {
 		err = p.client.cmd.Receive(p.ctx, p.client.cmd.B().Ssubscribe().Channel(channels...).Build(), func(m rueidis.PubSubMessage) {
 			if !p.isClosed() {
-				p.msgCh <- m
+				p.msgCh.In <- m
 			}
 		})
 	}()
@@ -341,5 +339,5 @@ func (p *pubSub) PUnsubscribe(ctx context.Context, patterns ...string) error {
 }
 
 func (p *pubSub) Channel() <-chan Message {
-	return p.msgCh
+	return p.msgCh.Out
 }
