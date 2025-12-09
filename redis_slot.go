@@ -133,3 +133,5 @@ func crc16(key string) (crc uint16) {
 	}
 	return crc
 }
+
+func Slot(key string) uint16 { return slot(key) }
