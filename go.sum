@@ -216,8 +216,8 @@ github.com/redis/rueidis/rueidiscompat v1.0.70/go.mod h1:YDbx4GS/jFV01WDpHjrQzwy
 github.com/redis/rueidis/rueidisprob v1.0.70 h1:bkp1U2DBbYS512zRkAGw3PHQZSdvv+NKEE+gbbpjfss=
 github.com/redis/rueidis/rueidisprob v1.0.70/go.mod h1:5ZCKKK78GMLfPAVRQClcMtTcopDH24mmp6yvbQoCbR8=
 github.com/rogpeppe/go-internal v1.3.0/go.mod h1:M8bDsm7K2OlrFYOpmOWEs/qY81heoFRclV5y23lUDJ4=
-github.com/sandwich-go/funnel v0.0.1 h1:iAQQv2NhsqK6pmb+k81h14qSrE1VazR3DZ8BqxUyP/8=
-github.com/sandwich-go/funnel v0.0.1/go.mod h1:i+Ic0l78rwAqFV2CxdrK9FZNk2JU73jamUFfk/wogGM=
+github.com/sandwich-go/funnel v0.0.2-0.20260127034708-1198e231ebca h1:3Sdce4Wv9QeHHoLCrDN9BBUwvtI96WYl2/E4YpBBmp4=
+github.com/sandwich-go/funnel v0.0.2-0.20260127034708-1198e231ebca/go.mod h1:9a0WCDrEDoM7Nd6vEuiCz2Q2X7sy0+PDBmamPTf/qUM=
 github.com/sirupsen/logrus v1.2.0/go.mod h1:LxeOpSwHxABJmUn/MG1IvRgCAasNZTLOkJPxbbu5VWo=
 github.com/sirupsen/logrus v1.4.2/go.mod h1:tLMulIdttU9McNUspp0xgXVQah82FyeX6MwdIuYE2rE=
 github.com/sirupsen/logrus v1.6.0/go.mod h1:7uNnSEd1DgxDLC74fIahvMZmmYsHGZGEOFrfsX/uA88=

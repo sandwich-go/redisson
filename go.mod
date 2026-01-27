@@ -10,7 +10,7 @@ require (
 	github.com/redis/rueidis v1.0.70
 	github.com/redis/rueidis/rueidiscompat v1.0.70
 	github.com/redis/rueidis/rueidisprob v1.0.70
-	github.com/sandwich-go/funnel v0.0.1
+	github.com/sandwich-go/funnel v0.0.2-0.20260127034708-1198e231ebca
 	github.com/smartystreets/goconvey v1.7.2
 )
 
