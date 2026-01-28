@@ -285,11 +285,11 @@ func (p *pubSub) PSubscribe(ctx context.Context, patterns ...string) error {
 			if !p.isClosed() {
 				p.msgCh.In <- m
 			} else {
-				warning(fmt.Sprintf("psubsribe, channel closed, patterns: %s,", strings.Join(patterns, " ")))
+				warning(fmt.Sprintf("psubscribe, channel closed, patterns: %s,", strings.Join(patterns, " ")))
 			}
 		})
 		if err != nil {
-			e(fmt.Sprintf("psubsribe failed, patterns: %s, err: %s", strings.Join(patterns, ", "), err.Error()))
+			e(fmt.Sprintf("psubscribe failed, patterns: %s, err: %s", strings.Join(patterns, ", "), err.Error()))
 		}
 	}()
 	p.handler.after(ctx, err)
@@ -304,11 +304,11 @@ func (p *pubSub) Subscribe(ctx context.Context, channels ...string) error {
 			if !p.isClosed() {
 				p.msgCh.In <- m
 			} else {
-				warning(fmt.Sprintf("subsribe, channel closed, channels: %s,", strings.Join(channels, " ")))
+				warning(fmt.Sprintf("subscribe, channel closed, channels: %s,", strings.Join(channels, " ")))
 			}
 		})
 		if err != nil {
-			e(fmt.Sprintf("subsribe failed, channels: %s, err: %s", strings.Join(channels, ", "), err.Error()))
+			e(fmt.Sprintf("subscribe failed, channels: %s, err: %s", strings.Join(channels, ", "), err.Error()))
 		}
 	}()
 	p.handler.after(ctx, err)
@@ -323,11 +323,11 @@ func (p *pubSub) SSubscribe(ctx context.Context, channels ...string) error {
 			if !p.isClosed() {
 				p.msgCh.In <- m
 			} else {
-				warning(fmt.Sprintf("ssubsribe, channel closed, channels: %s,", strings.Join(channels, " ")))
+				warning(fmt.Sprintf("ssubscribe, channel closed, channels: %s,", strings.Join(channels, " ")))
 			}
 		})
 		if err != nil {
-			e(fmt.Sprintf("ssubsribe failed, channels: %s, err: %s", strings.Join(channels, ", "), err.Error()))
+			e(fmt.Sprintf("ssubscribe failed, channels: %s, err: %s", strings.Join(channels, ", "), err.Error()))
 		}
 	}()
 	p.handler.after(ctx, err)
