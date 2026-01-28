@@ -2,6 +2,8 @@ package redisson
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"github.com/redis/rueidis"
 )
@@ -284,6 +286,9 @@ func (p *pubSub) PSubscribe(ctx context.Context, patterns ...string) error {
 				p.msgCh.In <- m
 			}
 		})
+		if err != nil {
+			e(fmt.Sprintf("psubsribe failed, patterns: %s, err: %s", strings.Join(patterns, ", "), err.Error()))
+		}
 	}()
 	p.handler.after(ctx, err)
 	return err
@@ -298,6 +303,9 @@ func (p *pubSub) Subscribe(ctx context.Context, channels ...string) error {
 				p.msgCh.In <- m
 			}
 		})
+		if err != nil {
+			e(fmt.Sprintf("subsribe failed, channels: %s, err: %s", strings.Join(channels, ", "), err.Error()))
+		}
 	}()
 	p.handler.after(ctx, err)
 	return err
@@ -312,6 +320,9 @@ func (p *pubSub) SSubscribe(ctx context.Context, channels ...string) error {
 				p.msgCh.In <- m
 			}
 		})
+		if err != nil {
+			e(fmt.Sprintf("ssubsribe failed, channels: %s, err: %s", strings.Join(channels, ", "), err.Error()))
+		}
 	}()
 	p.handler.after(ctx, err)
 	return err
