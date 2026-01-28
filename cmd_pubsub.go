@@ -284,6 +284,8 @@ func (p *pubSub) PSubscribe(ctx context.Context, patterns ...string) error {
 		err = p.client.cmd.Receive(p.ctx, p.client.cmd.B().Psubscribe().Pattern(patterns...).Build(), func(m rueidis.PubSubMessage) {
 			if !p.isClosed() {
 				p.msgCh.In <- m
+			} else {
+				warning(fmt.Sprintf("psubsribe, channel closed, patterns: %s,", strings.Join(patterns, " ")))
 			}
 		})
 		if err != nil {
@@ -301,6 +303,8 @@ func (p *pubSub) Subscribe(ctx context.Context, channels ...string) error {
 		err = p.client.cmd.Receive(p.ctx, p.client.cmd.B().Subscribe().Channel(channels...).Build(), func(m rueidis.PubSubMessage) {
 			if !p.isClosed() {
 				p.msgCh.In <- m
+			} else {
+				warning(fmt.Sprintf("subsribe, channel closed, channels: %s,", strings.Join(channels, " ")))
 			}
 		})
 		if err != nil {
@@ -318,6 +322,8 @@ func (p *pubSub) SSubscribe(ctx context.Context, channels ...string) error {
 		err = p.client.cmd.Receive(p.ctx, p.client.cmd.B().Ssubscribe().Channel(channels...).Build(), func(m rueidis.PubSubMessage) {
 			if !p.isClosed() {
 				p.msgCh.In <- m
+			} else {
+				warning(fmt.Sprintf("ssubsribe, channel closed, channels: %s,", strings.Join(channels, " ")))
 			}
 		})
 		if err != nil {
