@@ -3,7 +3,6 @@ package redisson
 import (
 	"context"
 	"github.com/coreos/go-semver/semver"
-	"github.com/sandwich-go/funnel"
 	"time"
 )
 
@@ -12,8 +11,8 @@ type XCmdable interface {
 	RegisterCollector(RegisterCollectorFunc)
 	Cache(ttl time.Duration) CacheCmdable
 	NewLocker(opts ...LockerOption) (Locker, error)
-	NewFunnel(key string, capacity, operations int64, seconds time.Duration) funnel.Funnel
 	NewBloomFilter(name string, expectedNumberOfItems uint, falsePositiveRate float64, opts ...BloomOption) (BloomFilter, error)
+	NewRateLimiter(opts ...RateLimiterOption) (RateLimiter, error)
 	NewDelayQueue(name string, f func([]byte) error, opts ...DelayOption) (DelayQueue, error)
 	Close() error
 	IsCluster() bool
