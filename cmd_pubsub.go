@@ -208,7 +208,7 @@ func (c *client) Subscribe(ctx context.Context, channels ...string) PubSub {
 
 	var err error
 	if len(channels) > 0 {
-		err = r.SSubscribe(ctx, channels...)
+		err = r.Subscribe(ctx, channels...)
 	}
 
 	c.handler.after(ctx, err)
