@@ -100,3 +100,15 @@ jobs:
         with:
           version: v2.12
           args: --timeout=5m
+
+  builder-check:
+    name: Builder invariants (genbuilder)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.24.x"
+          cache: true
+      - name: Run genbuilder -check
+        run: go run ./cmd/genbuilder -check -v

@@ -53,6 +53,8 @@ linters:
       # 自动生成的命令字典与 optiongen 产物
       - cmd_gen\.go$
       - gen_.*_optiongen\.go$
+      # 元工程工具（独立 main 程序，不属于库代码）
+      - ^cmd/genbuilder/
     rules:
       - path: _test\.go
         linters:
