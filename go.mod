@@ -12,7 +12,6 @@ require (
 	github.com/redis/rueidis/rueidislimiter v1.0.71
 	github.com/redis/rueidis/rueidisprob v1.0.71
 	github.com/smartystreets/goconvey v1.7.2
-	golang.org/x/net v0.48.0
 )
 
 require (

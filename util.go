@@ -411,7 +411,7 @@ func scanSlice(data []string, slice interface{}) error {
 	if !v.IsValid() {
 		return fmt.Errorf("redis: ScanSlice(nil)")
 	}
-	if v.Kind() != reflect.Ptr {
+	if v.Kind() != reflect.Pointer {
 		return fmt.Errorf("redis: ScanSlice(non-pointer %T)", slice)
 	}
 	v = v.Elem()
@@ -434,7 +434,7 @@ func scanSlice(data []string, slice interface{}) error {
 func makeSliceNextElemFunc(v reflect.Value) func() reflect.Value {
 	elemType := v.Type().Elem()
 
-	if elemType.Kind() == reflect.Ptr {
+	if elemType.Kind() == reflect.Pointer {
 		elemType = elemType.Elem()
 		return func() reflect.Value {
 			if v.Len() < v.Cap() {

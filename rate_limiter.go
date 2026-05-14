@@ -1,10 +1,11 @@
 package redisson
 
 import (
+	"context"
+	"time"
+
 	"github.com/redis/rueidis"
 	"github.com/redis/rueidis/rueidislimiter"
-	"golang.org/x/net/context"
-	"time"
 )
 
 type (

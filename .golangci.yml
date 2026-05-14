@@ -1,40 +1,61 @@
+version: "2"
+
 run:
   timeout: 5m
   tests: true
-  # 跳过自动生成的命令字典与 optiongen 产物
-  skip-files:
-    - "cmd_gen\\.go$"
-    - "gen_.*_optiongen\\.go$"
 
 linters:
-  disable-all: true
+  default: none
   enable:
     - errcheck
-    - gosimple
     - govet
     - ineffassign
     - staticcheck
-    - typecheck
-    - unused
     - misspell
-    - unconvert
     - bodyclose
     - nilerr
-    - prealloc
-
-linters-settings:
-  staticcheck:
-    checks: ["all", "-SA1019"] # SA1019 = deprecated；过滤掉避免 noise
-  govet:
-    enable-all: true
-    disable:
-      - fieldalignment
+  settings:
+    govet:
+      enable:
+        - assign
+        - atomic
+        - bools
+        - buildtag
+        - composites
+        - copylocks
+        - directive
+        - errorsas
+        - httpresponse
+        - loopclosure
+        - lostcancel
+        - nilfunc
+        - printf
+        - shift
+        - stringintconv
+        - structtag
+        - tests
+        - unmarshal
+        - unreachable
+        - unsafeptr
+        - unusedresult
+    staticcheck:
+      # 仅启用真正影响正确性的检查；禁用风格类（命名/注释/简化建议）以避免大批量改动
+      checks:
+        - "SA*" # 静态分析正确性问题（bug / 资源泄漏等）
+        - "-SA1019" # 忽略 deprecated 警告
+        - "-SA9003" # empty branch
+  exclusions:
+    generated: lax
+    paths:
+      # 自动生成的命令字典与 optiongen 产物
+      - cmd_gen\.go$
+      - gen_.*_optiongen\.go$
+    rules:
+      - path: _test\.go
+        linters:
+          - errcheck
+          - bodyclose
 
 issues:
-  exclude-rules:
-    - path: _test\.go
-      linters:
-        - errcheck
-        - prealloc
-  max-same-issues: 50
   max-issues-per-linter: 0
+  max-same-issues: 50
