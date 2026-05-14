@@ -102,15 +102,17 @@ func (r *baseHandler) beforeWithKeys(ctx context.Context, command Command, getKe
 		if skipCheck := ctx.Value(skipCheckContextKey); skipCheck == nil {
 			// 需要检验命令是否在黑名单
 			if command.Forbid() {
-				panic(fmt.Errorf("[%s]: redis command are not allowed", command.String()))
+				e(fmt.Sprintf("[%s]: redis command are not allowed", command.String()))
 			}
 			// 需要检验版本是否支持该命令
 			if r.version != nil && r.version.LessThan(mustNewSemVersion(command.RequireVersion())) {
-				panic(fmt.Errorf("[%s]: redis command are not supported in version %q, available since %s", command, r.version, command.RequireVersion()))
+				e(fmt.Sprintf("[%s]: redis command are not supported in version %q, available since %s", command, r.version, command.RequireVersion()))
 			}
 			if r.cluster {
 				// 需要检验所有的key是否均在同一槽位
-				panicIfUseMultipleKeySlots(command, getKeys)
+				if err := checkMultipleKeySlots(command, getKeys); err != nil {
+					e(err.Error())
+				}
 			}
 			// 该命令是否有警告日志输出
 			if r.version != nil {

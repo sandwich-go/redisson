@@ -262,7 +262,7 @@ func setConfDefaultValue(cc *Conf) {
 		WithEnableCache(true),
 		WithCacheSizeEachConn(0),
 		WithRingScaleEachConn(0),
-		WithDevelopment(true),
+		WithDevelopment(false),
 		WithT(nil),
 		WithForceSingleClient(false),
 		WithPubSubChanSize(defaultPubSubChanSize),

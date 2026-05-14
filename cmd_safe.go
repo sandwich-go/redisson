@@ -36,7 +36,8 @@ func (c *client) SafeMGet(ctx context.Context, keys ...string) SliceCmd {
 	var scs = make(map[uint16]SliceCmd)
 
 	parallelK(c.maxp, slot2Keys, func(k uint16) {
-		ret := c.MGet(WithSkipCheck(context.Background()), slot2Keys[k]...)
+		// 透传外层 ctx，保留用户的取消/超时语义
+		ret := c.MGet(WithSkipCheck(ctx), slot2Keys[k]...)
 		mx.Lock()
 		scs[k] = ret
 		mx.Unlock()

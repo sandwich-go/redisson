@@ -1,1 +1,18 @@
 .idea/
+.vscode/
+.DS_Store
+
+# Go build artifacts
+*.test
+*.out
+*.exe
+coverage.out
+coverage.html
+profile.cov
+
+# Vendor (use modules)
+vendor/
+
+# Local env / scratch
+.env
+*.local

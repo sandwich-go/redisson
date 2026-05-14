@@ -5,7 +5,6 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
-	"github.com/alicebob/miniredis/v2"
 	"github.com/coreos/go-semver/semver"
 	"github.com/modern-go/reflect2"
 	"github.com/redis/rueidis"
@@ -104,8 +103,12 @@ func confVisitor2ClientOption(v ConfVisitor) rueidis.ClientOption {
 }
 
 func (c *client) connect() error {
+	// 当配置了 Tester 时，挂上 mock。该路径默认仅在 build tag `redisson_miniredis`
+	// 下可用，避免下游用户的二进制链入 miniredis 及其传递依赖。
 	if t := c.v.GetT(); t != nil {
-		_ = c.v.ApplyOption(WithAddrs(miniredis.RunT(t).Addr()))
+		if err := setupMiniredisIfEnabled(c.v, t); err != nil {
+			return err
+		}
 	}
 	var err error
 	c.cmd, err = rueidis.NewClient(confVisitor2ClientOption(c.v))
@@ -115,7 +118,10 @@ func (c *client) connect() error {
 	c.adapter = rueidiscompat.NewAdapter(c.cmd)
 	c.builder = builder{c.cmd.B()}
 	if t := c.v.GetT(); t == nil {
-		if err = c.revise(context.Background()); err != nil {
+		// 启动期版本/集群探测设置合理超时，避免 Background 卡死初始化。
+		ctx, cancel := context.WithTimeout(context.Background(), c.v.GetWriteTimeout())
+		defer cancel()
+		if err = c.revise(ctx); err != nil {
 			_ = c.Close()
 			return err
 		}

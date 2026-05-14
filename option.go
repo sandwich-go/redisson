@@ -32,7 +32,7 @@ func ConfOptionDeclareWithDefault() any {
 		"EnableCache":       true,                               // @MethodComment(是否开启客户端缓存)
 		"CacheSizeEachConn": 0,                                  // @MethodComment(开启客户端缓存时，单个连接缓存大小，默认128 MiB)
 		"RingScaleEachConn": 0,                                  // @MethodComment(单个连接ring buffer大小，默认2 ^ RingScaleEachConn, RingScaleEachConn默认情况下为10)
-		"Development":       true,                               // @MethodComment(是否为开发模式，开发模式下，使用部分接口会有警告日志输出，会校验多key是否为同一hash槽，会校验部分接口是否满足版本要求)
+		"Development":       false,                              // @MethodComment(是否为开发模式，开发模式下，使用部分接口会有警告日志输出，会校验多key是否为同一hash槽，会校验部分接口是否满足版本要求；生产环境请保持 false)
 		"T":                 (Tester)(nil),                      // @MethodComment(如果设置该值，则启动mock)
 		"ForceSingleClient": false,                              // @MethodComment(ForceSingleClient force the usage of a single client connection, without letting the lib guessing)
 		"PubSubChanSize":    int(defaultPubSubChanSize),         // @MethodComment(pubsub chan 大小)

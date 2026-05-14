@@ -2,11 +2,18 @@ package redisson
 
 import "fmt"
 
-func panicIfUseMultipleKeySlots(command Command, f func() []string) {
+// checkMultipleKeySlots 检查多 key 命令的所有 key 是否在同一 slot；
+// 若不同则返回错误。Development 模式下用于警告（不再 panic）。
+func checkMultipleKeySlots(command Command, f func() []string) error {
 	if f == nil {
-		return
+		return nil
 	}
-	if err := checkSlots(command, f()...); err != nil {
+	return checkSlots(command, f()...)
+}
+
+// Deprecated: 保留向后兼容；现已不在生产路径中使用，请改用 checkMultipleKeySlots。
+func panicIfUseMultipleKeySlots(command Command, f func() []string) {
+	if err := checkMultipleKeySlots(command, f); err != nil {
 		panic(err)
 	}
 }

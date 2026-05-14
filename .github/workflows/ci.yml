@@ -1,0 +1,87 @@
+name: CI
+
+on:
+  push:
+    branches: ["main", "master", "1.*/develop", "1.*/release"]
+  pull_request:
+    branches: ["main", "master", "1.*/develop", "1.*/release"]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build (no tags)
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        go: ["1.22.x", "1.23.x", "1.24.x"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go }}
+          cache: true
+      - name: go vet
+        run: go vet ./...
+      - name: go build (without miniredis tag)
+        run: go build ./...
+
+  test:
+    name: Test (Redis ${{ matrix.redis }} + Go ${{ matrix.go }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        go: ["1.24.x"]
+        redis: ["6", "7"]
+    services:
+      redis:
+        image: redis:${{ matrix.redis }}
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go }}
+          cache: true
+      - name: Run tests with race detector
+        env:
+          # 测试套依赖外部 Redis；地址来自 service container
+          REDIS_ADDR: 127.0.0.1:6379
+        run: |
+          go test -race -count=1 -timeout 5m ./...
+
+  test-miniredis:
+    name: Test miniredis path (build tag)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.24.x"
+          cache: true
+      - name: Build with -tags redisson_miniredis
+        run: go build -tags redisson_miniredis ./...
+
+  lint:
+    name: golangci-lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.24.x"
+          cache: true
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: v1.61
+          args: --timeout=5m

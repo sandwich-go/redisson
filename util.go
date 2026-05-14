@@ -201,8 +201,7 @@ func argToSlice(a any) []string {
 	}
 }
 
-func warning(msg string) { fmt.Println(msg) }
-func e(msg string)       { fmt.Println(msg) }
+// warning 与 e 已迁移至 logger.go，并通过 SetLogger 可注入。
 
 func toFloat32(val any) (float32, error) {
 	switch t := val.(type) {
