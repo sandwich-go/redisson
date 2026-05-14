@@ -1,10 +1,10 @@
 package redisson
 
-// Redis 命令关键字（XMODEM 大小写命令字面量）。
+// Redis 命令关键字（保留大小写命令字面量）。
 // 用作内部 Builder.Arbitrary().Args(...) 的常量参数。
 //
-// 此前以 XXX_ 前缀命名（容易被误读为 TODO）；新代码请使用 Kw* 名称。
-// 旧名仍以 const alias 保留以保持向后兼容（见 keywords_legacy.go）。
+// 历史上曾以 XXX_ 前缀命名（容易被误读为 TODO 标记）；
+// 自 v2.0 起仅保留 Kw* 命名，旧的 XXX_* 别名已彻底移除。
 const (
 	KwBitField            = "BITFIELD"
 	KwScan                = "SCAN"

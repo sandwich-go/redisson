@@ -14,8 +14,7 @@ import (
 	"github.com/redis/rueidis"
 )
 
-// Redis 命令关键字常量已迁至 keywords.go（Kw* 命名）；
-// 旧的 XXX_* 别名保留在 keywords_legacy.go。
+// Redis 命令关键字常量见 keywords.go（Kw* 命名）。
 
 var (
 	nowFunc   = time.Now
