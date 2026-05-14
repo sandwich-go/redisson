@@ -47,13 +47,29 @@ type baseHandler struct {
 	v                 ConfVisitor
 	version           *semver.Version
 	cluster           bool
+	// metrics 是构造期注入的 prometheus 指标集合；
+	// 默认指向 defaultMetrics（向后兼容），调用 newBaseHandlerWithMetrics 可注入独立实例。
+	metrics *metricsSet
 
 	mx                 sync.Mutex
 	warningOnceMapping map[string]struct{}
 }
 
 func newBaseHandler(v ConfVisitor) handler {
-	return &baseHandler{v: v, warningOnceMapping: make(map[string]struct{})}
+	return newBaseHandlerWithMetrics(v, defaultMetrics)
+}
+
+// newBaseHandlerWithMetrics 用指定的 metrics 实例构造 handler。
+// 多 client 隔离场景下使用 newMetricsSet() 生成独立实例并通过本函数注入。
+func newBaseHandlerWithMetrics(v ConfVisitor, m *metricsSet) handler {
+	if m == nil {
+		m = defaultMetrics
+	}
+	return &baseHandler{
+		v:                  v,
+		metrics:            m,
+		warningOnceMapping: make(map[string]struct{}),
+	}
 }
 
 type (
@@ -160,38 +176,41 @@ func (r *baseHandler) isImplicitError(err error) bool {
 	return r.silentErrCallback(err)
 }
 func (r *baseHandler) after(ctx context.Context, err error) {
-	if r.v.GetEnableMonitor() {
-		cmd := ctx.Value(commandContextKey).(string)
-		subCmd := ctx.Value(subCommandContextKey).(string)
-		if err != nil && !r.isImplicitError(err) {
-			errMetric.WithLabelValues(cmd, subCmd).Inc()
-		} else {
-			metric.WithLabelValues(cmd, subCmd).Observe(sinceFunc(ctx.Value(startTimeContextKey).(time.Time)).Seconds())
-		}
+	if !r.v.GetEnableMonitor() || r.metrics == nil {
+		return
+	}
+	cmd := ctx.Value(commandContextKey).(string)
+	subCmd := ctx.Value(subCommandContextKey).(string)
+	if err != nil && !r.isImplicitError(err) {
+		r.metrics.err.WithLabelValues(cmd, subCmd).Inc()
+	} else {
+		r.metrics.timing.WithLabelValues(cmd, subCmd).Observe(sinceFunc(ctx.Value(startTimeContextKey).(time.Time)).Seconds())
 	}
 }
 func (r *baseHandler) cache(ctx context.Context, hit bool) {
-	if r.v.GetEnableMonitor() {
-		if hit {
-			hitsMetric.WithLabelValues(ctx.Value(commandContextKey).(string), ctx.Value(subCommandContextKey).(string)).Inc()
-		} else {
-			missMetric.WithLabelValues(ctx.Value(commandContextKey).(string), ctx.Value(subCommandContextKey).(string)).Inc()
-		}
+	if !r.v.GetEnableMonitor() || r.metrics == nil {
+		return
+	}
+	cmd := ctx.Value(commandContextKey).(string)
+	subCmd := ctx.Value(subCommandContextKey).(string)
+	if hit {
+		r.metrics.hits.WithLabelValues(cmd, subCmd).Inc()
+	} else {
+		r.metrics.miss.WithLabelValues(cmd, subCmd).Inc()
 	}
 }
 func (r *baseHandler) delayPollError(name string) {
-	if r.v.GetEnableMonitor() {
-		delayPollErrorMetric.WithLabelValues(name).Inc()
+	if r.v.GetEnableMonitor() && r.metrics != nil {
+		r.metrics.delayPollError.WithLabelValues(name).Inc()
 	}
-
 }
 func (r *baseHandler) delayReclaimError(name string) {
-	if r.v.GetEnableMonitor() {
-		delayReclaimErrorMetric.WithLabelValues(name).Inc()
+	if r.v.GetEnableMonitor() && r.metrics != nil {
+		r.metrics.delayReclaimError.WithLabelValues(name).Inc()
 	}
 }
 func (r *baseHandler) delayReclaim(name string, count int) {
-	if r.v.GetEnableMonitor() {
-		delayReclaimCountMetric.WithLabelValues(name).Add(float64(count))
+	if r.v.GetEnableMonitor() && r.metrics != nil {
+		r.metrics.delayReclaimCount.WithLabelValues(name).Add(float64(count))
 	}
 }
