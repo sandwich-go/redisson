@@ -108,7 +108,7 @@ jobs:
           args: --timeout=5m
 
   builder-check:
-    name: Builder invariants (genbuilder)
+    name: Builder invariants + spec sync (genbuilder)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -116,5 +116,7 @@ jobs:
         with:
           go-version: "1.24.x"
           cache: true
-      - name: Run genbuilder -check
+      - name: AST invariants
         run: go run ./cmd/genbuilder -check -v
+      - name: Spec sync (specs/builder.yaml vs code)
+        run: go run ./cmd/genbuilder -check=false -check-spec=specs/builder.yaml

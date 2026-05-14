@@ -1,6 +1,7 @@
 package redisson
 
 //go:generate go run ./cmd/genbuilder -check
+//go:generate go run ./cmd/genbuilder -check=false -export-spec specs/builder.yaml
 
 // builder 是 rueidis Builder 的语义糖，所有命令构造器（XxxCompleted）方法已按
 // 命令族拆分到 builder_*.go 文件，对应关系：

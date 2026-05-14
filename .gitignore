@@ -16,3 +16,5 @@ vendor/
 # Local env / scratch
 .env
 *.local
+genbuilder
+/genbuilder
