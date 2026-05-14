@@ -18,11 +18,7 @@ type xMessageSliceCmd struct {
 	baseCmd[[]XMessage]
 }
 
-func newXMessageSliceCmd(res rueidis.RedisResult) *xMessageSliceCmd {
-	cmd := &xMessageSliceCmd{}
-	cmd.from(res)
-	return cmd
-}
+// 注：newXMessageSliceCmd 工厂已废弃。Pipeliner 路径通过 cmd_gen.go 直接构造空对象。
 
 func (c *xMessageSliceCmd) from(res rueidis.RedisResult) {
 	val, err := res.AsXRange()
@@ -56,11 +52,7 @@ func newXMessage(r rueidis.XRangeEntry) XMessage {
 	return m
 }
 
-func newXAutoClaimCmd(res rueidis.RedisResult) *xAutoClaimCmd {
-	c := &xAutoClaimCmd{}
-	c.from(res)
-	return c
-}
+// 注：newXAutoClaimCmd 工厂已废弃。Pipeliner 路径通过 cmd_gen.go 直接构造空对象。
 
 func (c *xAutoClaimCmd) from(res rueidis.RedisResult) {
 	arr, err := res.ToArray()
@@ -117,11 +109,7 @@ type xInfoConsumersCmd struct {
 	baseCmd[[]XInfoConsumer]
 }
 
-func newXInfoConsumersCmd(res rueidis.RedisResult) *xInfoConsumersCmd {
-	cmd := &xInfoConsumersCmd{}
-	cmd.from(res)
-	return cmd
-}
+// 注：newXInfoConsumersCmd 工厂已废弃。Pipeliner 路径通过 cmd_gen.go 直接构造空对象。
 
 func (c *xInfoConsumersCmd) from(res rueidis.RedisResult) {
 	arr, err := res.ToArray()
@@ -162,11 +150,7 @@ type xInfoGroupsCmd struct {
 	baseCmd[[]XInfoGroup]
 }
 
-func newXInfoGroupsCmd(res rueidis.RedisResult) *xInfoGroupsCmd {
-	cmd := &xInfoGroupsCmd{}
-	cmd.from(res)
-	return cmd
-}
+// 注：newXInfoGroupsCmd 工厂已废弃。Pipeliner 路径通过 cmd_gen.go 直接构造空对象。
 
 func (c *xInfoGroupsCmd) from(res rueidis.RedisResult) {
 	arr, err := res.ToArray()
@@ -215,11 +199,7 @@ type xInfoStreamCmd struct {
 	baseCmd[XInfoStream]
 }
 
-func newXInfoStreamCmd(res rueidis.RedisResult) *xInfoStreamCmd {
-	cmd := &xInfoStreamCmd{}
-	cmd.from(res)
-	return cmd
-}
+// 注：newXInfoStreamCmd 工厂已废弃。Pipeliner 路径通过 cmd_gen.go 直接构造空对象。
 
 func (c *xInfoStreamCmd) from(res rueidis.RedisResult) {
 	kv, err := res.AsMap()
@@ -275,11 +255,7 @@ type xInfoStreamFullCmd struct {
 	baseCmd[XInfoStreamFull]
 }
 
-func newXInfoStreamFullCmd(res rueidis.RedisResult) *xInfoStreamFullCmd {
-	cmd := &xInfoStreamFullCmd{}
-	cmd.from(res)
-	return cmd
-}
+// 注：newXInfoStreamFullCmd 工厂已废弃。Pipeliner 路径通过 cmd_gen.go 直接构造空对象。
 
 func (c *xInfoStreamFullCmd) from(res rueidis.RedisResult) {
 	kv, err := res.AsMap()
@@ -479,11 +455,7 @@ type xPendingCmd struct {
 	baseCmd[XPending]
 }
 
-func newXPendingCmd(res rueidis.RedisResult) *xPendingCmd {
-	cmd := &xPendingCmd{}
-	cmd.from(res)
-	return cmd
-}
+// 注：newXPendingCmd 工厂已废弃。Pipeliner 路径通过 cmd_gen.go 直接构造空对象。
 
 func (c *xPendingCmd) from(res rueidis.RedisResult) {
 	arr, err := res.ToArray()
@@ -558,11 +530,7 @@ type xPendingExtCmd struct {
 	baseCmd[[]XPendingExt]
 }
 
-func newXPendingExtCmd(res rueidis.RedisResult) *xPendingExtCmd {
-	cmd := &xPendingExtCmd{}
-	cmd.from(res)
-	return cmd
-}
+// 注：newXPendingExtCmd 工厂已废弃。Pipeliner 路径通过 cmd_gen.go 直接构造空对象。
 
 func (c *xPendingExtCmd) from(res rueidis.RedisResult) {
 	arrs, err := res.ToArray()
@@ -629,11 +597,7 @@ type xAutoClaimJustIDCmd struct {
 	val   []string
 }
 
-func newXAutoClaimJustIDCmd(res rueidis.RedisResult) *xAutoClaimJustIDCmd {
-	c := &xAutoClaimJustIDCmd{}
-	c.from(res)
-	return c
-}
+// 注：newXAutoClaimJustIDCmd 工厂已废弃。Pipeliner 路径通过 cmd_gen.go 直接构造空对象。
 
 func (c *xAutoClaimJustIDCmd) from(res rueidis.RedisResult) {
 	arr, err := res.ToArray()

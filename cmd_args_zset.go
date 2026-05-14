@@ -16,11 +16,7 @@ type zSliceWithKeyCmd struct {
 	val []Z
 }
 
-func newZSliceWithKeyCmd(res rueidis.RedisResult) *zSliceWithKeyCmd {
-	c := &zSliceWithKeyCmd{}
-	c.from(res)
-	return c
-}
+// 注：newZSliceWithKeyCmd 工厂已废弃。Pipeliner 路径通过 cmd_gen.go 直接构造空对象。
 
 func (c *zSliceWithKeyCmd) from(res rueidis.RedisResult) {
 	v, err := res.AsZMPop()
