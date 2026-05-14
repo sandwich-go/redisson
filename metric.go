@@ -29,13 +29,13 @@ var (
 // 兼容性说明：包级变量 errMetric 等仍保留并被 init() 初始化为同一份实例，
 // 由 RegisterCollector 默认路径使用，保持外部行为不变。
 type metricsSet struct {
-	timing                  *prometheus.SummaryVec
-	err                     *prometheus.CounterVec
-	hits                    *prometheus.CounterVec
-	miss                    *prometheus.CounterVec
-	delayPollError          *prometheus.CounterVec
-	delayReclaimError       *prometheus.CounterVec
-	delayReclaimCount       *prometheus.CounterVec
+	timing            *prometheus.SummaryVec
+	err               *prometheus.CounterVec
+	hits              *prometheus.CounterVec
+	miss              *prometheus.CounterVec
+	delayPollError    *prometheus.CounterVec
+	delayReclaimError *prometheus.CounterVec
+	delayReclaimCount *prometheus.CounterVec
 }
 
 // newMetricsSet 创建一组新的 metric 实例。

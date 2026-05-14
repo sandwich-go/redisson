@@ -327,24 +327,24 @@ func AtomicConf() ConfVisitor {
 }
 
 // all getter func
-func (cc *Conf) GetNet() string                 { return cc.Net }
-func (cc *Conf) GetAlwaysRESP2() bool           { return cc.AlwaysRESP2 }
-func (cc *Conf) GetName() string                { return cc.Name }
-func (cc *Conf) GetMasterName() string          { return cc.MasterName }
-func (cc *Conf) GetEnableMonitor() bool         { return cc.EnableMonitor }
-func (cc *Conf) GetAddrs() []string             { return cc.Addrs }
-func (cc *Conf) GetDB() int                     { return cc.DB }
-func (cc *Conf) GetUsername() string            { return cc.Username }
-func (cc *Conf) GetPassword() string            { return cc.Password }
-func (cc *Conf) GetWriteTimeout() time.Duration { return cc.WriteTimeout }
-func (cc *Conf) GetConnPoolSize() int           { return cc.ConnPoolSize }
-func (cc *Conf) GetEnableCache() bool           { return cc.EnableCache }
-func (cc *Conf) GetCacheSizeEachConn() int      { return cc.CacheSizeEachConn }
-func (cc *Conf) GetRingScaleEachConn() int      { return cc.RingScaleEachConn }
-func (cc *Conf) GetDevelopment() bool           { return cc.Development }
-func (cc *Conf) GetT() Tester                   { return cc.T }
-func (cc *Conf) GetForceSingleClient() bool     { return cc.ForceSingleClient }
-func (cc *Conf) GetPubSubChanSize() int         { return cc.PubSubChanSize }
+func (cc *Conf) GetNet() string                     { return cc.Net }
+func (cc *Conf) GetAlwaysRESP2() bool               { return cc.AlwaysRESP2 }
+func (cc *Conf) GetName() string                    { return cc.Name }
+func (cc *Conf) GetMasterName() string              { return cc.MasterName }
+func (cc *Conf) GetEnableMonitor() bool             { return cc.EnableMonitor }
+func (cc *Conf) GetAddrs() []string                 { return cc.Addrs }
+func (cc *Conf) GetDB() int                         { return cc.DB }
+func (cc *Conf) GetUsername() string                { return cc.Username }
+func (cc *Conf) GetPassword() string                { return cc.Password }
+func (cc *Conf) GetWriteTimeout() time.Duration     { return cc.WriteTimeout }
+func (cc *Conf) GetConnPoolSize() int               { return cc.ConnPoolSize }
+func (cc *Conf) GetEnableCache() bool               { return cc.EnableCache }
+func (cc *Conf) GetCacheSizeEachConn() int          { return cc.CacheSizeEachConn }
+func (cc *Conf) GetRingScaleEachConn() int          { return cc.RingScaleEachConn }
+func (cc *Conf) GetDevelopment() bool               { return cc.Development }
+func (cc *Conf) GetT() Tester                       { return cc.T }
+func (cc *Conf) GetForceSingleClient() bool         { return cc.ForceSingleClient }
+func (cc *Conf) GetPubSubChanSize() int             { return cc.PubSubChanSize }
 func (cc *Conf) GetBootstrapTimeout() time.Duration { return cc.BootstrapTimeout }
 
 // ConfVisitor visitor interface for Conf

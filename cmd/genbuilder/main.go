@@ -3,15 +3,15 @@
 // 该工具有三种工作模式（互斥）：
 //
 //  1. -check（默认）: AST 扫描所有 builder_*.go，验证以下不变式：
-//      - receiver 必须为 (b builder)
-//      - 公开函数必须以 "Completed" 结尾
-//      - 公开 Completed 函数必须返回单一 Completed 类型
+//     - receiver 必须为 (b builder)
+//     - 公开函数必须以 "Completed" 结尾
+//     - 公开 Completed 函数必须返回单一 Completed 类型
 //
 //  2. -export-spec=path: 把扫描到的所有函数清单导出到 YAML
-//      （格式：family/name/params），便于 review 与 cmd_gen.go 对比。
+//     （格式：family/name/params），便于 review 与 cmd_gen.go 对比。
 //
 //  3. -check-spec=path: 比对当前 builder_*.go 是否覆盖 YAML 中列出的所有名字
-//      （家族归属、参数列表、返回类型）；用于跟随 cmd_gen.go 升级的回归保护。
+//     （家族归属、参数列表、返回类型）；用于跟随 cmd_gen.go 升级的回归保护。
 //
 // 集成方式:
 //   - redisson_builder.go 顶部 //go:generate go run ./cmd/genbuilder -check
@@ -52,11 +52,11 @@ type funcInfo struct {
 
 func main() {
 	var (
-		root        string
-		checkInv    bool
-		verbose     bool
-		exportSpec  string
-		checkSpec   string
+		root       string
+		checkInv   bool
+		verbose    bool
+		exportSpec string
+		checkSpec  string
 	)
 	flag.StringVar(&root, "root", ".", "package root containing builder_*.go")
 	flag.BoolVar(&checkInv, "check", true, "fail (exit 1) if AST invariants are violated")
