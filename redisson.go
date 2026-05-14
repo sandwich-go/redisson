@@ -32,6 +32,11 @@ type client struct {
 	builder     builder
 	maxp        int
 	delayQueues sync.Map
+	// delayWorkerWG 跟踪所有 delay queue 在途 worker（callback + ack 阶段）。
+	// q.Close 不等 worker（避免 callback 内死锁），但在 client.Close 时
+	// 必须等所有 worker 收尾后才能释放底层连接，否则 worker 中的脚本调用
+	// 会与 c.cmd=nil 写 race。
+	delayWorkerWG sync.WaitGroup
 
 	once sync.Once
 }

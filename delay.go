@@ -160,6 +160,10 @@ const (
 	// 业务失败后要等 1 分钟才重试。新版本拆开：visibility 用 Timeout（reclaim 用），
 	// retry backoff 用此常量，保持业务失败 → 短时再投递 的预期。
 	defaultRetryBackoff = time.Second
+	// delayCloseWorkerWaitTimeout q.Close 等本 queue 在途 worker 完成 ack 的最长时间。
+	// 主路径毫秒级返回；callback 内调 q.Close 的反模式下用此 timeout 打破死锁。
+	// client.Close 仍会在更高层等所有 worker 收尾，保证无 c.cmd race。
+	delayCloseWorkerWaitTimeout = 5 * time.Second
 )
 
 // DelayQueue 单 namespace 的 Redis 延迟队列。
@@ -207,9 +211,11 @@ type delayQueue struct {
 	cancel context.CancelFunc
 
 	// tickerWG 等 ticker goroutine 退出。
-	// 注意：worker（执行用户 callback 的 goroutine）刻意不放进 wg，
-	// 这样 callback 可以在自身内部安全调用 q.Close()。
 	tickerWG sync.WaitGroup
+	// workerWG 跟踪本 queue 的在途 worker；q.Close 等之，但带超时
+	// （避免 callback 内调 q.Close 时形成"worker 等 callback ↔ callback 等 Close"死锁）。
+	// 即使超时，client.delayWorkerWG 仍会兜底等到 worker 完全收尾。
+	workerWG sync.WaitGroup
 	exitC    chan struct{}
 
 	// keys 顺序按 Lua 脚本声明对齐，避免每次调用临时构造切片
@@ -249,8 +255,12 @@ func (c *client) NewDelayQueue(name string, f func([]byte) error, opts ...DelayO
 	// LoadOrStore 保证并发安全的"严格唯一注册"
 	if _, loaded := c.delayQueues.LoadOrStore(q.name, q); loaded {
 		// 撞名：把刚启动的 ticker 收回，返回错误
-		q.running.Store(false)
-		q.shutdown()
+		// 这里 q 刚创建，不可能有 worker；只需关 ticker。
+		if q.running.CompareAndSwap(true, false) {
+			close(q.exitC)
+			q.tickerWG.Wait()
+			q.cancel()
+		}
 		return nil, ErrDelayQueueHasRegistered
 	}
 	return q, nil
@@ -333,25 +343,46 @@ func (q *delayQueue) Length(ctx context.Context) (int64, error) {
 }
 
 // Close 实现 DelayQueue.Close。CAS 守护幂等。
+//
+// 关闭顺序：
+//  1. running CAS true→false，阻止新 Add/Del 与 ticker fire；
+//  2. close(exitC) 让 ticker goroutine 退出；
+//  3. tickerWG.Wait——确保不再 spawn 新 worker；
+//  4. 从 client.delayQueues 摘除（NewDelayQueue 同名可立即重建）；
+//  5. 带超时等 worker 完成 ack（workerWG.Wait with timeout）；
+//  6. cancel ctx，让仍未完成的 worker ack 快速失败短路。
+//
+// 等 worker 时为什么带超时？
+// 在用户的 callback 内同步调 q.Close 是支持的反模式（业务侧"自我崩溃通知"）。
+// 此时形成"worker 等 callback 返回 ↔ callback 等 Close 返回"环；带超时让
+// Close 强制返回打破环，callback 才能继续走完。
+// 即使超时漏掉的 worker，也由 client.delayWorkerWG 在 client.Close 时兜底等待，
+// 仍能保证 c.cmd 释放前所有脚本调用收尾，无 race。
 func (q *delayQueue) Close() error {
 	if !q.running.CompareAndSwap(true, false) {
 		return ErrDelayQueueHasClosed
 	}
-	q.shutdown()
+	close(q.exitC)
+	q.tickerWG.Wait()
 	q.c.delayQueues.Delete(q.name)
+	q.waitWorkersWithTimeout(delayCloseWorkerWaitTimeout)
+	q.cancel()
 	return nil
 }
 
-// shutdown 是 Close 的幂等内部实现：取消 ctx、关闭 exitC、等 ticker 退出。
-// 不操作 c.delayQueues，由 Close 或 NewDelayQueue 撞名兜底自行处理。
-//
-// shutdown 不等待 worker（callback）完成，这样 callback 内部可以安全调用 q.Close。
-// 正在进行的 Redis 调用会被 ctx cancel 立即终止；未完成 ack 的 item 会被下一进程的
-// reclaim ticker 在 visibility 超时后回收。
-func (q *delayQueue) shutdown() {
-	q.cancel()
-	close(q.exitC)
-	q.tickerWG.Wait()
+// waitWorkersWithTimeout 等 workerWG 至多 timeout 时长。
+// 主路径：所有 worker 已完成 → wg.Wait 立即返回。
+// 反模式路径（callback 内调 q.Close）：wg.Wait 永等 → timeout 后强制返回。
+func (q *delayQueue) waitWorkersWithTimeout(timeout time.Duration) {
+	done := make(chan struct{})
+	go func() {
+		q.workerWG.Wait()
+		close(done)
+	}()
+	select {
+	case <-done:
+	case <-time.After(timeout):
+	}
 }
 
 // startTickers 启动 poll/reclaim 两个 ticker goroutine。
@@ -406,14 +437,37 @@ func (q *delayQueue) pollOnce() {
 	for i := 0; i+1 < len(res); i += 2 {
 		payload := []byte(toString(res[i]))
 		retries, _ := strconv.Atoi(toString(res[i+1]))
+		// 双重跟踪：
+		//   - q.workerWG  ：q.Close 带超时等之，主路径用于让 ack 在 ctx cancel 前完成；
+		//   - client.delayWorkerWG：client.Close 兜底等之，避免 c.cmd race。
+		// Add 在 spawn 之前完成，安全：q.Close 阻断后续 ticker fire，不与 wg.Wait race。
+		q.workerWG.Add(1)
+		q.c.delayWorkerWG.Add(1)
 		go q.executeOne(payload, retries)
 	}
 }
 
 // executeOne 在独立 goroutine 中执行一个 item 的 callback 与 ack。
-// recover panic 视为失败一次。
+//
+// 并发模型：
+//   - worker 计入 client.delayWorkerWG，client.Close 会等它结束；
+//   - q.Close 不等 worker（避免 callback 内 q.Close 死锁）；
+//   - 用户 callback 跑在嵌套 goroutine 中独立调度；
+//   - worker 同步等 cbDone 后总是尝试 ack，ack 用 q.opCtx 派生 ctx：
+//     Close 触发的 cancel 会让 ack 快速失败短路（item 留 doing，由下次 reclaim 兜底）。
+//
+// recover panic 在嵌套 goroutine 中执行，视为业务失败一次。
 func (q *delayQueue) executeOne(payload []byte, retries int) {
-	err := q.runCallback(payload)
+	defer q.c.delayWorkerWG.Done()
+	defer q.workerWG.Done()
+
+	cbDone := make(chan error, 1)
+	go func() {
+		cbDone <- q.runCallback(payload)
+	}()
+
+	err := <-cbDone
+
 	if err == nil {
 		q.ackSuccess(payload)
 		return

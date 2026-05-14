@@ -714,7 +714,8 @@ func TestDelay_CallbackPanicTriggersRetry(t *testing.T) {
 }
 
 // TestDelay_CallbackCallsCloseNoDeadlock callback 内部 q.Close() 不应死锁。
-// 这个保证由"shutdown 不等 worker"实现。
+// q.Close 不等 worker（在途 worker 由 client.Close 兜底等待），
+// 因此 callback 中同步调 q.Close 安全。
 func TestDelay_CallbackCallsCloseNoDeadlock(t *testing.T) {
 	t.Parallel()
 	c := newTestDelayClient(t)
@@ -724,7 +725,6 @@ func TestDelay_CallbackCallsCloseNoDeadlock(t *testing.T) {
 	var q DelayQueue
 	var err error
 	q, err = c.NewDelayQueue("close-from-cb", func(_ []byte) error {
-		// callback 内部调 Close；不应死锁。
 		closed <- q.Close()
 		return nil
 	}, WithDelayOptionPrefix(uniquePrefix(t)))

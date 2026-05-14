@@ -133,9 +133,9 @@ func (c *client) connect() error {
 // reconnect 错误模式：因 rueidis 不暴露这些场景的强类型错误，仍需字符串匹配，
 // 但集中定义在此，便于跟随上游 rueidis 改文案时修订。
 const (
-	errMsgClusterInfoElements   = "elements in cluster info address, expected 2 or 3"
-	errMsgUnsupportedHello      = "unsupported command `hello`"
-	errMsgSlotHasNoRedisNode    = "the slot has no redis node"
+	errMsgClusterInfoElements = "elements in cluster info address, expected 2 or 3"
+	errMsgUnsupportedHello    = "unsupported command `hello`"
+	errMsgSlotHasNoRedisNode  = "the slot has no redis node"
 )
 
 // reconnectErrors 是一组按顺序尝试的"识别 + 修正"函数。
@@ -191,10 +191,16 @@ func (c *client) reconnectWhenError(err error) error {
 func (c *client) Version() *semver.Version { return &c.version }
 
 func (c *client) Close() error {
-	c.delayQueues.Range(func(key, value any) bool {
+	// 第一阶段：关掉所有 queue 的 ticker（q.Close 不等 worker，仅阻止新 worker spawn）。
+	c.delayQueues.Range(func(_, value any) bool {
 		_ = value.(*delayQueue).Close()
 		return true
 	})
+	// 第二阶段：等所有在途 worker 收尾。
+	// 必须在 c.cmd 释放前等完，否则 worker 中的脚本调用会与 c.cmd=nil 写 race。
+	// 注意：即使 q 已从 delayQueues 摘除（例如 callback 内自行调 q.Close 的场景），
+	// 它的 worker 仍计在 client.delayWorkerWG 上，这里能等到。
+	c.delayWorkerWG.Wait()
 	c.delayQueues = sync.Map{}
 	if c.cmd != nil && !reflect2.IsNil(c.cmd) {
 		c.cmd.Close()
