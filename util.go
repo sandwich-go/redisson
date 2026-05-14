@@ -281,6 +281,8 @@ func bytesToString(b []byte) string {
 }
 
 // stringToBytes converts string to byte slice.
+//
+//nolint:unused // 与 bytesToString 配对的零拷贝转换，保留供后续优化使用
 func stringToBytes(s string) []byte {
 	return *(*[]byte)(unsafe.Pointer(
 		&struct {

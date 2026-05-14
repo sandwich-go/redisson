@@ -11,7 +11,7 @@ func DelayOptionsOptionDeclareWithDefault() any {
 		// annotation@Prefix(延迟队列前缀)
 		"Prefix": "",
 		// annotation@Timeout(业务处理超时时间，如果超过该时间未处理，则重试)
-		"Timeout": time.Duration(1 * time.Minute),
+		"Timeout": 1 * time.Minute,
 		// annotation@RetryTimes(comment="重试次数，当业务处理超时，或业务处理返回错误，则重试")
 		"RetryTimes": 3,
 		// annotation@HandleDeadLetter(comment="处理死信，当达到最大重试次数，则为死信")

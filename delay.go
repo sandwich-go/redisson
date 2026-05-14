@@ -157,11 +157,6 @@ func (q *delayQueue) Length(ctx context.Context) (int64, error) {
 	return q.lengthScript.Run(ctx, q.pollKeys).Int64()
 }
 
-func (q *delayQueue) move(ctx context.Context, from, to string, offset float64) ([]any, error) {
-	now := nowFunc().Unix()
-	return q.moveScript.Run(ctx, []string{from, to}, now, float64(now)+offset).Slice()
-}
-
 func (q *delayQueue) isRunning() bool { return q.running.Load() }
 
 func (q *delayQueue) Close() error {

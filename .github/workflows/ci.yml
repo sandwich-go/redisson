@@ -28,8 +28,24 @@ jobs:
       - name: go build (without miniredis tag)
         run: go build ./...
 
-  test:
-    name: Test (Redis ${{ matrix.redis }} + Go ${{ matrix.go }})
+  unit-test:
+    name: Unit tests (no Redis required)
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        go: ["1.22.x", "1.23.x", "1.24.x"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go }}
+          cache: true
+      - name: Run unit tests with race detector
+        run: go test -race -count=1 -timeout 2m ./...
+
+  integration-test:
+    name: Integration tests (Redis ${{ matrix.redis }} + Go ${{ matrix.go }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -52,12 +68,11 @@ jobs:
         with:
           go-version: ${{ matrix.go }}
           cache: true
-      - name: Run tests with race detector
+      - name: Run integration tests with race detector
         env:
-          # 测试套依赖外部 Redis；地址来自 service container
           REDIS_ADDR: 127.0.0.1:6379
         run: |
-          go test -race -count=1 -timeout 5m ./...
+          go test -tags integration -race -count=1 -timeout 5m ./...
 
   test-miniredis:
     name: Test miniredis path (build tag)

@@ -1,9 +1,38 @@
 package redisson
 
 import (
+	"errors"
 	"fmt"
 	"strings"
+
+	"github.com/redis/rueidis"
 )
+
+// 包级 sentinel error，用于在调用方使用 errors.Is 进行可靠判别。
+//
+// 这些 sentinel 同时具备稳定的 Error() 字符串：当 rueidis 返回的原始错误
+// 文案与之匹配时，可被对应的 IsXxx 函数识别。
+var (
+	// ErrNoScript 对应 Redis 服务端 "NOSCRIPT" 响应。
+	// 当通过 EVALSHA 调用而脚本未在缓存中时会返回。
+	ErrNoScript = errors.New("NOSCRIPT No matching script. Please use EVAL")
+
+	// ErrNoCache 对应 rueidis.ErrNoCache，当客户端缓存被禁用但执行 cache 路径时返回。
+	// 提供出来方便用户用 errors.Is(err, redisson.ErrNoCache) 判别。
+	ErrNoCache = rueidis.ErrNoCache
+)
+
+// IsNoScriptError 判别是否为 NOSCRIPT 错误。
+// 优先使用 errors.Is，回退到字符串前缀匹配以兼容 rueidis 直接返回的协议错误。
+func IsNoScriptError(err error) bool {
+	if err == nil {
+		return false
+	}
+	if errors.Is(err, ErrNoScript) {
+		return true
+	}
+	return strings.HasPrefix(err.Error(), "NOSCRIPT ")
+}
 
 // ErrorFormatFunc 格式化 error 数组
 // 调用 Error 时，会将  error 数组进行格式化，默认 ListFormatFunc
@@ -83,9 +112,5 @@ var ListFormatFunc = func(es []error) string {
 		len(es), strings.Join(points, "\n"))
 }
 
-func isNoScriptError(err error) bool {
-	if err == nil {
-		return false
-	}
-	return strings.HasPrefix(err.Error(), "NOSCRIPT ")
-}
+// isNoScriptError 包内向后兼容别名；新代码请使用 IsNoScriptError。
+func isNoScriptError(err error) bool { return IsNoScriptError(err) }

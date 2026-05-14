@@ -28,8 +28,8 @@ func ConfOptionDeclareWithDefault() any {
 		"DB":                0,                                  // @MethodComment(Redis实例数据库编号，集群下只能用0)
 		"Username":          "",                                 // @MethodComment(Redis用户名)
 		"Password":          "",                                 // @MethodComment(Redis用户密码)
-		"WriteTimeout":      time.Duration(defaultWriteTimeout),     // @MethodComment(Redis连接写入的超时时长)
-		"BootstrapTimeout":  time.Duration(defaultBootstrapTimeout), // @MethodComment(连接建立时执行 INFO 等启动期探测的总超时；集群+多副本下默认 30s)
+		"WriteTimeout":      defaultWriteTimeout,     // @MethodComment(Redis连接写入的超时时长)
+		"BootstrapTimeout":  defaultBootstrapTimeout, // @MethodComment(连接建立时执行 INFO 等启动期探测的总超时；集群+多副本下默认 30s)
 		"ConnPoolSize":      0,                                  // @MethodComment(RedisBlock连接池，默认1000)
 		"EnableCache":       true,                               // @MethodComment(是否开启客户端缓存)
 		"CacheSizeEachConn": 0,                                  // @MethodComment(开启客户端缓存时，单个连接缓存大小，默认128 MiB)
@@ -37,7 +37,7 @@ func ConfOptionDeclareWithDefault() any {
 		"Development":       false,                              // @MethodComment(是否为开发模式，开发模式下，使用部分接口会有警告日志输出，会校验多key是否为同一hash槽，会校验部分接口是否满足版本要求；生产环境请保持 false)
 		"T":                 (Tester)(nil),                      // @MethodComment(如果设置该值，则启动mock)
 		"ForceSingleClient": false,                              // @MethodComment(ForceSingleClient force the usage of a single client connection, without letting the lib guessing)
-		"PubSubChanSize":    int(defaultPubSubChanSize),         // @MethodComment(pubsub chan 大小)
+		"PubSubChanSize":    defaultPubSubChanSize,                  // @MethodComment(pubsub chan 大小)
 	}
 }
 

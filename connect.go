@@ -130,23 +130,43 @@ func (c *client) connect() error {
 	return nil
 }
 
-var reconnectErrors = []func(*client, string) bool{
-	func(c *client, errString string) bool {
-		if c.v.GetEnableCache() && strings.Contains(errString, rueidis.ErrNoCache.Error()) {
+// reconnect 错误模式：因 rueidis 不暴露这些场景的强类型错误，仍需字符串匹配，
+// 但集中定义在此，便于跟随上游 rueidis 改文案时修订。
+const (
+	errMsgClusterInfoElements   = "elements in cluster info address, expected 2 or 3"
+	errMsgUnsupportedHello      = "unsupported command `hello`"
+	errMsgSlotHasNoRedisNode    = "the slot has no redis node"
+)
+
+// reconnectErrors 是一组按顺序尝试的"识别 + 修正"函数。
+// 每个函数:
+//   - 接收 client 与原 error，
+//   - 若识别命中则就地调整 ConfInterface 并返回 true（调用方会重连），
+//   - 否则返回 false。
+var reconnectErrors = []func(c *client, err error) bool{
+	// rueidis 客户端缓存不可用 → 关闭 cache 后重连
+	func(c *client, err error) bool {
+		if c.v.GetEnableCache() && errors.Is(err, rueidis.ErrNoCache) {
 			c.v.ApplyOption(WithEnableCache(false))
 			return true
 		}
 		return false
 	},
-	func(c *client, errString string) bool {
-		if !c.v.GetAlwaysRESP2() && strings.Contains(errString, "elements in cluster info address, expected 2 or 3") || strings.Contains(errString, "unsupported command `hello`") {
+	// 服务端不支持 RESP3 / HELLO → 退回 RESP2
+	func(c *client, err error) bool {
+		if c.v.GetAlwaysRESP2() {
+			return false
+		}
+		s := err.Error()
+		if strings.Contains(s, errMsgClusterInfoElements) || strings.Contains(s, errMsgUnsupportedHello) {
 			c.v.ApplyOption(WithAlwaysRESP2(true))
 			return true
 		}
 		return false
 	},
-	func(c *client, errString string) bool {
-		if !c.v.GetForceSingleClient() && strings.Contains(errString, "the slot has no redis node") {
+	// 集群拓扑探测失败 → 强制单连接
+	func(c *client, err error) bool {
+		if !c.v.GetForceSingleClient() && strings.Contains(err.Error(), errMsgSlotHasNoRedisNode) {
 			c.v.ApplyOption(WithForceSingleClient(true))
 			return true
 		}
@@ -158,10 +178,9 @@ func (c *client) reconnectWhenError(err error) error {
 	if err == nil {
 		return nil
 	}
-	errString := err.Error()
 	for _, f := range reconnectErrors {
-		if ok := f(c, errString); ok {
-			warning(fmt.Sprintf("%s, reconnect...", errString))
+		if ok := f(c, err); ok {
+			warning(fmt.Sprintf("%s, reconnect...", err.Error()))
 			_ = c.Close()
 			return c.connect()
 		}

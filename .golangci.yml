@@ -14,6 +14,9 @@ linters:
     - misspell
     - bodyclose
     - nilerr
+    - unconvert
+    - prealloc
+    - unused
   settings:
     govet:
       enable:
@@ -55,6 +58,12 @@ linters:
         linters:
           - errcheck
           - bodyclose
+          - prealloc
+      # cmd_args.go 是 rueidiscompat 类型适配器集合，含部分目前未直接调用但属于
+      # 公开命令结果型工厂；不当 unused 处理（同时 P3-10 builder 生成完成后会被启用）。
+      - path: cmd_args\.go
+        linters:
+          - unused
 
 issues:
   max-issues-per-linter: 0

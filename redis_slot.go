@@ -12,6 +12,8 @@ func checkMultipleKeySlots(command Command, f func() []string) error {
 }
 
 // Deprecated: 保留向后兼容；现已不在生产路径中使用，请改用 checkMultipleKeySlots。
+//
+//nolint:unused // 公开 API 兼容残留，保留至 1.4 主版本前
 func panicIfUseMultipleKeySlots(command Command, f func() []string) {
 	if err := checkMultipleKeySlots(command, f); err != nil {
 		panic(err)

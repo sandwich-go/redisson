@@ -34,11 +34,15 @@ type NopLogger struct{}
 func (NopLogger) Warnf(string, ...any)  {}
 func (NopLogger) Errorf(string, ...any) {}
 
+// loggerBox 给 atomic.Value 提供单一具体类型，规避不同实现存入同一 atomic.Value
+// 时触发的 "store of inconsistently typed value" panic。
+type loggerBox struct{ l Logger }
+
 // loggerHolder 通过 atomic.Value 持有当前 Logger，保证 SetLogger 与读取并发安全。
-var loggerHolder atomic.Value // Logger
+var loggerHolder atomic.Value // loggerBox
 
 func init() {
-	loggerHolder.Store(Logger(stderrLogger{}))
+	loggerHolder.Store(loggerBox{l: stderrLogger{}})
 }
 
 // SetLogger 替换全局 logger。传 nil 等价于 NopLogger。
@@ -47,14 +51,14 @@ func SetLogger(l Logger) {
 	if l == nil {
 		l = NopLogger{}
 	}
-	loggerHolder.Store(l)
+	loggerHolder.Store(loggerBox{l: l})
 }
 
 // GetLogger 返回当前 logger，便于库使用方查询或在自定义 logger 中委托。
 func GetLogger() Logger {
 	if v := loggerHolder.Load(); v != nil {
-		if l, ok := v.(Logger); ok && l != nil {
-			return l
+		if box, ok := v.(loggerBox); ok && box.l != nil {
+			return box.l
 		}
 	}
 	return stderrLogger{}
