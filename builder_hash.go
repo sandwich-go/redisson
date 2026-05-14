@@ -159,12 +159,12 @@ func (b builder) HRandFieldWithValuesCompleted(key string, count int64) Complete
 }
 
 func (b builder) HScanCompleted(key string, cursor uint64, match string, count int64) Completed {
-	cmd := b.Arbitrary(XXX_HSCAN).Keys(key).Args(strconv.FormatInt(int64(cursor), 10))
+	cmd := b.Arbitrary(KwHScan).Keys(key).Args(strconv.FormatInt(int64(cursor), 10))
 	if match != "" {
-		cmd = cmd.Args(XXX_MATCH, match)
+		cmd = cmd.Args(KwMatch, match)
 	}
 	if count > 0 {
-		cmd = cmd.Args(XXX_COUNT, strconv.FormatInt(count, 10))
+		cmd = cmd.Args(KwCount, strconv.FormatInt(count, 10))
 	}
 	return cmd.ReadOnly()
 }

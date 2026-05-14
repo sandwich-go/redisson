@@ -17,12 +17,12 @@ func (b builder) EvalShaROCompleted(sha1 string, keys []string, args ...any) Com
 }
 
 func (b builder) FunctionListCompleted(q FunctionListQuery) Completed {
-	cmd := b.Arbitrary(XXX_FUNCTION, XXX_LIST)
+	cmd := b.Arbitrary(KwFunction, KwList)
 	if q.LibraryNamePattern != "" {
-		cmd = cmd.Args(XXX_LIBRARYNAME, q.LibraryNamePattern)
+		cmd = cmd.Args(KwLibraryName, q.LibraryNamePattern)
 	}
 	if q.WithCode {
-		cmd = cmd.Args(XXX_WITHCODE)
+		cmd = cmd.Args(KwWithCode)
 	}
 	return cmd.Build()
 }

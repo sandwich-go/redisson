@@ -685,26 +685,26 @@ func geoRadiusQueryArgs(q GeoRadiusQuery) []string {
 		args = append(args, KM)
 	}
 	if q.WithCoord {
-		args = append(args, XXX_WITHCOORD)
+		args = append(args, KwWithCoord)
 	}
 	if q.WithDist {
-		args = append(args, XXX_WITHDIST)
+		args = append(args, KwWithDist)
 	}
 	if q.WithGeoHash {
-		args = append(args, XXX_WITHHASH)
+		args = append(args, KwWithHash)
 	}
 	if q.Count > 0 {
-		args = append(args, XXX_COUNT, strconv.FormatInt(q.Count, 10))
+		args = append(args, KwCount, strconv.FormatInt(q.Count, 10))
 	}
 	if q.Sort != "" {
 		args = append(args, q.Sort)
 	}
 	if q.Store != "" {
-		args = append(args, XXX_STORE)
+		args = append(args, KwStore)
 		args = append(args, q.Store)
 	}
 	if q.StoreDist != "" {
-		args = append(args, XXX_STOREDIST)
+		args = append(args, KwStoreDist)
 		args = append(args, q.StoreDist)
 	}
 	return args
@@ -713,13 +713,13 @@ func geoRadiusQueryArgs(q GeoRadiusQuery) []string {
 func geoSearchLocationQueryArgs(q GeoSearchLocationQuery) []string {
 	args := geoSearchQueryArgs(q.GeoSearchQuery)
 	if q.WithCoord {
-		args = append(args, XXX_WITHCOORD)
+		args = append(args, KwWithCoord)
 	}
 	if q.WithDist {
-		args = append(args, XXX_WITHDIST)
+		args = append(args, KwWithDist)
 	}
 	if q.WithHash {
-		args = append(args, XXX_WITHHASH)
+		args = append(args, KwWithHash)
 	}
 	return args
 }
@@ -727,28 +727,28 @@ func geoSearchLocationQueryArgs(q GeoSearchLocationQuery) []string {
 func geoSearchQueryArgs(q GeoSearchQuery) []string {
 	args := make([]string, 0, 2)
 	if q.Member != "" {
-		args = append(args, XXX_FROMMEMBER, q.Member)
+		args = append(args, KwFromMember, q.Member)
 	} else {
-		args = append(args, XXX_FROMLONLAT, strconv.FormatFloat(q.Longitude, 'f', -1, 64), strconv.FormatFloat(q.Latitude, 'f', -1, 64))
+		args = append(args, KwFromLonLat, strconv.FormatFloat(q.Longitude, 'f', -1, 64), strconv.FormatFloat(q.Latitude, 'f', -1, 64))
 	}
 	if q.Radius > 0 {
 		if q.RadiusUnit == "" {
 			q.RadiusUnit = KM
 		}
-		args = append(args, XXX_BYRADIUS, strconv.FormatFloat(q.Radius, 'f', -1, 64), q.RadiusUnit)
+		args = append(args, KwByRadius, strconv.FormatFloat(q.Radius, 'f', -1, 64), q.RadiusUnit)
 	} else {
 		if q.BoxUnit == "" {
 			q.BoxUnit = KM
 		}
-		args = append(args, XXX_BYBOX, strconv.FormatFloat(q.BoxWidth, 'f', -1, 64), strconv.FormatFloat(q.BoxHeight, 'f', -1, 64), q.BoxUnit)
+		args = append(args, KwByBox, strconv.FormatFloat(q.BoxWidth, 'f', -1, 64), strconv.FormatFloat(q.BoxHeight, 'f', -1, 64), q.BoxUnit)
 	}
 	if q.Sort != "" {
 		args = append(args, q.Sort)
 	}
 	if q.Count > 0 {
-		args = append(args, XXX_COUNT, strconv.FormatInt(q.Count, 10))
+		args = append(args, KwCount, strconv.FormatInt(q.Count, 10))
 		if q.CountAny {
-			args = append(args, XXX_ANY)
+			args = append(args, KwAny)
 		}
 	}
 	return args

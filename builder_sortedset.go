@@ -5,7 +5,7 @@ import (
 )
 
 func (b builder) zAddArgs(key string, incr bool, args ZAddArgs) Completed {
-	cmd := b.Arbitrary(XXX_ZADD).Keys(key)
+	cmd := b.Arbitrary(KwZAdd).Keys(key)
 	// The GT, LT and NX options are mutually exclusive.
 	if args.NX {
 		cmd = cmd.Args(NX)
@@ -14,16 +14,16 @@ func (b builder) zAddArgs(key string, incr bool, args ZAddArgs) Completed {
 			cmd = cmd.Args(XX)
 		}
 		if args.GT {
-			cmd = cmd.Args(XXX_GT)
+			cmd = cmd.Args(KwGt)
 		} else if args.LT {
-			cmd = cmd.Args(XXX_LT)
+			cmd = cmd.Args(KwLt)
 		}
 	}
 	if args.Ch {
-		cmd = cmd.Args(XXX_CH)
+		cmd = cmd.Args(KwCh)
 	}
 	if incr {
-		cmd = cmd.Args(XXX_INCR)
+		cmd = cmd.Args(KwIncr)
 	}
 	for _, v := range args.Members {
 		cmd = cmd.Args(strconv.FormatFloat(v.Score, 'f', -1, 64), v.Member)
@@ -80,18 +80,18 @@ func (b builder) ZIncrByCompleted(key string, increment float64, member string) 
 }
 
 func (b builder) zInter(store ZStore, withScores bool) Completed {
-	cmd := b.Arbitrary(XXX_ZINTER).Args(strconv.Itoa(len(store.Keys))).Keys(store.Keys...)
+	cmd := b.Arbitrary(KwZInter).Args(strconv.Itoa(len(store.Keys))).Keys(store.Keys...)
 	if len(store.Weights) > 0 {
-		cmd = cmd.Args(XXX_WEIGHTS)
+		cmd = cmd.Args(KwWeights)
 		for _, w := range store.Weights {
 			cmd = cmd.Args(strconv.FormatInt(w, 10))
 		}
 	}
 	if store.Aggregate != "" {
-		cmd = cmd.Args(XXX_AGGREGATE, store.Aggregate)
+		cmd = cmd.Args(KwAggregate, store.Aggregate)
 	}
 	if withScores {
-		cmd = cmd.Args(XXX_WITHSCORES)
+		cmd = cmd.Args(KwWithScores)
 	}
 	return cmd.ReadOnly()
 }
@@ -104,24 +104,24 @@ func (b builder) ZInterCardCompleted(limit int64, keys ...string) Completed {
 }
 
 func (b builder) ZInterStoreCompleted(destination string, store ZStore) Completed {
-	cmd := b.Arbitrary(XXX_ZINTERSTORE).Keys(destination).Args(strconv.Itoa(len(store.Keys))).Keys(store.Keys...)
+	cmd := b.Arbitrary(KwZInterStore).Keys(destination).Args(strconv.Itoa(len(store.Keys))).Keys(store.Keys...)
 	if len(store.Weights) > 0 {
-		cmd = cmd.Args(XXX_WEIGHTS)
+		cmd = cmd.Args(KwWeights)
 		for _, w := range store.Weights {
 			cmd = cmd.Args(strconv.FormatInt(w, 10))
 		}
 	}
 	if store.Aggregate != "" {
-		cmd = cmd.Args(XXX_AGGREGATE, store.Aggregate)
+		cmd = cmd.Args(KwAggregate, store.Aggregate)
 	}
 	return cmd.Build()
 }
 
 func (b builder) ZMPopCompleted(order string, count int64, keys ...string) Completed {
-	cmd := b.Arbitrary(XXX_ZMPOP, strconv.Itoa(len(keys))).Keys(keys...)
+	cmd := b.Arbitrary(KwZMPop, strconv.Itoa(len(keys))).Keys(keys...)
 	cmd = cmd.Args(order)
 	if count > 0 {
-		cmd = cmd.Args(XXX_COUNT, strconv.FormatInt(count, 10))
+		cmd = cmd.Args(KwCount, strconv.FormatInt(count, 10))
 	}
 	return cmd.Build()
 }
@@ -153,25 +153,25 @@ func (b builder) ZPopMinCompleted(key string, count ...int64) Completed {
 }
 
 func (b builder) zRangeArgs(withScores bool, z ZRangeArgs) Completed {
-	cmd := b.Arbitrary(XXX_ZRANGE).Keys(z.Key)
+	cmd := b.Arbitrary(KwZRange).Keys(z.Key)
 	if z.Rev && (z.ByScore || z.ByLex) {
 		cmd = cmd.Args(str(z.Stop), str(z.Start))
 	} else {
 		cmd = cmd.Args(str(z.Start), str(z.Stop))
 	}
 	if z.ByScore {
-		cmd = cmd.Args(XXX_BYSCORE)
+		cmd = cmd.Args(KwByScore)
 	} else if z.ByLex {
-		cmd = cmd.Args(XXX_BYLEX)
+		cmd = cmd.Args(KwByLex)
 	}
 	if z.Rev {
-		cmd = cmd.Args(XXX_REV)
+		cmd = cmd.Args(KwRev)
 	}
 	if z.Offset != 0 || z.Count != 0 {
-		cmd = cmd.Args(XXX_LIMIT, strconv.FormatInt(z.Offset, 10), strconv.FormatInt(z.Count, 10))
+		cmd = cmd.Args(KwLimit, strconv.FormatInt(z.Offset, 10), strconv.FormatInt(z.Count, 10))
 	}
 	if withScores {
-		cmd = cmd.Args(XXX_WITHSCORES)
+		cmd = cmd.Args(KwWithScores)
 	}
 	return cmd.Build()
 }
@@ -225,22 +225,22 @@ func (b builder) ZRangeArgsWithScoresCompleted(z ZRangeArgs) Completed {
 }
 
 func (b builder) ZRangeStoreCompleted(dst string, z ZRangeArgs) Completed {
-	cmd := b.Arbitrary(XXX_ZRANGESTORE).Keys(dst, z.Key)
+	cmd := b.Arbitrary(KwZRangeStore).Keys(dst, z.Key)
 	if z.Rev && (z.ByScore || z.ByLex) {
 		cmd = cmd.Args(str(z.Stop), str(z.Start))
 	} else {
 		cmd = cmd.Args(str(z.Start), str(z.Stop))
 	}
 	if z.ByScore {
-		cmd = cmd.Args(XXX_BYSCORE)
+		cmd = cmd.Args(KwByScore)
 	} else if z.ByLex {
-		cmd = cmd.Args(XXX_BYLEX)
+		cmd = cmd.Args(KwByLex)
 	}
 	if z.Rev {
-		cmd = cmd.Args(XXX_REV)
+		cmd = cmd.Args(KwRev)
 	}
 	if z.Offset != 0 || z.Count != 0 {
-		cmd = cmd.Args(XXX_LIMIT, strconv.FormatInt(z.Offset, 10), strconv.FormatInt(z.Count, 10))
+		cmd = cmd.Args(KwLimit, strconv.FormatInt(z.Offset, 10), strconv.FormatInt(z.Count, 10))
 	}
 	return cmd.Build()
 }
@@ -313,32 +313,32 @@ func (b builder) ZScoreCompleted(key, member string) Completed {
 }
 
 func (b builder) zUnion(store ZStore, withScores bool) Completed {
-	cmd := b.Arbitrary(XXX_ZUNION).Args(strconv.Itoa(len(store.Keys))).Keys(store.Keys...)
+	cmd := b.Arbitrary(KwZUnion).Args(strconv.Itoa(len(store.Keys))).Keys(store.Keys...)
 	if len(store.Weights) > 0 {
-		cmd = cmd.Args(XXX_WEIGHTS)
+		cmd = cmd.Args(KwWeights)
 		for _, w := range store.Weights {
 			cmd = cmd.Args(strconv.FormatInt(w, 10))
 		}
 	}
 	if store.Aggregate != "" {
-		cmd = cmd.Args(XXX_AGGREGATE, store.Aggregate)
+		cmd = cmd.Args(KwAggregate, store.Aggregate)
 	}
 	if withScores {
-		cmd = cmd.Args(XXX_WITHSCORES)
+		cmd = cmd.Args(KwWithScores)
 	}
 	return cmd.ReadOnly()
 }
 
 func (b builder) ZUnionStoreCompleted(dest string, store ZStore) Completed {
-	cmd := b.Arbitrary(XXX_ZUNIONSTORE).Keys(dest).Args(strconv.Itoa(len(store.Keys))).Keys(store.Keys...)
+	cmd := b.Arbitrary(KwZUnionStore).Keys(dest).Args(strconv.Itoa(len(store.Keys))).Keys(store.Keys...)
 	if len(store.Weights) > 0 {
-		cmd = cmd.Args(XXX_WEIGHTS)
+		cmd = cmd.Args(KwWeights)
 		for _, w := range store.Weights {
 			cmd = cmd.Args(strconv.FormatInt(w, 10))
 		}
 	}
 	if store.Aggregate != "" {
-		cmd = cmd.Args(XXX_AGGREGATE, store.Aggregate)
+		cmd = cmd.Args(KwAggregate, store.Aggregate)
 	}
 	return cmd.Build()
 }
@@ -367,12 +367,12 @@ func (b builder) ZDiffStoreCompleted(destination string, keys ...string) Complet
 }
 
 func (b builder) ZScanCompleted(key string, cursor uint64, match string, count int64) Completed {
-	cmd := b.Arbitrary(XXX_ZSCAN).Keys(key).Args(strconv.FormatInt(int64(cursor), 10))
+	cmd := b.Arbitrary(KwZScan).Keys(key).Args(strconv.FormatInt(int64(cursor), 10))
 	if match != "" {
-		cmd = cmd.Args(XXX_MATCH, match)
+		cmd = cmd.Args(KwMatch, match)
 	}
 	if count > 0 {
-		cmd = cmd.Args(XXX_COUNT, strconv.FormatInt(count, 10))
+		cmd = cmd.Args(KwCount, strconv.FormatInt(count, 10))
 	}
 	return cmd.ReadOnly()
 }

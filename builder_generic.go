@@ -147,13 +147,13 @@ func (b builder) RandomKeyCompleted() Completed {
 func (b builder) sort(command, key string, sort Sort) Completed {
 	cmd := b.Arbitrary(command).Keys(key)
 	if sort.By != "" {
-		cmd = cmd.Args(XXX_BY, sort.By)
+		cmd = cmd.Args(KwBy, sort.By)
 	}
 	if sort.Offset != 0 || sort.Count != 0 {
-		cmd = cmd.Args(XXX_LIMIT, strconv.FormatInt(sort.Offset, 10), strconv.FormatInt(sort.Count, 10))
+		cmd = cmd.Args(KwLimit, strconv.FormatInt(sort.Offset, 10), strconv.FormatInt(sort.Count, 10))
 	}
 	for _, get := range sort.Get {
-		cmd = cmd.Args(XXX_GET).Args(get)
+		cmd = cmd.Args(KwGet).Args(get)
 	}
 	switch order := strings.ToUpper(sort.Order); order {
 	case ASC, DESC:
@@ -163,7 +163,7 @@ func (b builder) sort(command, key string, sort Sort) Completed {
 		panic(fmt.Sprintf("invalid sort order %s", sort.Order))
 	}
 	if sort.Alpha {
-		cmd = cmd.Args(XXX_ALPHA)
+		cmd = cmd.Args(KwAlpha)
 	}
 	return cmd.Build()
 }
@@ -193,23 +193,23 @@ func (b builder) RestoreReplaceCompleted(key string, ttl time.Duration, serializ
 }
 
 func (b builder) ScanCompleted(cursor uint64, match string, count int64) Completed {
-	cmd := b.Arbitrary(XXX_SCAN, strconv.FormatInt(int64(cursor), 10))
+	cmd := b.Arbitrary(KwScan, strconv.FormatInt(int64(cursor), 10))
 	if match != "" {
-		cmd = cmd.Args(XXX_MATCH, match)
+		cmd = cmd.Args(KwMatch, match)
 	}
 	if count > 0 {
-		cmd = cmd.Args(XXX_COUNT, strconv.FormatInt(count, 10))
+		cmd = cmd.Args(KwCount, strconv.FormatInt(count, 10))
 	}
 	return cmd.ReadOnly()
 }
 
 func (b builder) ScanTypeCompleted(cursor uint64, match string, count int64, keyType string) Completed {
-	cmd := b.Arbitrary(XXX_SCAN, strconv.FormatInt(int64(cursor), 10))
+	cmd := b.Arbitrary(KwScan, strconv.FormatInt(int64(cursor), 10))
 	if match != "" {
-		cmd = cmd.Args(XXX_MATCH, match)
+		cmd = cmd.Args(KwMatch, match)
 	}
 	if count > 0 {
-		cmd = cmd.Args(XXX_COUNT, strconv.FormatInt(count, 10))
+		cmd = cmd.Args(KwCount, strconv.FormatInt(count, 10))
 	}
 	return cmd.Args(TYPE, keyType).ReadOnly()
 }

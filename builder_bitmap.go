@@ -68,7 +68,7 @@ func (b builder) BitPosSpanCompleted(key string, bit, start, end int64, span str
 }
 
 func (b builder) BitFieldCompleted(key string, args ...any) Completed {
-	cmd := b.Arbitrary(XXX_BITFIELD).Keys(key)
+	cmd := b.Arbitrary(KwBitField).Keys(key)
 	for _, v := range args {
 		cmd = cmd.Args(str(v))
 	}

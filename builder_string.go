@@ -100,18 +100,18 @@ func (b builder) SetCompleted(key string, value any, expiration time.Duration) C
 }
 
 func (b builder) SetArgsCompleted(key string, value any, a SetArgs) Completed {
-	cmd := b.Arbitrary(XXX_SET).Keys(key).Args(str(value))
+	cmd := b.Arbitrary(KwSet).Keys(key).Args(str(value))
 	if a.KeepTTL {
-		cmd = cmd.Args(XXX_KEEPTTL)
+		cmd = cmd.Args(KwKeepTTL)
 	}
 	if !a.ExpireAt.IsZero() {
-		cmd = cmd.Args(XXX_EXAT, strconv.FormatInt(a.ExpireAt.Unix(), 10))
+		cmd = cmd.Args(KwExat, strconv.FormatInt(a.ExpireAt.Unix(), 10))
 	}
 	if a.TTL > 0 {
 		if usePrecise(a.TTL) {
-			cmd = cmd.Args(XXX_PX, strconv.FormatInt(formatMs(a.TTL), 10))
+			cmd = cmd.Args(KwPx, strconv.FormatInt(formatMs(a.TTL), 10))
 		} else {
-			cmd = cmd.Args(XXX_EX, strconv.FormatInt(formatSec(a.TTL), 10))
+			cmd = cmd.Args(KwEx, strconv.FormatInt(formatSec(a.TTL), 10))
 		}
 	}
 	switch mode := strings.ToUpper(a.Mode); mode {
@@ -122,7 +122,7 @@ func (b builder) SetArgsCompleted(key string, value any, a SetArgs) Completed {
 		panic(fmt.Sprintf("invalid mode for SET: %s", a.Mode))
 	}
 	if a.Get {
-		cmd = cmd.Args(XXX_GET)
+		cmd = cmd.Args(KwGet)
 	}
 	return cmd.Build()
 }

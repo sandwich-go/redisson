@@ -23,7 +23,7 @@ var (
 
 func (c *client) reviseCluster(ctx context.Context, info string) (err error) {
 	if len(info) == 0 {
-		info, err = c.Info(ctx, XXX_CLUSTER).Result()
+		info, err = c.Info(ctx, KwCluster).Result()
 		if err != nil {
 			return
 		}
@@ -40,7 +40,7 @@ func (c *client) reviseCluster(ctx context.Context, info string) (err error) {
 
 func (c *client) reviseVersion(ctx context.Context, info string) (err error) {
 	if len(info) == 0 {
-		info, err = c.Info(ctx, XXX_SERVER).Result()
+		info, err = c.Info(ctx, KwServer).Result()
 		if err != nil {
 			return err
 		}
@@ -59,7 +59,7 @@ func (c *client) reviseVersion(ctx context.Context, info string) (err error) {
 }
 
 func (c *client) revise(ctx context.Context) error {
-	info, err := c.Info(ctx, XXX_CLUSTER, XXX_SERVER).Result()
+	info, err := c.Info(ctx, KwCluster, KwServer).Result()
 	if err != nil {
 		info = ""
 	}

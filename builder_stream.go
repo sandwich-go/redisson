@@ -9,26 +9,26 @@ func (b builder) XAckCompleted(stream, group string, ids ...string) Completed {
 }
 
 func (b builder) XAddCompleted(a XAddArgs) Completed {
-	cmd := b.Arbitrary(XXX_XADD).Keys(a.Stream)
+	cmd := b.Arbitrary(KwXAdd).Keys(a.Stream)
 	if a.NoMkStream {
-		cmd = cmd.Args(XXX_NOMKSTREAM)
+		cmd = cmd.Args(KwNoMkStream)
 	}
 	switch {
 	case a.MaxLen > 0:
 		if a.Approx {
-			cmd = cmd.Args(XXX_MAXLEN, "~", strconv.FormatInt(a.MaxLen, 10))
+			cmd = cmd.Args(KwMaxLen, "~", strconv.FormatInt(a.MaxLen, 10))
 		} else {
-			cmd = cmd.Args(XXX_MAXLEN, strconv.FormatInt(a.MaxLen, 10))
+			cmd = cmd.Args(KwMaxLen, strconv.FormatInt(a.MaxLen, 10))
 		}
 	case a.MinID != "":
 		if a.Approx {
-			cmd = cmd.Args(XXX_MINID, "~", a.MinID)
+			cmd = cmd.Args(KwMinID, "~", a.MinID)
 		} else {
-			cmd = cmd.Args(XXX_MINID, a.MinID)
+			cmd = cmd.Args(KwMinID, a.MinID)
 		}
 	}
 	if a.Limit > 0 {
-		cmd = cmd.Args(XXX_LIMIT, strconv.FormatInt(a.Limit, 10))
+		cmd = cmd.Args(KwLimit, strconv.FormatInt(a.Limit, 10))
 	}
 	if a.ID != "" {
 		cmd = cmd.Args(a.ID)
@@ -116,9 +116,9 @@ func (b builder) XPendingCompleted(stream, group string) Completed {
 }
 
 func (b builder) XPendingExtCompleted(a XPendingExtArgs) Completed {
-	cmd := b.Arbitrary(XXX_XPENDING).Keys(a.Stream).Args(a.Group)
+	cmd := b.Arbitrary(KwXPending).Keys(a.Stream).Args(a.Group)
 	if a.Idle != 0 {
-		cmd = cmd.Args(XXX_IDLE, strconv.FormatInt(formatMs(a.Idle), 10))
+		cmd = cmd.Args(KwIdle, strconv.FormatInt(formatMs(a.Idle), 10))
 	}
 	cmd = cmd.Args(a.Start, a.End, strconv.FormatInt(a.Count, 10))
 	if a.Consumer != "" {
@@ -145,29 +145,29 @@ func (b builder) XRevRangeNCompleted(stream, stop, start string, count int64) Co
 
 func (b builder) xTrim(key, strategy string,
 	approx bool, threshold string, limit int64) Completed {
-	cmd := b.Arbitrary(XXX_XTRIM).Keys(key).Args(strategy)
+	cmd := b.Arbitrary(KwXTrim).Keys(key).Args(strategy)
 	if approx {
 		cmd = cmd.Args("~")
 	}
 	cmd = cmd.Args(threshold)
 	if limit > 0 {
-		cmd = cmd.Args(XXX_LIMIT, strconv.FormatInt(limit, 10))
+		cmd = cmd.Args(KwLimit, strconv.FormatInt(limit, 10))
 	}
 	return cmd.Build()
 }
 
 func (b builder) XTrimCompleted(key string, maxLen int64) Completed {
-	return b.xTrim(key, XXX_MAXLEN, false, strconv.FormatInt(maxLen, 10), 0)
+	return b.xTrim(key, KwMaxLen, false, strconv.FormatInt(maxLen, 10), 0)
 }
 
 func (b builder) XTrimMaxLenApproxCompleted(key string, maxLen, limit int64) Completed {
-	return b.xTrim(key, XXX_MAXLEN, true, strconv.FormatInt(maxLen, 10), limit)
+	return b.xTrim(key, KwMaxLen, true, strconv.FormatInt(maxLen, 10), limit)
 }
 
 func (b builder) XTrimMinIDCompleted(key string, minID string) Completed {
-	return b.xTrim(key, XXX_MINID, false, minID, 0)
+	return b.xTrim(key, KwMinID, false, minID, 0)
 }
 
 func (b builder) XTrimMinIDApproxCompleted(key string, minID string, limit int64) Completed {
-	return b.xTrim(key, XXX_MINID, true, minID, limit)
+	return b.xTrim(key, KwMinID, true, minID, limit)
 }

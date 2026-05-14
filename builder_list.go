@@ -8,7 +8,7 @@ import (
 )
 
 func (b builder) BLMoveCompleted(source, destination, srcpos, destpos string, timeout time.Duration) Completed {
-	return b.Arbitrary(XXX_BLMOVE).Keys(source, destination).Args(srcpos, destpos, strconv.FormatFloat(float64(formatSec(timeout)), 'f', -1, 64)).Blocking()
+	return b.Arbitrary(KwBLMove).Keys(source, destination).Args(srcpos, destpos, strconv.FormatFloat(float64(formatSec(timeout)), 'f', -1, 64)).Blocking()
 }
 
 func (b builder) BLPopCompleted(timeout time.Duration, keys ...string) Completed {
@@ -51,7 +51,7 @@ func (b builder) LLenCompleted(key string) Completed {
 }
 
 func (b builder) LMoveCompleted(source, destination, srcpos, destpos string) Completed {
-	return b.Arbitrary(XXX_LMOVE).Keys(source, destination).Args(srcpos, destpos).Build()
+	return b.Arbitrary(KwLMove).Keys(source, destination).Args(srcpos, destpos).Build()
 }
 
 func (b builder) LPopCompleted(key string) Completed {
@@ -63,32 +63,32 @@ func (b builder) LPopCountCompleted(key string, count int64) Completed {
 }
 
 func (b builder) LMPopCompleted(direction string, count int64, keys ...string) Completed {
-	cmd := b.Arbitrary(XXX_LMPOP, strconv.Itoa(len(keys))).Keys(keys...)
+	cmd := b.Arbitrary(KwLMPop, strconv.Itoa(len(keys))).Keys(keys...)
 	cmd = cmd.Args(direction)
 	if count > 0 {
-		cmd = cmd.Args(XXX_COUNT, strconv.FormatInt(count, 10))
+		cmd = cmd.Args(KwCount, strconv.FormatInt(count, 10))
 	}
 	return cmd.Build()
 }
 
 func (b builder) LPosCompleted(key string, element string, a LPosArgs) Completed {
-	cmd := b.Arbitrary(XXX_LPOS).Keys(key).Args(element)
+	cmd := b.Arbitrary(KwLPos).Keys(key).Args(element)
 	if a.Rank != 0 {
-		cmd = cmd.Args(XXX_RANK, strconv.FormatInt(a.Rank, 10))
+		cmd = cmd.Args(KwRank, strconv.FormatInt(a.Rank, 10))
 	}
 	if a.MaxLen != 0 {
-		cmd = cmd.Args(XXX_MAXLEN, strconv.FormatInt(a.MaxLen, 10))
+		cmd = cmd.Args(KwMaxLen, strconv.FormatInt(a.MaxLen, 10))
 	}
 	return cmd.Build()
 }
 
 func (b builder) LPosCountCompleted(key string, element string, count int64, a LPosArgs) Completed {
-	cmd := b.Arbitrary(XXX_LPOS).Keys(key).Args(element).Args(XXX_COUNT, strconv.FormatInt(count, 10))
+	cmd := b.Arbitrary(KwLPos).Keys(key).Args(element).Args(KwCount, strconv.FormatInt(count, 10))
 	if a.Rank != 0 {
-		cmd = cmd.Args(XXX_RANK, strconv.FormatInt(a.Rank, 10))
+		cmd = cmd.Args(KwRank, strconv.FormatInt(a.Rank, 10))
 	}
 	if a.MaxLen != 0 {
-		cmd = cmd.Args(XXX_MAXLEN, strconv.FormatInt(a.MaxLen, 10))
+		cmd = cmd.Args(KwMaxLen, strconv.FormatInt(a.MaxLen, 10))
 	}
 	return cmd.Build()
 }
