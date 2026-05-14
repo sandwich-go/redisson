@@ -108,7 +108,13 @@ func _doTestUnits(t *testing.T, c Cmdable, unitsFunc func() []TestUnit) {
 
 // doTestUnits 用默认 standalone 配置（Development=false）跑测试。
 // 自动分配独立 DB（避免与并行运行的其他测试相互污染）。
+//
+// 仅在 integration tag 下真实运行；纯 miniredis_test 构建会 t.Skip
+// （miniredis 套通过 doMiniredisTestUnits 跑相同 testXxx helper）。
 func doTestUnits(t *testing.T, unitsFunc func() []TestUnit) {
+	if !realRedisAvailable {
+		t.Skip("real Redis not available; this test runs under -tags integration")
+	}
 	t.Parallel()
 	c := MustNewClient(NewConf(WithDevelopment(false), WithDB(nextDB())))
 	_doTestUnits(t, c, unitsFunc)
@@ -117,6 +123,9 @@ func doTestUnits(t *testing.T, unitsFunc func() []TestUnit) {
 // doClusterTestUnits 模拟 cluster 路径（开启 Development）。
 // 不并行：cluster 模式下使用 db 0 才有效，且测试本身依赖跨 slot 行为。
 func doClusterTestUnits(t *testing.T, unitsFunc func() []TestUnit) {
+	if !realRedisAvailable {
+		t.Skip("real Redis not available; this test runs under -tags integration")
+	}
 	c := MustNewClient(NewConf(WithDevelopment(true)))
 	_doTestUnits(t, c, unitsFunc)
 }
