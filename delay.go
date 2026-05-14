@@ -13,36 +13,47 @@ import (
 // ============================================================================
 // Lua 脚本
 //
-// 数据结构（每个 DelayQueue 实例独占）：
-//   - delay:{name}  ZSET   score = 任务到期 unix 秒（绝对时间），member = payload
-//   - doing:{name}  ZSET   score = visibility deadline unix 秒（处理超时绝对时间），member = payload
-//   - meta:{name}   HASH   field = payload, value = 已失败次数（int，HINCRBY 维护）
+// 数据结构（每个 DelayQueue 实例独占；时间单位统一为 毫秒）：
+//   - delay:{name}  ZSET    score = 任务到期 unix ms（绝对时间），member = payload
+//   - doing:{name}  ZSET    score = visibility deadline unix ms，member = payload
+//   - meta:{name}   HASH    field  = payload, value = 已失败次数（int，HINCRBY 维护）
+//   - owner:{name}  HASH    field  = payload, value = fence token（拿到任务的 worker 持有）
+//   - seq:{name}    STRING  fence token 单调递增源（INCR 维护）
 //
-// 命名采用 `{name}` hashtag，确保同一队列三键落到同一 cluster slot。
-// 所有脚本在 Redis 单线程内原子执行；Go 端只负责调度和重试策略。
+// 命名采用 `{name}` hashtag，确保同一队列各键落到同一 cluster slot。
+// 所有脚本在 Redis 单线程内原子执行；Go 端只负责调度、重试策略与 fence token 持有。
+//
+// Fence Token 机制（防止 callback 卡住超过 visibility 时被本实例 reclaim 重复调度）：
+//   - poll 时为每个 item 分配一个新 token（INCR 拿到），写入 owner hash 并返回给 worker；
+//   - worker 启动后周期 heartbeat：用 token 校验后推后 doing 的 score；
+//   - worker ack（成功/重试/死信）：用 token 校验，token 不匹配说明已被 reclaim 移交他人，
+//     当前 worker 跳过 ack（避免误删别人的状态），item 由新持有者负责；
+//   - reclaim 时清掉 owner，使旧 worker 的后续 heartbeat / ack 全部因 token 不匹配而 noop。
 // ============================================================================
 
 // addDelayTaskLua 添加一个延迟任务。
-// KEYS: [delaySet, metaSet]
-// ARGV: [payload, expireUnixSeconds]
-// 行为：覆盖 delaySet 中同 payload 的旧 score；同时清掉 meta（重置失败计数）。
+// KEYS: [delaySet, metaSet, ownerSet]
+// ARGV: [payload, expireUnixMs]
+// 行为：覆盖 delaySet 中同 payload 的旧 score；同时清掉 meta（重置失败计数）和 owner。
 var addDelayTaskLua = `
-local delay_set, meta_set = KEYS[1], KEYS[2]
+local delay_set, meta_set, owner_set = KEYS[1], KEYS[2], KEYS[3]
 local value, score = ARGV[1], tonumber(ARGV[2])
 redis.call('ZADD', delay_set, score, value)
 redis.call('HDEL', meta_set, value)
+redis.call('HDEL', owner_set, value)
 return 1
 `
 
-// delDelayTaskLua 删除任务（不论在 delay 还是 doing）。
-// KEYS: [delaySet, doingSet, metaSet]
+// delDelayTaskLua 删除任务（不论它当前在 delay 还是 doing）。
+// KEYS: [delaySet, doingSet, metaSet, ownerSet]
 // ARGV: [payload]
 var delDelayTaskLua = `
-local delay_set, doing_set, meta_set = KEYS[1], KEYS[2], KEYS[3]
+local delay_set, doing_set, meta_set, owner_set = KEYS[1], KEYS[2], KEYS[3], KEYS[4]
 local value = ARGV[1]
 redis.call('ZREM', delay_set, value)
 redis.call('ZREM', doing_set, value)
 redis.call('HDEL', meta_set, value)
+redis.call('HDEL', owner_set, value)
 return 1
 `
 
@@ -53,75 +64,98 @@ local delay_set, doing_set = KEYS[1], KEYS[2]
 return redis.call('ZCARD', delay_set) + redis.call('ZCARD', doing_set)
 `
 
-// pollDelayTaskLua 从 delay 中原子检出 score<=now 的若干 item，移到 doing
-// 并把 doing 中的 score 设为 now+visibilityTimeout（处理超时回收点）；
-// 同时回带每个 item 当前的失败次数（来自 meta hash）。
-// KEYS: [delaySet, doingSet, metaSet]
-// ARGV: [nowSeconds, visibilityDeadlineSeconds, batchLimit]
-// 返回：[payload1, retries1, payload2, retries2, ...]
+// pollDelayTaskLua 从 delay 中原子检出 score<=now 的若干 item，移到 doing，
+// 为每个 item 分配新的 fence token 写入 owner hash，同时回带 retries 与 token。
+// KEYS: [delaySet, doingSet, metaSet, ownerSet, seqKey]
+// ARGV: [nowMs, visibilityDeadlineMs, batchLimit]
+// 返回：[payload1, retries1, token1, payload2, retries2, token2, ...]
 var pollDelayTaskLua = `
-local delay_set, doing_set, meta_set = KEYS[1], KEYS[2], KEYS[3]
+local delay_set, doing_set, meta_set, owner_set, seq_key = KEYS[1], KEYS[2], KEYS[3], KEYS[4], KEYS[5]
 local now = tonumber(ARGV[1])
 local visibility_deadline = tonumber(ARGV[2])
 local limit = tonumber(ARGV[3])
 local items = redis.call('ZRANGEBYSCORE', delay_set, '-inf', now, 'LIMIT', 0, limit)
 local out = {}
 for i, value in ipairs(items) do
+    local token = redis.call('INCR', seq_key)
     redis.call('ZADD', doing_set, visibility_deadline, value)
     redis.call('ZREM', delay_set, value)
+    redis.call('HSET', owner_set, value, token)
     local retries = redis.call('HGET', meta_set, value)
     if not retries then retries = '0' end
     out[#out+1] = value
     out[#out+1] = retries
+    out[#out+1] = tostring(token)
 end
 return out
 `
 
-// reclaimDelayTaskLua 把 doing 中 score<=now 的 item（已超过 visibility）移回 delay，
-// 立即可重试；不增加重试计数（reclaim 不视为业务失败，仅恢复消费权）。
-// KEYS: [delaySet, doingSet]
-// ARGV: [nowSeconds, batchLimit]
+// reclaimDelayTaskLua 把 doing 中 score<=now 的 item（已超过 visibility）移回 delay
+// 并清掉 owner（让旧持有者的 heartbeat/ack 因 token 不匹配而失效）。
+// 不增加重试计数：reclaim 表示上一持有者疑似崩溃，不是业务失败。
+// KEYS: [delaySet, doingSet, ownerSet]
+// ARGV: [nowMs, batchLimit]
 // 返回：被回收的 item 数量
 var reclaimDelayTaskLua = `
-local delay_set, doing_set = KEYS[1], KEYS[2]
+local delay_set, doing_set, owner_set = KEYS[1], KEYS[2], KEYS[3]
 local now = tonumber(ARGV[1])
 local limit = tonumber(ARGV[2])
 local items = redis.call('ZRANGEBYSCORE', doing_set, '-inf', now, 'LIMIT', 0, limit)
 for i, value in ipairs(items) do
     redis.call('ZADD', delay_set, now, value)
     redis.call('ZREM', doing_set, value)
+    redis.call('HDEL', owner_set, value)
 end
 return #items
 `
 
-// ackOKLua 业务成功：从 doing 清掉 + 清 meta。
-// KEYS: [doingSet, metaSet]
-// ARGV: [payload]
-var ackOKLua = `
-local doing_set, meta_set = KEYS[1], KEYS[2]
-local value = ARGV[1]
-redis.call('ZREM', doing_set, value)
-redis.call('HDEL', meta_set, value)
+// heartbeatDelayTaskLua worker 续约：校验 token 后把 doing 的 score 推到新 deadline。
+// KEYS: [doingSet, ownerSet]
+// ARGV: [payload, expectedToken, newDeadlineMs]
+// 返回：1=续约成功；0=token 不匹配（已被 reclaim 或已 ack），调用方应停止 heartbeat。
+var heartbeatDelayTaskLua = `
+local doing_set, owner_set = KEYS[1], KEYS[2]
+local value, expected, new_deadline = ARGV[1], ARGV[2], tonumber(ARGV[3])
+local cur = redis.call('HGET', owner_set, value)
+if cur == false or cur ~= expected then return 0 end
+redis.call('ZADD', doing_set, new_deadline, value)
 return 1
 `
 
-// ackRetryLua 业务失败但未达死信阈值：累加失败计数，把 item 移回 delay。
-// KEYS: [delaySet, doingSet, metaSet]
-// ARGV: [payload, retryAtUnixSeconds]
-// 返回：累加后的失败次数
+// ackOKLua 业务成功：校验 token，匹配则从 doing 清掉 + 清 meta + 清 owner。
+// KEYS: [doingSet, metaSet, ownerSet]
+// ARGV: [payload, expectedToken]
+// 返回：1=成功；0=token 不匹配（lease 已转移）。
+var ackOKLua = `
+local doing_set, meta_set, owner_set = KEYS[1], KEYS[2], KEYS[3]
+local value, expected = ARGV[1], ARGV[2]
+local cur = redis.call('HGET', owner_set, value)
+if cur == false or cur ~= expected then return 0 end
+redis.call('ZREM', doing_set, value)
+redis.call('HDEL', meta_set, value)
+redis.call('HDEL', owner_set, value)
+return 1
+`
+
+// ackRetryLua 业务失败但未达死信阈值：校验 token，匹配则累加失败计数，把 item 移回 delay。
+// KEYS: [delaySet, doingSet, metaSet, ownerSet]
+// ARGV: [payload, expectedToken, retryAtMs]
+// 返回：>0=新失败次数；0=token 不匹配。
 var ackRetryLua = `
-local delay_set, doing_set, meta_set = KEYS[1], KEYS[2], KEYS[3]
-local value, retry_at = ARGV[1], tonumber(ARGV[2])
+local delay_set, doing_set, meta_set, owner_set = KEYS[1], KEYS[2], KEYS[3], KEYS[4]
+local value, expected, retry_at = ARGV[1], ARGV[2], tonumber(ARGV[3])
+local cur = redis.call('HGET', owner_set, value)
+if cur == false or cur ~= expected then return 0 end
 local retries = redis.call('HINCRBY', meta_set, value, 1)
 redis.call('ZREM', doing_set, value)
 redis.call('ZADD', delay_set, retry_at, value)
+redis.call('HDEL', owner_set, value)
 return retries
 `
 
-// ackDeadLua 业务失败且达到死信阈值：从 doing 清掉 + 清 meta。
-// 和 ackOKLua 行为一致；分名是为了语义清晰、便于将来扩展（如写入 dead-letter list）。
-// KEYS: [doingSet, metaSet]
-// ARGV: [payload]
+// ackDeadLua 业务达到死信阈值：校验 token 后清干净。
+// 行为等同 ackOKLua（都从 doing/meta/owner 清掉）；分名为了语义清晰，
+// 便于将来扩展（如写入 dead-letter list）。
 var ackDeadLua = ackOKLua
 
 // ============================================================================
@@ -148,6 +182,8 @@ const (
 	delayKeyFormat      = "delay:{%s}"
 	delayDoingKeyFormat = "doing:{%s}"
 	delayMetaKeyFormat  = "meta:{%s}"
+	delayOwnerKeyFormat = "owner:{%s}"
+	delaySeqKeyFormat   = "seq:{%s}"
 
 	// defaultPollInterval ticker 默认间隔；用户暂不可配。
 	defaultPollInterval = time.Second
@@ -164,6 +200,11 @@ const (
 	// 主路径毫秒级返回；callback 内调 q.Close 的反模式下用此 timeout 打破死锁。
 	// client.Close 仍会在更高层等所有 worker 收尾，保证无 c.cmd race。
 	delayCloseWorkerWaitTimeout = 5 * time.Second
+	// heartbeatRatio worker heartbeat 间隔 = visibilityTimeout / heartbeatRatio。
+	// 默认 3：每过 1/3 visibility 续一次，给网络抖动留 2 个 RTT 的容错窗口。
+	heartbeatRatio = 3
+	// minHeartbeatInterval heartbeat 间隔下限，避免 visibility 极短时打爆 Redis。
+	minHeartbeatInterval = 200 * time.Millisecond
 )
 
 // DelayQueue 单 namespace 的 Redis 延迟队列。
@@ -219,23 +260,25 @@ type delayQueue struct {
 	exitC    chan struct{}
 
 	// keys 顺序按 Lua 脚本声明对齐，避免每次调用临时构造切片
-	pollKeys    []string // [delay, doing, meta]
-	delKeys     []string // [delay, doing, meta]
-	lengthKeys  []string // [delay, doing]
-	reclaimKeys []string // [delay, doing]
-	addKeys     []string // [delay, meta]
-	ackOKKeys   []string // [doing, meta]
-	ackDeadKeys []string // [doing, meta]
-	// ackRetry 复用 delKeys（[delay, doing, meta]）
+	pollKeys      []string // [delay, doing, meta, owner, seq]
+	delKeys       []string // [delay, doing, meta, owner]
+	lengthKeys    []string // [delay, doing]
+	reclaimKeys   []string // [delay, doing, owner]
+	addKeys       []string // [delay, meta, owner]
+	ackOKKeys     []string // [doing, meta, owner]
+	ackRetryKeys  []string // [delay, doing, meta, owner]
+	ackDeadKeys   []string // [doing, meta, owner]
+	heartbeatKeys []string // [doing, owner]
 
-	addScript     Scripter
-	delScript     Scripter
-	lengthScript  Scripter
-	pollScript    Scripter
-	reclaimScript Scripter
-	ackOKScript   Scripter
-	ackRetry      Scripter
-	ackDeadScript Scripter
+	addScript       Scripter
+	delScript       Scripter
+	lengthScript    Scripter
+	pollScript      Scripter
+	reclaimScript   Scripter
+	ackOKScript     Scripter
+	ackRetryScript  Scripter
+	ackDeadScript   Scripter
+	heartbeatScript Scripter
 
 	callback func([]byte) error
 }
@@ -286,22 +329,28 @@ func newDelayQueue(c *client, name string, f func([]byte) error, opts ...DelayOp
 	}
 	q.running.Store(true)
 
-	// 三个 key 用 hashtag 锁定到同一 slot
+	// 五个 key 用同一 {name} hashtag 锁定到同一 cluster slot
 	delayKey := fmt.Sprintf(delayKeyFormat, name)
 	doingKey := fmt.Sprintf(delayDoingKeyFormat, name)
 	metaKey := fmt.Sprintf(delayMetaKeyFormat, name)
+	ownerKey := fmt.Sprintf(delayOwnerKeyFormat, name)
+	seqKey := fmt.Sprintf(delaySeqKeyFormat, name)
 	if prefix := spec.GetPrefix(); prefix != "" {
 		delayKey = fmt.Sprintf("%s:%s", prefix, delayKey)
 		doingKey = fmt.Sprintf("%s:%s", prefix, doingKey)
 		metaKey = fmt.Sprintf("%s:%s", prefix, metaKey)
+		ownerKey = fmt.Sprintf("%s:%s", prefix, ownerKey)
+		seqKey = fmt.Sprintf("%s:%s", prefix, seqKey)
 	}
-	q.pollKeys = []string{delayKey, doingKey, metaKey}
-	q.delKeys = []string{delayKey, doingKey, metaKey}
+	q.pollKeys = []string{delayKey, doingKey, metaKey, ownerKey, seqKey}
+	q.delKeys = []string{delayKey, doingKey, metaKey, ownerKey}
 	q.lengthKeys = []string{delayKey, doingKey}
-	q.reclaimKeys = []string{delayKey, doingKey}
-	q.addKeys = []string{delayKey, metaKey}
-	q.ackOKKeys = []string{doingKey, metaKey}
-	q.ackDeadKeys = []string{doingKey, metaKey}
+	q.reclaimKeys = []string{delayKey, doingKey, ownerKey}
+	q.addKeys = []string{delayKey, metaKey, ownerKey}
+	q.ackOKKeys = []string{doingKey, metaKey, ownerKey}
+	q.ackRetryKeys = []string{delayKey, doingKey, metaKey, ownerKey}
+	q.ackDeadKeys = []string{doingKey, metaKey, ownerKey}
+	q.heartbeatKeys = []string{doingKey, ownerKey}
 
 	q.addScript = c.CreateScript(addDelayTaskLua)
 	q.delScript = c.CreateScript(delDelayTaskLua)
@@ -309,8 +358,9 @@ func newDelayQueue(c *client, name string, f func([]byte) error, opts ...DelayOp
 	q.pollScript = c.CreateScript(pollDelayTaskLua)
 	q.reclaimScript = c.CreateScript(reclaimDelayTaskLua)
 	q.ackOKScript = c.CreateScript(ackOKLua)
-	q.ackRetry = c.CreateScript(ackRetryLua)
+	q.ackRetryScript = c.CreateScript(ackRetryLua)
 	q.ackDeadScript = c.CreateScript(ackDeadLua)
+	q.heartbeatScript = c.CreateScript(heartbeatDelayTaskLua)
 
 	q.startTickers()
 	return q, nil
@@ -322,11 +372,10 @@ func (q *delayQueue) Add(ctx context.Context, payload []byte, delay time.Duratio
 	if !q.running.Load() {
 		return ErrDelayQueueHasClosed
 	}
-	sec := formatSec(delay)
-	if sec < 0 {
-		sec = 0
+	if delay < 0 {
+		delay = 0
 	}
-	expireAt := nowFunc().Unix() + sec
+	expireAt := nowFunc().Add(delay).UnixMilli()
 	return q.addScript.Run(ctx, q.addKeys, payload, expireAt).Err()
 }
 
@@ -419,11 +468,11 @@ func (q *delayQueue) pollOnce() {
 		return
 	}
 	now := nowFunc()
-	visibilityDeadline := now.Add(q.spec.GetTimeout()).Unix()
+	visibilityDeadline := now.Add(q.spec.GetTimeout()).UnixMilli()
 
 	ctx, cancel := q.opCtx()
 	defer cancel()
-	res, err := q.pollScript.Run(ctx, q.pollKeys, now.Unix(), visibilityDeadline, defaultPollBatch).Slice()
+	res, err := q.pollScript.Run(ctx, q.pollKeys, now.UnixMilli(), visibilityDeadline, defaultPollBatch).Slice()
 	if err != nil {
 		q.c.handler.delayPollError(q.name)
 		if !errors.Is(err, context.Canceled) {
@@ -434,32 +483,40 @@ func (q *delayQueue) pollOnce() {
 	if len(res) == 0 {
 		return
 	}
-	for i := 0; i+1 < len(res); i += 2 {
+	// 返回格式：[payload, retries, token, payload, retries, token, ...]
+	for i := 0; i+2 < len(res); i += 3 {
 		payload := []byte(toString(res[i]))
 		retries, _ := strconv.Atoi(toString(res[i+1]))
+		token := toString(res[i+2])
 		// 双重跟踪：
 		//   - q.workerWG  ：q.Close 带超时等之，主路径用于让 ack 在 ctx cancel 前完成；
 		//   - client.delayWorkerWG：client.Close 兜底等之，避免 c.cmd race。
 		// Add 在 spawn 之前完成，安全：q.Close 阻断后续 ticker fire，不与 wg.Wait race。
 		q.workerWG.Add(1)
 		q.c.delayWorkerWG.Add(1)
-		go q.executeOne(payload, retries)
+		go q.executeOne(payload, retries, token)
 	}
 }
 
 // executeOne 在独立 goroutine 中执行一个 item 的 callback 与 ack。
 //
 // 并发模型：
-//   - worker 计入 client.delayWorkerWG，client.Close 会等它结束；
-//   - q.Close 不等 worker（避免 callback 内 q.Close 死锁）；
+//   - worker 计入 client.delayWorkerWG（client.Close 兜底等之）和 q.workerWG（q.Close 等之，带超时）；
 //   - 用户 callback 跑在嵌套 goroutine 中独立调度；
-//   - worker 同步等 cbDone 后总是尝试 ack，ack 用 q.opCtx 派生 ctx：
-//     Close 触发的 cancel 会让 ack 快速失败短路（item 留 doing，由下次 reclaim 兜底）。
+//   - worker 启动 heartbeat ticker 周期续 doing 的 visibility；
+//     续期失败（token 不匹配，意味着已被 reclaim 转移给他人）时停止续期，
+//     callback 跑完后的 ack 同样会因 token 不匹配而 noop（fence 语义）；
+//   - worker 同步等 cbDone 后尝试 ack；ack 用 token 校验防误删。
 //
 // recover panic 在嵌套 goroutine 中执行，视为业务失败一次。
-func (q *delayQueue) executeOne(payload []byte, retries int) {
+func (q *delayQueue) executeOne(payload []byte, retries int, token string) {
 	defer q.c.delayWorkerWG.Done()
 	defer q.workerWG.Done()
+
+	// heartbeat：每 visibility/3 续期，停止信号通过 close(stopHB) 发出。
+	stopHB := make(chan struct{})
+	hbDone := make(chan struct{})
+	go q.heartbeatLoop(payload, token, stopHB, hbDone)
 
 	cbDone := make(chan error, 1)
 	go func() {
@@ -468,17 +525,76 @@ func (q *delayQueue) executeOne(payload []byte, retries int) {
 
 	err := <-cbDone
 
+	// 停 heartbeat（callback 已完成，接下来要 ack；不需要再续期）。
+	close(stopHB)
+	<-hbDone
+
 	if err == nil {
-		q.ackSuccess(payload)
+		q.ackSuccess(payload, token)
 		return
 	}
 	// 业务失败：判断是否达到死信阈值
 	// 注意：retries 是本次执行前的失败次数；本次失败后实际计数为 retries+1。
 	if retries+1 >= q.spec.GetRetryTimes() {
-		q.ackDead(payload)
+		q.ackDead(payload, token)
 		return
 	}
-	q.ackRetryWithBackoff(payload)
+	q.ackRetryWithBackoff(payload, token)
+}
+
+// heartbeatLoop 周期续 doing 的 visibility，直到 stopHB 关闭。
+// 单次续期失败（token 不匹配）即停止——表示 lease 已被 reclaim 转移给其他 worker。
+func (q *delayQueue) heartbeatLoop(payload []byte, token string, stopHB <-chan struct{}, done chan<- struct{}) {
+	defer close(done)
+	interval := q.heartbeatInterval()
+	if interval <= 0 {
+		return
+	}
+	t := time.NewTicker(interval)
+	defer t.Stop()
+	for {
+		select {
+		case <-stopHB:
+			return
+		case <-q.exitC:
+			return
+		case <-t.C:
+			if !q.heartbeatOnce(payload, token) {
+				return
+			}
+		}
+	}
+}
+
+// heartbeatInterval 计算 heartbeat 间隔：visibility / heartbeatRatio，下限 minHeartbeatInterval。
+func (q *delayQueue) heartbeatInterval() time.Duration {
+	visibility := q.spec.GetTimeout()
+	if visibility <= 0 {
+		return 0
+	}
+	d := visibility / heartbeatRatio
+	if d < minHeartbeatInterval {
+		d = minHeartbeatInterval
+	}
+	return d
+}
+
+// heartbeatOnce 续期一次。返回 false 表示 token 已失效（不应再续期）。
+func (q *delayQueue) heartbeatOnce(payload []byte, token string) bool {
+	now := nowFunc()
+	newDeadline := now.Add(q.spec.GetTimeout()).UnixMilli()
+	ctx, cancel := q.opCtx()
+	defer cancel()
+	ok, err := q.heartbeatScript.Run(ctx, q.heartbeatKeys, payload, token, newDeadline).Int64()
+	if err != nil {
+		// 网络错误不立即放弃续期：单次失败不能可靠判断 lease 状态，下个周期重试。
+		// ctx 取消（Close 路径）会让 select 通过 q.exitC 或 stopHB 自然退出。
+		if !errors.Is(err, context.Canceled) {
+			e(fmt.Sprintf("%s heartbeat error, payload=%q err=%v", delayLogPrefix, payload, err))
+		}
+		return true
+	}
+	return ok == 1
 }
 
 // runCallback 执行用户 callback；recover panic。
@@ -492,39 +608,48 @@ func (q *delayQueue) runCallback(payload []byte) (err error) {
 	return q.callback(payload)
 }
 
-// ackSuccess 业务成功：移出 doing + 清 meta。失败仅日志（reclaim 兜底）。
-func (q *delayQueue) ackSuccess(payload []byte) {
+// ackSuccess 业务成功：校验 token，匹配则移出 doing + 清 meta + 清 owner。
+// token 不匹配（lease 已被 reclaim 转移）时 noop，由新持有者负责。
+func (q *delayQueue) ackSuccess(payload []byte, token string) {
 	ctx, cancel := q.opCtx()
 	defer cancel()
-	if err := q.ackOKScript.Run(ctx, q.ackOKKeys, payload).Err(); err != nil {
+	if err := q.ackOKScript.Run(ctx, q.ackOKKeys, payload, token).Err(); err != nil {
 		if !errors.Is(err, context.Canceled) {
 			e(fmt.Sprintf("%s ack ok failed, payload=%q err=%v", delayLogPrefix, payload, err))
 		}
 	}
 }
 
-// ackRetryWithBackoff 业务失败但未达死信阈值：累加 meta 计数 + 把 item 放回 delay。
+// ackRetryWithBackoff 业务失败但未达死信阈值：校验 token 后累加 meta 计数 + 把 item 放回 delay。
 // 重新可见时间 = now + defaultRetryBackoff，与 visibility timeout 解耦。
-func (q *delayQueue) ackRetryWithBackoff(payload []byte) {
-	retryAt := nowFunc().Add(defaultRetryBackoff).Unix()
+// token 不匹配时 noop。
+func (q *delayQueue) ackRetryWithBackoff(payload []byte, token string) {
+	retryAt := nowFunc().Add(defaultRetryBackoff).UnixMilli()
 	ctx, cancel := q.opCtx()
 	defer cancel()
-	if err := q.ackRetry.Run(ctx, q.delKeys, payload, retryAt).Err(); err != nil {
+	if err := q.ackRetryScript.Run(ctx, q.ackRetryKeys, payload, token, retryAt).Err(); err != nil {
 		if !errors.Is(err, context.Canceled) {
 			e(fmt.Sprintf("%s ack retry failed, payload=%q err=%v", delayLogPrefix, payload, err))
 		}
 	}
 }
 
-// ackDead 业务达到死信阈值：清理 + 触发用户 dead-letter hook。
+// ackDead 业务达到死信阈值：校验 token 后清理 + 触发用户 dead-letter hook。
 // 先清 Redis 状态再调 hook；hook panic 不影响清理结果。
-func (q *delayQueue) ackDead(payload []byte) {
+// token 不匹配时跳过清理，但仍**不**触发死信 hook（lease 已转移，新持有者负责）。
+func (q *delayQueue) ackDead(payload []byte, token string) {
 	ctx, cancel := q.opCtx()
 	defer cancel()
-	if err := q.ackDeadScript.Run(ctx, q.ackDeadKeys, payload).Err(); err != nil {
+	cleared, err := q.ackDeadScript.Run(ctx, q.ackDeadKeys, payload, token).Int64()
+	if err != nil {
 		if !errors.Is(err, context.Canceled) {
 			e(fmt.Sprintf("%s ack dead failed, payload=%q err=%v", delayLogPrefix, payload, err))
 		}
+		return
+	}
+	if cleared != 1 {
+		// token 不匹配：lease 已转移，避免与新持有者重复触发 hook。
+		return
 	}
 	if hook := q.spec.GetHandleDeadLetter(); hook != nil {
 		defer func() {
@@ -538,6 +663,7 @@ func (q *delayQueue) ackDead(payload []byte) {
 
 // reclaimOnce 把 doing 中超过 visibility 的 item 拉回 delay 重新可见。
 // 不增加重试计数：reclaim 表示上一次执行进程崩溃/卡死，并非业务失败。
+// reclaim 同时会清掉 owner，使旧持有者的 heartbeat / ack 因 token 不匹配而 noop。
 func (q *delayQueue) reclaimOnce() {
 	if !q.running.Load() {
 		return
@@ -545,7 +671,7 @@ func (q *delayQueue) reclaimOnce() {
 	now := nowFunc()
 	ctx, cancel := q.opCtx()
 	defer cancel()
-	count, err := q.reclaimScript.Run(ctx, q.reclaimKeys, now.Unix(), defaultPollBatch).Int64()
+	count, err := q.reclaimScript.Run(ctx, q.reclaimKeys, now.UnixMilli(), defaultPollBatch).Int64()
 	if err != nil {
 		q.c.handler.delayReclaimError(q.name)
 		if !errors.Is(err, context.Canceled) {

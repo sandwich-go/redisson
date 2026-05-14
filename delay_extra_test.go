@@ -177,6 +177,61 @@ func TestDelay_DeadLetterViaRetryPath_NotReclaim(t *testing.T) {
 // P0 回归：reclaim 不会过早触发
 // ============================================================================
 
+// TestDelay_StuckCallbackDoesNotReschedule 验证 callback 执行时间超过 visibility timeout
+// 时，本实例的 reclaim 不会重复调度同一 payload（heartbeat 续期保证）。
+//
+// 设计：Timeout=2s（visibility=2s），callback 阻塞 5s（远超 visibility）。
+// 旧实现：T=2s reclaim 把 task 从 doing 移回 delay → poll 立刻拉到 → spawn 第二个 worker
+// 与第一个并发跑同一 payload，是真 bug。
+// 新实现：worker 用 heartbeat 每 visibility/3 续 doing score，visibility 永远在未来，
+// reclaim 拉不到自己持有的 task；callback 跑完后通过 score fence 安全 ack。
+func TestDelay_StuckCallbackDoesNotReschedule(t *testing.T) {
+	t.Parallel()
+	c := newTestDelayClient(t)
+	ctx := context.Background()
+
+	var totalCalls atomic.Int32
+	done := make(chan struct{})
+	q, err := c.NewDelayQueue("stuck-cb", func(_ []byte) error {
+		totalCalls.Add(1)
+		// 阻塞远超 visibility，模拟卡住的 callback
+		time.Sleep(5 * time.Second)
+		select {
+		case <-done:
+		default:
+			close(done)
+		}
+		return nil
+	},
+		WithDelayOptionPrefix(uniquePrefix(t)),
+		WithDelayOptionTimeout(2*time.Second), // visibility=2s
+		WithDelayOptionRetryTimes(3),
+	)
+	if err != nil {
+		t.Fatalf("NewDelayQueue: %v", err)
+	}
+	t.Cleanup(func() { _ = q.Close() })
+
+	if err := q.Add(ctx, []byte("p"), 500*time.Millisecond); err != nil {
+		t.Fatalf("Add: %v", err)
+	}
+
+	// 等第一次完成
+	select {
+	case <-done:
+	case <-time.After(15 * time.Second):
+		t.Fatalf("callback never completed; totalCalls=%d", totalCalls.Load())
+	}
+
+	// callback 完成后再多等一段，看 reclaim 是否多触发了几次
+	time.Sleep(3 * time.Second)
+
+	if got := totalCalls.Load(); got != 1 {
+		t.Fatalf("totalCalls=%d, want 1 (callback 卡住超过 visibility 期间不应被重复调度，"+
+			"heartbeat 应保证 doing score 始终在未来，reclaim 拉不到)", got)
+	}
+}
+
 // TestDelay_ReclaimNotTooEarly 验证一个正在被处理的 item 在 visibility 内
 // 不会被 reclaim 拉回造成重复消费。
 //
