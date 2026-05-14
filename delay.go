@@ -218,7 +218,10 @@ func (q *delayQueue) run(ts ...ticker) error {
 
 func (q *delayQueue) poll() error {
 	now := nowFunc()
-	res, err := q.moveScript.Run(context.Background(), q.pollKeys, now.Unix(), float64(now.Add(q.spec.GetTimeout()).Unix())).Slice()
+	// 后台 ticker 任务设置 timeout，避免 Redis 慢查询/网络抖动导致 worker 卡死
+	ctx, cancel := context.WithTimeout(context.Background(), q.spec.GetTimeout())
+	defer cancel()
+	res, err := q.moveScript.Run(ctx, q.pollKeys, now.Unix(), float64(now.Add(q.spec.GetTimeout()).Unix())).Slice()
 	if err != nil {
 		q.c.handler.delayPollError(q.name)
 		return err
@@ -274,7 +277,9 @@ func (q *delayQueue) handleDeadLetter(data []byte) {
 
 func (q *delayQueue) reclaim() error {
 	now := nowFunc()
-	res, err := q.moveScript.Run(context.Background(), q.reclaimKeys, now.Unix(), float64(now.Add(q.spec.GetTimeout()).Unix())).Slice()
+	ctx, cancel := context.WithTimeout(context.Background(), q.spec.GetTimeout())
+	defer cancel()
+	res, err := q.moveScript.Run(ctx, q.reclaimKeys, now.Unix(), float64(now.Add(q.spec.GetTimeout()).Unix())).Slice()
 	if err != nil {
 		q.c.handler.delayReclaimError(q.name)
 	} else if len(res) > 0 {
@@ -284,7 +289,9 @@ func (q *delayQueue) reclaim() error {
 }
 
 func (q *delayQueue) ackOK(data []byte) error {
-	err := q.consumeSuccessScript.Run(context.Background(), q.reclaimKeys, data).Err()
+	ctx, cancel := context.WithTimeout(context.Background(), q.spec.GetTimeout())
+	defer cancel()
+	err := q.consumeSuccessScript.Run(ctx, q.reclaimKeys, data).Err()
 	if err != nil {
 		e(fmt.Sprintf("%s ack failed, %v, %v", delayLogPrefix, data, err))
 	}
@@ -292,7 +299,9 @@ func (q *delayQueue) ackOK(data []byte) error {
 }
 
 func (q *delayQueue) retryAdd(data []byte, score float64) error {
-	err := q.consumeFailedScript.Run(context.Background(), q.pollKeys, data, score).Err()
+	ctx, cancel := context.WithTimeout(context.Background(), q.spec.GetTimeout())
+	defer cancel()
+	err := q.consumeFailedScript.Run(ctx, q.pollKeys, data, score).Err()
 	if err != nil {
 		e(fmt.Sprintf("%s retry add failed, %v, %f, %v", delayLogPrefix, data, score, err))
 	}

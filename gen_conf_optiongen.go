@@ -29,6 +29,7 @@ type Conf struct {
 	T                 Tester        `xconf:"t" usage:"如果设置该值，则启动mock"`
 	ForceSingleClient bool          `xconf:"force_single_client" usage:"ForceSingleClient force the usage of a single client connection, without letting the lib guessing"`
 	PubSubChanSize    int           `xconf:"pub_sub_chan_size" usage:"pubsub chan 大小"`
+	BootstrapTimeout  time.Duration `xconf:"bootstrap_timeout" usage:"连接建立时执行 INFO 等启动期探测的总超时；集群+多副本下默认 30s"`
 }
 
 // NewConf new Conf
@@ -239,6 +240,15 @@ func WithPubSubChanSize(v int) ConfOptionFunc {
 	}
 }
 
+// WithBootstrapTimeout 连接建立时执行 INFO 等启动期探测的总超时；集群+多副本下默认 30s
+func WithBootstrapTimeout(v time.Duration) ConfOptionFunc {
+	return func(cc *Conf) ConfOptionFunc {
+		previous := cc.BootstrapTimeout
+		cc.BootstrapTimeout = v
+		return WithBootstrapTimeout(previous)
+	}
+}
+
 // InstallConfWatchDog the installed func will called when NewConf  called
 func InstallConfWatchDog(dog func(cc *Conf)) { watchDogConf = dog }
 
@@ -266,6 +276,7 @@ func setConfDefaultValue(cc *Conf) {
 		WithT(nil),
 		WithForceSingleClient(false),
 		WithPubSubChanSize(defaultPubSubChanSize),
+		WithBootstrapTimeout(defaultBootstrapTimeout),
 	} {
 		opt(cc)
 	}
@@ -334,6 +345,7 @@ func (cc *Conf) GetDevelopment() bool           { return cc.Development }
 func (cc *Conf) GetT() Tester                   { return cc.T }
 func (cc *Conf) GetForceSingleClient() bool     { return cc.ForceSingleClient }
 func (cc *Conf) GetPubSubChanSize() int         { return cc.PubSubChanSize }
+func (cc *Conf) GetBootstrapTimeout() time.Duration { return cc.BootstrapTimeout }
 
 // ConfVisitor visitor interface for Conf
 type ConfVisitor interface {
@@ -355,6 +367,7 @@ type ConfVisitor interface {
 	GetT() Tester
 	GetForceSingleClient() bool
 	GetPubSubChanSize() int
+	GetBootstrapTimeout() time.Duration
 }
 
 // ConfInterface visitor + ApplyOption interface for Conf

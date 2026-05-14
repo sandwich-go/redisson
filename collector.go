@@ -2,12 +2,17 @@ package redisson
 
 import (
 	"context"
-	"github.com/prometheus/client_golang/prometheus"
 	"sync"
+	"time"
+
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 const (
 	namespace = "redis"
+	// collectScrapeTimeout Prometheus 采集 delay queue 长度的最大耗时；
+	// 控制单次 scrape 时间，避免被 Redis 慢查询拖死。
+	collectScrapeTimeout = 2 * time.Second
 )
 
 type RegisterCollectorFunc func(prometheus.Collector)
@@ -56,7 +61,9 @@ func (c *collector) Collect(ch chan<- prometheus.Metric) {
 			return true
 		}
 		cli.delayQueues.Range(func(key, value any) bool {
-			l, _ := value.(*delayQueue).Length(context.Background())
+			ctx, cancel := context.WithTimeout(context.Background(), collectScrapeTimeout)
+			l, _ := value.(*delayQueue).Length(ctx)
+			cancel()
 			ch <- prometheus.MustNewConstMetric(
 				c.delayLengthDesc,
 				prometheus.GaugeValue,

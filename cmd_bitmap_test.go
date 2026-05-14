@@ -239,24 +239,6 @@ func testSetBit(ctx context.Context, c Cmdable) []string {
 	return []string{key1}
 }
 
-func doTestUnitClean(ctx context.Context, c Cmdable, keys []string) {
-	if len(keys) > 0 {
-		So(c.Del(ctx, keys...).Err(), ShouldBeNil)
-	}
-	if !c.Options().GetDevelopment() {
-		c.FlushAll(context.Background())
-	}
-}
-
-type TestUnitName interface {
-	String() string
-}
-
-type TestUnit struct {
-	Name TestUnitName
-	Func func(ctx context.Context, c Cmdable) []string
-}
-
 func bitMapTestUnits() []TestUnit {
 	return []TestUnit{
 		{CommandBitCount, testBitCount},
@@ -269,29 +251,6 @@ func bitMapTestUnits() []TestUnit {
 		{CommandGetBit, testGetBit},
 		{CommandSetBit, testSetBit},
 	}
-}
-
-func _doTestUnits(t *testing.T, c Cmdable, unitsFunc func() []TestUnit) {
-	t.Cleanup(func() {
-		_ = c.Close()
-	})
-	if !c.Options().GetDevelopment() {
-		c.FlushAll(context.Background())
-	}
-	var ctx = context.Background()
-	for _, v := range unitsFunc() {
-		Convey(v.Name.String(), t, func() { doTestUnitClean(ctx, c, v.Func(ctx, c)) })
-	}
-}
-
-func doTestUnits(t *testing.T, unitsFunc func() []TestUnit) {
-	c := MustNewClient(NewConf(WithDevelopment(false)))
-	_doTestUnits(t, c, unitsFunc)
-}
-
-func doClusterTestUnits(t *testing.T, unitsFunc func() []TestUnit) {
-	c := MustNewClient(NewConf(WithDevelopment(true)))
-	_doTestUnits(t, c, unitsFunc)
 }
 
 func TestClient_BitMap(t *testing.T) { doTestUnits(t, bitMapTestUnits) }

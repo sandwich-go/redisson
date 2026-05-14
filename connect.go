@@ -118,8 +118,9 @@ func (c *client) connect() error {
 	c.adapter = rueidiscompat.NewAdapter(c.cmd)
 	c.builder = builder{c.cmd.B()}
 	if t := c.v.GetT(); t == nil {
-		// 启动期版本/集群探测设置合理超时，避免 Background 卡死初始化。
-		ctx, cancel := context.WithTimeout(context.Background(), c.v.GetWriteTimeout())
+		// 启动期版本/集群探测使用 BootstrapTimeout，避免 Background 卡死初始化。
+		// 默认 30s（参见 option.go 的 defaultBootstrapTimeout）。
+		ctx, cancel := context.WithTimeout(context.Background(), c.v.GetBootstrapTimeout())
 		defer cancel()
 		if err = c.revise(ctx); err != nil {
 			_ = c.Close()

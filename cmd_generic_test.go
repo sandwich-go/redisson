@@ -3,10 +3,10 @@ package redisson
 import (
 	"context"
 	"fmt"
-	. "github.com/smartystreets/goconvey/convey"
-	"sort"
 	"testing"
 	"time"
+
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 func testCopy(ctx context.Context, c Cmdable) []string {
@@ -179,28 +179,6 @@ func interfaceSliceEqual(a, b []any) bool {
 	}
 	if len(b) != len(a) {
 		return false
-	}
-	for k, v := range a {
-		if v != b[k] {
-			return false
-		}
-	}
-	return true
-}
-
-func stringSliceEqual(a, b []string, absolute bool) bool {
-	if a == nil && b != nil {
-		return false
-	}
-	if b == nil && a != nil {
-		return false
-	}
-	if len(b) != len(a) {
-		return false
-	}
-	if !absolute {
-		sort.Strings(a)
-		sort.Strings(b)
 	}
 	for k, v := range a {
 		if v != b[k] {

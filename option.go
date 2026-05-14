@@ -11,8 +11,9 @@ type Tester interface {
 }
 
 var (
-	defaultWriteTimeout   = 10 * time.Second
-	defaultPubSubChanSize = 1024
+	defaultWriteTimeout     = 10 * time.Second
+	defaultPubSubChanSize   = 1024
+	defaultBootstrapTimeout = 30 * time.Second
 )
 
 //go:generate optiongen --new_func=NewConf --xconf=true --empty_composite_nil=true --usage_tag_name=usage
@@ -27,7 +28,8 @@ func ConfOptionDeclareWithDefault() any {
 		"DB":                0,                                  // @MethodComment(Redis实例数据库编号，集群下只能用0)
 		"Username":          "",                                 // @MethodComment(Redis用户名)
 		"Password":          "",                                 // @MethodComment(Redis用户密码)
-		"WriteTimeout":      time.Duration(defaultWriteTimeout), // @MethodComment(Redis连接写入的超时时长)
+		"WriteTimeout":      time.Duration(defaultWriteTimeout),     // @MethodComment(Redis连接写入的超时时长)
+		"BootstrapTimeout":  time.Duration(defaultBootstrapTimeout), // @MethodComment(连接建立时执行 INFO 等启动期探测的总超时；集群+多副本下默认 30s)
 		"ConnPoolSize":      0,                                  // @MethodComment(RedisBlock连接池，默认1000)
 		"EnableCache":       true,                               // @MethodComment(是否开启客户端缓存)
 		"CacheSizeEachConn": 0,                                  // @MethodComment(开启客户端缓存时，单个连接缓存大小，默认128 MiB)
@@ -45,5 +47,8 @@ func revise(v ConfInterface) {
 	}
 	if v.GetPubSubChanSize() == 0 {
 		v.ApplyOption(WithPubSubChanSize(defaultPubSubChanSize))
+	}
+	if v.GetBootstrapTimeout() == 0 {
+		v.ApplyOption(WithBootstrapTimeout(defaultBootstrapTimeout))
 	}
 }

@@ -233,24 +233,6 @@ func testSMembers(ctx context.Context, c Cmdable) []string {
 	return []string{key}
 }
 
-func stringStructMapEqual(a, b map[string]struct{}) bool {
-	if a == nil && b != nil {
-		return false
-	}
-	if b == nil && a != nil {
-		return false
-	}
-	if len(b) != len(a) {
-		return false
-	}
-	for k := range a {
-		if _, ok := b[k]; !ok {
-			return false
-		}
-	}
-	return true
-}
-
 func testSMove(ctx context.Context, c Cmdable) []string {
 	var key1, key2 = "set1", "set2"
 
