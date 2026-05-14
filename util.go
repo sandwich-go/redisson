@@ -76,8 +76,8 @@ func str(arg any) string {
 	default:
 		vv := reflect.ValueOf(arg)
 		if vv.Kind() == reflect.Struct || vv.Kind() == reflect.Pointer {
-			panic(fmt.Errorf(
-				"redis: can't marshal %T (consider implementing BinaryMarshaler)", v))
+			panic(NewParameterError(
+				"can't marshal %T (consider implementing BinaryMarshaler)", v))
 		}
 	}
 	return fmt.Sprint(arg)

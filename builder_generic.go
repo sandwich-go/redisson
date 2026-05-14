@@ -1,7 +1,6 @@
 package redisson
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -160,7 +159,7 @@ func (b builder) sort(command, key string, sort Sort) Completed {
 		cmd = cmd.Args(order)
 	case "":
 	default:
-		panic(fmt.Sprintf("invalid sort order %s", sort.Order))
+		panic(NewParameterError("invalid sort order %s", sort.Order))
 	}
 	if sort.Alpha {
 		cmd = cmd.Args(KwAlpha)

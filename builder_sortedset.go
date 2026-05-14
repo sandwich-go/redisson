@@ -137,7 +137,7 @@ func (b builder) ZPopMaxCompleted(key string, count ...int64) Completed {
 	case 1:
 		return b.Zpopmax().Key(key).Count(count[0]).Build()
 	default:
-		panic("too many arguments")
+		panic(NewParameterError("too many arguments"))
 	}
 }
 
@@ -148,7 +148,7 @@ func (b builder) ZPopMinCompleted(key string, count ...int64) Completed {
 	case 1:
 		return b.Zpopmin().Key(key).Count(count[0]).Build()
 	default:
-		panic("too many arguments")
+		panic(NewParameterError("too many arguments"))
 	}
 }
 

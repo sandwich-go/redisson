@@ -1,7 +1,6 @@
 package redisson
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -119,7 +118,7 @@ func (b builder) SetArgsCompleted(key string, value any, a SetArgs) Completed {
 		cmd = cmd.Args(mode)
 	case "":
 	default:
-		panic(fmt.Sprintf("invalid mode for SET: %s", a.Mode))
+		panic(NewParameterError("invalid mode for SET: %s", a.Mode))
 	}
 	if a.Get {
 		cmd = cmd.Args(KwGet)

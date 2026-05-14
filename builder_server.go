@@ -43,7 +43,7 @@ func (b builder) MemoryUsageCompleted(key string, samples ...int64) Completed {
 	case 1:
 		return b.MemoryUsage().Key(key).Samples(samples[0]).Build()
 	default:
-		panic("too many arguments")
+		panic(NewParameterError("too many arguments"))
 	}
 }
 

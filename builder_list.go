@@ -1,7 +1,6 @@
 package redisson
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -34,7 +33,7 @@ func (b builder) LInsertCompleted(key, op string, pivot, element any) Completed 
 	case AFTER:
 		return b.Linsert().Key(key).After().Pivot(str(pivot)).Element(str(element)).Build()
 	default:
-		panic(fmt.Sprintf("Invalid op argument value: %s", op))
+		panic(NewParameterError("invalid LInsert op: %s", op))
 	}
 }
 

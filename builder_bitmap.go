@@ -1,7 +1,6 @@
 package redisson
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -26,7 +25,7 @@ func (b builder) BitCountCompleted(key string, bc *BitCount) Completed {
 	case BIT:
 		return b.Bitcount().Key(key).Start(bc.Start).End(bc.End).Bit().Build()
 	default:
-		panic(fmt.Sprintf("invalid unit %s", bc.Unit))
+		panic(NewParameterError("invalid unit %s", bc.Unit))
 	}
 }
 
@@ -55,7 +54,7 @@ func (b builder) BitPosCompleted(key string, bit int64, pos ...int64) Completed 
 	case 2:
 		return b.Bitpos().Key(key).Bit(bit).Start(pos[0]).End(pos[1]).Build()
 	default:
-		panic("too many arguments")
+		panic(NewParameterError("too many arguments"))
 	}
 }
 

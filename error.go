@@ -22,6 +22,37 @@ var (
 	ErrNoCache = rueidis.ErrNoCache
 )
 
+// ParameterError 表示 builder 参数校验失败，调用方传入了非法的 enum / 范围 / 互斥参数等。
+//
+// 在 builder 阶段以 panic 抛出（属于编程错误，应在测试中立即发现），
+// 但通过自定义类型而非 string，便于 recover() 时识别和处理：
+//
+//	defer func() {
+//	    if r := recover(); r != nil {
+//	        if pe, ok := r.(*ParameterError); ok {
+//	            // 处理参数错误
+//	            _ = pe
+//	        }
+//	    }
+//	}()
+type ParameterError struct {
+	Reason string
+}
+
+// Error 实现 error 接口。
+func (e *ParameterError) Error() string { return "redisson: " + e.Reason }
+
+// NewParameterError 构造 ParameterError。
+func NewParameterError(format string, args ...any) *ParameterError {
+	return &ParameterError{Reason: fmt.Sprintf(format, args...)}
+}
+
+// IsParameterError 判别 panic 抛出的 r 是否为 ParameterError。
+func IsParameterError(r any) bool {
+	_, ok := r.(*ParameterError)
+	return ok
+}
+
 // IsNoScriptError 判别是否为 NOSCRIPT 错误。
 // 优先使用 errors.Is，回退到字符串前缀匹配以兼容 rueidis 直接返回的协议错误。
 func IsNoScriptError(err error) bool {

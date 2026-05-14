@@ -51,6 +51,34 @@ func TestErrors_PushAndErr(t *testing.T) {
 	}
 }
 
+// TestParameterError 验证参数错误类型与 IsParameterError 识别。
+func TestParameterError(t *testing.T) {
+	pe := NewParameterError("invalid unit %s", "FOO")
+	if pe == nil {
+		t.Fatal("NewParameterError returned nil")
+	}
+	if pe.Error() != "redisson: invalid unit FOO" {
+		t.Fatalf("Error() = %q", pe.Error())
+	}
+	if !IsParameterError(pe) {
+		t.Fatal("IsParameterError(pe) should be true")
+	}
+	if IsParameterError(errors.New("plain")) {
+		t.Fatal("plain error should not be ParameterError")
+	}
+}
+
+// TestParameterError_Recover 验证 panic(NewParameterError(...)) 可被 recover 识别。
+func TestParameterError_Recover(t *testing.T) {
+	defer func() {
+		r := recover()
+		if !IsParameterError(r) {
+			t.Fatalf("recover got %T (%v), want *ParameterError", r, r)
+		}
+	}()
+	panic(NewParameterError("test"))
+}
+
 // TestErrors_FormatFunc 验证可替换的 format 函数。
 func TestErrors_FormatFunc(t *testing.T) {
 	var es Errors

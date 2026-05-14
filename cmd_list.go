@@ -2,7 +2,6 @@ package redisson
 
 import (
 	"context"
-	"fmt"
 	"strings"
 	"time"
 )
@@ -360,7 +359,7 @@ func (c *client) LInsert(ctx context.Context, key, op string, pivot, value any) 
 	case AFTER:
 		ctx = c.handler.before(ctx, CommandLInsertAfter)
 	default:
-		panic(fmt.Sprintf("Invalid op argument value: %s", op))
+		panic(NewParameterError("invalid LInsert op: %s", op))
 	}
 	r := c.adapter.LInsert(ctx, key, op, pivot, value)
 	c.handler.after(ctx, r.Err())
