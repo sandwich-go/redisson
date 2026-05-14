@@ -1,5 +1,4 @@
-//go:build integration
-
+//go:build integration || miniredis_test
 
 package redisson
 
@@ -83,9 +82,11 @@ type TestUnit struct {
 
 // doTestUnitClean 在每个 unit 结束后清理写入的 key；
 // 然后 FlushDB（不再 FlushAll，避免影响并行运行的其他测试 DB）。
+//
+// 逐个 Del 避免 rueidis 多 key 跨槽预校验（同 unit 不同语义的多 key 不一定同 hashtag）。
 func doTestUnitClean(ctx context.Context, c Cmdable, keys []string) {
-	if len(keys) > 0 {
-		So(c.Del(ctx, keys...).Err(), ShouldBeNil)
+	for _, k := range keys {
+		So(c.Del(ctx, k).Err(), ShouldBeNil)
 	}
 	if !c.Options().GetDevelopment() {
 		c.FlushDB(context.Background())
@@ -135,6 +136,25 @@ func stringSliceEqual(a, b []string, absolute bool) bool {
 	if !absolute {
 		sort.Strings(a)
 		sort.Strings(b)
+	}
+	for k, v := range a {
+		if v != b[k] {
+			return false
+		}
+	}
+	return true
+}
+
+// interfaceSliceEqual 严格比较两个 []any（按下标）。
+func interfaceSliceEqual(a, b []any) bool {
+	if a == nil && b != nil {
+		return false
+	}
+	if b == nil && a != nil {
+		return false
+	}
+	if len(b) != len(a) {
+		return false
 	}
 	for k, v := range a {
 		if v != b[k] {

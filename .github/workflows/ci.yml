@@ -75,16 +75,22 @@ jobs:
           go test -tags integration -race -count=1 -timeout 5m ./...
 
   test-miniredis:
-    name: Test miniredis path (build tag)
+    name: miniredis suite (no Redis required)
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        go: ["1.24.x"]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.24.x"
+          go-version: ${{ matrix.go }}
           cache: true
       - name: Build with -tags redisson_miniredis
         run: go build -tags redisson_miniredis ./...
+      - name: Run miniredis isolated test suite
+        run: go test -tags 'miniredis_test redisson_miniredis' -race -count=1 -timeout 5m ./...
 
   lint:
     name: golangci-lint

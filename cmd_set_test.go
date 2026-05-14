@@ -1,4 +1,4 @@
-//go:build integration
+//go:build integration || miniredis_test
 
 
 package redisson

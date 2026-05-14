@@ -177,24 +177,6 @@ func testExpireAt(ctx context.Context, c Cmdable) []string {
 	return []string{key}
 }
 
-func interfaceSliceEqual(a, b []any) bool {
-	if a == nil && b != nil {
-		return false
-	}
-	if b == nil && a != nil {
-		return false
-	}
-	if len(b) != len(a) {
-		return false
-	}
-	for k, v := range a {
-		if v != b[k] {
-			return false
-		}
-	}
-	return true
-}
-
 func testKeys(ctx context.Context, c Cmdable) []string {
 	mset := c.MSet(ctx, "one", "1", "two", "2", "three", "3", "four", "4")
 	So(mset.Err(), ShouldBeNil)
