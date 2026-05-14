@@ -18,3 +18,9 @@ vendor/
 *.local
 genbuilder
 /genbuilder
+
+# example binaries (从 redisson 根目录运行 `go build ./examples/<name>` 会落到这里)
+/string
+/hash
+/delay
+/locker
