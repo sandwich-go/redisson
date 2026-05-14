@@ -67,7 +67,7 @@ pack:
   #bin/{os}: bin/{os}
   #example: example
 
-chglog:
-  change_log_ssh_url:  # push到其他site，管理changelog版本的所在git地址，默认不同步
-  change_log_path:  # release文件存放路径
-
+#chglog:
+#  change_log_ssh_url:  # push到其他site，管理changelog版本的所在git地址，默认不同步
+#  change_log_path:  # release文件存放路径
+#
