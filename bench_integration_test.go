@@ -15,7 +15,7 @@ func BenchmarkSet(b *testing.B) {
 	b.Cleanup(func() { _ = c.Close() })
 
 	ctx := context.Background()
-	c.FlushAll(ctx)
+	c.FlushDB(ctx)
 
 	b.ReportAllocs()
 	b.ResetTimer()
@@ -33,7 +33,7 @@ func BenchmarkGet(b *testing.B) {
 	b.Cleanup(func() { _ = c.Close() })
 
 	ctx := context.Background()
-	c.FlushAll(ctx)
+	c.FlushDB(ctx)
 	const key = "bench:get:hot"
 	if err := c.Set(ctx, key, "hello-world", 0).Err(); err != nil {
 		b.Fatal(err)
@@ -54,7 +54,7 @@ func BenchmarkGet_Cached(b *testing.B) {
 	b.Cleanup(func() { _ = c.Close() })
 
 	ctx := context.Background()
-	c.FlushAll(ctx)
+	c.FlushDB(ctx)
 	const key = "bench:get:cached"
 	if err := c.Set(ctx, key, "hello-world", 0).Err(); err != nil {
 		b.Fatal(err)
@@ -76,7 +76,7 @@ func BenchmarkPipeline_Set(b *testing.B) {
 	b.Cleanup(func() { _ = c.Close() })
 
 	ctx := context.Background()
-	c.FlushAll(ctx)
+	c.FlushDB(ctx)
 
 	b.ReportAllocs()
 	b.ResetTimer()

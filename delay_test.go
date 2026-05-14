@@ -12,12 +12,13 @@ import (
 )
 
 func TestDelay(t *testing.T) {
-	c := MustNewClient(NewConf(WithDevelopment(false)))
+	t.Parallel()
+	c := MustNewClient(NewConf(WithDevelopment(false), WithDB(nextDB())))
 	t.Cleanup(func() {
 		_ = c.Close()
 	})
 	if !c.Options().GetDevelopment() {
-		c.FlushAll(context.Background())
+		c.FlushDB(context.Background())
 	}
 	var ctx = context.Background()
 	name := "mock"

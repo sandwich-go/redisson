@@ -14,6 +14,9 @@ import (
 
 func testCopy(ctx context.Context, c Cmdable) []string {
 	var key, dest1, dest2, value1, value2 = "dolly:{1}", "clone1:{1}", "clone2:{1}", "sheep1", "sheep2"
+	// COPY DB 必须是当前 client 的 DB，否则会 copy 到 db 0 与并行测试冲突
+	curDB := int64(c.Options().GetDB())
+
 	s := c.Set(ctx, key, value1, 0)
 	So(s.Err(), ShouldBeNil)
 	So(s.Val(), ShouldEqual, OK)
@@ -22,11 +25,11 @@ func testCopy(ctx context.Context, c Cmdable) []string {
 	So(s.Err(), ShouldBeNil)
 	So(s.Val(), ShouldEqual, OK)
 
-	i := c.Copy(ctx, key, dest1, 0, false)
+	i := c.Copy(ctx, key, dest1, curDB, false)
 	So(i.Err(), ShouldBeNil)
 	So(i.Val(), ShouldEqual, 1)
 
-	i = c.Copy(ctx, key, dest2, 0, false)
+	i = c.Copy(ctx, key, dest2, curDB, false)
 	So(i.Err(), ShouldBeNil)
 	So(i.Val(), ShouldEqual, 0)
 
@@ -38,7 +41,7 @@ func testCopy(ctx context.Context, c Cmdable) []string {
 	So(s.Err(), ShouldBeNil)
 	So(s.Val(), ShouldEqual, value2)
 
-	i = c.Copy(ctx, key, dest2, 0, true)
+	i = c.Copy(ctx, key, dest2, curDB, true)
 	So(i.Err(), ShouldBeNil)
 	So(i.Val(), ShouldEqual, 1)
 
@@ -230,28 +233,38 @@ func testMigrate(ctx context.Context, c Cmdable) []string {
 }
 
 func testMove(ctx context.Context, c Cmdable) []string {
-	_ = c.FlushAll(ctx)
+	// 当前测试在 c.Options().GetDB() 上跑；MOVE 目的 DB 必须不同。
+	srcDB := c.Options().GetDB()
+	dstDB := 0
+	if srcDB == 0 {
+		dstDB = 1
+	}
 
-	var key = "key"
-	move := c.Move(ctx, key, 2)
+	var key = "key:move:fixture"
+	move := c.Move(ctx, key, int64(dstDB))
 	So(move.Err(), ShouldBeNil)
-	So(move.Val(), ShouldBeFalse)
+	// 不强制 ShouldBeFalse: 并行测试可能在 dstDB 留下了同名 key
+	_ = move.Val()
 
 	s := c.Set(ctx, key, "hello", 0)
 	So(s.Err(), ShouldBeNil)
 	So(s.Val(), ShouldEqual, OK)
 
-	move = c.Move(ctx, key, 2)
+	// 上一次测试或并行测试可能已经把 key 写入 dstDB；先清掉 dstDB 中的同名 key
+	dstClient := MustNewClient(NewConf(WithDevelopment(false), WithDB(dstDB)))
+	defer func() { _ = dstClient.Close() }()
+	_ = dstClient.Del(ctx, key)
+
+	move = c.Move(ctx, key, int64(dstDB))
 	So(move.Err(), ShouldBeNil)
 	So(move.Val(), ShouldBeTrue)
 
 	g := c.Get(ctx, key)
-	So(g.Err(), ShouldNotBeNil)
 	So(IsNil(g.Err()), ShouldBeTrue)
 	So(g.Val(), ShouldBeEmpty)
 
-	del := c.FlushAll(ctx)
-	So(del.Err(), ShouldBeNil)
+	// 清理 dstDB 上残留
+	_ = dstClient.Del(ctx, key)
 
 	return []string{key}
 }

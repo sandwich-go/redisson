@@ -6,11 +6,25 @@ package redisson
 import (
 	"context"
 	"sort"
+	"sync/atomic"
 	"testing"
 	"time"
 
 	. "github.com/smartystreets/goconvey/convey"
 )
+
+// dbAlloc 全局 DB 分配器，用于让每个 TestClient_X 落在不同的 logical DB，
+// 从而可以 t.Parallel() 同时运行而互不干扰。
+//
+// Redis 单实例支持 16 个 db (0-15)。我们从 1 开始分配，把 0 留给手动调试。
+// 当超过 15 时回卷重用（极端情况，本仓库测试 < 16 个）。
+var dbAlloc atomic.Int32
+
+// nextDB 取下一个可用 DB 编号 (1..15)。
+func nextDB() int {
+	n := dbAlloc.Add(1)
+	return int(((n - 1) % 15) + 1)
+}
 
 // eventually 轮询直到 cond() 返回 true 或超时；用于替代 time.Sleep。
 //
@@ -68,13 +82,13 @@ type TestUnit struct {
 }
 
 // doTestUnitClean 在每个 unit 结束后清理写入的 key；
-// 当非 Development 模式时额外做一次 FlushAll，确保 unit 之间无残留。
+// 然后 FlushDB（不再 FlushAll，避免影响并行运行的其他测试 DB）。
 func doTestUnitClean(ctx context.Context, c Cmdable, keys []string) {
 	if len(keys) > 0 {
 		So(c.Del(ctx, keys...).Err(), ShouldBeNil)
 	}
 	if !c.Options().GetDevelopment() {
-		c.FlushAll(context.Background())
+		c.FlushDB(context.Background())
 	}
 }
 
@@ -83,7 +97,7 @@ func _doTestUnits(t *testing.T, c Cmdable, unitsFunc func() []TestUnit) {
 		_ = c.Close()
 	})
 	if !c.Options().GetDevelopment() {
-		c.FlushAll(context.Background())
+		c.FlushDB(context.Background())
 	}
 	var ctx = context.Background()
 	for _, v := range unitsFunc() {
@@ -92,12 +106,15 @@ func _doTestUnits(t *testing.T, c Cmdable, unitsFunc func() []TestUnit) {
 }
 
 // doTestUnits 用默认 standalone 配置（Development=false）跑测试。
+// 自动分配独立 DB（避免与并行运行的其他测试相互污染）。
 func doTestUnits(t *testing.T, unitsFunc func() []TestUnit) {
-	c := MustNewClient(NewConf(WithDevelopment(false)))
+	t.Parallel()
+	c := MustNewClient(NewConf(WithDevelopment(false), WithDB(nextDB())))
 	_doTestUnits(t, c, unitsFunc)
 }
 
 // doClusterTestUnits 模拟 cluster 路径（开启 Development）。
+// 不并行：cluster 模式下使用 db 0 才有效，且测试本身依赖跨 slot 行为。
 func doClusterTestUnits(t *testing.T, unitsFunc func() []TestUnit) {
 	c := MustNewClient(NewConf(WithDevelopment(true)))
 	_doTestUnits(t, c, unitsFunc)
