@@ -13,6 +13,9 @@ import (
 // 路径，以及 Receive/PReceive 的额外覆盖。
 //
 // 串行跑在同一 client 上（不 t.Parallel），避免新增并发 client 抢资源。
+//
+// SSubscribe / SPublish / PubSubShard* 是 Redis 7.0+ 才支持的 sharded pub/sub，
+// 在 Redis 6.x 上调用会返回 "unknown command"，因此用 requireRedisAtLeast 守门。
 
 // TestPubSubExtra 串行跑 5 个 pub/sub-extra 子测试。
 func TestPubSubExtra(t *testing.T) {
@@ -20,6 +23,7 @@ func TestPubSubExtra(t *testing.T) {
 	t.Cleanup(func() { _ = c.Close() })
 
 	t.Run("PubSubShardChannels", func(t *testing.T) {
+		requireRedisAtLeast(t, c, 7, 0)
 		ctx := context.Background()
 		r := c.PubSubShardChannels(ctx, "*")
 		_ = r.Err()
@@ -27,6 +31,7 @@ func TestPubSubExtra(t *testing.T) {
 	})
 
 	t.Run("PubSubShardNumSub", func(t *testing.T) {
+		requireRedisAtLeast(t, c, 7, 0)
 		ctx := context.Background()
 		r := c.PubSubShardNumSub(ctx, "ch1", "ch2")
 		_ = r.Err()
@@ -34,6 +39,7 @@ func TestPubSubExtra(t *testing.T) {
 	})
 
 	t.Run("SPublish", func(t *testing.T) {
+		requireRedisAtLeast(t, c, 7, 0)
 		ctx := context.Background()
 		r := c.SPublish(ctx, "ch", "msg")
 		_ = r.Err()
@@ -41,6 +47,7 @@ func TestPubSubExtra(t *testing.T) {
 	})
 
 	t.Run("SSubscribeReceive", func(t *testing.T) {
+		requireRedisAtLeast(t, c, 7, 0)
 		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 		defer cancel()
 

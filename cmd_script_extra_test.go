@@ -175,7 +175,12 @@ func scriptExtraTestUnits() []TestUnit {
 
 // TestClient_ScriptExtra 不调 t.Parallel：脚本相关命令（ScriptFlush/FunctionFlush）
 // 是 server 全局的，与 TestClient_Script 并发会相互干扰。串行跑稳定且总时长不变。
+//
+// 整文件全部用例都依赖 Redis 7.0+：EvalRO/EvalShaRO（7.0+）、Function* 全套（7.0+）。
+// Redis 6.x 上 SkipNow 跳过；新建一个 client 仅用于版本探测，t.Cleanup 关闭。
 func TestClient_ScriptExtra(t *testing.T) {
 	c := MustNewClient(NewConf(WithDevelopment(false), WithDB(nextDB())))
+	requireRedisAtLeast(t, c, 7, 0)
+	// 注：_doTestUnits 内部已注册 t.Cleanup 关闭 client，这里不重复。
 	_doTestUnits(t, c, scriptExtraTestUnits)
 }

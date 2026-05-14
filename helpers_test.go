@@ -191,3 +191,22 @@ func stringStructMapEqual(a, b map[string]struct{}) bool {
 	}
 	return true
 }
+
+// requireRedisAtLeast 在当前 Redis server 版本低于 wantMajor.wantMinor 时
+// 调 t.Skipf 跳过该测试。
+//
+// 用法（在子测试入口或测试入口）：
+//
+//	requireRedisAtLeast(t, c, 7, 0)  // 要求 Redis >= 7.0
+//
+// 实现细节：从 c.Version() 取 server 报告的版本，与 want 比较。c 必须是已连接的 client。
+func requireRedisAtLeast(t *testing.T, c Cmdable, wantMajor, wantMinor int64) {
+	t.Helper()
+	v := c.Version()
+	if v == nil {
+		t.Skipf("requireRedisAtLeast: server version unavailable")
+	}
+	if v.Major < wantMajor || (v.Major == wantMajor && v.Minor < wantMinor) {
+		t.Skipf("requires Redis >= %d.%d, server is %s", wantMajor, wantMinor, v.String())
+	}
+}

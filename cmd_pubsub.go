@@ -277,11 +277,17 @@ func (p *pubSub) Close() error {
 	return nil
 }
 
+// 订阅类方法的 err 永远是同步路径上的 nil：rueidis.Receive 是阻塞调用，
+// 必须放到独立 goroutine 后台跑；调用方拿到的 err 仅反映"启动是否成功"，
+// 真正的接收错误通过日志输出（启动错误几乎不可能，因为没有立即同步操作）。
+//
+// 注意：旧版本中曾把 err 同时被 goroutine 内写、主路径读，造成 data race；
+// 新版去掉无效的写读，明确"同步路径恒返回 nil"。
+
 func (p *pubSub) PSubscribe(ctx context.Context, patterns ...string) error {
 	ctx = p.handler.before(ctx, CommandPSubscribe)
-	var err error
 	go func() {
-		err = p.client.cmd.Receive(p.ctx, p.client.cmd.B().Psubscribe().Pattern(patterns...).Build(), func(m rueidis.PubSubMessage) {
+		err := p.client.cmd.Receive(p.ctx, p.client.cmd.B().Psubscribe().Pattern(patterns...).Build(), func(m rueidis.PubSubMessage) {
 			if !p.isClosed() {
 				p.msgCh.In <- m
 			} else {
@@ -292,15 +298,14 @@ func (p *pubSub) PSubscribe(ctx context.Context, patterns ...string) error {
 			e(fmt.Sprintf("psubscribe failed, patterns: %s, err: %s", strings.Join(patterns, ", "), err.Error()))
 		}
 	}()
-	p.handler.after(ctx, err)
-	return err
+	p.handler.after(ctx, nil)
+	return nil
 }
 
 func (p *pubSub) Subscribe(ctx context.Context, channels ...string) error {
 	ctx = p.handler.before(ctx, CommandSubscribe)
-	var err error
 	go func() {
-		err = p.client.cmd.Receive(p.ctx, p.client.cmd.B().Subscribe().Channel(channels...).Build(), func(m rueidis.PubSubMessage) {
+		err := p.client.cmd.Receive(p.ctx, p.client.cmd.B().Subscribe().Channel(channels...).Build(), func(m rueidis.PubSubMessage) {
 			if !p.isClosed() {
 				p.msgCh.In <- m
 			} else {
@@ -311,15 +316,14 @@ func (p *pubSub) Subscribe(ctx context.Context, channels ...string) error {
 			e(fmt.Sprintf("subscribe failed, channels: %s, err: %s", strings.Join(channels, ", "), err.Error()))
 		}
 	}()
-	p.handler.after(ctx, err)
-	return err
+	p.handler.after(ctx, nil)
+	return nil
 }
 
 func (p *pubSub) SSubscribe(ctx context.Context, channels ...string) error {
 	ctx = p.handler.before(ctx, CommandSSubscribe)
-	var err error
 	go func() {
-		err = p.client.cmd.Receive(p.ctx, p.client.cmd.B().Ssubscribe().Channel(channels...).Build(), func(m rueidis.PubSubMessage) {
+		err := p.client.cmd.Receive(p.ctx, p.client.cmd.B().Ssubscribe().Channel(channels...).Build(), func(m rueidis.PubSubMessage) {
 			if !p.isClosed() {
 				p.msgCh.In <- m
 			} else {
@@ -330,8 +334,8 @@ func (p *pubSub) SSubscribe(ctx context.Context, channels ...string) error {
 			e(fmt.Sprintf("ssubscribe failed, channels: %s, err: %s", strings.Join(channels, ", "), err.Error()))
 		}
 	}()
-	p.handler.after(ctx, err)
-	return err
+	p.handler.after(ctx, nil)
+	return nil
 }
 
 func (p *pubSub) SUnsubscribe(ctx context.Context, channels ...string) error {
