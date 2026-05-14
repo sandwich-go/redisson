@@ -17,7 +17,8 @@
 
 ## 要求
 
-* Golang >= 1.22（建议 1.24）
+* Golang >= 1.24（受上游 rueidis v1.0.71+ 约束）
+* Redis 推荐 >= 7.0（部分命令如 Sharded Pub/Sub、EVAL_RO、FUNCTION_* 需要 7.0+；测试在 Redis 6 上自动 skip）
 
 如需在更老的 Go 版本上使用，请锁定对应的 redisson tag（如 Go 1.18 使用 `v0.1.x`）。
 
@@ -53,6 +54,57 @@ func main() {
 	_ = c.Get(ctx, "key").Val()
 }
 ```
+
+## 示例
+
+完整可运行示例位于 `examples/`：
+
+```bash
+go run ./examples/string   # GET/SET/Incr/Pipeline
+go run ./examples/hash     # HSET/HGetAll/HMSet/HExpire（Redis 7.4+）
+go run ./examples/delay    # 延迟队列：投递、消费、重试、死信
+go run ./examples/locker   # 分布式锁：获取 / TryLock / 锁租约丢失
+```
+
+详见 [`examples/README.md`](examples/README.md)。
+
+## 细粒度 Client 接口（v2.0 起）
+
+`Cmdable` 是聚合大接口，包含所有 Redis 命令。新代码建议依赖 **最窄** 的子接口；`clients.go` 为每个命令族提供了 16 个类型别名：
+
+```go
+// 旧：函数依赖整个接口
+func ProcessOrders(c redisson.Cmdable) error { ... }
+
+// 新（推荐）：只暴露 String 命令族
+func ProcessOrders(c redisson.StringClient) error {
+    c.Set(ctx, "k", "v", 0)   // ✓
+    // c.HSet(...)             // 编译期报错：不在 String 子集
+}
+```
+
+可用别名（完整列表见 `clients.go`）：
+
+| 别名               | 命令族                 | 等价 Cmdable 子集    |
+|--------------------|----------------------|----------------------|
+| `StringClient`     | GET/SET/INCR/...     | `StringCmdable`      |
+| `HashClient`       | HSET/HGetAll/...     | `HashCmdable`        |
+| `ListClient`       | LPUSH/LRANGE/...     | `ListCmdable`        |
+| `SetClient`        | SADD/SMEMBERS/...    | `SetCmdable`         |
+| `SortedSetClient`  | ZADD/ZRANGE/...      | `SortedSetCmdable`   |
+| `StreamClient`     | XADD/XRANGE/...      | `StreamCmdable`      |
+| `BitmapClient`     | SETBIT/BITCOUNT/...  | `BitmapCmdable`      |
+| `HyperLogClient`   | PFADD/PFCOUNT/...    | `HyperLogCmdable`    |
+| `GeoClient`        | GEOADD/GEORADIUS/... | `GeospatialCmdable`  |
+| `GenericClient`    | DEL/EXPIRE/...       | `GenericCmdable`     |
+| `ScriptClient`     | EVAL/SCRIPT/...      | `ScriptCmdable`      |
+| `PubSubClient`     | PUBLISH/SUBSCRIBE    | `PubSubCmdable`      |
+| `ConnectionClient` | PING/AUTH/CLIENT/... | `ConnectionCmdable`  |
+| `ServerClient`     | INFO/DBSIZE/...      | `ServerCmdable`      |
+| `ClusterClient`    | CLUSTER * / READONLY | `ClusterCmdable`     |
+| `SafeClient`       | SafeMGet             | `SafeCmdable`        |
+
+由于 Go 类型别名（`type X = Y`），底层 `*client` 自动满足所有这些接口，**已有传 `Cmdable` 的调用点无需迁移**。
 
 ## 检查
 仅在development模式下才会检查

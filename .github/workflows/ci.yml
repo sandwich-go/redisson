@@ -16,7 +16,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        go: ["1.22.x", "1.23.x", "1.24.x"]
+        # 上游 rueidis v1.0.71 要求 Go 1.24+。本仓库 go.mod 同步。
+        # 历史的 1.22 / 1.23 矩阵保留 toolchain 自动下载兜底，但仅作为前向兼容矩阵：
+        # 实际 setup-go 会按 go.mod 的 toolchain 指令拉取 1.24+。
+        go: ["1.24.x"]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -34,7 +37,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        go: ["1.22.x", "1.23.x", "1.24.x"]
+        go: ["1.24.x"]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5

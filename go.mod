@@ -2,6 +2,9 @@ module github.com/sandwich-go/redisson
 
 go 1.24.9
 
+// 当用户机器只有 1.24.x 而 patch 低于 1.24.9 时，Go 工具链会自动下载满足要求的版本。
+toolchain go1.24.11
+
 require (
 	github.com/alicebob/miniredis/v2 v2.30.5
 	github.com/coreos/go-semver v0.3.1

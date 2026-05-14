@@ -17,7 +17,8 @@ A Type-safe Golang Redis RESP2/RESP3 client.
 
 ## Requirement
 
-* Golang >= 1.22 (recommended 1.24)
+* Golang >= 1.24 (driven by upstream rueidis v1.0.71+)
+* Redis >= 7.0 recommended (some commands such as Sharded Pub/Sub, EVAL_RO, FUNCTION_* require 7.0+; tests gracefully skip on Redis 6)
 
 For older Go versions, please pin the corresponding redisson tag (e.g. `v0.1.x` for Go 1.18).
 
@@ -53,6 +54,57 @@ func main() {
 	_ = c.Get(ctx, "key").Val()
 }
 ```
+
+## Examples
+
+Runnable end-to-end examples live under `examples/`:
+
+```bash
+go run ./examples/string   # GET/SET/Incr/Pipeline
+go run ./examples/hash     # HSET/HGetAll/HMSet/HExpire (Redis 7.4+)
+go run ./examples/delay    # DelayQueue with retry / dead-letter
+go run ./examples/locker   # Distributed lock (acquire / TryLock / lease loss)
+```
+
+See [`examples/README.md`](examples/README.md) for a description of each.
+
+## Fine-grained Client Interfaces (since v2.0)
+
+`Cmdable` is a single aggregated interface that exposes every Redis command. New code should depend on the **narrowest** interface that satisfies its needs. `clients.go` defines 16 type aliases for each command family:
+
+```go
+// Old (still works): function depends on the entire surface
+func ProcessOrders(c redisson.Cmdable) error { ... }
+
+// New (recommended): only String commands are reachable inside
+func ProcessOrders(c redisson.StringClient) error {
+    c.Set(ctx, "k", "v", 0)   // ✓
+    // c.HSet(...)             // compile error: not a String operation
+}
+```
+
+Available aliases (see `clients.go` for the full list):
+
+| Alias              | Family              | Equivalent Cmdable subset |
+|--------------------|---------------------|---------------------------|
+| `StringClient`     | GET/SET/INCR/...    | `StringCmdable`           |
+| `HashClient`       | HSET/HGetAll/...    | `HashCmdable`             |
+| `ListClient`       | LPUSH/LRANGE/...    | `ListCmdable`             |
+| `SetClient`        | SADD/SMEMBERS/...   | `SetCmdable`              |
+| `SortedSetClient`  | ZADD/ZRANGE/...     | `SortedSetCmdable`        |
+| `StreamClient`     | XADD/XRANGE/...     | `StreamCmdable`           |
+| `BitmapClient`     | SETBIT/BITCOUNT/... | `BitmapCmdable`           |
+| `HyperLogClient`   | PFADD/PFCOUNT/...   | `HyperLogCmdable`         |
+| `GeoClient`        | GEOADD/GEORADIUS/...| `GeospatialCmdable`       |
+| `GenericClient`    | DEL/EXPIRE/...      | `GenericCmdable`          |
+| `ScriptClient`     | EVAL/SCRIPT/...     | `ScriptCmdable`           |
+| `PubSubClient`     | PUBLISH/SUBSCRIBE   | `PubSubCmdable`           |
+| `ConnectionClient` | PING/AUTH/CLIENT/...| `ConnectionCmdable`       |
+| `ServerClient`     | INFO/DBSIZE/...     | `ServerCmdable`           |
+| `ClusterClient`    | CLUSTER * / READONLY| `ClusterCmdable`          |
+| `SafeClient`       | SafeMGet            | `SafeCmdable`             |
+
+Because these are Go type aliases (`type X = Y`), the underlying `*client` automatically satisfies them all — no migration needed for existing call sites that pass `Cmdable`.
 
 ## Check
 Check only in development mode.
