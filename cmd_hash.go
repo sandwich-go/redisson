@@ -649,8 +649,7 @@ func (c *client) HVals(ctx context.Context, key string) StringSliceCmd {
 
 func (c *client) HStrLen(ctx context.Context, key, field string) IntCmd {
 	ctx = c.handler.before(ctx, CommandHStrLen)
-	var r IntCmd
-	r = newIntCmd(c.Do(ctx, c.builder.HStrLenCompleted(key, field)))
+	r := newIntCmd(c.Do(ctx, c.builder.HStrLenCompleted(key, field)))
 	c.handler.after(ctx, r.Err())
 	return r
 }

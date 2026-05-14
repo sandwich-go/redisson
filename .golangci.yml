@@ -42,11 +42,19 @@ linters:
         - unsafeptr
         - unusedresult
     staticcheck:
-      # 仅启用真正影响正确性的检查；禁用风格类（命名/注释/简化建议）以避免大批量改动
+      # 启用 SA*（正确性）+ S1*（简化）+ ST1003 之外的命名 + QF（quickfix）。
+      # ST1003（命名规范，禁 ALL_CAPS）显式禁用，因为 XXX_* 常量重命名留待后续。
       checks:
-        - "SA*" # 静态分析正确性问题（bug / 资源泄漏等）
+        - "SA*"     # 静态分析正确性问题（bug / 资源泄漏等）
+        - "S1*"     # 简化建议
+        - "ST1*"    # 风格规范
+        - "QF*"     # quickfix 建议
         - "-SA1019" # 忽略 deprecated 警告
         - "-SA9003" # empty branch
+        - "-ST1003" # 命名 ALL_CAPS（XXX_* 常量重命名见 commit）
+        - "-ST1020" # comment on exported function（历史代码风格）
+        - "-ST1021" # comment on exported type
+        - "-ST1022" # comment on exported var
   exclusions:
     generated: lax
     paths:
@@ -61,9 +69,9 @@ linters:
           - errcheck
           - bodyclose
           - prealloc
-      # cmd_args.go 是 rueidiscompat 类型适配器集合，含部分目前未直接调用但属于
-      # 公开命令结果型工厂；不当 unused 处理（同时 P3-10 builder 生成完成后会被启用）。
-      - path: cmd_args\.go
+      # cmd_args*.go 是 rueidiscompat 类型适配器集合（已按命令族拆分），
+      # 含部分目前未直接调用但属于公开命令结果型工厂；不当 unused 处理。
+      - path: 'cmd_args.*\.go$'
         linters:
           - unused
 

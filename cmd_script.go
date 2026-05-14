@@ -437,31 +437,31 @@ func (s *script) Hash() string                            { return s.hash }
 func (s *script) Load(ctx context.Context) StringCmd      { return s.scriptLoad(ctx, s.name, s.src) }
 func (s *script) Exists(ctx context.Context) BoolSliceCmd { return s.scriptExists(ctx, s.hash) }
 func (s *script) Eval(ctx context.Context, keys []string, args ...any) Cmd {
-	return s.client.eval(ctx, s.name, s.src, keys, args...)
+	return s.eval(ctx, s.name, s.src, keys, args...)
 }
 func (s *script) EvalRO(ctx context.Context, keys []string, args ...any) Cmd {
-	return s.client.evalRO(ctx, s.name, s.src, keys, args...)
+	return s.evalRO(ctx, s.name, s.src, keys, args...)
 }
 
 func (s *script) EvalSha(ctx context.Context, keys []string, args ...any) Cmd {
-	return s.client.evalSha(ctx, s.name, s.hash, keys, args...)
+	return s.evalSha(ctx, s.name, s.hash, keys, args...)
 }
 func (s *script) EvalShaRO(ctx context.Context, keys []string, args ...any) Cmd {
-	return s.client.evalShaRO(ctx, s.name, s.hash, keys, args...)
+	return s.evalShaRO(ctx, s.name, s.hash, keys, args...)
 }
 
 func (s *script) Run(ctx context.Context, keys []string, args ...any) Cmd {
-	r := s.client.evalSha(ctx, s.name, s.hash, keys, args...)
+	r := s.evalSha(ctx, s.name, s.hash, keys, args...)
 	if isNoScriptError(r.Err()) {
-		return s.client.eval(ctx, s.name, s.src, keys, args...)
+		return s.eval(ctx, s.name, s.src, keys, args...)
 	}
 	return r
 }
 
 func (s *script) RunRO(ctx context.Context, keys []string, args ...any) Cmd {
-	r := s.client.evalShaRO(ctx, s.name, s.hash, keys, args...)
+	r := s.evalShaRO(ctx, s.name, s.hash, keys, args...)
 	if isNoScriptError(r.Err()) {
-		return s.client.evalRO(ctx, s.name, s.src, keys, args...)
+		return s.evalRO(ctx, s.name, s.src, keys, args...)
 	}
 	return r
 }

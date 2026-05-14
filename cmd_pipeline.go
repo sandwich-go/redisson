@@ -53,7 +53,6 @@ func (p *pipeline) cmd(cs Completed, ret BaseCmd) {
 	p.commands = append(p.commands, cs)
 	p.rets = append(p.rets, ret)
 	p.mx.Unlock()
-	return
 }
 
 func (p *pipeline) exec(ctx context.Context, f func([]Completed, []BaseCmd) error) {
@@ -75,7 +74,6 @@ func (p *pipeline) exec(ctx context.Context, f func([]Completed, []BaseCmd) erro
 		return
 	}
 	firstError = f(cmds, rets)
-	return
 }
 
 func (p *pipeline) Exec(ctx context.Context) (result []any, err error) {
