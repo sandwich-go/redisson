@@ -96,3 +96,65 @@ func TestErrors_FormatFunc(t *testing.T) {
 		t.Fatalf("DotFormatFunc Error() = %q, want %q", got, "e1,e2")
 	}
 }
+
+// TestErrors_NilSafe 在 nil 接收者上调用 Err / LastErr 不应 panic。
+func TestErrors_NilSafe(t *testing.T) {
+	var es *Errors
+	if es.LastErr() != nil {
+		t.Errorf("nil Errors.LastErr() should be nil")
+	}
+	if es.Err() != nil {
+		t.Errorf("nil Errors.Err() should be nil")
+	}
+}
+
+// TestErrors_String 验证 String 输出非空。
+func TestErrors_String(t *testing.T) {
+	var es Errors
+	es.Push(errors.New("e"))
+	s := es.String()
+	if s == "" {
+		t.Errorf("String() should be non-empty")
+	}
+}
+
+// TestErrors_ListFormatFunc 显式调用 ListFormatFunc 的输出格式。
+func TestErrors_ListFormatFunc(t *testing.T) {
+	got := ListFormatFunc([]error{errors.New("a"), errors.New("b")})
+	want := "2 errors occurred:\n#1: a\n#2: b"
+	if got != want {
+		t.Errorf("ListFormatFunc=%q, want %q", got, want)
+	}
+}
+
+// TestErrors_DotFormatFunc_Empty 空集 DotFormat 应返回空字符串。
+func TestErrors_DotFormatFunc_Empty(t *testing.T) {
+	if got := DotFormatFunc(nil); got != "" {
+		t.Errorf("DotFormatFunc(nil)=%q, want empty", got)
+	}
+}
+
+// TestParameterError_FormatArgs 验证格式化参数路径。
+func TestParameterError_FormatArgs(t *testing.T) {
+	pe := NewParameterError("got %d items, want %d", 3, 5)
+	if pe.Error() != "redisson: got 3 items, want 5" {
+		t.Errorf("formatted Error()=%q", pe.Error())
+	}
+}
+
+// TestIsParameterError_Nil nil recover 值不是 ParameterError。
+func TestIsParameterError_Nil(t *testing.T) {
+	if IsParameterError(nil) {
+		t.Errorf("IsParameterError(nil) should be false")
+	}
+}
+
+// TestIsNoScriptError_LegacyAlias 包内别名 isNoScriptError 与导出版本等价。
+func TestIsNoScriptError_LegacyAlias(t *testing.T) {
+	if !isNoScriptError(ErrNoScript) {
+		t.Errorf("isNoScriptError sentinel mismatch")
+	}
+	if isNoScriptError(nil) {
+		t.Errorf("isNoScriptError(nil) should be false")
+	}
+}
