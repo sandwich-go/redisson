@@ -17,9 +17,9 @@
 
 ## 要求
 
-* Golang >= 1.18
+* Golang >= 1.22（建议 1.24）
 
-如果不能升级`Golang`至`1.18`，请使用`redisson/version/0.1`版本。
+如需在更老的 Go 版本上使用，请锁定对应的 redisson tag（如 Go 1.18 使用 `v0.1.x`）。
 
 ## 基础库
 使用 [redis/rueidis](https://github.com/redis/rueidis)
