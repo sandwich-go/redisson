@@ -60,9 +60,11 @@ func testHExists(ctx context.Context, c Cmdable) []string {
 	So(del.Err(), ShouldBeNil)
 	So(del.Val(), ShouldEqual, 1)
 
-	time.Sleep(1 * time.Second)
+	// 等客户端缓存失效（rueidis 服务端推送 invalidation 后）
+	eventually(func() bool {
+		return !cacheCmd(c).HExists(ctx, key, field1).Val()
+	}, 2*time.Second, "cached HExists should reflect deletion")
 	hExists = cacheCmd(c).HExists(ctx, key, field1)
-	So(hExists.Err(), ShouldBeNil)
 	So(hExists.Val(), ShouldBeFalse)
 
 	return nil
@@ -95,10 +97,10 @@ func testHGet(ctx context.Context, c Cmdable) []string {
 	So(del.Err(), ShouldBeNil)
 	So(del.Val(), ShouldEqual, 1)
 
-	time.Sleep(1 * time.Second)
-
+	eventually(func() bool {
+		return IsNil(cacheCmd(c).HGet(ctx, key, field1).Err())
+	}, 2*time.Second, "cached HGet should be Nil after key deletion")
 	hget = cacheCmd(c).HGet(ctx, key, field1)
-	So(hget.Err(), ShouldNotBeNil)
 	So(IsNil(hget.Err()), ShouldBeTrue)
 
 	return nil

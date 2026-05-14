@@ -23,7 +23,10 @@ func testSubscribe(ctx context.Context, c Cmdable) []string {
 	s := c.Subscribe(ctx)
 	err := s.Subscribe(ctx, "channel")
 	So(err, ShouldBeNil)
-	time.Sleep(time.Millisecond * 10)
+	// 用 PUBSUB NUMSUB 探测订阅是否生效（不能用 Publish 探测，否则 ping 会被消费掉）
+	eventually(func() bool {
+		return c.PubSubNumSub(ctx, "channel").Val()["channel"] == 1
+	}, 2*time.Second, "subscribe should take effect")
 	p := c.Publish(ctx, "channel", "one")
 	So(p.Err(), ShouldBeNil)
 	So(p.Val(), ShouldEqual, 1)
@@ -50,18 +53,19 @@ func testPubSubChannels(ctx context.Context, c Cmdable) []string {
 	s := c.Subscribe(ctx)
 	err := s.Subscribe(ctx, "channel1", "channel2")
 	So(err, ShouldBeNil)
-	time.Sleep(time.Millisecond * 10)
+	eventually(func() bool {
+		return len(c.PubSubChannels(ctx, "*").Val()) == 2
+	}, 2*time.Second, "should see 2 channels")
 
 	pubSubChannels := c.PubSubChannels(ctx, "*")
-	So(pubSubChannels.Err(), ShouldBeNil)
 	So(stringSliceEqual(pubSubChannels.Val(), []string{"channel1", "channel2"}, false), ShouldBeTrue)
 
 	err = s.Unsubscribe(ctx, "channel1")
 	So(err, ShouldBeNil)
-	time.Sleep(time.Millisecond * 10)
-
+	eventually(func() bool {
+		return len(c.PubSubChannels(ctx, "*").Val()) == 1
+	}, 2*time.Second, "should see 1 channel after unsubscribe")
 	pubSubChannels = c.PubSubChannels(ctx, "*")
-	So(pubSubChannels.Err(), ShouldBeNil)
 	So(stringSliceEqual(pubSubChannels.Val(), []string{"channel2"}, false), ShouldBeTrue)
 
 	err = s.Close()
@@ -76,10 +80,8 @@ func testPSubscribe(ctx context.Context, c Cmdable) []string {
 	err := s.PSubscribe(ctx, "channel1.*")
 	So(err, ShouldBeNil)
 
-	time.Sleep(1 * time.Second)
-
+	eventuallyEq(func() int64 { return c.PubSubNumPat(ctx).Val() }, 1, 2*time.Second)
 	pubSubNumPat := c.PubSubNumPat(ctx)
-	So(pubSubNumPat.Err(), ShouldBeNil)
 	So(pubSubNumPat.Val(), ShouldEqual, 1)
 
 	err = s.Close()
@@ -90,22 +92,17 @@ func testPSubscribe(ctx context.Context, c Cmdable) []string {
 
 func testPUnsubscribe(ctx context.Context, c Cmdable) []string {
 	s := c.Subscribe(ctx)
-	time.Sleep(time.Millisecond * 10)
 
 	err := s.PSubscribe(ctx, "channel1.*")
 	So(err, ShouldBeNil)
-	time.Sleep(time.Millisecond * 10)
-
+	eventuallyEq(func() int64 { return c.PubSubNumPat(ctx).Val() }, 1, 2*time.Second)
 	pubSubNumPat := c.PubSubNumPat(ctx)
-	So(pubSubNumPat.Err(), ShouldBeNil)
 	So(pubSubNumPat.Val(), ShouldEqual, 1)
 
 	err = s.PUnsubscribe(ctx)
 	So(err, ShouldBeNil)
-	time.Sleep(time.Millisecond * 10)
-
+	eventuallyEq(func() int64 { return c.PubSubNumPat(ctx).Val() }, 0, 2*time.Second)
 	pubSubNumPat = c.PubSubNumPat(ctx)
-	So(pubSubNumPat.Err(), ShouldBeNil)
 	So(pubSubNumPat.Val(), ShouldEqual, 0)
 
 	err = s.Close()
@@ -116,7 +113,6 @@ func testPUnsubscribe(ctx context.Context, c Cmdable) []string {
 
 func testPubSubNumPat(ctx context.Context, c Cmdable) []string {
 	s := c.Subscribe(ctx)
-	time.Sleep(time.Millisecond * 10)
 
 	pubSubNumPat := c.PubSubNumPat(ctx)
 	So(pubSubNumPat.Err(), ShouldBeNil)
@@ -124,10 +120,8 @@ func testPubSubNumPat(ctx context.Context, c Cmdable) []string {
 
 	err := s.PSubscribe(ctx, "channel1.*", "channel2.*")
 	So(err, ShouldBeNil)
-	time.Sleep(time.Millisecond * 10)
-
+	eventuallyEq(func() int64 { return c.PubSubNumPat(ctx).Val() }, 2, 2*time.Second)
 	pubSubNumPat = c.PubSubNumPat(ctx)
-	So(pubSubNumPat.Err(), ShouldBeNil)
 	So(pubSubNumPat.Val(), ShouldEqual, 2)
 
 	err = s.Close()
@@ -140,7 +134,9 @@ func testPubSubNumSub(ctx context.Context, c Cmdable) []string {
 	s := c.Subscribe(ctx)
 	err := s.Subscribe(ctx, "channel1", "channel2")
 	So(err, ShouldBeNil)
-	time.Sleep(time.Millisecond * 10)
+	eventually(func() bool {
+		return c.PubSubNumSub(ctx, "channel1", "channel2").Val()["channel1"] == 1
+	}, 2*time.Second, "subscribe should take effect")
 
 	pubSubNumSub := c.PubSubNumSub(ctx, "channel1", "channel2", "channel3")
 	So(pubSubNumSub.Err(), ShouldBeNil)

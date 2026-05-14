@@ -110,10 +110,11 @@ func testExists(ctx context.Context, c Cmdable) []string {
 	So(d.Err(), ShouldBeNil)
 	So(d.Val(), ShouldEqual, 2)
 
-	time.Sleep(1 * time.Second)
-
+	// 等待客户端缓存失效后 Exists 看到 0
+	eventually(func() bool {
+		return c.Exists(ctx, key1, nosuchkey, key2).Val() == 0
+	}, 2*time.Second, "Exists should reflect deletion")
 	b = c.Exists(ctx, key1, nosuchkey, key2)
-	So(b.Err(), ShouldBeNil)
 	So(b.Val(), ShouldEqual, 0)
 
 	b = c.Exists(ctx, key1, nosuchkey, key2)

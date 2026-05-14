@@ -52,7 +52,10 @@ func TestDelay(t *testing.T) {
 			So(data, ShouldResemble, task)
 			So(doTime.Sub(addTime).Seconds(), ShouldBeGreaterThan, 1)
 			// 保证已经删除掉了
-			time.Sleep(1 * time.Second)
+			eventuallyEq(func() int64 {
+				v, _ := q.Length(ctx)
+				return v
+			}, 0, 3*time.Second)
 			l, err = q.Length(ctx)
 			So(err, ShouldBeNil)
 			So(l, ShouldEqual, int64(0))
@@ -88,7 +91,10 @@ func TestDelay(t *testing.T) {
 		case data := <-notifyChan:
 			So(data, ShouldResemble, task)
 			// 保证已经删除掉了
-			time.Sleep(1 * time.Second)
+			eventuallyEq(func() int64 {
+				v, _ := q.Length(ctx)
+				return v
+			}, 0, 3*time.Second)
 
 			l, err = q.Length(ctx)
 			So(err, ShouldBeNil)

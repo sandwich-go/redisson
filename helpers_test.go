@@ -7,9 +7,52 @@ import (
 	"context"
 	"sort"
 	"testing"
+	"time"
 
 	. "github.com/smartystreets/goconvey/convey"
 )
+
+// eventually 轮询直到 cond() 返回 true 或超时；用于替代 time.Sleep。
+//
+// 默认每 10ms 检查一次。timeout 是总等待上限。
+//
+// 用法:
+//
+//	eventually(func() bool { return r.Val() == 1 }, 2*time.Second, "value should reach 1")
+func eventually(cond func() bool, timeout time.Duration, msg string) {
+	if cond() {
+		return
+	}
+	deadline := time.Now().Add(timeout)
+	tick := 10 * time.Millisecond
+	for time.Now().Before(deadline) {
+		time.Sleep(tick)
+		if cond() {
+			return
+		}
+		// 指数退避，最多到 100ms 一次，减少 Redis 压力
+		if tick < 100*time.Millisecond {
+			tick *= 2
+		}
+	}
+	So(false, ShouldBeTrue) // 转化为 Convey 断言失败
+	_ = msg                 // 显式标记未使用，便于读者识别失败原因
+}
+
+// eventuallyEq 是 eventually 的便利封装：等待 actual() == expected。
+func eventuallyEq[T comparable](actual func() T, expected T, timeout time.Duration) {
+	eventually(func() bool { return actual() == expected }, timeout,
+		"expected value not reached")
+}
+
+// eventuallyExpired 等待 key 过期（c.Get 返回 redis.Nil 错误）。
+//
+// timeout 应略大于 ttl + 一些时钟漂移容忍度（如 ttl + 500ms）。
+func eventuallyExpired(ctx context.Context, c Cmdable, key string, timeout time.Duration) {
+	eventually(func() bool {
+		return IsNil(c.Get(ctx, key).Err())
+	}, timeout, "key did not expire")
+}
 
 // 本文件集中存放跨 _test.go 共享的测试 helper，避免散落在各 cmd_*_test.go 中。
 

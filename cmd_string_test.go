@@ -224,11 +224,7 @@ func testSet(ctx context.Context, c Cmdable) []string {
 	So(get.Err(), ShouldBeNil)
 	So(get.Val(), ShouldEqual, "hello")
 
-	time.Sleep(110 * time.Millisecond)
-
-	get = c.Get(ctx, key)
-	So(get.Err(), ShouldNotBeNil)
-	So(IsNil(get.Err()), ShouldBeTrue)
+	eventuallyExpired(ctx, c, key, 2*time.Second)
 
 	set = c.Set(ctx, key, "hello", 5*time.Second)
 	So(set.Err(), ShouldBeNil)
@@ -257,11 +253,7 @@ func testSetEX(ctx context.Context, c Cmdable) []string {
 	So(get.Err(), ShouldBeNil)
 	So(get.Val(), ShouldEqual, value)
 
-	time.Sleep(1500 * time.Millisecond)
-
-	get = c.Get(ctx, key)
-	So(get.Err(), ShouldNotBeNil)
-	So(IsNil(get.Err()), ShouldBeTrue)
+	eventuallyExpired(ctx, c, key, 3*time.Second)
 
 	return []string{key}
 }
@@ -389,11 +381,7 @@ func testSetArgs(ctx context.Context, c Cmdable) []string {
 	So(get.Err(), ShouldBeNil)
 	So(get.Val(), ShouldEqual, value)
 
-	time.Sleep(200 * time.Millisecond)
-
-	get = c.Get(ctx, key)
-	So(get.Err(), ShouldNotBeNil)
-	So(IsNil(get.Err()), ShouldBeTrue)
+	eventuallyExpired(ctx, c, key, 2*time.Second)
 
 	expireAt := time.Now().AddDate(1, 1, 1)
 	args = SetArgs{
@@ -496,11 +484,8 @@ func testSetArgs(ctx context.Context, c Cmdable) []string {
 	So(val.Err(), ShouldBeNil)
 	So(val.Val(), ShouldEqual, OK)
 
-	time.Sleep(200 * time.Millisecond)
-
+	eventuallyExpired(ctx, c, key, 2*time.Second)
 	get = c.Get(ctx, key)
-	So(get.Err(), ShouldNotBeNil)
-	So(IsNil(get.Err()), ShouldBeTrue)
 	So(get.Val(), ShouldBeEmpty)
 
 	e := c.Set(ctx, key, value, 0)
@@ -601,11 +586,8 @@ func testSetArgs(ctx context.Context, c Cmdable) []string {
 	So(val.Err(), ShouldBeNil)
 	So(val.Val(), ShouldEqual, value)
 
-	time.Sleep(200 * time.Millisecond)
-
+	eventuallyExpired(ctx, c, key, 2*time.Second)
 	get = c.Get(ctx, key)
-	So(get.Err(), ShouldNotBeNil)
-	So(IsNil(get.Err()), ShouldBeTrue)
 	So(get.Val(), ShouldBeEmpty)
 
 	args = SetArgs{
