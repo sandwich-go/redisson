@@ -95,10 +95,14 @@ func TestReconnectErrors_NoMatch(t *testing.T) {
 	}
 }
 
-// TestReconnectWhenError_NilPassthrough 验证 nil error 直接返回 nil。
+// TestReconnectWhenError_NilPassthrough 验证 nil error 直接返回 nil 且 recognized=false。
 func TestReconnectWhenError_NilPassthrough(t *testing.T) {
 	c := fakeClientForReconnect()
-	if err := c.reconnectWhenError(nil); err != nil {
+	err, recognized := c.reconnectWhenError(nil)
+	if err != nil {
 		t.Fatalf("nil err should pass through, got %v", err)
+	}
+	if recognized {
+		t.Fatal("nil err should not be recognized as reconnect-able")
 	}
 }

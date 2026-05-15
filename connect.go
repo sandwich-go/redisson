@@ -174,18 +174,22 @@ var reconnectErrors = []func(c *client, err error) bool{
 	},
 }
 
-func (c *client) reconnectWhenError(err error) error {
+// reconnectWhenError 尝试根据 err 调整 Conf 后 reconnect。
+// 第二个返回值 recognized 标识 err 是否被任一 matcher 识别并触发了重连：
+//   - recognized=false：err 不是已知可恢复的错误；调用方应直接结束重试循环。
+//   - recognized=true ：触发了一次 Close+connect；返回的 err 为新一轮 connect 的结果。
+func (c *client) reconnectWhenError(err error) (error, bool) {
 	if err == nil {
-		return nil
+		return nil, false
 	}
 	for _, f := range reconnectErrors {
 		if ok := f(c, err); ok {
 			warning(fmt.Sprintf("%s, reconnect...", err.Error()))
 			_ = c.Close()
-			return c.connect()
+			return c.connect(), true
 		}
 	}
-	return err
+	return err, false
 }
 
 func (c *client) Version() *semver.Version { return &c.version }
@@ -217,12 +221,14 @@ func Connect(v ConfInterface) (Cmdable, error) {
 	revise(v)
 	c := &client{v: v, handler: newBaseHandler(v), maxp: runtime.GOMAXPROCS(0)}
 	err := c.connect()
-	if err != nil {
-		for i := 0; i < len(reconnectErrors); i++ {
-			err = c.reconnectWhenError(err)
-			if err == nil {
-				break
-			}
+	// 重连尝试上限：每个 matcher 最多触发一次 ApplyOption + reconnect，
+	// 上限设为 len(reconnectErrors) 以容许一次连接错误链经过所有识别器。
+	// 直到 err 不再被任何 matcher 识别（recognized=false），跳出循环。
+	for attempt := 0; err != nil && attempt < len(reconnectErrors); attempt++ {
+		var recognized bool
+		err, recognized = c.reconnectWhenError(err)
+		if !recognized {
+			break
 		}
 	}
 	if err != nil {
