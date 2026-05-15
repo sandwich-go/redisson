@@ -75,6 +75,12 @@ cover-stats: ## 打印覆盖率统计(总体 + 排除 cmd_gen)
 	@$(GO) tool cover -func=$(COVER_OUT) | tail -1
 	@awk 'NR>1 && !/cmd_gen\.go/ {total+=$$2; if ($$3>0) covered+=$$2} END {printf "排除 cmd_gen.go: %d/%d = %.1f%%\n", covered, total, covered*100/total}' $(COVER_OUT)
 
+.PHONY: cover-stats-mr
+cover-stats-mr: ## 打印 miniredis 套覆盖率(主要是 builder_*.go 单测)
+	@$(GO) test -tags 'miniredis_test redisson_miniredis' -coverprofile=coverage-mr.out -count=1 -timeout=$(TIMEOUT) . | tail -1
+	@$(GO) tool cover -func=coverage-mr.out | tail -1
+	@awk 'NR>1 && /builder_/ {total+=$$2; if ($$3>0) covered+=$$2} END {printf "miniredis 套 builder_*.go: %d/%d = %.1f%%\n", covered, total, covered*100/total}' coverage-mr.out
+
 .PHONY: lint
 lint: ## golangci-lint
 	golangci-lint run --timeout=$(TIMEOUT) $(PKG)
