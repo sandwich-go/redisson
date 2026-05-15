@@ -16,8 +16,9 @@ vendor/
 # Local env / scratch
 .env
 *.local
-genbuilder
+# 仓库根目录的二进制产物 (cmd/<name> 编译后落到根) — 仅匹配根目录
 /genbuilder
+/genmeta
 
 # example binaries (从 redisson 根目录运行 `go build ./examples/<name>` 会落到这里)
 /string
