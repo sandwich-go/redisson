@@ -17,7 +17,7 @@
 
 ## 要求
 
-* Golang >= 1.24（受上游 rueidis v1.0.71+ 约束）
+* Golang >= 1.25（受上游 rueidis v1.0.75+ 约束）
 * Redis 推荐 >= 7.0（部分命令如 Sharded Pub/Sub、EVAL_RO、FUNCTION_* 需要 7.0+；测试在 Redis 6 上自动 skip）
 
 如需在更老的 Go 版本上使用，请锁定对应的 redisson tag（如 Go 1.18 使用 `v0.1.x`）。

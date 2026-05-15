@@ -17,7 +17,7 @@ A Type-safe Golang Redis RESP2/RESP3 client.
 
 ## Requirement
 
-* Golang >= 1.24 (driven by upstream rueidis v1.0.71+)
+* Golang >= 1.25 (driven by upstream rueidis v1.0.75+)
 * Redis >= 7.0 recommended (some commands such as Sharded Pub/Sub, EVAL_RO, FUNCTION_* require 7.0+; tests gracefully skip on Redis 6)
 
 For older Go versions, please pin the corresponding redisson tag (e.g. `v0.1.x` for Go 1.18).
