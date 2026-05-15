@@ -44,7 +44,10 @@ jobs:
           go-version: ${{ matrix.go }}
           cache: true
       - name: Run unit tests with race detector
-        run: go test -race -count=1 -timeout 2m ./...
+        # -ldflags=-extldflags=-Wl,-w 抑制 macOS Apple ld-prime 在 Go cgo 链接时
+        # 输出的 'malformed LC_DYSYMTAB' warning（golang/go#61229，仅警告无影响）。
+        # GNU ld 也支持 -w，跨平台无副作用。
+        run: go test -ldflags=-extldflags=-Wl,-w -race -count=1 -timeout 2m ./...
 
   integration-test:
     name: Integration tests (Redis ${{ matrix.redis }} + Go ${{ matrix.go }})
@@ -74,7 +77,7 @@ jobs:
         env:
           REDIS_ADDR: 127.0.0.1:6379
         run: |
-          go test -tags integration -race -count=1 -timeout 5m ./...
+          go test -ldflags=-extldflags=-Wl,-w -tags integration -race -count=1 -timeout 5m ./...
 
   test-miniredis:
     name: miniredis suite (no Redis required)
@@ -92,7 +95,7 @@ jobs:
       - name: Build with -tags redisson_miniredis
         run: go build -tags redisson_miniredis ./...
       - name: Run miniredis isolated test suite
-        run: go test -tags 'miniredis_test redisson_miniredis' -race -count=1 -timeout 5m ./...
+        run: go test -ldflags=-extldflags=-Wl,-w -tags 'miniredis_test redisson_miniredis' -race -count=1 -timeout 5m ./...
 
   lint:
     name: golangci-lint

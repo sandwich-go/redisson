@@ -25,6 +25,11 @@ TIMEOUT   ?= 5m
 PKG       ?= ./...
 COVER_OUT ?= coverage.out
 
+# macOS Apple ld-prime 在 Go cgo 链接时会输出 'malformed LC_DYSYMTAB' warning，
+# 仅是 warning 不影响 binary 正确性（见 golang/go#61229）。darwin 下加 -Wl,-w 关闭。
+# Linux GNU ld 也支持 -w，跨平台无副作用。
+GO_LDFLAGS_QUIET := -ldflags=-extldflags=-Wl,-w
+
 .DEFAULT_GOAL := help
 
 .PHONY: help
@@ -50,34 +55,34 @@ vet: ## go vet 3 个 tag 路径
 
 .PHONY: test
 test: ## 跑单元测试(无需 Redis,带 -race)
-	$(GO) test -race -count=1 -timeout=$(TIMEOUT) $(PKG)
+	$(GO) test $(GO_LDFLAGS_QUIET) -race -count=1 -timeout=$(TIMEOUT) $(PKG)
 
 .PHONY: test-mr
 test-mr: ## 跑 miniredis 套(无需 Redis,带 -race)
-	$(GO) test -tags 'miniredis_test redisson_miniredis' -race -count=1 -timeout=$(TIMEOUT) $(PKG)
+	$(GO) test $(GO_LDFLAGS_QUIET) -tags 'miniredis_test redisson_miniredis' -race -count=1 -timeout=$(TIMEOUT) $(PKG)
 
 .PHONY: test-int
 test-int: ## 跑集成测试(需 Redis,带 -race)
-	$(GO) test -tags integration -race -count=1 -timeout=$(TIMEOUT) $(PKG)
+	$(GO) test $(GO_LDFLAGS_QUIET) -tags integration -race -count=1 -timeout=$(TIMEOUT) $(PKG)
 
 .PHONY: test-all
 test-all: test test-mr test-int ## 三类测试全跑
 
 .PHONY: cover
 cover: ## 生成集成测试 cover 报告
-	$(GO) test -tags integration -coverprofile=$(COVER_OUT) -count=1 -timeout=$(TIMEOUT) .
+	$(GO) test $(GO_LDFLAGS_QUIET) -tags integration -coverprofile=$(COVER_OUT) -count=1 -timeout=$(TIMEOUT) .
 	$(GO) tool cover -html=$(COVER_OUT) -o coverage.html
 	@echo "report: coverage.html"
 
 .PHONY: cover-stats
 cover-stats: ## 打印覆盖率统计(总体 + 排除 cmd_gen)
-	@$(GO) test -tags integration -coverprofile=$(COVER_OUT) -count=1 -timeout=$(TIMEOUT) . | tail -1
+	@$(GO) test $(GO_LDFLAGS_QUIET) -tags integration -coverprofile=$(COVER_OUT) -count=1 -timeout=$(TIMEOUT) . | tail -1
 	@$(GO) tool cover -func=$(COVER_OUT) | tail -1
 	@awk 'NR>1 && !/cmd_gen\.go/ {total+=$$2; if ($$3>0) covered+=$$2} END {printf "排除 cmd_gen.go: %d/%d = %.1f%%\n", covered, total, covered*100/total}' $(COVER_OUT)
 
 .PHONY: cover-stats-mr
 cover-stats-mr: ## 打印 miniredis 套覆盖率(主要是 builder_*.go 单测)
-	@$(GO) test -tags 'miniredis_test redisson_miniredis' -coverprofile=coverage-mr.out -count=1 -timeout=$(TIMEOUT) . | tail -1
+	@$(GO) test $(GO_LDFLAGS_QUIET) -tags 'miniredis_test redisson_miniredis' -coverprofile=coverage-mr.out -count=1 -timeout=$(TIMEOUT) . | tail -1
 	@$(GO) tool cover -func=coverage-mr.out | tail -1
 	@awk 'NR>1 && /builder_/ {total+=$$2; if ($$3>0) covered+=$$2} END {printf "miniredis 套 builder_*.go: %d/%d = %.1f%%\n", covered, total, covered*100/total}' coverage-mr.out
 
