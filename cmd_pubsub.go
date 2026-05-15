@@ -283,16 +283,32 @@ func (p *pubSub) Close() error {
 //
 // 注意：旧版本中曾把 err 同时被 goroutine 内写、主路径读，造成 data race；
 // 新版去掉无效的写读，明确"同步路径恒返回 nil"。
+//
+// Close 路径：cancel(p.ctx) 后 rueidis.Receive 会返回，回调不再被调用；
+// 但极端情况下 Close 之后仍可能有少量回调正在执行（rueidis 内部调度），
+// 此时 forwardMessage 用 select 在 ctx.Done 与 In 之间二选一，
+// 避免"UnboundedChan process goroutine 已退出 → In 缓冲打满 → 回调永久阻塞"
+// 导致 rueidis 连接池无法释放与 goroutine 泄漏。
+
+// forwardMessage 把 PubSubMessage 投递到 msgCh.In；
+// 若 pubSub 已 Close（ctx canceled）则丢弃并打 warning，绝不阻塞。
+func (p *pubSub) forwardMessage(kind string, names []string, m rueidis.PubSubMessage) {
+	if p.isClosed() {
+		warning(fmt.Sprintf("%s, channel closed, %s: %s,", kind, kind, strings.Join(names, " ")))
+		return
+	}
+	select {
+	case p.msgCh.In <- m:
+	case <-p.ctx.Done():
+		warning(fmt.Sprintf("%s, channel closed during send, %s: %s,", kind, kind, strings.Join(names, " ")))
+	}
+}
 
 func (p *pubSub) PSubscribe(ctx context.Context, patterns ...string) error {
 	ctx = p.handler.before(ctx, CommandPSubscribe)
 	go func() {
 		err := p.client.cmd.Receive(p.ctx, p.client.cmd.B().Psubscribe().Pattern(patterns...).Build(), func(m rueidis.PubSubMessage) {
-			if !p.isClosed() {
-				p.msgCh.In <- m
-			} else {
-				warning(fmt.Sprintf("psubscribe, channel closed, patterns: %s,", strings.Join(patterns, " ")))
-			}
+			p.forwardMessage("psubscribe", patterns, m)
 		})
 		if err != nil {
 			e(fmt.Sprintf("psubscribe failed, patterns: %s, err: %s", strings.Join(patterns, ", "), err.Error()))
@@ -306,11 +322,7 @@ func (p *pubSub) Subscribe(ctx context.Context, channels ...string) error {
 	ctx = p.handler.before(ctx, CommandSubscribe)
 	go func() {
 		err := p.client.cmd.Receive(p.ctx, p.client.cmd.B().Subscribe().Channel(channels...).Build(), func(m rueidis.PubSubMessage) {
-			if !p.isClosed() {
-				p.msgCh.In <- m
-			} else {
-				warning(fmt.Sprintf("subscribe, channel closed, channels: %s,", strings.Join(channels, " ")))
-			}
+			p.forwardMessage("subscribe", channels, m)
 		})
 		if err != nil {
 			e(fmt.Sprintf("subscribe failed, channels: %s, err: %s", strings.Join(channels, ", "), err.Error()))
@@ -324,11 +336,7 @@ func (p *pubSub) SSubscribe(ctx context.Context, channels ...string) error {
 	ctx = p.handler.before(ctx, CommandSSubscribe)
 	go func() {
 		err := p.client.cmd.Receive(p.ctx, p.client.cmd.B().Ssubscribe().Channel(channels...).Build(), func(m rueidis.PubSubMessage) {
-			if !p.isClosed() {
-				p.msgCh.In <- m
-			} else {
-				warning(fmt.Sprintf("ssubscribe, channel closed, channels: %s,", strings.Join(channels, " ")))
-			}
+			p.forwardMessage("ssubscribe", channels, m)
 		})
 		if err != nil {
 			e(fmt.Sprintf("ssubscribe failed, channels: %s, err: %s", strings.Join(channels, ", "), err.Error()))
