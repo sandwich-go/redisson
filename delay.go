@@ -422,9 +422,15 @@ func (q *delayQueue) Close() error {
 // 主路径：所有 worker 已完成 → wg.Wait 立即返回。
 // 反模式路径（callback 内调 q.Close）：wg.Wait 永等 → timeout 后强制返回。
 func (q *delayQueue) waitWorkersWithTimeout(timeout time.Duration) {
+	waitWGWithTimeout(&q.workerWG, timeout)
+}
+
+// waitWGWithTimeout 等 wg 至多 timeout 时长,常用于反模式 callback 自调 Close
+// 形成的死锁场景中打破等待。
+func waitWGWithTimeout(wg *sync.WaitGroup, timeout time.Duration) {
 	done := make(chan struct{})
 	go func() {
-		q.workerWG.Wait()
+		wg.Wait()
 		close(done)
 	}()
 	select {

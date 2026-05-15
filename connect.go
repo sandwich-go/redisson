@@ -5,15 +5,17 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
-	"github.com/coreos/go-semver/semver"
-	"github.com/modern-go/reflect2"
-	"github.com/redis/rueidis"
-	"github.com/redis/rueidis/rueidiscompat"
 	"net"
 	"regexp"
 	"runtime"
 	"strings"
 	"sync"
+	"time"
+
+	"github.com/coreos/go-semver/semver"
+	"github.com/modern-go/reflect2"
+	"github.com/redis/rueidis"
+	"github.com/redis/rueidis/rueidiscompat"
 )
 
 var (
@@ -141,6 +143,12 @@ const (
 	errMsgSlotHasNoRedisNode  = "the slot has no redis node"
 )
 
+// clientCloseWaitTimeout client.Close 等所有 delayQueue worker 收尾的兜底超时。
+// 比 q.Close 的 5s timeout (delayCloseWorkerWaitTimeout) 略长,给 q.Close 自身的
+// in-flight ack 留出余量;反模式 (callback 内同时阻塞用户 chan + 调 q.Close) 下,
+// 这个超时打破死锁,后续 c.cmd.Close() 让 worker 中正在执行的 Redis 调用快速失败。
+const clientCloseWaitTimeout = 10 * time.Second
+
 // reconnectErrors 是一组按顺序尝试的"识别 + 修正"函数。
 // 每个函数:
 //   - 接收 client 与原 error，
@@ -199,25 +207,27 @@ func (c *client) reconnectWhenError(err error) (error, bool) {
 func (c *client) Version() *semver.Version { return c.version.Load() }
 
 func (c *client) Close() error {
-	// 第一阶段：关掉所有 queue 的 ticker（q.Close 不等 worker，仅阻止新 worker spawn）。
+	// 第一阶段:关掉所有 queue 的 ticker (q.Close 不等 worker, 仅阻止新 worker spawn)。
 	c.delayQueues.Range(func(_, value any) bool {
 		_ = value.(*delayQueue).Close()
 		return true
 	})
-	// 第二阶段：等所有在途 worker 收尾。
-	// 必须在 c.cmd 释放前等完，否则 worker 中的脚本调用会与 c.cmd=nil 写 race。
-	// 注意：即使 q 已从 delayQueues 摘除（例如 callback 内自行调 q.Close 的场景），
-	// 它的 worker 仍计在 client.delayWorkerWG 上，这里能等到。
-	c.delayWorkerWG.Wait()
+	// 第二阶段:带超时等所有在途 worker 收尾。
+	// 反模式 (callback 内调 q.Close 且后续阻塞在用户 chan) 下 worker 永等 callback,
+	// 这里超时打破死锁。
+	waitWGWithTimeout(&c.delayWorkerWG, clientCloseWaitTimeout)
 	c.delayQueues = sync.Map{}
-	// 从全局 collector 摘除自己，否则长期运行（频繁 New/Close）会泄漏 client root 与
-	// associated handler/metrics 引用，且 Prometheus scrape 仍会枚举到已 Close 的实例。
+	// 从全局 collector 摘除自己,否则长期运行 (频繁 New/Close) 会泄漏 client root 与
+	// associated handler/metrics 引用,且 Prometheus scrape 仍会枚举到已 Close 的实例。
 	col.cs.Delete(c)
+	// 第三阶段:关闭 rueidis client。
+	// 注意不再把 c.cmd / c.adapter 设为 nil,避免 worker 超时漏出后的 ackSuccess /
+	// ackRetry 等调用对 nil c.cmd 直接 panic;rueidis client 在 Close 后调命令会
+	// 返回 ErrClosing 而非 panic,worker 内有 errors.Is(err, context.Canceled) 等
+	// silent 路径,这样配合可让漏出的 worker 优雅收尾。
 	if c.cmd != nil && !reflect2.IsNil(c.cmd) {
 		c.cmd.Close()
 	}
-	c.cmd = nil
-	c.adapter = nil
 	return nil
 }
 
