@@ -484,7 +484,6 @@ commands:
     pipelineBuilder: DecrCompleted
     pipelineParams:
       - "key string"
-      - "value string"
     pipelineCallExpr: "key"
   - name: DecrBy
     cmd: "DECRBY"

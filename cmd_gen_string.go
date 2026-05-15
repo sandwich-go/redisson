@@ -41,7 +41,7 @@ func (commandDecr) Instead() string            { return "" }
 func (commandDecr) ETC() string                { return "" }
 func (commandDecr) PR(b BaseCmd) IntCmd        { return b.(IntCmd) }
 func (commandDecr) P(p Pipeliner) commandDecrP { return commandDecrP{p} }
-func (b commandDecrP) Cmd(key string, value string) {
+func (b commandDecrP) Cmd(key string) {
 	b.p.cmd(b.p.builder().DecrCompleted(key), &intCmd{})
 }
 
