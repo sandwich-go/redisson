@@ -41,9 +41,10 @@ package redisson
 //   - 修改某个命令 metadata: 直接改 cmd_gen_<class>.go,
 //     运行 `make cmdgen-extract` 同步 yaml,提交两侧改动。
 //
-//   - 新增一个命令: 在 specs/cmd_gen.yaml 添加条目,运行 `make cmdgen-generate`
-//     重生成 cmd_gen_<class>.go,然后改 cmd_gen_registry_test.go 注册新命令
-//     (生成器目前不更新 registry,需手动同步)。
+//   - 新增/删除一个命令: 编辑 specs/cmd_gen.yaml,运行 `make cmdgen-generate`
+//     重生成全部 cmd_gen_<class>.go 与 cmd_gen_registry_test.go (双向自动同步)。
 //
-//   - CI 守门: `make cmdgen-check` (集成在 `make ci`) 比对 yaml 与代码,
-//     任一侧漂移立即报错。
+//   - CI 守门: `make cmdgen-check` (集成在 `make ci`) 三重比对:
+//       1. specs/cmd_gen.yaml ↔ cmd_gen_<class>.go 元数据字段一致
+//       2. specs/cmd_gen.yaml ↔ cmd_gen_registry_test.go 384 项注册表一致
+//       3. cmd_gen_full_test.go 全量 384 命令的 9 个 metadata 字段运行时校验
