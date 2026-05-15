@@ -96,7 +96,7 @@ func setDelayOptionsDefaultValue(cc *DelayOptions) {
 		WithDelayOptionTimeout(1 * time.Minute),
 		WithDelayOptionRetryTimes(3),
 		WithDelayOptionHandleDeadLetter(func(bs []byte) {
-			warning(fmt.Sprintf("got dead letter, %v", bs))
+			warning(fmt.Sprintf("got dead letter, %q", bs))
 		}),
 	} {
 		opt(cc)
