@@ -21,12 +21,16 @@ func (c *client) SafeMGet(ctx context.Context, keys ...string) SliceCmd {
 	if len(keys) <= 1 {
 		return c.MGet(ctx, keys...)
 	}
+	// slot2Keys：每个 slot 对应去重后的 key 列表（保持首次出现顺序）。
+	// keyPos：每个 key 在原 keys 中所有出现位置；分发结果时对每个位置都赋值，
+	// 避免重复 key 导致结果遗漏（旧实现以 map[key]int 仅记最后位置，res[0]=nil 等错误）。
 	var slot2Keys = make(map[uint16][]string)
-	var keyIndexes = make(map[string]int)
+	var keyPos = make(map[string][]int)
 	for i, key := range keys {
-		keySlot := slot(key)
-		slot2Keys[keySlot] = append(slot2Keys[keySlot], key)
-		keyIndexes[key] = i
+		if _, seen := keyPos[key]; !seen {
+			slot2Keys[slot(key)] = append(slot2Keys[slot(key)], key)
+		}
+		keyPos[key] = append(keyPos[key], i)
 	}
 	if len(slot2Keys) == 1 {
 		return c.MGet(ctx, keys...)
@@ -44,13 +48,16 @@ func (c *client) SafeMGet(ctx context.Context, keys ...string) SliceCmd {
 	})
 
 	var res = make([]any, len(keys))
-	for i, ret := range scs {
+	for s, ret := range scs {
 		if err := ret.Err(); err != nil {
 			return newSliceCmdFromSlice(nil, err, keys...)
 		}
 		_values := ret.Val()
-		for _i, _key := range slot2Keys[i] {
-			res[keyIndexes[_key]] = _values[_i]
+		for _i, _key := range slot2Keys[s] {
+			// 每个 key 可能在原 keys 中出现多次，全部位置都填充同一值。
+			for _, p := range keyPos[_key] {
+				res[p] = _values[_i]
+			}
 		}
 	}
 	return newSliceCmdFromSlice(res, nil, keys...)
