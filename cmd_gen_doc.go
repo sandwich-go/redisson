@@ -1,0 +1,49 @@
+package redisson
+
+//go:generate go run ./cmd/genmeta -check
+
+// cmd_gen_*.go 是 redisson 384 个 Redis 命令的元数据全集 (Class / RequireVersion /
+// Forbid / WarnVersion / Warning / Instead / ETC) 与 Pipeliner P()/Cmd() 包装方法。
+//
+// 历史背景:
+//
+//	v1.3 之前是单文件 cmd_gen.go (7204 行) ,影响 IDE 加载与 PR 审查。
+//	现已按 Class 拆分为 15 个 cmd_gen_<class>.go + 1 个 cmd_gen_const.go,
+//	最大文件 ~1200 行,符合常规可维护规模。
+//
+// 文件分布与 builder_*.go 对齐:
+//
+//	cmd_gen_bitmap.go     12 命令  ←→ builder_bitmap.go
+//	cmd_gen_cluster.go    23 命令  ←→ builder_cluster_conn.go (含 Connection 部分)
+//	cmd_gen_connection.go 14 命令  ←→ builder_cluster_conn.go (含 Cluster 部分)
+//	cmd_gen_generic.go    49 命令  ←→ builder_generic.go
+//	cmd_gen_geospatial.go 11 命令  ←→ builder_geospatial.go
+//	cmd_gen_hash.go       44 命令  ←→ builder_hash.go
+//	cmd_gen_hyperlog.go    3 命令  ←→ builder_hyperlog.go
+//	cmd_gen_list.go       31 命令  ←→ builder_list.go
+//	cmd_gen_pubsub.go     13 命令  ←→ builder_pubsub.go
+//	cmd_gen_scripting.go  19 命令  ←→ builder_script.go
+//	cmd_gen_server.go     26 命令  ←→ builder_server.go
+//	cmd_gen_set.go        21 命令  ←→ builder_set.go
+//	cmd_gen_sortedset.go  59 命令  ←→ builder_sortedset.go
+//	cmd_gen_stream.go     34 命令  ←→ builder_stream.go
+//	cmd_gen_string.go     25 命令  ←→ builder_string.go
+//
+// 三位一体闭环:
+//
+//	specs/cmd_gen.yaml   ← extract ←   cmd_gen_<class>.go 源代码
+//	                     → generate →  (生成器 cmd/genmeta 实现双向)
+//	cmd_gen_meta_test.go (采样 41) + cmd_gen_full_test.go (全量 384)
+//	     ↑ 双向校验: yaml ↔ runtime CommandXxx ↔ specs 三者一致
+//
+// 工作流:
+//
+//   - 修改某个命令 metadata: 直接改 cmd_gen_<class>.go,
+//     运行 `make cmdgen-extract` 同步 yaml,提交两侧改动。
+//
+//   - 新增一个命令: 在 specs/cmd_gen.yaml 添加条目,运行 `make cmdgen-generate`
+//     重生成 cmd_gen_<class>.go,然后改 cmd_gen_registry_test.go 注册新命令
+//     (生成器目前不更新 registry,需手动同步)。
+//
+//   - CI 守门: `make cmdgen-check` (集成在 `make ci`) 比对 yaml 与代码,
+//     任一侧漂移立即报错。
