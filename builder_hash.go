@@ -86,8 +86,11 @@ func (b builder) HMGetCompleted(key string, fields ...string) Completed {
 }
 
 func (b builder) HMSetCompleted(key string, values ...any) Completed {
-	partial := b.Hset().Key(key).FieldValue()
 	args := argsToSlice(values)
+	if len(args)%2 != 0 {
+		panic(NewParameterError("HMSet requires an even number of arguments (field, value, field, value, ...), got %d", len(args)))
+	}
+	partial := b.Hset().Key(key).FieldValue()
 	for i := 0; i < len(args); i += 2 {
 		partial = partial.FieldValue(args[i], args[i+1])
 	}
@@ -176,8 +179,11 @@ func (b builder) HSetCompleted(key, field string, value any) Completed {
 }
 
 func (b builder) HMSetXCompleted(key string, values ...any) Completed {
-	partial := b.Hset().Key(key).FieldValue()
 	args := argsToSlice(values)
+	if len(args)%2 != 0 {
+		panic(NewParameterError("HMSetX requires an even number of arguments (field, value, field, value, ...), got %d", len(args)))
+	}
+	partial := b.Hset().Key(key).FieldValue()
 	for i := 0; i < len(args); i += 2 {
 		partial = partial.FieldValue(args[i], args[i+1])
 	}

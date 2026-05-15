@@ -63,8 +63,11 @@ func (b builder) MGetCompleted(keys ...string) Completed {
 }
 
 func (b builder) MSetCompleted(values ...any) Completed {
-	partial := b.Mset().KeyValue()
 	args := argsToSlice(values)
+	if len(args)%2 != 0 {
+		panic(NewParameterError("MSet requires an even number of arguments (key, value, key, value, ...), got %d", len(args)))
+	}
+	partial := b.Mset().KeyValue()
 	for i := 0; i < len(args); i += 2 {
 		partial = partial.KeyValue(args[i], args[i+1])
 	}
@@ -72,8 +75,11 @@ func (b builder) MSetCompleted(values ...any) Completed {
 }
 
 func (b builder) MSetNXCompleted(values ...any) Completed {
-	partial := b.Msetnx().KeyValue()
 	args := argsToSlice(values)
+	if len(args)%2 != 0 {
+		panic(NewParameterError("MSetNX requires an even number of arguments (key, value, key, value, ...), got %d", len(args)))
+	}
+	partial := b.Msetnx().KeyValue()
 	for i := 0; i < len(args); i += 2 {
 		partial = partial.KeyValue(args[i], args[i+1])
 	}
