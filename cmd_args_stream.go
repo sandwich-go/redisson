@@ -18,8 +18,6 @@ type xMessageSliceCmd struct {
 	baseCmd[[]XMessage]
 }
 
-// 注：newXMessageSliceCmd 工厂已废弃。Pipeliner 路径通过 cmd_gen.go 直接构造空对象。
-
 func (c *xMessageSliceCmd) from(res rueidis.RedisResult) {
 	val, err := res.AsXRange()
 	c.SetErr(err)
@@ -51,8 +49,6 @@ func newXMessage(r rueidis.XRangeEntry) XMessage {
 	}
 	return m
 }
-
-// 注：newXAutoClaimCmd 工厂已废弃。Pipeliner 路径通过 cmd_gen.go 直接构造空对象。
 
 func (c *xAutoClaimCmd) from(res rueidis.RedisResult) {
 	arr, err := res.ToArray()
@@ -109,8 +105,6 @@ type xInfoConsumersCmd struct {
 	baseCmd[[]XInfoConsumer]
 }
 
-// 注：newXInfoConsumersCmd 工厂已废弃。Pipeliner 路径通过 cmd_gen.go 直接构造空对象。
-
 func (c *xInfoConsumersCmd) from(res rueidis.RedisResult) {
 	arr, err := res.ToArray()
 	if err != nil {
@@ -149,8 +143,6 @@ type XInfoGroupsCmd interface {
 type xInfoGroupsCmd struct {
 	baseCmd[[]XInfoGroup]
 }
-
-// 注：newXInfoGroupsCmd 工厂已废弃。Pipeliner 路径通过 cmd_gen.go 直接构造空对象。
 
 func (c *xInfoGroupsCmd) from(res rueidis.RedisResult) {
 	arr, err := res.ToArray()
@@ -198,8 +190,6 @@ type XInfoStreamCmd interface {
 type xInfoStreamCmd struct {
 	baseCmd[XInfoStream]
 }
-
-// 注：newXInfoStreamCmd 工厂已废弃。Pipeliner 路径通过 cmd_gen.go 直接构造空对象。
 
 func (c *xInfoStreamCmd) from(res rueidis.RedisResult) {
 	kv, err := res.AsMap()
@@ -254,8 +244,6 @@ type XInfoStreamFullCmd interface {
 type xInfoStreamFullCmd struct {
 	baseCmd[XInfoStreamFull]
 }
-
-// 注：newXInfoStreamFullCmd 工厂已废弃。Pipeliner 路径通过 cmd_gen.go 直接构造空对象。
 
 func (c *xInfoStreamFullCmd) from(res rueidis.RedisResult) {
 	kv, err := res.AsMap()
@@ -455,8 +443,6 @@ type xPendingCmd struct {
 	baseCmd[XPending]
 }
 
-// 注：newXPendingCmd 工厂已废弃。Pipeliner 路径通过 cmd_gen.go 直接构造空对象。
-
 func (c *xPendingCmd) from(res rueidis.RedisResult) {
 	arr, err := res.ToArray()
 	if err != nil {
@@ -530,8 +516,6 @@ type xPendingExtCmd struct {
 	baseCmd[[]XPendingExt]
 }
 
-// 注：newXPendingExtCmd 工厂已废弃。Pipeliner 路径通过 cmd_gen.go 直接构造空对象。
-
 func (c *xPendingExtCmd) from(res rueidis.RedisResult) {
 	arrs, err := res.ToArray()
 	if err != nil {
@@ -596,8 +580,6 @@ type xAutoClaimJustIDCmd struct {
 	start string
 	val   []string
 }
-
-// 注：newXAutoClaimJustIDCmd 工厂已废弃。Pipeliner 路径通过 cmd_gen.go 直接构造空对象。
 
 func (c *xAutoClaimJustIDCmd) from(res rueidis.RedisResult) {
 	arr, err := res.ToArray()

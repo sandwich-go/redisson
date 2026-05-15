@@ -36,8 +36,7 @@ func testSafeMGet(ctx context.Context, c Cmdable) []string {
 	So(mGet.Err(), ShouldBeNil)
 	So(interfaceSliceEqual(mGet.Val(), []any{"hello1", "hello2", "hello3", "hello4", nil}), ShouldBeTrue)
 
-	// 回归 Bug #1：跨 slot 时若同 key 多次出现，每个出现位置都应填回该 key 对应的值。
-	// 旧实现以 map[key]int 仅记最后位置，导致前面同 key 的位置会保持 nil。
+	// 跨 slot 时若同 key 多次出现，每个出现位置都应填回该 key 对应的值。
 	mGetDup := c.SafeMGet(ctx, key, key1, key, key2, key, key3)
 	So(mGetDup.Err(), ShouldBeNil)
 	So(interfaceSliceEqual(

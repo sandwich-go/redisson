@@ -9,10 +9,10 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-// TestZRangeRevByScoreUserCompat 回归 rueidiscompat v1.0.74+ regression：
-// PR #979 删除了 ZRange / ZRangeStore / ZRangeArgsWithScores 的 Rev+ByScore 时
-// Start/Stop 自动交换补偿。redisson 旧 API 约定下用户传 Min<Max 顺序即可，
-// 升级 rueidis 后会静默返回空集；本测试验证 redisson 层补回该补偿。
+// TestZRangeRevByScoreUserCompat 验证 ZRangeStore / ZRangeArgsWithScores 在
+// Rev+ByScore 时,redisson 层正确处理 Start/Stop 交换:用户传 Start<Stop+Rev=true
+// 仍能拿到正确的反向区间结果 (rueidiscompat v1.0.74+ 不再做这一交换补偿,
+// redisson 改走自己的 builder 路径来覆盖)。
 func TestZRangeRevByScoreUserCompat(t *testing.T) {
 	if !realRedisAvailable {
 		t.Skip("real Redis not available; this test runs under -tags integration")
@@ -32,8 +32,7 @@ func TestZRangeRevByScoreUserCompat(t *testing.T) {
 			},
 		})
 
-		// 用户传 Start < Stop 顺序 + Rev=true。
-		// rueidis v1.0.74+ regression：如果不补偿会返回 0，目标集合为空。
+		// 用户传 Start<Stop+Rev=true,期望按 score 反向取窗口的 [1,2] 段 (Offset=1, Count=2)。
 		got := c.ZRangeStore(ctx, "dst", ZRangeArgs{
 			Key:     "src",
 			Start:   1,

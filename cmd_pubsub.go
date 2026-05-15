@@ -279,16 +279,13 @@ func (p *pubSub) Close() error {
 
 // 订阅类方法的 err 永远是同步路径上的 nil：rueidis.Receive 是阻塞调用，
 // 必须放到独立 goroutine 后台跑；调用方拿到的 err 仅反映"启动是否成功"，
-// 真正的接收错误通过日志输出（启动错误几乎不可能，因为没有立即同步操作）。
-//
-// 注意：旧版本中曾把 err 同时被 goroutine 内写、主路径读，造成 data race；
-// 新版去掉无效的写读，明确"同步路径恒返回 nil"。
+// 真正的接收错误通过日志输出。
 //
 // Close 路径：cancel(p.ctx) 后 rueidis.Receive 会返回，回调不再被调用；
 // 但极端情况下 Close 之后仍可能有少量回调正在执行（rueidis 内部调度），
 // 此时 forwardMessage 用 select 在 ctx.Done 与 In 之间二选一，
-// 避免"UnboundedChan process goroutine 已退出 → In 缓冲打满 → 回调永久阻塞"
-// 导致 rueidis 连接池无法释放与 goroutine 泄漏。
+// 避免 UnboundedChan process goroutine 已退出后 In 缓冲打满 → 回调永久阻塞 →
+// rueidis 连接池泄漏。
 
 // forwardMessage 把 PubSubMessage 投递到 msgCh.In；
 // 若 pubSub 已 Close（ctx canceled）则丢弃并打 warning，绝不阻塞。

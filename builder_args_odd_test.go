@@ -24,16 +24,15 @@ func mustOddArgsPanic(t *testing.T, name string, fn func()) {
 	fn()
 }
 
-// TestMSetCompletedOddArgsPanics 回归 Bug #2：
-// MSet/MSetNX 在奇数参数时应当 panic ParameterError，
-// 而不是从 partial.KeyValue(args[i+1]) 抛出 runtime 数组越界（信息含糊）。
+// TestMSetCompletedOddArgsPanics 验证 MSet/MSetNX 在奇数参数时 panic ParameterError,
+// 而非 args[i+1] 数组越界 (信息含糊)。
 func TestMSetCompletedOddArgsPanics(t *testing.T) {
 	b := builder{}
 	mustOddArgsPanic(t, "MSet", func() { b.MSetCompleted("k1", "v1", "k2") })
 	mustOddArgsPanic(t, "MSetNX", func() { b.MSetNXCompleted("k1", "v1", "k2") })
 }
 
-// TestHMSetCompletedOddArgsPanics 同 #2：HMSet/HMSetX。
+// TestHMSetCompletedOddArgsPanics 同上,针对 HMSet/HMSetX。
 func TestHMSetCompletedOddArgsPanics(t *testing.T) {
 	b := builder{}
 	mustOddArgsPanic(t, "HMSet", func() { b.HMSetCompleted("h", "f1", "v1", "f2") })

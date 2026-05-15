@@ -118,8 +118,7 @@ func TestDelay_RetryViaRetryPath_NotReclaim(t *testing.T) {
 			t.Fatalf("attempts=%d, want >=3", got)
 		}
 	case <-time.After(8 * time.Second):
-		t.Fatalf("retry never converged within 8s; attempts=%d (旧版本 retry score 覆盖 bug 会卡这里)",
-			attempts.Load())
+		t.Fatalf("retry never converged within 8s; attempts=%d", attempts.Load())
 	}
 }
 
@@ -180,11 +179,9 @@ func TestDelay_DeadLetterViaRetryPath_NotReclaim(t *testing.T) {
 // TestDelay_StuckCallbackDoesNotReschedule 验证 callback 执行时间超过 visibility timeout
 // 时，本实例的 reclaim 不会重复调度同一 payload（heartbeat 续期保证）。
 //
-// 设计：Timeout=2s（visibility=2s），callback 阻塞 5s（远超 visibility）。
-// 旧实现：T=2s reclaim 把 task 从 doing 移回 delay → poll 立刻拉到 → spawn 第二个 worker
-// 与第一个并发跑同一 payload，是真 bug。
-// 新实现：worker 用 heartbeat 每 visibility/3 续 doing score，visibility 永远在未来，
-// reclaim 拉不到自己持有的 task；callback 跑完后通过 score fence 安全 ack。
+// 设计:Timeout=2s (visibility=2s),callback 阻塞 5s (远超 visibility)。
+// worker 用 heartbeat 每 visibility/3 续 doing score,visibility 永远在未来,
+// reclaim 拉不到自己持有的 task;callback 跑完后通过 score fence 安全 ack。
 func TestDelay_StuckCallbackDoesNotReschedule(t *testing.T) {
 	t.Parallel()
 	c := newTestDelayClient(t)
@@ -285,10 +282,10 @@ func TestDelay_ReclaimNotTooEarly(t *testing.T) {
 	time.Sleep(4 * time.Second)
 
 	if got := maxInFlight.Load(); got > 1 {
-		t.Fatalf("maxInFlight=%d, want=1 (reclaim 上界 bug 会让 callback 并发触发)", got)
+		t.Fatalf("maxInFlight=%d, want=1 (callback 不应被并发触发)", got)
 	}
 	if got := totalCalls.Load(); got != 1 {
-		t.Fatalf("totalCalls=%d, want=1 (旧版本 reclaim 上界 bug 会让 callback 重复触发)", got)
+		t.Fatalf("totalCalls=%d, want=1 (callback 不应被重复触发)", got)
 	}
 }
 

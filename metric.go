@@ -81,17 +81,11 @@ func (m *metricsSet) register(rc RegisterCollectorFunc) {
 	rc(m.timing)
 }
 
-// 全局兼容层 ============================================================
-//
-// 旧版本通过 init() 创建一组全局 *prometheus.CounterVec 等指标，
-// 由 RegisterCollector + registerMetric 流程注册。为保持向后兼容，
-// 这里继续暴露同名包级变量，并在 init() 时复用 newMetricsSet 的实例。
+// 包级别名:外部可能直接读取的兼容入口,内部新代码请通过 metricsSet 实例访问。
 var (
 	defaultMetrics = newMetricsSet()
 
-	// 旧版包级别名（保留以兼容外部可能直接读取的代码；新代码使用 metricsSet 实例）。
-	//
-	//nolint:unused // 公共包级变量，外部用户可能引用
+	//nolint:unused // 公共包级变量,外部用户可能引用
 	metric = defaultMetrics.timing
 	//nolint:unused
 	errMetric = defaultMetrics.err
@@ -109,9 +103,8 @@ var (
 	metricOnce sync.Once
 )
 
-// registerMetric 旧版默认路径：注册全局指标实例（一次性）。
-//
-// 新代码可以直接调用 metricsSet.register。
+// registerMetric 把全局默认指标实例 (defaultMetrics) 一次性注册到外部 collector。
+// 新代码可以构造独立 metricsSet 并直接调 metricsSet.register。
 func registerMetric(rc RegisterCollectorFunc) {
 	metricOnce.Do(func() {
 		defaultMetrics.register(rc)

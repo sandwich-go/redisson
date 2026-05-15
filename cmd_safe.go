@@ -23,7 +23,7 @@ func (c *client) SafeMGet(ctx context.Context, keys ...string) SliceCmd {
 	}
 	// slot2Keys：每个 slot 对应去重后的 key 列表（保持首次出现顺序）。
 	// keyPos：每个 key 在原 keys 中所有出现位置；分发结果时对每个位置都赋值，
-	// 避免重复 key 导致结果遗漏（旧实现以 map[key]int 仅记最后位置，res[0]=nil 等错误）。
+	// 支持调用方传入重复 key 的语义。
 	var slot2Keys = make(map[uint16][]string)
 	var keyPos = make(map[string][]int)
 	for i, key := range keys {

@@ -172,8 +172,8 @@ var (
 	// ErrDelayQueueHasStarted ticker 重复启动时返回（内部错误，正常路径不会暴露给用户）。
 	ErrDelayQueueHasStarted = errors.New("delay queue has started")
 	// ErrDelayQueueHasRegistered 同名 DelayQueue 已经注册到 client。
-	// 旧代码可能调用 NewDelayQueue 期望"已存在则返回旧实例"——v2 起改为显式报错；
-	// 调用方应在创建前确保旧实例已 Close 或使用不同 name。
+	// 调用方应在创建前确保旧实例已 Close 或使用不同 name (NewDelayQueue 不会
+	// 复用已存在的实例,而是显式报错以避免 callback 丢失)。
 	ErrDelayQueueHasRegistered = errors.New("delay queue has registered")
 )
 
@@ -192,9 +192,8 @@ const (
 	// defaultRedisOpTimeout 单次 Redis 操作的兜底超时；与业务 callback 超时解耦。
 	defaultRedisOpTimeout = 5 * time.Second
 	// defaultRetryBackoff 业务失败后再次可见的间隔（与 visibility timeout 解耦）。
-	// 旧版本错误地用 Timeout 既当 visibility 又当 retry 间隔，导致默认 Timeout=1min 时
-	// 业务失败后要等 1 分钟才重试。新版本拆开：visibility 用 Timeout（reclaim 用），
-	// retry backoff 用此常量，保持业务失败 → 短时再投递 的预期。
+	// visibility 用 spec.Timeout（reclaim 判定),retry backoff 单独走本常量,
+	// 保证业务失败 → 短时再投递 的预期不被默认 Timeout=1min 拖累。
 	defaultRetryBackoff = time.Second
 	// delayCloseWorkerWaitTimeout q.Close 等本 queue 在途 worker 完成 ack 的最长时间。
 	// 主路径毫秒级返回；callback 内调 q.Close 的反模式下用此 timeout 打破死锁。
@@ -435,7 +434,7 @@ func (q *delayQueue) waitWorkersWithTimeout(timeout time.Duration) {
 }
 
 // startTickers 启动 poll/reclaim 两个 ticker goroutine。
-// ticker 内同步调用任务函数，避免旧版本"go ti.f()"导致的并发触发与 wg 不等待 bug。
+// ticker 内同步调用任务函数,确保前一轮完成才进入下一轮、Close 等待 wg 时一定收尾。
 func (q *delayQueue) startTickers() {
 	q.tickerWG.Add(2)
 	go q.runTicker(defaultPollInterval, q.pollOnce)
@@ -445,10 +444,8 @@ func (q *delayQueue) startTickers() {
 // runTicker 周期触发 fn；同步执行确保前一轮完成后才进入下一轮。
 // fn 内可能 spawn worker goroutine 跑用户 callback；那部分独立于 ticker wg。
 //
-// fn 出现 panic 时本 ticker 必须能继续：旧实现没有 recover，一次 panic
-// 直接让 ticker goroutine 退出，从此 pollOnce/reclaimOnce 永不再触发，
-// 整个 delayQueue 静默失效。这里 recover 后记录日志、保留 ticker 节奏，
-// 避免被异常的 metric/handler 回调拖垮整个延迟队列。
+// fn panic 时 recover 并记日志后保留 ticker 节奏:单次 panic (例如异常的 metric/handler
+// 回调) 不应让 ticker goroutine 退出导致整个 delayQueue 静默失效。
 func (q *delayQueue) runTicker(interval time.Duration, fn func()) {
 	defer q.tickerWG.Done()
 

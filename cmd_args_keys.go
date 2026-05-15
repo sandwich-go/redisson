@@ -15,9 +15,6 @@ type keyValuesCmd struct {
 	val rueidis.KeyValues
 }
 
-// 注：newKeyValuesCmd 工厂已废弃。Pipeliner 路径通过 cmd_gen.go 直接构造
-// `&keyValuesCmd{}`，再调用 from(res) 填充；非 Pipeliner 路径（rueidiscompat）已绕开此类型。
-
 func (c *keyValuesCmd) from(res rueidis.RedisResult) {
 	c.val, c.err = res.AsLMPop()
 }
@@ -57,8 +54,6 @@ type keyFlagsCmd struct {
 	baseCmd[[]KeyFlags]
 }
 
-// 注：newKeyFlagsCmd 工厂已废弃。Pipeliner 路径通过 cmd_gen.go 直接构造空对象。
-
 func (c *keyFlagsCmd) from(res rueidis.RedisResult) {
 	if c.err = res.Error(); c.err == nil {
 		kfs, _ := res.ToArray()
@@ -83,8 +78,6 @@ type scanCmd struct {
 	keys   []string
 	cursor uint64
 }
-
-// 注：newScanCmd 工厂已废弃。Pipeliner 路径通过 cmd_gen.go 直接构造空对象。
 
 func (c *scanCmd) SetVal(keys []string, cursor uint64) {
 	c.keys = keys

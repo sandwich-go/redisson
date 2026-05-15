@@ -1,32 +1,27 @@
-// genmeta 是 redisson 的 cmd_gen_*.go 一致性校验器、规约文件读写工具与代码生成器。
-//
-// 现状:
-//
-//	cmd_gen.go 历史上是单文件 7204 行,内含 384 个命令的元数据对象 (Class/RequireVersion/
-//	Forbid/Warning/Instead/ETC) 与 Pipeliner P()/Cmd() 包装方法。文件过大影响 IDE
-//	加载与 PR 审查,虽然是 generated 代码但缺乏可重复生成的工具链与说明书。
+// genmeta 维护 384 个 redisson 命令的元数据,在 cmd_gen_<class>.go (按 Class 拆分的
+// 15 个生成文件) 与 specs/cmd_gen.yaml (单一可读规约) 之间双向同步。
 //
 // 工作模式 (互斥):
 //
-//  1. -extract=specs/cmd_gen.yaml: 从现有 cmd_gen.go AST 提取 384 个命令元数据为
-//     YAML 说明书 (人类可读、版本可控)。
+//  1. -extract=specs/cmd_gen.yaml: 用 AST 解析当前 cmd_gen_*.go,把元数据 (Class /
+//     RequireVersion / Forbid / Warning / Instead / ETC + Pipeliner P/Cmd 信息)
+//     导出为 YAML 规约。
 //
-//  2. -generate=specs/cmd_gen.yaml: 从 YAML 说明书重新生成 cmd_gen_<class>.go (15 个
-//     文件,按 Class 拆分)。生成结果与原 cmd_gen.go 行为完全一致。
+//  2. -generate=specs/cmd_gen.yaml: 从 YAML 规约重生成 cmd_gen_<class>.go +
+//     cmd_gen_const.go + cmd_gen_registry_test.go (17 文件全集),保证行为一致。
 //
-//  3. -check (默认): 同时跑 extract + 与 specs/cmd_gen.yaml 比对,确认代码与说明书
-//     未漂移。 CI 用此模式守门。
+//  3. -check (默认): extract + 比对,任一字段或注册表项漂移即报错。CI 用此模式守门。
 //
 // 集成方式:
 //
-//	使用 go generate 调用 (在被 generated 的源文件中加上指令),或者
-//	直接 'make cmdgen-check' (与 builder-check 并列)。
+//	go generate 通过 cmd_gen_doc.go 中的 //go:generate 指令触发,或直接
+//	'make cmdgen-check' (与 builder-check 并列)。
 //
 // 三位一体闭环:
 //
 //	specs/cmd_gen.yaml  ←  extract  ←  cmd_gen_<class>.go (15 文件)
 //	                  →  generate  →
-//	                  →   check    →  CI 守门 + 元数据测试 (cmd_gen_meta_test.go) 双向校验
+//	                  →   check    →  CI 守门 + cmd_gen_meta/full_test.go 运行时校验
 package main
 
 import (

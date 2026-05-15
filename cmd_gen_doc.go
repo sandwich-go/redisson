@@ -3,13 +3,9 @@ package redisson
 //go:generate go run ./cmd/genmeta -check
 
 // cmd_gen_*.go 是 redisson 384 个 Redis 命令的元数据全集 (Class / RequireVersion /
-// Forbid / WarnVersion / Warning / Instead / ETC) 与 Pipeliner P()/Cmd() 包装方法。
-//
-// 历史背景:
-//
-//	v1.3 之前是单文件 cmd_gen.go (7204 行) ,影响 IDE 加载与 PR 审查。
-//	现已按 Class 拆分为 15 个 cmd_gen_<class>.go + 1 个 cmd_gen_const.go,
-//	最大文件 ~1200 行,符合常规可维护规模。
+// Forbid / WarnVersion / Warning / Instead / ETC) 与 Pipeliner P()/Cmd() 包装方法,
+// 由 cmd/genmeta 从 specs/cmd_gen.yaml 生成,按 Class 拆分到 15 个文件 +
+// cmd_gen_const.go 共享常量。
 //
 // 文件分布与 builder_*.go 对齐:
 //

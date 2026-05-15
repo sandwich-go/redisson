@@ -293,10 +293,7 @@ func newDurationCmd(res rueidis.RedisResult, precision time.Duration) DurationCm
 func (c *durationCmd) from(res rueidis.RedisResult) {
 	val, err := res.AsInt64()
 	c.SetErr(err)
-	// Redis 协议中 PTTL/TTL 在 key 不存在时返回 -2、key 无过期时间时返回 -1。
-	// 旧实现 if val > 0 走 *precision 路径，else 走 time.Duration(val) 即 ns，
-	// 导致 Cache 模式下 -1/-2 被错误地理解为 -1ns/-2ns 而非 -1*precision/-2*precision，
-	// 与非 Cache 路径（adapter 直接返回 -1*precision）行为不一致。
-	// 这里统一乘以 precision，保持 sentinel 值的语义（< 0 仍 < 0，调用方判 < 0 即可）。
+	// Redis PTTL/TTL 用 -2 表示 key 不存在、-1 表示无过期时间。统一乘以 precision，
+	// sentinel 值符号语义保留（调用方判 val < 0 即可）。
 	c.SetVal(time.Duration(val) * c.precision)
 }

@@ -7,11 +7,8 @@ import (
 	"github.com/coreos/go-semver/semver"
 )
 
-// TestClientVersion_ConcurrentReadWrite 回归 client.version 改 atomic.Pointer 后
-// 在并发读写下不应触发 -race 告警。
-//
-// 旧实现 c.version 是 plain semver.Version 字段，reconnect 路径写入与
-// 命令读形成 data race。改 atomic.Pointer[semver.Version] 后消除。
+// TestClientVersion_ConcurrentReadWrite 验证 client.version (atomic.Pointer)
+// 在并发读写下不触发 -race 告警 (reconnect 路径写入 + 命令路径读取的常见组合)。
 func TestClientVersion_ConcurrentReadWrite(t *testing.T) {
 	c := &client{}
 	v1 := semver.New("7.0.0")
@@ -39,7 +36,7 @@ func TestClientVersion_ConcurrentReadWrite(t *testing.T) {
 	wg.Wait()
 }
 
-// TestClientIsCluster_ConcurrentReadWrite 同上：isCluster 改 atomic.Bool。
+// TestClientIsCluster_ConcurrentReadWrite 同上,针对 isCluster (atomic.Bool)。
 func TestClientIsCluster_ConcurrentReadWrite(t *testing.T) {
 	c := &client{}
 

@@ -7,15 +7,8 @@ import (
 	"time"
 )
 
-// TestRunTickerRecoverFromPanic 回归 Bug #6：
-// runTicker 内 fn panic 不应让 ticker goroutine 退出，必须 recover 并继续后续 tick。
-//
-// 旧实现:
-//
-//	for { select { case <-exitC: return; case <-t.C: fn(); t.Reset(...) } }
-//
-// fn() panic → defer tickerWG.Done 触发 → goroutine 退出 → 该 delayQueue
-// 此后 pollOnce/reclaimOnce 永不再被触发，整个延迟队列静默失效。
+// TestRunTickerRecoverFromPanic 验证 runTicker 内 fn panic 时 recover 后
+// ticker 仍继续:单次 panic 不应让整个 delayQueue 静默失效。
 func TestRunTickerRecoverFromPanic(t *testing.T) {
 	q := &delayQueue{
 		name:  "panic-test",

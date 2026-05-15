@@ -7,9 +7,8 @@ import (
 	"github.com/coreos/go-semver/semver"
 )
 
-// TestBaseHandlerConcurrentVersionReadWrite 回归 Bug #9：
-// baseHandler.version / cluster / silentErrCallback 改 atomic 后
-// 在并发读写下不应触发 -race 告警（go test -race 即可验证）。
+// TestBaseHandlerConcurrentVersionReadWrite 验证 baseHandler 的 version /
+// cluster / silentErrCallback 三个 atomic 字段在并发读写下不触发 -race 告警。
 func TestBaseHandlerConcurrentVersionReadWrite(t *testing.T) {
 	h := newBaseHandler(NewConf()).(*baseHandler)
 	v := semver.New("7.2.5")

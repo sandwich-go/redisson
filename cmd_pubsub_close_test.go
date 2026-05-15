@@ -8,10 +8,10 @@ import (
 	"github.com/redis/rueidis"
 )
 
-// TestPubSubForwardMessage_NonBlockingAfterClose 回归 Bug #4：
-// pubSub.forwardMessage 在 ctx 已 cancel（即 Close 后）的情况下不应阻塞，
-// 必须立即丢弃消息（避免 UnboundedChan process goroutine 退出后
-// In 缓冲打满 → rueidis 回调永久阻塞 → 连接池泄漏）。
+// TestPubSubForwardMessage_NonBlockingAfterClose 验证 pubSub.forwardMessage
+// 在 ctx 已 cancel(即 Close 后)的情况下不应阻塞,必须立即丢弃消息——避免
+// UnboundedChan process goroutine 退出后 In 缓冲打满导致 rueidis 回调永久
+// 阻塞、连接池泄漏。
 func TestPubSubForwardMessage_NonBlockingAfterClose(t *testing.T) {
 	conf := NewConf()
 	c := &client{v: conf, handler: newBaseHandler(conf)}
@@ -34,8 +34,8 @@ func TestPubSubForwardMessage_NonBlockingAfterClose(t *testing.T) {
 }
 
 // TestPubSubForwardMessage_NonBlockingWhenBufferFullAndClosed 模拟
-// "msgCh.In 缓冲打满 + p.ctx 已 cancel" 双重条件下，forwardMessage 必须不阻塞。
-// 这是 Bug #4 最坏情况：Close 触发 process goroutine 退出，回调累积写到无人消费的 In。
+// "msgCh.In 缓冲打满 + p.ctx 已 cancel" 双重条件下,forwardMessage 必须不阻塞。
+// 这是最坏情况:Close 触发 process goroutine 退出,回调累积写到无人消费的 In。
 func TestPubSubForwardMessage_NonBlockingWhenBufferFullAndClosed(t *testing.T) {
 	// 这里跳过 isClosed 早返回路径，构造 ctx 已 cancel 但 isClosed=false 的极端竞态：
 	// 通过手动重置 closed 字段实现。
@@ -55,7 +55,7 @@ func TestPubSubForwardMessage_NonBlockingWhenBufferFullAndClosed(t *testing.T) {
 			i = conf.GetPubSubChanSize()
 		}
 	}
-	// 再来一条：旧实现会永久阻塞；新实现因为 ctx.Done 会立即返回。
+	// 再来一条:必须立即返回 (ctx.Done 让 select 解阻塞)。
 	done := make(chan struct{})
 	go func() {
 		p.forwardMessage("test", []string{"ch"}, rueidis.PubSubMessage{Channel: "ch", Message: "x"})
@@ -64,6 +64,6 @@ func TestPubSubForwardMessage_NonBlockingWhenBufferFullAndClosed(t *testing.T) {
 	select {
 	case <-done:
 	case <-time.After(2 * time.Second):
-		t.Fatalf("forwardMessage blocked when buffer full and ctx canceled — Bug #4 not fixed")
+		t.Fatalf("forwardMessage blocked when buffer full and ctx canceled (goroutine leak risk)")
 	}
 }

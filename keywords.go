@@ -1,10 +1,7 @@
 package redisson
 
-// Redis 命令关键字（保留大小写命令字面量）。
-// 用作内部 Builder.Arbitrary().Args(...) 的常量参数。
-//
-// 历史上曾以 XXX_ 前缀命名（容易被误读为 TODO 标记）；
-// 自 v2.0 起仅保留 Kw* 命名，旧的 XXX_* 别名已彻底移除。
+// Redis 命令关键字 (保留大小写命令字面量),用作内部 Builder.Arbitrary().Args(...)
+// 的常量参数。命名前缀 Kw* 表示 keyword,避免与命令族类型冲突。
 const (
 	KwBitField            = "BITFIELD"
 	KwScan                = "SCAN"

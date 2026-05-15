@@ -79,11 +79,11 @@ func TestColPackageOnceInitialized(t *testing.T) {
 	}
 }
 
-// TestCollector_ClientRemovedOnClose 回归 Bug #3：
-// client.Close 必须从全局 col.cs 摘除自己，否则长期运行（频繁 New/Close）
-// 会泄漏 client root 与 handler 引用，且 Prometheus scrape 仍会枚举到已 Close 实例。
+// TestCollector_ClientRemovedOnClose 验证 client.Close 从全局 col.cs 摘除自己,
+// 否则长期运行(频繁 New/Close) 会泄漏 client root 与 handler 引用,
+// 且 Prometheus scrape 仍会枚举到已 Close 实例。
 func TestCollector_ClientRemovedOnClose(t *testing.T) {
-	// 直接构造一个最小 client（不真正 connect），手动注册到 col.cs 后调 Close 验证摘除。
+	// 构造最小 client (不真正 connect),手动注册到 col.cs 后 Close 验证摘除。
 	c := &client{v: NewConf(), handler: newBaseHandler(NewConf())}
 	col.cs.Store(c, struct{}{})
 	if _, ok := col.cs.Load(c); !ok {

@@ -103,8 +103,6 @@ type keyValueSliceCmd struct {
 	baseCmd[[]KeyValue]
 }
 
-// 注：newKeyValueSliceCmd 工厂已废弃。Pipeliner 路径通过 cmd_gen.go 直接构造空对象。
-
 func (c *keyValueSliceCmd) from(res rueidis.RedisResult) {
 	arr, err := res.ToArray()
 	for _, a := range arr {
@@ -125,8 +123,6 @@ type CommandsInfoCmd interface {
 type commandsInfoCmd struct {
 	baseCmd[map[string]CommandInfo]
 }
-
-// 注：newCommandsInfoCmd 工厂已废弃。Pipeliner 路径通过 cmd_gen.go 直接构造空对象。
 
 func (c *commandsInfoCmd) from(res rueidis.RedisResult) {
 	arr, err := res.ToArray()

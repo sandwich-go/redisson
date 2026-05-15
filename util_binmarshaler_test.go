@@ -17,9 +17,8 @@ type okBinaryMarshaler struct{ data []byte }
 
 func (o okBinaryMarshaler) MarshalBinary() ([]byte, error) { return o.data, nil }
 
-// TestStrBinaryMarshalerErrorPanics 回归 Bug #8：
-// str() 在 BinaryMarshaler 返回 error 时应当 panic ParameterError，
-// 而不是静默落入 fmt.Sprint 写入 "&{...}" 这种无法读出的乱码。
+// TestStrBinaryMarshalerErrorPanics 验证 str() 在 BinaryMarshaler 返回 error 时
+// panic ParameterError,而不是静默把 "&{...}" 之类乱码写入 Redis。
 func TestStrBinaryMarshalerErrorPanics(t *testing.T) {
 	defer func() {
 		r := recover()

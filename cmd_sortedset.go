@@ -695,10 +695,9 @@ func (c *client) ZRangeArgsWithScores(ctx context.Context, z ZRangeArgs) ZSliceC
 	} else {
 		ctx = c.handler.before(ctx, CommandZRangeArgsWithScores)
 	}
-	// 统一走 c.builder（Rev+ByScore/ByLex 时正确交换 Start/Stop）。
-	// 旧实现非 Cache 路径走 c.adapter.ZRangeArgsWithScores，
-	// 但 rueidiscompat v1.0.74 起删除了 Start/Stop 交换补偿（PR #979）
-	// 导致 Rev+ByScore 用户旧代码静默返回空集；此处统一回到 builder 路径。
+	// 走 c.builder 而非 c.adapter:builder 在 Rev+ByScore/ByLex 时正确交换
+	// Start/Stop;rueidiscompat v1.0.74+ 已不再补偿这一交换 (PR #979),
+	// 直接调 adapter 会让用户传 Start<Stop+Rev=true 的常见用法静默返回空集。
 	r := newZSliceCmd(c.Do(ctx, c.builder.ZRangeArgsWithScoresCompleted(z)))
 	c.handler.after(ctx, r.Err())
 	return r
@@ -732,10 +731,8 @@ func (c *client) ZRangeByScoreWithScores(ctx context.Context, key string, opt ZR
 
 func (c *client) ZRangeStore(ctx context.Context, dst string, z ZRangeArgs) IntCmd {
 	ctx = c.handler.before(ctx, CommandZRangeStore)
-	// 统一走 c.builder（Rev+ByScore/ByLex 时正确交换 Start/Stop）。
-	// 旧实现走 c.adapter.ZRangeStore，但 rueidiscompat v1.0.74 起
-	// 删除了 Start/Stop 交换补偿（PR #979），Rev+ByScore 时返回 0、
-	// 目标集合为空，构成静默数据错误。回到 builder 路径修复。
+	// 走 c.builder 而非 c.adapter (理由同 ZRangeArgsWithScores):rueidiscompat v1.0.74+
+	// 不再补偿 Rev+ByScore 时的 Start/Stop 交换,直接调 adapter 会返回 0、目标集合为空。
 	r := newIntCmd(c.Do(ctx, c.builder.ZRangeStoreCompleted(dst, z)))
 	c.handler.after(ctx, r.Err())
 	return r

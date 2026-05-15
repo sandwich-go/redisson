@@ -156,10 +156,8 @@ func TestStr_BinaryMarshaler(t *testing.T) {
 	}
 }
 
-// errBinMarshaler 让 MarshalBinary 报错；str 应 panic ParameterError，
-// 而不是静默落入 fmt.Sprint 写入 "&{...}" 这种无法回读的乱码。
-// 行为变更见 Bug #8 修复：旧实现吞掉 MarshalBinary 错误后回落到 fmt.Sprint，
-// 导致用户错以为成功写入但读出来是垃圾字节；现统一升级为 panic 让问题尽早暴露。
+// errBinMarshaler 让 MarshalBinary 报错;str 应 panic ParameterError,
+// 而不是静默把 "&{...}" 之类乱码写入 Redis。
 type errBinMarshaler struct{}
 
 func (errBinMarshaler) MarshalBinary() ([]byte, error) { return nil, errors.New("boom") }
