@@ -202,6 +202,9 @@ func (c *client) Close() error {
 	// 它的 worker 仍计在 client.delayWorkerWG 上，这里能等到。
 	c.delayWorkerWG.Wait()
 	c.delayQueues = sync.Map{}
+	// 从全局 collector 摘除自己，否则长期运行（频繁 New/Close）会泄漏 client root 与
+	// associated handler/metrics 引用，且 Prometheus scrape 仍会枚举到已 Close 的实例。
+	col.cs.Delete(c)
 	if c.cmd != nil && !reflect2.IsNil(c.cmd) {
 		c.cmd.Close()
 	}
