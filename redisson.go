@@ -3,11 +3,13 @@ package redisson
 import (
 	"context"
 	"errors"
+	"sync"
+	"sync/atomic"
+	"time"
+
 	"github.com/coreos/go-semver/semver"
 	"github.com/redis/rueidis"
 	"github.com/redis/rueidis/rueidiscompat"
-	"sync"
-	"time"
 )
 
 type RESP = string
@@ -22,10 +24,15 @@ var Nil = rueidis.Nil
 func IsNil(err error) bool { return errors.Is(err, Nil) }
 
 type client struct {
-	v           ConfInterface
-	version     semver.Version
+	v ConfInterface
+	// version / isCluster 在 Connect.reviseVersion / reviseCluster 时由
+	// 后台 goroutine 写入；命令路径并发读。改 atomic 防 reconnect 路径
+	// 与其他派生 client 命令读形成 data race。
+	// 派生 client（ForEachNodes / Cache）通过 cloneClientFrom 复制 atomic 值。
+	version   atomic.Pointer[semver.Version]
+	isCluster atomic.Bool
+
 	handler     handler
-	isCluster   bool
 	cmd         rueidis.Client
 	adapter     rueidiscompat.Cmdable
 	ttl         time.Duration
@@ -41,6 +48,23 @@ type client struct {
 	once sync.Once
 }
 
+// cloneClientFrom 派生新 client 时复制 src 的 atomic 字段（version / isCluster）。
+// 不是浅拷贝整个 struct（避免 atomic 字段被复制 header → race detector 告警）。
+func cloneClientFrom(src *client) *client {
+	dst := &client{
+		v:       src.v,
+		handler: src.handler,
+		ttl:     src.ttl,
+		builder: src.builder,
+		maxp:    src.maxp,
+	}
+	if v := src.version.Load(); v != nil {
+		dst.version.Store(v)
+	}
+	dst.isCluster.Store(src.isCluster.Load())
+	return dst
+}
+
 func MustNewClient(v ConfInterface) Cmdable {
 	cmd, err := Connect(v)
 	if err != nil {
@@ -50,23 +74,17 @@ func MustNewClient(v ConfInterface) Cmdable {
 }
 
 func (c *client) Options() ConfVisitor { return c.v }
-func (c *client) IsCluster() bool      { return c.isCluster }
+func (c *client) IsCluster() bool      { return c.isCluster.Load() }
 func (c *client) ForEachNodes(ctx context.Context, f func(context.Context, Cmdable) error) error {
-	if !c.isCluster {
+	if !c.isCluster.Load() {
 		return f(ctx, c)
 	}
 	var errs Errors
 	for _, v := range c.cmd.Nodes() {
-		err := f(ctx, &client{
-			v:         c.v,
-			version:   c.version,
-			handler:   c.handler,
-			isCluster: c.isCluster,
-			cmd:       v,
-			adapter:   rueidiscompat.NewAdapter(v),
-			builder:   c.builder,
-			maxp:      c.maxp,
-		})
+		dst := cloneClientFrom(c)
+		dst.cmd = v
+		dst.adapter = rueidiscompat.NewAdapter(v)
+		err := f(ctx, dst)
 		if err != nil {
 			errs.Push(err)
 		}
@@ -78,17 +96,10 @@ func (c *client) Cache(ttl time.Duration) CacheCmdable {
 	if !c.v.GetEnableCache() || c.ttl == ttl {
 		return c
 	}
-	cp := &client{
-		v:         c.v,
-		version:   c.version,
-		handler:   c.handler,
-		isCluster: c.isCluster,
-		cmd:       c.cmd,
-		adapter:   c.adapter,
-		ttl:       ttl,
-		builder:   c.builder,
-		maxp:      c.maxp,
-	}
+	cp := cloneClientFrom(c)
+	cp.cmd = c.cmd
+	cp.adapter = c.adapter
+	cp.ttl = ttl
 	return cp
 }
 

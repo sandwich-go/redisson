@@ -29,12 +29,14 @@ func (c *client) reviseCluster(ctx context.Context, info string) (err error) {
 		}
 	}
 	match := clusterEnabled.FindAllStringSubmatch(info, -1)
+	var isCluster bool
 	if len(match) < 1 || len(strings.TrimSpace(match[0][1])) == 0 || strings.TrimSpace(match[0][1]) == "0" {
-		c.isCluster = false
+		isCluster = false
 	} else {
-		c.isCluster = true
+		isCluster = true
 	}
-	c.handler.setIsCluster(c.isCluster)
+	c.isCluster.Store(isCluster)
+	c.handler.setIsCluster(isCluster)
 	return
 }
 
@@ -50,12 +52,13 @@ func (c *client) reviseVersion(ctx context.Context, info string) (err error) {
 		err = fmt.Errorf("could not extract redis server version")
 		return
 	}
-	c.version, err = newSemVersion(strings.TrimSpace(match[0][1]))
+	v, err := newSemVersion(strings.TrimSpace(match[0][1]))
 	if err != nil {
-		return
+		return err
 	}
-	c.handler.setVersion(&c.version)
-	return err
+	c.version.Store(&v)
+	c.handler.setVersion(&v)
+	return nil
 }
 
 func (c *client) revise(ctx context.Context) error {
@@ -192,7 +195,8 @@ func (c *client) reconnectWhenError(err error) (error, bool) {
 	return err, false
 }
 
-func (c *client) Version() *semver.Version { return &c.version }
+// Version 返回当前 Redis server 版本。Connect 之前调用返回 nil。
+func (c *client) Version() *semver.Version { return c.version.Load() }
 
 func (c *client) Close() error {
 	// 第一阶段：关掉所有 queue 的 ticker（q.Close 不等 worker，仅阻止新 worker spawn）。

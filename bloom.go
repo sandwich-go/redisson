@@ -36,8 +36,8 @@ const bloomFilterROVersion = "7.0.0"
 
 // newBloomFilter 新建一个布隆过滤器
 func newBloomFilter(c *client, name string, expectedNumberOfItems uint, falsePositiveRate float64, opts ...BloomOption) (BloomFilter, error) {
-	// 校验版本
-	if c.version.LessThan(mustNewSemVersion(bloomFilterROVersion)) {
+	// 校验版本（c.version 改 atomic.Pointer 后需 Load 取值；nil 表示版本未探测）
+	if v := c.version.Load(); v != nil && v.LessThan(mustNewSemVersion(bloomFilterROVersion)) {
 		opts = append(opts, WithBloomOptionEnableReadOperation(false))
 	}
 	cc := newBloomOptions(opts...)

@@ -54,8 +54,8 @@ func (w *wrapLocker) ForceWithContext(ctx context.Context, name string) (context
 
 // newLocker 新建一个 locker
 func newLocker(c *client, opts ...LockerOption) (Locker, error) {
-	// 校验版本
-	if c.version.LessThan(mustNewSemVersion(fallbackSETPXVersion)) {
+	// 校验版本（c.version 改 atomic.Pointer 后需 Load 取值；nil 表示版本未探测）
+	if v := c.version.Load(); v != nil && v.LessThan(mustNewSemVersion(fallbackSETPXVersion)) {
 		opts = append(opts, WithLockerOptionFallbackSETPX(true))
 	}
 	cc := newLockerOptions(opts...)
