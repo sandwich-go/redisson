@@ -362,7 +362,7 @@ func readXInfoStreamGroupPending(res rueidis.RedisMessage) ([]XInfoStreamGroupPe
 			return nil, err
 		}
 		if len(info) < 4 {
-			return nil, fmt.Errorf("got %d, wanted 4", len(arr))
+			return nil, fmt.Errorf("got %d, wanted 4", len(info))
 		}
 		var p XInfoStreamGroupPending
 		p.ID, err = info[0].ToString()
@@ -421,7 +421,7 @@ func readXInfoStreamConsumers(res rueidis.RedisMessage) ([]XInfoStreamConsumer, 
 					return nil, err
 				}
 				if len(pendingInfo) < 3 {
-					return nil, fmt.Errorf("got %d, wanted 3", len(arr))
+					return nil, fmt.Errorf("got %d, wanted 3", len(pendingInfo))
 				}
 				var p XInfoStreamConsumerPending
 				p.ID, err = pendingInfo[0].ToString()
