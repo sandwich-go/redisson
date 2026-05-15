@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/coreos/go-semver/semver"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -42,11 +43,18 @@ func mustNewSemVersion(version string) semver.Version {
 	return v
 }
 
+// silentErrCallbackBox 给 atomic.Value 提供单一具体类型，规避存入不同
+// 函数实现时触发 "store of inconsistently typed value" panic。
+type silentErrCallbackBox struct{ f isSilentError }
+
 type baseHandler struct {
-	silentErrCallback isSilentError
+	// silentErrCallback / version / cluster 三者构造期由 Connect 写一次，
+	// 命令路径并发读；reconnectWhenError 路径下还会再写一次。
+	// 用 atomic 包装，避免 plain field 在 reconnect 时与命令读形成 data race。
+	silentErrCallback atomic.Value // silentErrCallbackBox
+	version           atomic.Pointer[semver.Version]
+	cluster           atomic.Bool
 	v                 ConfVisitor
-	version           *semver.Version
-	cluster           bool
 	// metrics 是构造期注入的 prometheus 指标集合；
 	// 默认指向 defaultMetrics（向后兼容），调用 newBaseHandlerWithMetrics 可注入独立实例。
 	metrics *metricsSet
@@ -105,10 +113,21 @@ func WithSubCommandName(ctx context.Context, s string) context.Context {
 	return context.WithValue(ctx, subCommandContextKey, s)
 }
 
-func (r *baseHandler) isCluster() bool                               { return r.cluster }
-func (r *baseHandler) setIsCluster(b bool)                           { r.cluster = b }
-func (r *baseHandler) setVersion(v *semver.Version)                  { r.version = v }
-func (r *baseHandler) setSilentErrCallback(b isSilentError)          { r.silentErrCallback = b }
+func (r *baseHandler) isCluster() bool              { return r.cluster.Load() }
+func (r *baseHandler) setIsCluster(b bool)          { r.cluster.Store(b) }
+func (r *baseHandler) setVersion(v *semver.Version) { r.version.Store(v) }
+func (r *baseHandler) getVersion() *semver.Version  { return r.version.Load() }
+func (r *baseHandler) setSilentErrCallback(b isSilentError) {
+	r.silentErrCallback.Store(silentErrCallbackBox{f: b})
+}
+func (r *baseHandler) getSilentErrCallback() isSilentError {
+	if v := r.silentErrCallback.Load(); v != nil {
+		if box, ok := v.(silentErrCallbackBox); ok {
+			return box.f
+		}
+	}
+	return nil
+}
 func (r *baseHandler) setRegisterCollector(rc RegisterCollectorFunc) { registerMetric(rc) }
 func (r *baseHandler) before(ctx context.Context, command Command) context.Context {
 	return r.beforeWithKeys(ctx, command, nil)
@@ -121,18 +140,19 @@ func (r *baseHandler) beforeWithKeys(ctx context.Context, command Command, getKe
 				e(fmt.Sprintf("[%s]: redis command are not allowed", command.String()))
 			}
 			// 需要检验版本是否支持该命令
-			if r.version != nil && r.version.LessThan(mustNewSemVersion(command.RequireVersion())) {
-				e(fmt.Sprintf("[%s]: redis command are not supported in version %q, available since %s", command, r.version, command.RequireVersion()))
+			ver := r.getVersion()
+			if ver != nil && ver.LessThan(mustNewSemVersion(command.RequireVersion())) {
+				e(fmt.Sprintf("[%s]: redis command are not supported in version %q, available since %s", command, ver, command.RequireVersion()))
 			}
-			if r.cluster {
+			if r.cluster.Load() {
 				// 需要检验所有的key是否均在同一槽位
 				if err := checkMultipleKeySlots(command, getKeys); err != nil {
 					e(err.Error())
 				}
 			}
 			// 该命令是否有警告日志输出
-			if r.version != nil {
-				if wv := command.WarnVersion(); len(wv) > 0 && mustNewSemVersion(wv).LessThan(*r.version) {
+			if ver != nil {
+				if wv := command.WarnVersion(); len(wv) > 0 && mustNewSemVersion(wv).LessThan(*ver) {
 					needWarning := false
 					if command.WarningOnce() {
 						cs := command.String()
@@ -170,10 +190,11 @@ func (r *baseHandler) beforeWithKeys(ctx context.Context, command Command, getKe
 	return ctx
 }
 func (r *baseHandler) isImplicitError(err error) bool {
-	if r.silentErrCallback == nil {
+	cb := r.getSilentErrCallback()
+	if cb == nil {
 		return false
 	}
-	return r.silentErrCallback(err)
+	return cb(err)
 }
 func (r *baseHandler) after(ctx context.Context, err error) {
 	if !r.v.GetEnableMonitor() || r.metrics == nil {
