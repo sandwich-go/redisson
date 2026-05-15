@@ -70,9 +70,14 @@ func str(arg any) string {
 	case time.Time:
 		return v.Format(time.RFC3339Nano)
 	case encoding.BinaryMarshaler:
-		if data, err := v.MarshalBinary(); err == nil {
-			return rueidis.BinaryString(data)
+		// 旧实现：MarshalBinary 报错时静默落入 fmt.Sprint(arg)，
+		// 把指向私有字段的结构体格式化成 "&{...}" 写入 Redis，写后无法读出且无任何日志。
+		// 现在显式 panic 让调用方第一时间发现问题，与下面 default 分支的错误处理风格一致。
+		data, err := v.MarshalBinary()
+		if err != nil {
+			panic(NewParameterError("MarshalBinary failed for %T: %v", v, err))
 		}
+		return rueidis.BinaryString(data)
 	default:
 		vv := reflect.ValueOf(arg)
 		if vv.Kind() == reflect.Struct || vv.Kind() == reflect.Pointer {

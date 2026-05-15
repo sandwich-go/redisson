@@ -156,20 +156,25 @@ func TestStr_BinaryMarshaler(t *testing.T) {
 	}
 }
 
-// errBinMarshaler 让 MarshalBinary 报错；str 应回退到 fmt.Sprint。
+// errBinMarshaler 让 MarshalBinary 报错；str 应 panic ParameterError，
+// 而不是静默落入 fmt.Sprint 写入 "&{...}" 这种无法回读的乱码。
+// 行为变更见 Bug #8 修复：旧实现吞掉 MarshalBinary 错误后回落到 fmt.Sprint，
+// 导致用户错以为成功写入但读出来是垃圾字节；现统一升级为 panic 让问题尽早暴露。
 type errBinMarshaler struct{}
 
 func (errBinMarshaler) MarshalBinary() ([]byte, error) { return nil, errors.New("boom") }
 
-func TestStr_BinaryMarshalerError_FallsBackToFmtSprint(t *testing.T) {
-	got := str(errBinMarshaler{})
-	// fmt.Sprint("{}") - struct 会触发 panic 路径！实际上 errBinMarshaler 是 struct 但实现了 BinaryMarshaler，
-	// switch 分支匹配 BinaryMarshaler 优先；MarshalBinary 出错时穿透到末尾 fmt.Sprint(arg)，
-	// 而 arg 是 struct 类型，再回到 default 分支 → reflect 检查会 panic。
-	// 这里的实际行为取决于 switch 命中顺序。我们只断言不 panic 时输出可解析。
-	if got == "" {
-		t.Errorf("str fallback returned empty string")
-	}
+func TestStr_BinaryMarshalerError_PanicsParameterError(t *testing.T) {
+	defer func() {
+		r := recover()
+		if r == nil {
+			t.Fatalf("str(BinaryMarshaler with err) should panic but didn't")
+		}
+		if !IsParameterError(r) {
+			t.Fatalf("panic value not ParameterError, got %T %v", r, r)
+		}
+	}()
+	_ = str(errBinMarshaler{})
 }
 
 func TestStr_StructPanicsAsParameterError(t *testing.T) {
