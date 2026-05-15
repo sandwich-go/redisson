@@ -444,8 +444,22 @@ func (q *delayQueue) startTickers() {
 
 // runTicker 周期触发 fn；同步执行确保前一轮完成后才进入下一轮。
 // fn 内可能 spawn worker goroutine 跑用户 callback；那部分独立于 ticker wg。
+//
+// fn 出现 panic 时本 ticker 必须能继续：旧实现没有 recover，一次 panic
+// 直接让 ticker goroutine 退出，从此 pollOnce/reclaimOnce 永不再触发，
+// 整个 delayQueue 静默失效。这里 recover 后记录日志、保留 ticker 节奏，
+// 避免被异常的 metric/handler 回调拖垮整个延迟队列。
 func (q *delayQueue) runTicker(interval time.Duration, fn func()) {
 	defer q.tickerWG.Done()
+
+	safeFn := func() {
+		defer func() {
+			if r := recover(); r != nil {
+				e(fmt.Sprintf("%s ticker panic recovered, queue=%s, %v", delayLogPrefix, q.name, r))
+			}
+		}()
+		fn()
+	}
 
 	t := time.NewTimer(interval)
 	defer t.Stop()
@@ -454,7 +468,7 @@ func (q *delayQueue) runTicker(interval time.Duration, fn func()) {
 		case <-q.exitC:
 			return
 		case <-t.C:
-			fn()
+			safeFn()
 			// Reset 在 fn 返回后才进入下一轮；保证不并发触发。
 			t.Reset(interval)
 		}
