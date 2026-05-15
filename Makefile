@@ -75,10 +75,10 @@ cover: ## 生成集成测试 cover 报告
 	@echo "report: coverage.html"
 
 .PHONY: cover-stats
-cover-stats: ## 打印覆盖率统计(总体 + 排除 cmd_gen)
+cover-stats: ## 打印覆盖率统计(总体 + 排除 cmd_gen 系列 generated)
 	@$(GO) test $(GO_LDFLAGS_QUIET) -tags integration -coverprofile=$(COVER_OUT) -count=1 -timeout=$(TIMEOUT) . | tail -1
 	@$(GO) tool cover -func=$(COVER_OUT) | tail -1
-	@awk 'NR>1 && !/cmd_gen\.go/ {total+=$$2; if ($$3>0) covered+=$$2} END {printf "排除 cmd_gen.go: %d/%d = %.1f%%\n", covered, total, covered*100/total}' $(COVER_OUT)
+	@awk 'NR>1 && !/cmd_gen[._]/ {total+=$$2; if ($$3>0) covered+=$$2} END {printf "排除 cmd_gen 系列: %d/%d = %.1f%%\n", covered, total, covered*100/total}' $(COVER_OUT)
 
 .PHONY: cover-stats-mr
 cover-stats-mr: ## 打印 miniredis 套覆盖率(主要是 builder_*.go 单测)
@@ -104,12 +104,24 @@ builder-check: ## builder AST 不变式 + spec 漂移检测
 	$(GO) run ./cmd/genbuilder -check
 	$(GO) run ./cmd/genbuilder -check-spec specs/builder.yaml
 
+.PHONY: cmdgen-check
+cmdgen-check: ## cmd_gen_*.go 与 specs/cmd_gen.yaml 漂移检测
+	$(GO) run ./cmd/genmeta -check
+
+.PHONY: cmdgen-extract
+cmdgen-extract: ## 从 cmd_gen_*.go 提取 spec 到 specs/cmd_gen.yaml
+	$(GO) run ./cmd/genmeta -extract=specs/cmd_gen.yaml
+
+.PHONY: cmdgen-generate
+cmdgen-generate: ## 从 specs/cmd_gen.yaml 重新生成 cmd_gen_*.go
+	$(GO) run ./cmd/genmeta -generate=specs/cmd_gen.yaml
+
 .PHONY: tidy
 tidy: ## go mod tidy
 	$(GO) mod tidy
 
 .PHONY: ci
-ci: build-all vet fmt-check lint builder-check test-mr test-int ## CI 等价完整流水(需 Redis)
+ci: build-all vet fmt-check lint builder-check cmdgen-check test-mr test-int ## CI 等价完整流水(需 Redis)
 
 .PHONY: clean
 clean: ## 清理产物

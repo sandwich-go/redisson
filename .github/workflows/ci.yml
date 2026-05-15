@@ -125,3 +125,15 @@ jobs:
         run: go run ./cmd/genbuilder -check -v
       - name: Spec sync (specs/builder.yaml vs code)
         run: go run ./cmd/genbuilder -check=false -check-spec=specs/builder.yaml
+
+  cmdgen-check:
+    name: cmd_gen spec sync (genmeta)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.25.x"
+          cache: true
+      - name: Verify cmd_gen_*.go matches specs/cmd_gen.yaml
+        run: go run ./cmd/genmeta -check
