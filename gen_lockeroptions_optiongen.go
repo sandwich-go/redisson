@@ -9,11 +9,11 @@ import "time"
 type LockerOptions struct {
 	// annotation@KeyPrefix(KeyPrefix is the prefix of redis key for locks. Default value is defaultKeyPrefix)
 	KeyPrefix string
-	// annotation@KeyValidity(KeyValidity is the validity duration of locks and will be extended periodically by the ExtendInterval. Default value is defaultKeyValidity)
+	// annotation@KeyValidity(KeyValidity is the validity duration of locks. The lock holder will renew it periodically inside rueidislock to keep the lock alive. Default value is defaultKeyValidity)
 	KeyValidity time.Duration
 	// annotation@TryNextAfter(TryNextAfter is the timeout duration before trying the next redis key for locks. Default value is defaultTryNextAfter)
 	TryNextAfter time.Duration
-	// annotation@KeyMajority(KeyMajority is at least how many redis keys in a total of KeyMajority*2-1 should be acquired to be a valid lock. Default value is defaultKeyMajority)
+	// annotation@KeyMajority(KeyMajority follows Redlock semantics: a lock spans N=KeyMajority*2-1 redis keys (each on its own slot for cluster), and needs at least KeyMajority keys to be acquired to be valid. Set to 1 if a single redis instance is enough. Default value is defaultKeyMajority)
 	KeyMajority int32
 	// annotation@NoLoopTracking(NoLoopTracking will use NOLOOP in the CLIENT TRACKING command to avoid unnecessary notifications and thus have better performance. This can only be enabled if all your redis nodes >= 7.0.5)
 	NoLoopTracking bool
@@ -25,7 +25,7 @@ type LockerOptions struct {
 func newLockerOptions(opts ...LockerOption) *LockerOptions {
 	cc := newDefaultLockerOptions()
 	for _, opt := range opts {
-		opt(cc)
+		opt.Apply(cc)
 	}
 	if watchDogLockerOptions != nil {
 		watchDogLockerOptions(cc)
@@ -40,17 +40,27 @@ func newLockerOptions(opts ...LockerOption) *LockerOptions {
 func (cc *LockerOptions) ApplyOption(opts ...LockerOption) []LockerOption {
 	var previous []LockerOption
 	for _, opt := range opts {
-		previous = append(previous, opt(cc))
+		previous = append(previous, opt.Apply(cc))
 	}
 	return previous
 }
 
-// LockerOption option func
-type LockerOption func(cc *LockerOptions) LockerOption
+// LockerOptionFunc option func
+type LockerOption interface {
+	Apply(cc *LockerOptions) LockerOption
+}
+
+var _ LockerOption = LockerOptionFunc(nil)
+
+type LockerOptionFunc func(cc *LockerOptions) LockerOptionFunc
+
+func (f LockerOptionFunc) Apply(cc *LockerOptions) LockerOption {
+	return f(cc)
+}
 
 // WithLockerOptionKeyPrefix option func for filed KeyPrefix
-func WithLockerOptionKeyPrefix(v string) LockerOption {
-	return func(cc *LockerOptions) LockerOption {
+func WithLockerOptionKeyPrefix(v string) LockerOptionFunc {
+	return func(cc *LockerOptions) LockerOptionFunc {
 		previous := cc.KeyPrefix
 		cc.KeyPrefix = v
 		return WithLockerOptionKeyPrefix(previous)
@@ -58,8 +68,8 @@ func WithLockerOptionKeyPrefix(v string) LockerOption {
 }
 
 // WithLockerOptionKeyValidity option func for filed KeyValidity
-func WithLockerOptionKeyValidity(v time.Duration) LockerOption {
-	return func(cc *LockerOptions) LockerOption {
+func WithLockerOptionKeyValidity(v time.Duration) LockerOptionFunc {
+	return func(cc *LockerOptions) LockerOptionFunc {
 		previous := cc.KeyValidity
 		cc.KeyValidity = v
 		return WithLockerOptionKeyValidity(previous)
@@ -67,8 +77,8 @@ func WithLockerOptionKeyValidity(v time.Duration) LockerOption {
 }
 
 // WithLockerOptionTryNextAfter option func for filed TryNextAfter
-func WithLockerOptionTryNextAfter(v time.Duration) LockerOption {
-	return func(cc *LockerOptions) LockerOption {
+func WithLockerOptionTryNextAfter(v time.Duration) LockerOptionFunc {
+	return func(cc *LockerOptions) LockerOptionFunc {
 		previous := cc.TryNextAfter
 		cc.TryNextAfter = v
 		return WithLockerOptionTryNextAfter(previous)
@@ -76,8 +86,8 @@ func WithLockerOptionTryNextAfter(v time.Duration) LockerOption {
 }
 
 // WithLockerOptionKeyMajority option func for filed KeyMajority
-func WithLockerOptionKeyMajority(v int32) LockerOption {
-	return func(cc *LockerOptions) LockerOption {
+func WithLockerOptionKeyMajority(v int32) LockerOptionFunc {
+	return func(cc *LockerOptions) LockerOptionFunc {
 		previous := cc.KeyMajority
 		cc.KeyMajority = v
 		return WithLockerOptionKeyMajority(previous)
@@ -85,8 +95,8 @@ func WithLockerOptionKeyMajority(v int32) LockerOption {
 }
 
 // WithLockerOptionNoLoopTracking option func for filed NoLoopTracking
-func WithLockerOptionNoLoopTracking(v bool) LockerOption {
-	return func(cc *LockerOptions) LockerOption {
+func WithLockerOptionNoLoopTracking(v bool) LockerOptionFunc {
+	return func(cc *LockerOptions) LockerOptionFunc {
 		previous := cc.NoLoopTracking
 		cc.NoLoopTracking = v
 		return WithLockerOptionNoLoopTracking(previous)
@@ -94,8 +104,8 @@ func WithLockerOptionNoLoopTracking(v bool) LockerOption {
 }
 
 // WithLockerOptionFallbackSETPX option func for filed FallbackSETPX
-func WithLockerOptionFallbackSETPX(v bool) LockerOption {
-	return func(cc *LockerOptions) LockerOption {
+func WithLockerOptionFallbackSETPX(v bool) LockerOptionFunc {
+	return func(cc *LockerOptions) LockerOptionFunc {
 		previous := cc.FallbackSETPX
 		cc.FallbackSETPX = v
 		return WithLockerOptionFallbackSETPX(previous)
@@ -110,7 +120,7 @@ var watchDogLockerOptions func(cc *LockerOptions)
 
 // setLockerOptionsDefaultValue default LockerOptions value
 func setLockerOptionsDefaultValue(cc *LockerOptions) {
-	for _, opt := range [...]LockerOption{
+	for _, opt := range [...]LockerOptionFunc{
 		WithLockerOptionKeyPrefix(defaultKeyPrefix),
 		WithLockerOptionKeyValidity(defaultKeyValidity),
 		WithLockerOptionTryNextAfter(defaultTryNextAfter),

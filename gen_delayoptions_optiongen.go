@@ -32,7 +32,7 @@ type DelayOptions struct {
 func newDelayOptions(opts ...DelayOption) *DelayOptions {
 	cc := newDefaultDelayOptions()
 	for _, opt := range opts {
-		opt(cc)
+		opt.Apply(cc)
 	}
 	if watchDogDelayOptions != nil {
 		watchDogDelayOptions(cc)
@@ -47,17 +47,27 @@ func newDelayOptions(opts ...DelayOption) *DelayOptions {
 func (cc *DelayOptions) ApplyOption(opts ...DelayOption) []DelayOption {
 	var previous []DelayOption
 	for _, opt := range opts {
-		previous = append(previous, opt(cc))
+		previous = append(previous, opt.Apply(cc))
 	}
 	return previous
 }
 
-// DelayOption option func
-type DelayOption func(cc *DelayOptions) DelayOption
+// DelayOptionFunc option func
+type DelayOption interface {
+	Apply(cc *DelayOptions) DelayOption
+}
+
+var _ DelayOption = DelayOptionFunc(nil)
+
+type DelayOptionFunc func(cc *DelayOptions) DelayOptionFunc
+
+func (f DelayOptionFunc) Apply(cc *DelayOptions) DelayOption {
+	return f(cc)
+}
 
 // WithDelayOptionPrefix option func for filed Prefix
-func WithDelayOptionPrefix(v string) DelayOption {
-	return func(cc *DelayOptions) DelayOption {
+func WithDelayOptionPrefix(v string) DelayOptionFunc {
+	return func(cc *DelayOptions) DelayOptionFunc {
 		previous := cc.Prefix
 		cc.Prefix = v
 		return WithDelayOptionPrefix(previous)
@@ -65,8 +75,8 @@ func WithDelayOptionPrefix(v string) DelayOption {
 }
 
 // WithDelayOptionVisibilityTimeout option func for filed VisibilityTimeout
-func WithDelayOptionVisibilityTimeout(v time.Duration) DelayOption {
-	return func(cc *DelayOptions) DelayOption {
+func WithDelayOptionVisibilityTimeout(v time.Duration) DelayOptionFunc {
+	return func(cc *DelayOptions) DelayOptionFunc {
 		previous := cc.VisibilityTimeout
 		cc.VisibilityTimeout = v
 		return WithDelayOptionVisibilityTimeout(previous)
@@ -74,8 +84,8 @@ func WithDelayOptionVisibilityTimeout(v time.Duration) DelayOption {
 }
 
 // WithDelayOptionRetryTimes 重试次数，当业务处理超时，或业务处理返回错误，则重试
-func WithDelayOptionRetryTimes(v int) DelayOption {
-	return func(cc *DelayOptions) DelayOption {
+func WithDelayOptionRetryTimes(v int) DelayOptionFunc {
+	return func(cc *DelayOptions) DelayOptionFunc {
 		previous := cc.RetryTimes
 		cc.RetryTimes = v
 		return WithDelayOptionRetryTimes(previous)
@@ -83,8 +93,8 @@ func WithDelayOptionRetryTimes(v int) DelayOption {
 }
 
 // WithDelayOptionHandleDeadLetter 处理死信，当达到最大重试次数，则为死信
-func WithDelayOptionHandleDeadLetter(v func(bs []byte)) DelayOption {
-	return func(cc *DelayOptions) DelayOption {
+func WithDelayOptionHandleDeadLetter(v func(bs []byte)) DelayOptionFunc {
+	return func(cc *DelayOptions) DelayOptionFunc {
 		previous := cc.HandleDeadLetter
 		cc.HandleDeadLetter = v
 		return WithDelayOptionHandleDeadLetter(previous)
@@ -92,8 +102,8 @@ func WithDelayOptionHandleDeadLetter(v func(bs []byte)) DelayOption {
 }
 
 // WithDelayOptionPollInterval option func for filed PollInterval
-func WithDelayOptionPollInterval(v time.Duration) DelayOption {
-	return func(cc *DelayOptions) DelayOption {
+func WithDelayOptionPollInterval(v time.Duration) DelayOptionFunc {
+	return func(cc *DelayOptions) DelayOptionFunc {
 		previous := cc.PollInterval
 		cc.PollInterval = v
 		return WithDelayOptionPollInterval(previous)
@@ -101,8 +111,8 @@ func WithDelayOptionPollInterval(v time.Duration) DelayOption {
 }
 
 // WithDelayOptionPollBatch option func for filed PollBatch
-func WithDelayOptionPollBatch(v int) DelayOption {
-	return func(cc *DelayOptions) DelayOption {
+func WithDelayOptionPollBatch(v int) DelayOptionFunc {
+	return func(cc *DelayOptions) DelayOptionFunc {
 		previous := cc.PollBatch
 		cc.PollBatch = v
 		return WithDelayOptionPollBatch(previous)
@@ -110,8 +120,8 @@ func WithDelayOptionPollBatch(v int) DelayOption {
 }
 
 // WithDelayOptionRedisOpTimeout option func for filed RedisOpTimeout
-func WithDelayOptionRedisOpTimeout(v time.Duration) DelayOption {
-	return func(cc *DelayOptions) DelayOption {
+func WithDelayOptionRedisOpTimeout(v time.Duration) DelayOptionFunc {
+	return func(cc *DelayOptions) DelayOptionFunc {
 		previous := cc.RedisOpTimeout
 		cc.RedisOpTimeout = v
 		return WithDelayOptionRedisOpTimeout(previous)
@@ -119,8 +129,8 @@ func WithDelayOptionRedisOpTimeout(v time.Duration) DelayOption {
 }
 
 // WithDelayOptionRetryBackoff option func for filed RetryBackoff
-func WithDelayOptionRetryBackoff(v time.Duration) DelayOption {
-	return func(cc *DelayOptions) DelayOption {
+func WithDelayOptionRetryBackoff(v time.Duration) DelayOptionFunc {
+	return func(cc *DelayOptions) DelayOptionFunc {
 		previous := cc.RetryBackoff
 		cc.RetryBackoff = v
 		return WithDelayOptionRetryBackoff(previous)
@@ -135,7 +145,7 @@ var watchDogDelayOptions func(cc *DelayOptions)
 
 // setDelayOptionsDefaultValue default DelayOptions value
 func setDelayOptionsDefaultValue(cc *DelayOptions) {
-	for _, opt := range [...]DelayOption{
+	for _, opt := range [...]DelayOptionFunc{
 		WithDelayOptionPrefix(""),
 		WithDelayOptionVisibilityTimeout(defaultDelayVisibilityTimeout),
 		WithDelayOptionRetryTimes(defaultDelayRetryTimes),

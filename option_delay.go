@@ -23,15 +23,18 @@ const (
 	defaultDelayRetryBackoff = time.Second
 )
 
+// 注意：optiongen 不接受裸 ident（panic on ast.Ident），引用 const 时必须显式用
+// time.Duration(...) / int(...) 等类型转换包一层。
+//
 //go:generate optiongen --option_with_struct_name=true --new_func=newDelayOptions --empty_composite_nil=true --usage_tag_name=usage
 func DelayOptionsOptionDeclareWithDefault() any {
 	return map[string]any{
 		// annotation@Prefix(延迟队列前缀)
 		"Prefix": "",
 		// annotation@VisibilityTimeout(任务被 worker 拉走后的可见性超时；worker 在该时间内未 ack 则任务被 reclaim 重新入 delay。建议覆盖业务 callback 实际耗时上限。)
-		"VisibilityTimeout": defaultDelayVisibilityTimeout,
+		"VisibilityTimeout": time.Duration(defaultDelayVisibilityTimeout),
 		// annotation@RetryTimes(comment="重试次数，当业务处理超时，或业务处理返回错误，则重试")
-		"RetryTimes": defaultDelayRetryTimes,
+		"RetryTimes": int(defaultDelayRetryTimes),
 		// annotation@HandleDeadLetter(comment="处理死信，当达到最大重试次数，则为死信")
 		"HandleDeadLetter": func(bs []byte) { warning(fmt.Sprintf("got dead letter, %q", bs)) },
 		// annotation@PollInterval(poll/reclaim ticker 触发间隔；过小会增加 Redis 压力，过大会让到期任务的派发延迟变高。0 表示使用 defaultDelayPollInterval。)

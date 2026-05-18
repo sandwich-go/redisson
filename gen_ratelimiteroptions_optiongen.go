@@ -9,9 +9,9 @@ import "time"
 type RateLimiterOptions struct {
 	// annotation@KeyPrefix(Prefix for Redis keys used by this limiter)
 	KeyPrefix string
-	// annotation@Limit(Maximum number of allowed requests per window.)
+	// annotation@Limit(Maximum number of allowed requests per window. Must be greater than 0; no default — caller must specify it before NewRateLimiter.)
 	Limit int
-	// annotation@Window(Time window duration for rate limiting. Must be greater than 1 millisecond.)
+	// annotation@Window(Time window duration for rate limiting. Must be greater than 1 millisecond; no default — caller must specify it before NewRateLimiter.)
 	Window time.Duration
 }
 

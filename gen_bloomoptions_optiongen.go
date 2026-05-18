@@ -13,7 +13,7 @@ type BloomOptions struct {
 func newBloomOptions(opts ...BloomOption) *BloomOptions {
 	cc := newDefaultBloomOptions()
 	for _, opt := range opts {
-		opt(cc)
+		opt.Apply(cc)
 	}
 	if watchDogBloomOptions != nil {
 		watchDogBloomOptions(cc)
@@ -28,17 +28,27 @@ func newBloomOptions(opts ...BloomOption) *BloomOptions {
 func (cc *BloomOptions) ApplyOption(opts ...BloomOption) []BloomOption {
 	var previous []BloomOption
 	for _, opt := range opts {
-		previous = append(previous, opt(cc))
+		previous = append(previous, opt.Apply(cc))
 	}
 	return previous
 }
 
-// BloomOption option func
-type BloomOption func(cc *BloomOptions) BloomOption
+// BloomOptionFunc option func
+type BloomOption interface {
+	Apply(cc *BloomOptions) BloomOption
+}
+
+var _ BloomOption = BloomOptionFunc(nil)
+
+type BloomOptionFunc func(cc *BloomOptions) BloomOptionFunc
+
+func (f BloomOptionFunc) Apply(cc *BloomOptions) BloomOption {
+	return f(cc)
+}
 
 // WithBloomOptionEnableReadOperation option func for filed EnableReadOperation
-func WithBloomOptionEnableReadOperation(v bool) BloomOption {
-	return func(cc *BloomOptions) BloomOption {
+func WithBloomOptionEnableReadOperation(v bool) BloomOptionFunc {
+	return func(cc *BloomOptions) BloomOptionFunc {
 		previous := cc.EnableReadOperation
 		cc.EnableReadOperation = v
 		return WithBloomOptionEnableReadOperation(previous)
@@ -53,7 +63,7 @@ var watchDogBloomOptions func(cc *BloomOptions)
 
 // setBloomOptionsDefaultValue default BloomOptions value
 func setBloomOptionsDefaultValue(cc *BloomOptions) {
-	for _, opt := range [...]BloomOption{
+	for _, opt := range [...]BloomOptionFunc{
 		WithBloomOptionEnableReadOperation(false),
 	} {
 		opt(cc)

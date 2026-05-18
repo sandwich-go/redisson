@@ -21,15 +21,15 @@ type Conf struct {
 	Username          string        `xconf:"username" usage:"Redis用户名"`
 	Password          string        `xconf:"password" usage:"Redis用户密码"`
 	WriteTimeout      time.Duration `xconf:"write_timeout" usage:"Redis连接写入的超时时长"`
-	ConnPoolSize      int           `xconf:"conn_pool_size" usage:"RedisBlock连接池，默认1000"`
+	BootstrapTimeout  time.Duration `xconf:"bootstrap_timeout" usage:"连接建立时执行 INFO 等启动期探测的总超时；集群+多副本下默认 30s"`
+	ConnPoolSize      int           `xconf:"conn_pool_size" usage:"Redis 阻塞命令(BLPOP 等"` // 使用的连接池大小；0 表示使用底层 rueidis 默认值（约 1000）)
 	EnableCache       bool          `xconf:"enable_cache" usage:"是否开启客户端缓存"`
-	CacheSizeEachConn int           `xconf:"cache_size_each_conn" usage:"开启客户端缓存时，单个连接缓存大小，默认128 MiB"`
-	RingScaleEachConn int           `xconf:"ring_scale_each_conn" usage:"单个连接ring buffer大小，默认2 ^ RingScaleEachConn, RingScaleEachConn默认情况下为10"`
-	Development       bool          `xconf:"development" usage:"是否为开发模式，开发模式下，使用部分接口会有警告日志输出，会校验多key是否为同一hash槽，会校验部分接口是否满足版本要求"`
+	CacheSizeEachConn int           `xconf:"cache_size_each_conn" usage:"开启客户端缓存时，单个连接缓存大小（字节）；0 表示使用底层 rueidis 默认值（约 128 MiB）"`
+	RingScaleEachConn int           `xconf:"ring_scale_each_conn" usage:"单个连接 ring buffer 容量为 2^RingScaleEachConn；0 表示使用底层 rueidis 默认值（10，即 1024）"`
+	Development       bool          `xconf:"development" usage:"是否为开发模式，开发模式下，使用部分接口会有警告日志输出，会校验多key是否为同一hash槽，会校验部分接口是否满足版本要求；生产环境请保持 false"`
 	T                 Tester        `xconf:"t" usage:"如果设置该值，则启动mock"`
 	ForceSingleClient bool          `xconf:"force_single_client" usage:"ForceSingleClient force the usage of a single client connection, without letting the lib guessing"`
 	PubSubChanSize    int           `xconf:"pub_sub_chan_size" usage:"pubsub chan 大小"`
-	BootstrapTimeout  time.Duration `xconf:"bootstrap_timeout" usage:"连接建立时执行 INFO 等启动期探测的总超时；集群+多副本下默认 30s"`
 }
 
 // NewConf new Conf
@@ -168,7 +168,16 @@ func WithWriteTimeout(v time.Duration) ConfOptionFunc {
 	}
 }
 
-// WithConnPoolSize RedisBlock连接池，默认1000
+// WithBootstrapTimeout 连接建立时执行 INFO 等启动期探测的总超时；集群+多副本下默认 30s
+func WithBootstrapTimeout(v time.Duration) ConfOptionFunc {
+	return func(cc *Conf) ConfOptionFunc {
+		previous := cc.BootstrapTimeout
+		cc.BootstrapTimeout = v
+		return WithBootstrapTimeout(previous)
+	}
+}
+
+// WithConnPoolSize Redis 阻塞命令(BLPOP 等
 func WithConnPoolSize(v int) ConfOptionFunc {
 	return func(cc *Conf) ConfOptionFunc {
 		previous := cc.ConnPoolSize
@@ -186,7 +195,7 @@ func WithEnableCache(v bool) ConfOptionFunc {
 	}
 }
 
-// WithCacheSizeEachConn 开启客户端缓存时，单个连接缓存大小，默认128 MiB
+// WithCacheSizeEachConn 开启客户端缓存时，单个连接缓存大小（字节）；0 表示使用底层 rueidis 默认值（约 128 MiB）
 func WithCacheSizeEachConn(v int) ConfOptionFunc {
 	return func(cc *Conf) ConfOptionFunc {
 		previous := cc.CacheSizeEachConn
@@ -195,7 +204,7 @@ func WithCacheSizeEachConn(v int) ConfOptionFunc {
 	}
 }
 
-// WithRingScaleEachConn 单个连接ring buffer大小，默认2 ^ RingScaleEachConn, RingScaleEachConn默认情况下为10
+// WithRingScaleEachConn 单个连接 ring buffer 容量为 2^RingScaleEachConn；0 表示使用底层 rueidis 默认值（10，即 1024）
 func WithRingScaleEachConn(v int) ConfOptionFunc {
 	return func(cc *Conf) ConfOptionFunc {
 		previous := cc.RingScaleEachConn
@@ -204,7 +213,7 @@ func WithRingScaleEachConn(v int) ConfOptionFunc {
 	}
 }
 
-// WithDevelopment 是否为开发模式，开发模式下，使用部分接口会有警告日志输出，会校验多key是否为同一hash槽，会校验部分接口是否满足版本要求
+// WithDevelopment 是否为开发模式，开发模式下，使用部分接口会有警告日志输出，会校验多key是否为同一hash槽，会校验部分接口是否满足版本要求；生产环境请保持 false
 func WithDevelopment(v bool) ConfOptionFunc {
 	return func(cc *Conf) ConfOptionFunc {
 		previous := cc.Development
@@ -240,15 +249,6 @@ func WithPubSubChanSize(v int) ConfOptionFunc {
 	}
 }
 
-// WithBootstrapTimeout 连接建立时执行 INFO 等启动期探测的总超时；集群+多副本下默认 30s
-func WithBootstrapTimeout(v time.Duration) ConfOptionFunc {
-	return func(cc *Conf) ConfOptionFunc {
-		previous := cc.BootstrapTimeout
-		cc.BootstrapTimeout = v
-		return WithBootstrapTimeout(previous)
-	}
-}
-
 // InstallConfWatchDog the installed func will called when NewConf  called
 func InstallConfWatchDog(dog func(cc *Conf)) { watchDogConf = dog }
 
@@ -268,6 +268,7 @@ func setConfDefaultValue(cc *Conf) {
 		WithUsername(""),
 		WithPassword(""),
 		WithWriteTimeout(defaultWriteTimeout),
+		WithBootstrapTimeout(defaultBootstrapTimeout),
 		WithConnPoolSize(0),
 		WithEnableCache(true),
 		WithCacheSizeEachConn(0),
@@ -276,7 +277,6 @@ func setConfDefaultValue(cc *Conf) {
 		WithT(nil),
 		WithForceSingleClient(false),
 		WithPubSubChanSize(defaultPubSubChanSize),
-		WithBootstrapTimeout(defaultBootstrapTimeout),
 	} {
 		opt(cc)
 	}
@@ -337,6 +337,7 @@ func (cc *Conf) GetDB() int                         { return cc.DB }
 func (cc *Conf) GetUsername() string                { return cc.Username }
 func (cc *Conf) GetPassword() string                { return cc.Password }
 func (cc *Conf) GetWriteTimeout() time.Duration     { return cc.WriteTimeout }
+func (cc *Conf) GetBootstrapTimeout() time.Duration { return cc.BootstrapTimeout }
 func (cc *Conf) GetConnPoolSize() int               { return cc.ConnPoolSize }
 func (cc *Conf) GetEnableCache() bool               { return cc.EnableCache }
 func (cc *Conf) GetCacheSizeEachConn() int          { return cc.CacheSizeEachConn }
@@ -345,7 +346,6 @@ func (cc *Conf) GetDevelopment() bool               { return cc.Development }
 func (cc *Conf) GetT() Tester                       { return cc.T }
 func (cc *Conf) GetForceSingleClient() bool         { return cc.ForceSingleClient }
 func (cc *Conf) GetPubSubChanSize() int             { return cc.PubSubChanSize }
-func (cc *Conf) GetBootstrapTimeout() time.Duration { return cc.BootstrapTimeout }
 
 // ConfVisitor visitor interface for Conf
 type ConfVisitor interface {
@@ -359,6 +359,7 @@ type ConfVisitor interface {
 	GetUsername() string
 	GetPassword() string
 	GetWriteTimeout() time.Duration
+	GetBootstrapTimeout() time.Duration
 	GetConnPoolSize() int
 	GetEnableCache() bool
 	GetCacheSizeEachConn() int
@@ -367,7 +368,6 @@ type ConfVisitor interface {
 	GetT() Tester
 	GetForceSingleClient() bool
 	GetPubSubChanSize() int
-	GetBootstrapTimeout() time.Duration
 }
 
 // ConfInterface visitor + ApplyOption interface for Conf

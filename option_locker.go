@@ -12,17 +12,20 @@ const (
 	defaultKeyMajority = int32(2)
 )
 
+// 注意：optiongen 不接受裸 ident（panic on ast.Ident），引用 const 时必须显式用
+// time.Duration(...) / int32(...) / string(...) 等类型转换包一层。
+//
 //go:generate optiongen --option_with_struct_name=true --new_func=newLockerOptions --empty_composite_nil=true --usage_tag_name=usage
 func LockerOptionsOptionDeclareWithDefault() any {
 	return map[string]any{
 		// annotation@KeyPrefix(KeyPrefix is the prefix of redis key for locks. Default value is defaultKeyPrefix)
 		"KeyPrefix": string(defaultKeyPrefix),
 		// annotation@KeyValidity(KeyValidity is the validity duration of locks. The lock holder will renew it periodically inside rueidislock to keep the lock alive. Default value is defaultKeyValidity)
-		"KeyValidity": defaultKeyValidity,
+		"KeyValidity": time.Duration(defaultKeyValidity),
 		// annotation@TryNextAfter(TryNextAfter is the timeout duration before trying the next redis key for locks. Default value is defaultTryNextAfter)
-		"TryNextAfter": defaultTryNextAfter,
+		"TryNextAfter": time.Duration(defaultTryNextAfter),
 		// annotation@KeyMajority(KeyMajority follows Redlock semantics: a lock spans N=KeyMajority*2-1 redis keys (each on its own slot for cluster), and needs at least KeyMajority keys to be acquired to be valid. Set to 1 if a single redis instance is enough. Default value is defaultKeyMajority)
-		"KeyMajority": defaultKeyMajority,
+		"KeyMajority": int32(defaultKeyMajority),
 		// annotation@NoLoopTracking(NoLoopTracking will use NOLOOP in the CLIENT TRACKING command to avoid unnecessary notifications and thus have better performance. This can only be enabled if all your redis nodes >= 7.0.5)
 		"NoLoopTracking": false,
 		// annotation@FallbackSETPX(Use SET PX instead of SET PXAT when acquiring locks to be compatible with Redis < 6.2)
