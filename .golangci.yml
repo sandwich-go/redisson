@@ -74,6 +74,13 @@ linters:
       - path: 'cmd_args.*\.go$'
         linters:
           - unused
+      # option*.go 中的 declaration 函数引用 const 时必须显式包一层
+      # time.Duration(...)/int(...) 等类型转换，否则 optiongen v1.0.9 会
+      # panic on ast.Ident。这些"冗余"转换是 generator 必需的契约，不应被
+      # unconvert 抹掉。
+      - path: 'option(_[a-z]+)?\.go$'
+        linters:
+          - unconvert
 
 issues:
   max-issues-per-linter: 0
