@@ -116,7 +116,7 @@ func TestDelay(t *testing.T) {
 			<-notifyChan1
 			notifyChan2 <- struct{}{}
 			return nil
-		}, WithDelayOptionPrefix(prefix), WithDelayOptionTimeout(timeout))
+		}, WithDelayOptionPrefix(prefix), WithDelayOptionVisibilityTimeout(timeout))
 		So(err, ShouldBeNil)
 
 		err = q.Add(ctx, task, time.Second)
@@ -143,7 +143,7 @@ func TestDelay(t *testing.T) {
 				// 重新处理
 				notifyChan1 <- bytes
 				return nil
-			}, WithDelayOptionPrefix(prefix), WithDelayOptionTimeout(timeout))
+			}, WithDelayOptionPrefix(prefix), WithDelayOptionVisibilityTimeout(timeout))
 			So(err, ShouldBeNil)
 		}
 		<-notifyChan2
@@ -157,7 +157,7 @@ func TestDelay(t *testing.T) {
 		var timeout = 2 * time.Second
 		q, err = c.NewDelayQueue(name, func(bytes []byte) error {
 			return errors.New("mock error")
-		}, WithDelayOptionPrefix(prefix), WithDelayOptionTimeout(timeout), WithDelayOptionRetryTimes(3), WithDelayOptionHandleDeadLetter(func(bs []byte) {
+		}, WithDelayOptionPrefix(prefix), WithDelayOptionVisibilityTimeout(timeout), WithDelayOptionRetryTimes(3), WithDelayOptionHandleDeadLetter(func(bs []byte) {
 			notifyChan <- bs
 		}))
 		So(err, ShouldBeNil)

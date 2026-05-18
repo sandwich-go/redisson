@@ -48,6 +48,13 @@ func (w *wrapRateLimiter) AllowN(ctx context.Context, identifier string, n int64
 
 func newRateLimiter(c *client, opts ...RateLimiterOption) (RateLimiter, error) {
 	cc := newRateLimiterOptions(opts...)
+	// 提前校验，给出明确的可读错误（底层 rueidislimiter 也会拒绝零值，但错误信息没有调用方上下文）。
+	if cc.GetLimit() <= 0 {
+		return nil, ErrRateLimiterInvalidLimit
+	}
+	if cc.GetWindow() <= minRateLimiterWindow {
+		return nil, ErrRateLimiterInvalidWindow
+	}
 	l, err := rueidislimiter.NewRateLimiter(rueidislimiter.RateLimiterOption{
 		ClientBuilder: func(option rueidis.ClientOption) (rueidis.Client, error) {
 			return rueidis.NewClient(option)

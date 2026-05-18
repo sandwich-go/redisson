@@ -32,7 +32,7 @@ func TestClient_Close_TimeoutBreaksDeadlock(t *testing.T) {
 		cbStarted.Done()
 		<-blockForever
 		return nil
-	}, WithDelayOptionPrefix("close_timeout_test"), WithDelayOptionTimeout(10*time.Second))
+	}, WithDelayOptionPrefix("close_timeout_test"), WithDelayOptionVisibilityTimeout(10*time.Second))
 	if err != nil {
 		t.Fatalf("NewDelayQueue: %v", err)
 	}

@@ -1,6 +1,7 @@
 package redisson
 
 import (
+	"errors"
 	"testing"
 	"time"
 )
@@ -50,8 +51,8 @@ func TestBloomOptions_WatchDog(t *testing.T) {
 
 func TestDelayOptions_Defaults(t *testing.T) {
 	opts := newDelayOptions()
-	if opts.GetTimeout() <= 0 {
-		t.Errorf("Timeout default should be >0, got %v", opts.GetTimeout())
+	if opts.GetVisibilityTimeout() <= 0 {
+		t.Errorf("VisibilityTimeout default should be >0, got %v", opts.GetVisibilityTimeout())
 	}
 	if opts.GetRetryTimes() <= 0 {
 		t.Errorf("RetryTimes default should be >0, got %d", opts.GetRetryTimes())
@@ -59,26 +60,55 @@ func TestDelayOptions_Defaults(t *testing.T) {
 	if opts.GetHandleDeadLetter() == nil {
 		t.Errorf("HandleDeadLetter default should be non-nil func")
 	}
+	// 新增字段默认 0（落到 default* 常量兜底，由 delay.go 内部转换）。
+	if opts.GetPollInterval() != 0 {
+		t.Errorf("PollInterval default should be 0 (use defaultDelayPollInterval), got %v", opts.GetPollInterval())
+	}
+	if opts.GetPollBatch() != 0 {
+		t.Errorf("PollBatch default should be 0 (use defaultDelayPollBatch), got %d", opts.GetPollBatch())
+	}
+	if opts.GetRedisOpTimeout() != 0 {
+		t.Errorf("RedisOpTimeout default should be 0 (use defaultDelayRedisOpTimeout), got %v", opts.GetRedisOpTimeout())
+	}
+	if opts.GetRetryBackoff() != 0 {
+		t.Errorf("RetryBackoff default should be 0 (use defaultDelayRetryBackoff), got %v", opts.GetRetryBackoff())
+	}
 }
 
 func TestDelayOptions_ApplyAll(t *testing.T) {
 	opts := newDelayOptions(
 		WithDelayOptionPrefix("p"),
-		WithDelayOptionTimeout(2*time.Second),
+		WithDelayOptionVisibilityTimeout(2*time.Second),
 		WithDelayOptionRetryTimes(7),
 		WithDelayOptionHandleDeadLetter(nil),
+		WithDelayOptionPollInterval(500*time.Millisecond),
+		WithDelayOptionPollBatch(32),
+		WithDelayOptionRedisOpTimeout(3*time.Second),
+		WithDelayOptionRetryBackoff(2*time.Second),
 	)
 	if opts.GetPrefix() != "p" {
 		t.Errorf("Prefix=%q", opts.GetPrefix())
 	}
-	if opts.GetTimeout() != 2*time.Second {
-		t.Errorf("Timeout=%v", opts.GetTimeout())
+	if opts.GetVisibilityTimeout() != 2*time.Second {
+		t.Errorf("VisibilityTimeout=%v", opts.GetVisibilityTimeout())
 	}
 	if opts.GetRetryTimes() != 7 {
 		t.Errorf("RetryTimes=%d", opts.GetRetryTimes())
 	}
 	if opts.GetHandleDeadLetter() != nil {
 		t.Errorf("HandleDeadLetter should be nil")
+	}
+	if opts.GetPollInterval() != 500*time.Millisecond {
+		t.Errorf("PollInterval=%v", opts.GetPollInterval())
+	}
+	if opts.GetPollBatch() != 32 {
+		t.Errorf("PollBatch=%d", opts.GetPollBatch())
+	}
+	if opts.GetRedisOpTimeout() != 3*time.Second {
+		t.Errorf("RedisOpTimeout=%v", opts.GetRedisOpTimeout())
+	}
+	if opts.GetRetryBackoff() != 2*time.Second {
+		t.Errorf("RetryBackoff=%v", opts.GetRetryBackoff())
 	}
 }
 
@@ -154,6 +184,29 @@ func TestRateLimiterOptions_Apply(t *testing.T) {
 	)
 	if opts.GetWindow() != time.Minute {
 		t.Errorf("Window=%v", opts.GetWindow())
+	}
+}
+
+// TestNewRateLimiter_RejectsZeroValues 在 newRateLimiter 入口拒绝零值 Limit/Window，
+// 让用户拿到一个清晰的、调用方可识别的 sentinel error；不必跑到 rueidislimiter 内部才报错。
+//
+// 校验在访问 c.v 之前发生，这里直接传 nil client 来覆盖校验路径而无需起 Redis。
+func TestNewRateLimiter_RejectsZeroValues(t *testing.T) {
+	// 默认 0/0 全拒
+	if _, err := newRateLimiter(nil); !errors.Is(err, ErrRateLimiterInvalidLimit) {
+		t.Errorf("expect ErrRateLimiterInvalidLimit on default options, got %v", err)
+	}
+	// 仅给 Window：Limit 仍为 0
+	if _, err := newRateLimiter(nil, WithRateLimiterOptionWindow(time.Second)); !errors.Is(err, ErrRateLimiterInvalidLimit) {
+		t.Errorf("expect ErrRateLimiterInvalidLimit when Limit=0, got %v", err)
+	}
+	// 仅给 Limit：Window 仍为 0
+	if _, err := newRateLimiter(nil, WithRateLimiterOptionLimit(10)); !errors.Is(err, ErrRateLimiterInvalidWindow) {
+		t.Errorf("expect ErrRateLimiterInvalidWindow when Window=0, got %v", err)
+	}
+	// Window=1ms 边界值（必须 > 1ms）
+	if _, err := newRateLimiter(nil, WithRateLimiterOptionLimit(10), WithRateLimiterOptionWindow(time.Millisecond)); !errors.Is(err, ErrRateLimiterInvalidWindow) {
+		t.Errorf("expect ErrRateLimiterInvalidWindow when Window==1ms, got %v", err)
 	}
 }
 

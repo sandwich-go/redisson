@@ -39,7 +39,7 @@ func main() {
 		return nil
 	},
 		redisson.WithDelayOptionPrefix("examples"),
-		redisson.WithDelayOptionTimeout(10*time.Second),
+		redisson.WithDelayOptionVisibilityTimeout(10*time.Second),
 		redisson.WithDelayOptionRetryTimes(3),
 	)
 	if err != nil {
@@ -62,7 +62,7 @@ func main() {
 		return errors.New("simulated failure")
 	},
 		redisson.WithDelayOptionPrefix("examples"),
-		redisson.WithDelayOptionTimeout(10*time.Second),
+		redisson.WithDelayOptionVisibilityTimeout(10*time.Second),
 		redisson.WithDelayOptionRetryTimes(2), // 失败 2 次即死信
 		redisson.WithDelayOptionHandleDeadLetter(func(bs []byte) {
 			fmt.Printf("[demo-dead] dead letter: %s\n", bs)

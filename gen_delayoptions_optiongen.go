@@ -12,12 +12,20 @@ import (
 type DelayOptions struct {
 	// annotation@Prefix(延迟队列前缀)
 	Prefix string
-	// annotation@Timeout(业务处理超时时间，如果超过该时间未处理，则重试)
-	Timeout time.Duration
+	// annotation@VisibilityTimeout(任务被 worker 拉走后的可见性超时；worker 在该时间内未 ack 则任务被 reclaim 重新入 delay。建议覆盖业务 callback 实际耗时上限。)
+	VisibilityTimeout time.Duration
 	// annotation@RetryTimes(comment="重试次数，当业务处理超时，或业务处理返回错误，则重试")
 	RetryTimes int `usage:"重试次数，当业务处理超时，或业务处理返回错误，则重试"`
 	// annotation@HandleDeadLetter(comment="处理死信，当达到最大重试次数，则为死信")
 	HandleDeadLetter func(bs []byte) `usage:"处理死信，当达到最大重试次数，则为死信"`
+	// annotation@PollInterval(poll/reclaim ticker 触发间隔；过小会增加 Redis 压力，过大会让到期任务的派发延迟变高。0 表示使用 defaultDelayPollInterval。)
+	PollInterval time.Duration
+	// annotation@PollBatch(单次 poll/reclaim 处理的最大 item 数；0 表示使用 defaultDelayPollBatch。)
+	PollBatch int
+	// annotation@RedisOpTimeout(单次 Redis 操作的兜底超时（与 VisibilityTimeout 解耦）；0 表示使用 defaultDelayRedisOpTimeout。)
+	RedisOpTimeout time.Duration
+	// annotation@RetryBackoff(业务失败后重新可见的间隔；0 表示使用 defaultDelayRetryBackoff。)
+	RetryBackoff time.Duration
 }
 
 // newDelayOptions new DelayOptions
@@ -56,12 +64,12 @@ func WithDelayOptionPrefix(v string) DelayOption {
 	}
 }
 
-// WithDelayOptionTimeout option func for filed Timeout
-func WithDelayOptionTimeout(v time.Duration) DelayOption {
+// WithDelayOptionVisibilityTimeout option func for filed VisibilityTimeout
+func WithDelayOptionVisibilityTimeout(v time.Duration) DelayOption {
 	return func(cc *DelayOptions) DelayOption {
-		previous := cc.Timeout
-		cc.Timeout = v
-		return WithDelayOptionTimeout(previous)
+		previous := cc.VisibilityTimeout
+		cc.VisibilityTimeout = v
+		return WithDelayOptionVisibilityTimeout(previous)
 	}
 }
 
@@ -83,6 +91,42 @@ func WithDelayOptionHandleDeadLetter(v func(bs []byte)) DelayOption {
 	}
 }
 
+// WithDelayOptionPollInterval option func for filed PollInterval
+func WithDelayOptionPollInterval(v time.Duration) DelayOption {
+	return func(cc *DelayOptions) DelayOption {
+		previous := cc.PollInterval
+		cc.PollInterval = v
+		return WithDelayOptionPollInterval(previous)
+	}
+}
+
+// WithDelayOptionPollBatch option func for filed PollBatch
+func WithDelayOptionPollBatch(v int) DelayOption {
+	return func(cc *DelayOptions) DelayOption {
+		previous := cc.PollBatch
+		cc.PollBatch = v
+		return WithDelayOptionPollBatch(previous)
+	}
+}
+
+// WithDelayOptionRedisOpTimeout option func for filed RedisOpTimeout
+func WithDelayOptionRedisOpTimeout(v time.Duration) DelayOption {
+	return func(cc *DelayOptions) DelayOption {
+		previous := cc.RedisOpTimeout
+		cc.RedisOpTimeout = v
+		return WithDelayOptionRedisOpTimeout(previous)
+	}
+}
+
+// WithDelayOptionRetryBackoff option func for filed RetryBackoff
+func WithDelayOptionRetryBackoff(v time.Duration) DelayOption {
+	return func(cc *DelayOptions) DelayOption {
+		previous := cc.RetryBackoff
+		cc.RetryBackoff = v
+		return WithDelayOptionRetryBackoff(previous)
+	}
+}
+
 // InstallDelayOptionsWatchDog the installed func will called when newDelayOptions  called
 func InstallDelayOptionsWatchDog(dog func(cc *DelayOptions)) { watchDogDelayOptions = dog }
 
@@ -93,11 +137,15 @@ var watchDogDelayOptions func(cc *DelayOptions)
 func setDelayOptionsDefaultValue(cc *DelayOptions) {
 	for _, opt := range [...]DelayOption{
 		WithDelayOptionPrefix(""),
-		WithDelayOptionTimeout(1 * time.Minute),
-		WithDelayOptionRetryTimes(3),
+		WithDelayOptionVisibilityTimeout(defaultDelayVisibilityTimeout),
+		WithDelayOptionRetryTimes(defaultDelayRetryTimes),
 		WithDelayOptionHandleDeadLetter(func(bs []byte) {
 			warning(fmt.Sprintf("got dead letter, %q", bs))
 		}),
+		WithDelayOptionPollInterval(0),
+		WithDelayOptionPollBatch(0),
+		WithDelayOptionRedisOpTimeout(0),
+		WithDelayOptionRetryBackoff(0),
 	} {
 		opt(cc)
 	}
@@ -112,16 +160,24 @@ func newDefaultDelayOptions() *DelayOptions {
 
 // all getter func
 func (cc *DelayOptions) GetPrefix() string                    { return cc.Prefix }
-func (cc *DelayOptions) GetTimeout() time.Duration            { return cc.Timeout }
+func (cc *DelayOptions) GetVisibilityTimeout() time.Duration  { return cc.VisibilityTimeout }
 func (cc *DelayOptions) GetRetryTimes() int                   { return cc.RetryTimes }
 func (cc *DelayOptions) GetHandleDeadLetter() func(bs []byte) { return cc.HandleDeadLetter }
+func (cc *DelayOptions) GetPollInterval() time.Duration       { return cc.PollInterval }
+func (cc *DelayOptions) GetPollBatch() int                    { return cc.PollBatch }
+func (cc *DelayOptions) GetRedisOpTimeout() time.Duration     { return cc.RedisOpTimeout }
+func (cc *DelayOptions) GetRetryBackoff() time.Duration       { return cc.RetryBackoff }
 
 // DelayOptionsVisitor visitor interface for DelayOptions
 type DelayOptionsVisitor interface {
 	GetPrefix() string
-	GetTimeout() time.Duration
+	GetVisibilityTimeout() time.Duration
 	GetRetryTimes() int
 	GetHandleDeadLetter() func(bs []byte)
+	GetPollInterval() time.Duration
+	GetPollBatch() int
+	GetRedisOpTimeout() time.Duration
+	GetRetryBackoff() time.Duration
 }
 
 // DelayOptionsInterface visitor + ApplyOption interface for DelayOptions

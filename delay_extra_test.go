@@ -99,7 +99,7 @@ func TestDelay_RetryViaRetryPath_NotReclaim(t *testing.T) {
 		return errors.New("transient")
 	},
 		WithDelayOptionPrefix(uniquePrefix(t)),
-		WithDelayOptionTimeout(60*time.Second),
+		WithDelayOptionVisibilityTimeout(60*time.Second),
 		WithDelayOptionRetryTimes(5),
 	)
 	if err != nil {
@@ -139,7 +139,7 @@ func TestDelay_DeadLetterViaRetryPath_NotReclaim(t *testing.T) {
 		return errors.New("perm")
 	},
 		WithDelayOptionPrefix(uniquePrefix(t)),
-		WithDelayOptionTimeout(60*time.Second),
+		WithDelayOptionVisibilityTimeout(60*time.Second),
 		WithDelayOptionRetryTimes(3),
 		WithDelayOptionHandleDeadLetter(func(bs []byte) {
 			select {
@@ -201,7 +201,7 @@ func TestDelay_StuckCallbackDoesNotReschedule(t *testing.T) {
 		return nil
 	},
 		WithDelayOptionPrefix(uniquePrefix(t)),
-		WithDelayOptionTimeout(2*time.Second), // visibility=2s
+		WithDelayOptionVisibilityTimeout(2*time.Second), // visibility=2s
 		WithDelayOptionRetryTimes(3),
 	)
 	if err != nil {
@@ -265,7 +265,7 @@ func TestDelay_ReclaimNotTooEarly(t *testing.T) {
 		return nil
 	},
 		WithDelayOptionPrefix(uniquePrefix(t)),
-		WithDelayOptionTimeout(10*time.Second),
+		WithDelayOptionVisibilityTimeout(10*time.Second),
 		WithDelayOptionRetryTimes(3),
 	)
 	if err != nil {
@@ -570,7 +570,7 @@ func TestDelay_AddOverridesResetsRetryCount(t *testing.T) {
 		return nil
 	},
 		WithDelayOptionPrefix(uniquePrefix(t)),
-		WithDelayOptionTimeout(60*time.Second),
+		WithDelayOptionVisibilityTimeout(60*time.Second),
 		WithDelayOptionRetryTimes(2), // 失败 2 次就死信
 	)
 	if err != nil {
@@ -681,7 +681,7 @@ func TestDelay_LengthCounts(t *testing.T) {
 		return nil
 	},
 		WithDelayOptionPrefix(uniquePrefix(t)),
-		WithDelayOptionTimeout(60*time.Second),
+		WithDelayOptionVisibilityTimeout(60*time.Second),
 	)
 	if err != nil {
 		t.Fatalf("NewDelayQueue: %v", err)
@@ -743,7 +743,7 @@ func TestDelay_CallbackPanicTriggersRetry(t *testing.T) {
 		return nil
 	},
 		WithDelayOptionPrefix(uniquePrefix(t)),
-		WithDelayOptionTimeout(60*time.Second),
+		WithDelayOptionVisibilityTimeout(60*time.Second),
 		WithDelayOptionRetryTimes(3),
 	)
 	if err != nil {
@@ -805,7 +805,7 @@ func TestDelay_ConcurrentAdd(t *testing.T) {
 
 	q, err := c.NewDelayQueue("concurrent-add", func(_ []byte) error { return nil },
 		WithDelayOptionPrefix(uniquePrefix(t)),
-		WithDelayOptionTimeout(60*time.Second),
+		WithDelayOptionVisibilityTimeout(60*time.Second),
 	)
 	if err != nil {
 		t.Fatalf("NewDelayQueue: %v", err)
@@ -847,7 +847,7 @@ func TestDelay_PrefixIsolatesQueues(t *testing.T) {
 
 	q1, err := c.NewDelayQueue("isolated", func(_ []byte) error { return nil },
 		WithDelayOptionPrefix(uniquePrefix(t)+":p1"),
-		WithDelayOptionTimeout(60*time.Second),
+		WithDelayOptionVisibilityTimeout(60*time.Second),
 	)
 	if err != nil {
 		t.Fatalf("q1 NewDelayQueue: %v", err)
@@ -865,7 +865,7 @@ func TestDelay_PrefixIsolatesQueues(t *testing.T) {
 
 	q2, err := c.NewDelayQueue("isolated", func(_ []byte) error { return nil },
 		WithDelayOptionPrefix(uniquePrefix(t)+":p2"),
-		WithDelayOptionTimeout(60*time.Second),
+		WithDelayOptionVisibilityTimeout(60*time.Second),
 	)
 	if err != nil {
 		t.Fatalf("q2 NewDelayQueue: %v", err)
@@ -889,7 +889,7 @@ func TestDelay_DeadLetterHookNil(t *testing.T) {
 		return errors.New("perm")
 	},
 		WithDelayOptionPrefix(uniquePrefix(t)),
-		WithDelayOptionTimeout(60*time.Second),
+		WithDelayOptionVisibilityTimeout(60*time.Second),
 		WithDelayOptionRetryTimes(2),
 		WithDelayOptionHandleDeadLetter(nil),
 	)

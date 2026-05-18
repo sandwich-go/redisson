@@ -185,16 +185,6 @@ const (
 	delayOwnerKeyFormat = "owner:{%s}"
 	delaySeqKeyFormat   = "seq:{%s}"
 
-	// defaultPollInterval ticker 默认间隔；用户暂不可配。
-	defaultPollInterval = time.Second
-	// defaultPollBatch 单次 poll/reclaim 处理的最大 item 数；防止单次脚本耗时过长。
-	defaultPollBatch = 64
-	// defaultRedisOpTimeout 单次 Redis 操作的兜底超时；与业务 callback 超时解耦。
-	defaultRedisOpTimeout = 5 * time.Second
-	// defaultRetryBackoff 业务失败后再次可见的间隔（与 visibility timeout 解耦）。
-	// visibility 用 spec.Timeout（reclaim 判定),retry backoff 单独走本常量,
-	// 保证业务失败 → 短时再投递 的预期不被默认 Timeout=1min 拖累。
-	defaultRetryBackoff = time.Second
 	// delayCloseWorkerWaitTimeout q.Close 等本 queue 在途 worker 完成 ack 的最长时间。
 	// 主路径毫秒级返回；callback 内调 q.Close 的反模式下用此 timeout 打破死锁。
 	// client.Close 仍会在更高层等所有 worker 收尾，保证无 c.cmd race。
@@ -439,12 +429,45 @@ func waitWGWithTimeout(wg *sync.WaitGroup, timeout time.Duration) {
 	}
 }
 
+// pollInterval 返回 ticker 触发间隔；用户未指定 (<=0) 时落到 defaultDelayPollInterval。
+func (q *delayQueue) pollInterval() time.Duration {
+	if v := q.spec.GetPollInterval(); v > 0 {
+		return v
+	}
+	return defaultDelayPollInterval
+}
+
+// pollBatch 返回单次 poll/reclaim 处理的最大 item 数；用户未指定 (<=0) 时落到 defaultDelayPollBatch。
+func (q *delayQueue) pollBatch() int {
+	if v := q.spec.GetPollBatch(); v > 0 {
+		return v
+	}
+	return defaultDelayPollBatch
+}
+
+// retryBackoff 返回业务失败后重新可见的间隔；用户未指定 (<=0) 时落到 defaultDelayRetryBackoff。
+func (q *delayQueue) retryBackoff() time.Duration {
+	if v := q.spec.GetRetryBackoff(); v > 0 {
+		return v
+	}
+	return defaultDelayRetryBackoff
+}
+
+// redisOpTimeout 返回单次 Redis 操作的兜底超时；用户未指定 (<=0) 时落到 defaultDelayRedisOpTimeout。
+func (q *delayQueue) redisOpTimeout() time.Duration {
+	if v := q.spec.GetRedisOpTimeout(); v > 0 {
+		return v
+	}
+	return defaultDelayRedisOpTimeout
+}
+
 // startTickers 启动 poll/reclaim 两个 ticker goroutine。
 // ticker 内同步调用任务函数,确保前一轮完成才进入下一轮、Close 等待 wg 时一定收尾。
 func (q *delayQueue) startTickers() {
+	interval := q.pollInterval()
 	q.tickerWG.Add(2)
-	go q.runTicker(defaultPollInterval, q.pollOnce)
-	go q.runTicker(defaultPollInterval, q.reclaimOnce)
+	go q.runTicker(interval, q.pollOnce)
+	go q.runTicker(interval, q.reclaimOnce)
 }
 
 // runTicker 周期触发 fn；同步执行确保前一轮完成后才进入下一轮。
@@ -485,11 +508,11 @@ func (q *delayQueue) pollOnce() {
 		return
 	}
 	now := nowFunc()
-	visibilityDeadline := now.Add(q.spec.GetTimeout()).UnixMilli()
+	visibilityDeadline := now.Add(q.spec.GetVisibilityTimeout()).UnixMilli()
 
 	ctx, cancel := q.opCtx()
 	defer cancel()
-	res, err := q.pollScript.Run(ctx, q.pollKeys, now.UnixMilli(), visibilityDeadline, defaultPollBatch).Slice()
+	res, err := q.pollScript.Run(ctx, q.pollKeys, now.UnixMilli(), visibilityDeadline, q.pollBatch()).Slice()
 	if err != nil {
 		q.c.handler.delayPollError(q.name)
 		if !errors.Is(err, context.Canceled) {
@@ -585,7 +608,7 @@ func (q *delayQueue) heartbeatLoop(payload []byte, token string, stopHB <-chan s
 
 // heartbeatInterval 计算 heartbeat 间隔：visibility / heartbeatRatio，下限 minHeartbeatInterval。
 func (q *delayQueue) heartbeatInterval() time.Duration {
-	visibility := q.spec.GetTimeout()
+	visibility := q.spec.GetVisibilityTimeout()
 	if visibility <= 0 {
 		return 0
 	}
@@ -599,7 +622,7 @@ func (q *delayQueue) heartbeatInterval() time.Duration {
 // heartbeatOnce 续期一次。返回 false 表示 token 已失效（不应再续期）。
 func (q *delayQueue) heartbeatOnce(payload []byte, token string) bool {
 	now := nowFunc()
-	newDeadline := now.Add(q.spec.GetTimeout()).UnixMilli()
+	newDeadline := now.Add(q.spec.GetVisibilityTimeout()).UnixMilli()
 	ctx, cancel := q.opCtx()
 	defer cancel()
 	ok, err := q.heartbeatScript.Run(ctx, q.heartbeatKeys, payload, token, newDeadline).Int64()
@@ -638,10 +661,10 @@ func (q *delayQueue) ackSuccess(payload []byte, token string) {
 }
 
 // ackRetryWithBackoff 业务失败但未达死信阈值：校验 token 后累加 meta 计数 + 把 item 放回 delay。
-// 重新可见时间 = now + defaultRetryBackoff，与 visibility timeout 解耦。
+// 重新可见时间 = now + retryBackoff()，与 visibility timeout 解耦。
 // token 不匹配时 noop。
 func (q *delayQueue) ackRetryWithBackoff(payload []byte, token string) {
-	retryAt := nowFunc().Add(defaultRetryBackoff).UnixMilli()
+	retryAt := nowFunc().Add(q.retryBackoff()).UnixMilli()
 	ctx, cancel := q.opCtx()
 	defer cancel()
 	if err := q.ackRetryScript.Run(ctx, q.ackRetryKeys, payload, token, retryAt).Err(); err != nil {
@@ -688,7 +711,7 @@ func (q *delayQueue) reclaimOnce() {
 	now := nowFunc()
 	ctx, cancel := q.opCtx()
 	defer cancel()
-	count, err := q.reclaimScript.Run(ctx, q.reclaimKeys, now.UnixMilli(), defaultPollBatch).Int64()
+	count, err := q.reclaimScript.Run(ctx, q.reclaimKeys, now.UnixMilli(), q.pollBatch()).Int64()
 	if err != nil {
 		q.c.handler.delayReclaimError(q.name)
 		if !errors.Is(err, context.Canceled) {
@@ -702,12 +725,10 @@ func (q *delayQueue) reclaimOnce() {
 }
 
 // opCtx 构造一个继承自 q.ctx 的子 ctx，带 Redis 操作超时；Close 时一并取消。
+// Redis 操作超时与 VisibilityTimeout 解耦：业务可见性可以很长（数分钟），但
+// 单次 Redis 调用永远不应该挂那么久——挂住通常意味着 Redis 异常，应快速失败。
 func (q *delayQueue) opCtx() (context.Context, context.CancelFunc) {
-	timeout := q.spec.GetTimeout()
-	if timeout <= 0 || timeout > defaultRedisOpTimeout {
-		timeout = defaultRedisOpTimeout
-	}
-	return context.WithTimeout(q.ctx, timeout)
+	return context.WithTimeout(q.ctx, q.redisOpTimeout())
 }
 
 // toString 把 Lua 返回值兜底转 string。Lua 通常返回 string；插入数字时返回 int64。
