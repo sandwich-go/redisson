@@ -133,10 +133,9 @@ type virtualHub struct {
 	// pools[kindSubscribe], pools[kindPSubscribe], pools[kindSSubscribe]
 	pools [3]*subscriptionPool
 
-	mu          sync.Mutex                // 保护 subs 表
-	subs        map[*virtualPubSub]struct{} // 全部活跃订阅者（用于 Close 全量收尾）
-	closed      AtomicInt32
-	subscribeFn func() // 仅测试可注入的 hook（保留扩展位）
+	mu     sync.Mutex                  // 保护 subs 表
+	subs   map[*virtualPubSub]struct{} // 全部活跃订阅者（用于 Close 全量收尾）
+	closed AtomicInt32
 }
 
 // NewVirtualPubSubHub 在 client 上创建一个 PubSub Hub。
