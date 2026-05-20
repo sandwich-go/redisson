@@ -22,6 +22,14 @@ type XCmdable interface {
 	PReceive(ctx context.Context, cb func(Message), patterns ...string) error
 	Do(ctx context.Context, completed Completed) RedisResult
 	Version() *semver.Version
+	// NewVirtualPubSubHub 创建一个进程级 PubSub 多路复用 Hub。详见 cmd_pubsub_virtual.go 文档注释。
+	// 通过 Hub 创建的 VirtualPubSub 实例会共享底层少量真实 dedicated 连接，
+	// 解决"大量 topic 各自 Subscribe 占用连接超出上限"的问题。
+	NewVirtualPubSubHub() VirtualPubSubHub
+	// NewVirtualStreamHub 创建一个进程级 Stream 多路复用 Hub。详见 cmd_stream_virtual.go 文档注释。
+	// 通过 Hub 创建的 VirtualStream 实例会共享底层少量 blocking 连接做 XREAD 合并读取，
+	// 解决"大量 stream 各起 goroutine 占用 BlockingPool 连接超上限"的问题。
+	NewVirtualStreamHub() VirtualStreamHub
 }
 
 type Cmdable interface {
