@@ -29,9 +29,22 @@ import (
 //   一次阻塞读里；返回后按 stream 名查路由表扇出到各 virtualStream，并推进每个
 //   stream 的 lastID 游标。
 //
-// 因此本实现把"N 个 stream × 1 连接"压缩为"N 个 stream × 1 连接"——准确说：
+// 连接数收益（XREAD 是 keyed 命令，按 streams 列表里第一个 key 的 slot 路由）：
 //   - 单实例 / 主从：1 个 hub 永远只占用 ** 1 条 ** blocking 连接；
-//   - Cluster：按 slot 分组，每个有订阅的 slot owner 节点占用 1 条 blocking 连接。
+//   - Cluster：worker 数 = 不同 slot 的数量，每个有订阅的 slot owner 节点 1 条
+//     blocking 连接。
+//
+// 控制连接数的方法（cluster 下尤其重要）：
+//   * ** XREAD 是 keyed 命令，hashtag 有效 **：给相关 stream 名带相同 {tag}
+//     可让它们落到同一 slot，从而共用一条 blocking 连接。例如：
+//         hub.Subscribe(ctx, []string{"{events}.a", "{events}.b", "{events}.c"})
+//     上面 3 个 stream 名因 hashtag 相同 → CRC16 相同 → slot 相同 → 1 条连接。
+//   * 反例：若用 "events.a"、"events.b"、"events.c" 这种 slot 各异的命名，
+//     hub 会分别为每个 slot 起 1 个 worker（即 1 条 blocking 连接），同时
+//     rueidis 在 cluster builder 模式下还会拒绝跨 slot 多 key 命令，因此本
+//     实现强制按 slot 分组（详见 nodeKeyForStream 的注释）。
+//   * 即使后端只是单实例，rueidis 默认仍构造 *clusterClient，跨 slot 仍受
+//     builder 校验，所以"按 slot 分组"在所有部署形态下都生效。
 //
 // 使用约束（fan-out 语义）：
 //   - 多个 VirtualStream 订阅同一个 stream 时，每条 message 都会被扇出给所有订阅者

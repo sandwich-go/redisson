@@ -29,12 +29,24 @@ import (
 //     另起新连接。
 //
 // 适用范围与限制：
-//   - 单实例 / 主从：1 个 Hub × 3 种订阅类型 ⇒ 最多 3 条共享连接；
-//   - Cluster：本实现的 Subscribe / PSubscribe 与 redisson 原本的 c.cmd.Receive
-//     行为一致（rueidis 把 SUBSCRIBE 发到其中一个节点，Redis Cluster 各版本
-//     对 publish 的 broadcast 行为不同，跨节点广播的覆盖性由 server 决定）；
-//     SSubscribe 由 rueidis 按 channel CRC16 路由到 slot owner 节点，因此每
-//     个用到的 owner 节点会持有一条 dedicated 连接。
+//   - 单实例 / 主从：1 个 Hub × 3 种订阅类型 ⇒ 最多 3 条共享连接；连接数与
+//     channel 数无关，hashtag 也无影响。
+//   - Cluster：行为按订阅类型分两类，关键差别在于该命令是否 keyed —— 这也
+//     决定了用户能否通过 hashtag 控制连接数：
+//
+//       a) Subscribe / PSubscribe（** non-keyed **）：rueidis 不看 channel 名，
+//          直接 pick 一个节点发命令（具体节点由 conns map 迭代顺序决定）。
+//          所以 Hub 内仍只占用 1 条 dedicated 连接，但 ** hashtag 在这里没用 **
+//          —— 加不加 {tag} 都路由到同一个被 pick 的节点。
+//          注意：在 Redis 7+ cluster 下 PUBLISH 不再跨节点 broadcast，单节点
+//          订阅可能漏消息——这是协议层语义问题，与 Hub 无关，原 redisson
+//          c.cmd.Receive 也一样；如需精确订阅某 slot 的消息，请改用 SSubscribe。
+//
+//       b) SSubscribe（** keyed **）：rueidis 按 channel 名 CRC16 路由到 slot
+//          owner 节点，每个用到的 owner 各占 1 条 dedicated 连接。
+//          ** 此处 hashtag 有效 **：让多个 sharded channel 带相同 {tag} 即可
+//          共用一条连接（如 SSubscribe("{group}.a") 与 SSubscribe("{group}.b")
+//          落在同一 slot/同一连接）。
 //
 // 不在本实现范畴：
 //   - reconnection：底层 rueidis 已自动重连；本实现在 dedicated 连接断开时
