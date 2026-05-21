@@ -151,15 +151,27 @@ func TestDelay(t *testing.T) {
 	})
 
 	Convey("delay queue dead letter", t, func() {
-		var notifyChan = make(chan []byte)
+		// 该子测试理论耗时 ~3-6s（3 次失败 → 死信）。给以下两项收紧：
+		//   1) PollInterval=200ms + RetryBackoff=200ms：去掉默认 1s/1s 配置下的"调度漂移"
+		//      （score = now + 1s 与 1s ticker 撞点会让每轮重试多等 1s）。这样 CI 上即使
+		//      Redis 抖动，理想耗时也能从 3-6s 压到 ~1s 内，留足缓冲。
+		//   2) <-notifyChan 改为 select + 15s 超时：若 hook 没被调用，立即 t.Fatal 而不是
+		//      被 go test 的 5 分钟全局 timeout 吞掉根因，便于 CI 上追查（之前观察到的 4 分钟+
+		//      卡顿就是因为缺这层显式超时）。
+		var notifyChan = make(chan []byte, 1) // buffered 防止 hook 写时无人读 → 阻塞 worker 路径
 		var q DelayQueue
 		var err error
 		var timeout = 2 * time.Second
 		q, err = c.NewDelayQueue(name, func(bytes []byte) error {
 			return errors.New("mock error")
-		}, WithDelayOptionPrefix(prefix), WithDelayOptionVisibilityTimeout(timeout), WithDelayOptionRetryTimes(3), WithDelayOptionHandleDeadLetter(func(bs []byte) {
-			notifyChan <- bs
-		}))
+		}, WithDelayOptionPrefix(prefix),
+			WithDelayOptionVisibilityTimeout(timeout),
+			WithDelayOptionRetryTimes(3),
+			WithDelayOptionPollInterval(200*time.Millisecond),
+			WithDelayOptionRetryBackoff(200*time.Millisecond),
+			WithDelayOptionHandleDeadLetter(func(bs []byte) {
+				notifyChan <- bs
+			}))
 		So(err, ShouldBeNil)
 
 		err = q.Add(ctx, task, time.Second)
@@ -170,7 +182,11 @@ func TestDelay(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(l, ShouldEqual, int64(1))
 
-		<-notifyChan
+		select {
+		case <-notifyChan:
+		case <-time.After(15 * time.Second):
+			t.Fatalf("dead letter handler not fired within 15s")
+		}
 
 		l, err = q.Length(ctx)
 		So(err, ShouldBeNil)
