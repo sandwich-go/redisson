@@ -561,8 +561,16 @@ func (p *subscriptionPool) nodeKey(key string) string {
 	return ""
 }
 
-// clusterSlotKey 把 channel/pattern 转成"同 slot 同节点"的 key。
-// 实际值无所谓，只要同 slot 的 channel 算出相同的字符串即可。
+// clusterSlotKey 把 channel/pattern/stream 名转成"同 slot 同 worker/conn"的 map 索引。
+//
+// 重要：返回值仅作为 hub 内部 map[string]*xxx 的 key 使用，从不发送到 Redis。
+// 因此 ** 不要 ** 给它加 hashtag（如 "slot:{%d}"）：
+//   - hashtag `{...}` 只在 Redis server 端计算 key slot 时被识别；
+//   - 该字符串的 `%d` 已经是计算好的 slot 数值，再加 `{}` 既无效又会误导阅读。
+//
+// 至于"如何让多个 channel/stream 共用一条连接"——那要靠用户传入的 ** 真实 key **
+// 带相同 hashtag（如 "{tag}.s1"、"{tag}.s2"），这样它们的 slot 相同，
+// 自然也会算出相同的 clusterSlotKey 值。
 func clusterSlotKey(channel string) string {
 	return fmt.Sprintf("slot:%d", slot(channel))
 }
