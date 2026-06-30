@@ -6,7 +6,13 @@ import (
 )
 
 type PipelineCmdable interface {
+	// Pipeline 创建一条 pipeline. 默认 commands/rets 切片走 cap=defaultPipelineCap
+	// 预分配, 减少 hot path 多次 .Cmd() append 触发的 grow alloc.
 	Pipeline() Pipeliner
+	// PipelineWithCap 同 Pipeline, 但 caller 显式指定 cap (典型 hot path 如
+	// transfer worker per-batch 已知 N 时, 给精准 cap 完全消除 grow 开销).
+	// hint <= 0 时退化为默认 cap.
+	PipelineWithCap(hint int) Pipeliner
 }
 
 type Pipeliner interface {
@@ -37,6 +43,11 @@ func (pipelineCommand) ETC() string            { return "" }
 
 var pipelineCmd = &pipelineCommand{}
 
+// defaultPipelineCap 是 Pipeline() 默认预分配的 commands/rets cap.
+// 8 = 覆盖典型场景 (HMGet+EXPIRE / SADD+SREM+EXPIRE 一窗几个 cmd) 单次 alloc
+// 不触发 grow; 偏大会浪费 6× 业务侧 hot path 已知 N 的场景可用 PipelineWithCap.
+const defaultPipelineCap = 8
+
 type pipeline struct {
 	client   *client
 	commands []Completed
@@ -45,7 +56,20 @@ type pipeline struct {
 	mx sync.RWMutex
 }
 
-func (c *client) Pipeline() Pipeliner { return &pipeline{client: c} }
+func newPipeline(c *client, cap int) *pipeline {
+	if cap <= 0 {
+		cap = defaultPipelineCap
+	}
+	return &pipeline{
+		client:   c,
+		commands: make([]Completed, 0, cap),
+		rets:     make([]BaseCmd, 0, cap),
+	}
+}
+
+func (c *client) Pipeline() Pipeliner { return newPipeline(c, defaultPipelineCap) }
+
+func (c *client) PipelineWithCap(hint int) Pipeliner { return newPipeline(c, hint) }
 
 func (p *pipeline) builder() builder { return p.client.builder }
 func (p *pipeline) cmd(cs Completed, ret BaseCmd) {
