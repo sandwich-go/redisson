@@ -38,6 +38,246 @@ type Cmd interface {
 	BoolSlice() ([]bool, error)
 }
 
+// anyCmd 把 rueidis 原生 RedisResult 拼装为满足 Cmd 接口的具体实现。风格与
+// 周围 intCmd / boolCmd / stringCmd / floatCmd 一致（baseCmd[any] + from），
+// 转换逻辑逐条对齐 rueidiscompat/command.go 的 Cmd 实现（rueidis v1.0.75）,
+// 便于以后手动同步。使用场景:需要绕开 rueidiscompat.Adapter 走 rueidis 原生
+// c.cmd.Do 时（如 EVAL 的 Retryable 变体）,用 newAnyCmd 把结果拼回 Cmd。
+type anyCmd struct {
+	baseCmd[any]
+}
+
+func newAnyCmd(res rueidis.RedisResult) Cmd {
+	cmd := &anyCmd{}
+	cmd.from(res)
+	return cmd
+}
+
+// from 对齐 rueidiscompat.Cmd.from:res.ToAny + SetVal/SetErr,错误不区分 Redis
+// Nil（Nil 也保留为 err）,与 adapter.Eval 路径完全一致。
+func (c *anyCmd) from(res rueidis.RedisResult) {
+	val, err := res.ToAny()
+	if err != nil {
+		c.SetErr(err)
+		return
+	}
+	c.SetVal(val)
+}
+
+// 以下 15 个方法逐条对齐 rueidiscompat/command.go 的 (*Cmd).Xxx 实现。
+// 复用本包已有的 toFloat32 / toFloat64（见 util.go），其余 helper（toStringAny /
+// toInt64Any / toUint64Any / toBoolAny）就近定义在文件末尾。
+
+func (c *anyCmd) Text() (string, error) {
+	if c.err != nil {
+		return "", c.err
+	}
+	return toStringAny(c.val)
+}
+
+func (c *anyCmd) Int() (int, error) {
+	if c.err != nil {
+		return 0, c.err
+	}
+	switch v := c.val.(type) {
+	case int64:
+		return int(v), nil
+	case string:
+		return strconv.Atoi(v)
+	default:
+		return 0, fmt.Errorf("redis: unexpected type=%T for Int", v)
+	}
+}
+
+func (c *anyCmd) Int64() (int64, error) {
+	if c.err != nil {
+		return 0, c.err
+	}
+	return toInt64Any(c.val)
+}
+
+func (c *anyCmd) Uint64() (uint64, error) {
+	if c.err != nil {
+		return 0, c.err
+	}
+	return toUint64Any(c.val)
+}
+
+func (c *anyCmd) Float32() (float32, error) {
+	if c.err != nil {
+		return 0, c.err
+	}
+	return toFloat32(c.val)
+}
+
+func (c *anyCmd) Float64() (float64, error) {
+	if c.err != nil {
+		return 0, c.err
+	}
+	return toFloat64(c.val)
+}
+
+func (c *anyCmd) Bool() (bool, error) {
+	if c.err != nil {
+		return false, c.err
+	}
+	return toBoolAny(c.val)
+}
+
+func (c *anyCmd) Slice() ([]any, error) {
+	if c.err != nil {
+		return nil, c.err
+	}
+	switch v := c.val.(type) {
+	case []any:
+		return v, nil
+	default:
+		return nil, fmt.Errorf("redis: unexpected type=%T for Slice", v)
+	}
+}
+
+func (c *anyCmd) StringSlice() ([]string, error) {
+	slice, err := c.Slice()
+	if err != nil {
+		return nil, err
+	}
+	ss := make([]string, len(slice))
+	for i, iface := range slice {
+		val, err := toStringAny(iface)
+		if err != nil {
+			return nil, err
+		}
+		ss[i] = val
+	}
+	return ss, nil
+}
+
+func (c *anyCmd) Int64Slice() ([]int64, error) {
+	slice, err := c.Slice()
+	if err != nil {
+		return nil, err
+	}
+	nums := make([]int64, len(slice))
+	for i, iface := range slice {
+		val, err := toInt64Any(iface)
+		if err != nil {
+			return nil, err
+		}
+		nums[i] = val
+	}
+	return nums, nil
+}
+
+func (c *anyCmd) Uint64Slice() ([]uint64, error) {
+	slice, err := c.Slice()
+	if err != nil {
+		return nil, err
+	}
+	nums := make([]uint64, len(slice))
+	for i, iface := range slice {
+		val, err := toUint64Any(iface)
+		if err != nil {
+			return nil, err
+		}
+		nums[i] = val
+	}
+	return nums, nil
+}
+
+func (c *anyCmd) Float32Slice() ([]float32, error) {
+	slice, err := c.Slice()
+	if err != nil {
+		return nil, err
+	}
+	floats := make([]float32, len(slice))
+	for i, iface := range slice {
+		val, err := toFloat32(iface)
+		if err != nil {
+			return nil, err
+		}
+		floats[i] = val
+	}
+	return floats, nil
+}
+
+func (c *anyCmd) Float64Slice() ([]float64, error) {
+	slice, err := c.Slice()
+	if err != nil {
+		return nil, err
+	}
+	floats := make([]float64, len(slice))
+	for i, iface := range slice {
+		val, err := toFloat64(iface)
+		if err != nil {
+			return nil, err
+		}
+		floats[i] = val
+	}
+	return floats, nil
+}
+
+func (c *anyCmd) BoolSlice() ([]bool, error) {
+	slice, err := c.Slice()
+	if err != nil {
+		return nil, err
+	}
+	bools := make([]bool, len(slice))
+	for i, iface := range slice {
+		val, err := toBoolAny(iface)
+		if err != nil {
+			return nil, err
+		}
+		bools[i] = val
+	}
+	return bools, nil
+}
+
+// toStringAny / toInt64Any / toUint64Any / toBoolAny 供 anyCmd 使用。签名/语义
+// 逐条对齐 rueidiscompat/command.go 里的 toString / toInt64 / toUint64 / toBool
+// （rueidis v1.0.75）。命名加 Any 后缀避免与本包已有 toString（见 delay.go,语
+// 义为 Lua 兜底无损转 string，不同）冲突。
+func toStringAny(val any) (string, error) {
+	switch v := val.(type) {
+	case string:
+		return v, nil
+	default:
+		return "", fmt.Errorf("redis: unexpected type=%T for String", v)
+	}
+}
+
+func toInt64Any(val any) (int64, error) {
+	switch v := val.(type) {
+	case int64:
+		return v, nil
+	case string:
+		return strconv.ParseInt(v, 10, 64)
+	default:
+		return 0, fmt.Errorf("redis: unexpected type=%T for Int64", v)
+	}
+}
+
+func toUint64Any(val any) (uint64, error) {
+	switch v := val.(type) {
+	case int64:
+		return uint64(v), nil
+	case string:
+		return strconv.ParseUint(v, 10, 64)
+	default:
+		return 0, fmt.Errorf("redis: unexpected type=%T for Uint64", v)
+	}
+}
+
+func toBoolAny(val any) (bool, error) {
+	switch v := val.(type) {
+	case int64:
+		return v != 0, nil
+	case string:
+		return strconv.ParseBool(v)
+	default:
+		return false, fmt.Errorf("redis: unexpected type=%T for Bool", v)
+	}
+}
+
 type IntCmd interface {
 	BaseCmd
 	Val() int64

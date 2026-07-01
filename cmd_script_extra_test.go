@@ -70,6 +70,75 @@ func testScriptCreateWithName(ctx context.Context, c Cmdable) []string {
 	return nil
 }
 
+// testScriptRetryable 覆盖 CreateScriptRetryable：Eval/EvalRO/EvalSha/EvalShaRO/
+// Run/RunRO 六条路径均能拿到正确结果，且与非 retryable 实例 Hash 一致（EVALSHA
+// 依赖此不变式）。retryable 是否 真的 走原生+ToRetryable 分支在 cmd_script_
+// retryable_unit_test.go 里用类型断言验证；这里只覆盖 e2e 正确性。
+func testScriptRetryable(ctx context.Context, c Cmdable) []string {
+	c.ScriptFlush(ctx)
+
+	sNormal := c.CreateScript(testScript)
+	sRetry := c.CreateScriptRetryable(testScript)
+	// Hash 一致性：同一份源码在 retryable 与非 retryable 实例上必须相同,
+	// 否则 EVALSHA 会因 SHA 不匹配无声失效。
+	So(sRetry.Hash(), ShouldEqual, sNormal.Hash())
+
+	// Eval 首发（NOSCRIPT fallback 已在 rueidis 层不影响 EVAL 首发路径）
+	cmd := sRetry.Eval(ctx, nil, "eval-val")
+	So(cmd.Err(), ShouldBeNil)
+	So(cmd.Val(), ShouldEqual, "eval-val")
+
+	// EvalRO
+	cmd = sRetry.EvalRO(ctx, nil, "evalro-val")
+	So(cmd.Err(), ShouldBeNil)
+	So(cmd.Val(), ShouldEqual, "evalro-val")
+
+	// EvalSha：脚本已被上面的 Eval 缓存
+	cmd = sRetry.EvalSha(ctx, nil, "evalsha-val")
+	So(cmd.Err(), ShouldBeNil)
+	So(cmd.Val(), ShouldEqual, "evalsha-val")
+
+	// EvalShaRO
+	cmd = sRetry.EvalShaRO(ctx, nil, "evalsharo-val")
+	So(cmd.Err(), ShouldBeNil)
+	So(cmd.Val(), ShouldEqual, "evalsharo-val")
+
+	// Run：先 flush 让 EVALSHA 走 NOSCRIPT → fallback EVAL 分支
+	c.ScriptFlush(ctx)
+	cmd = sRetry.Run(ctx, nil, "run-val")
+	So(cmd.Err(), ShouldBeNil)
+	So(cmd.Val(), ShouldEqual, "run-val")
+
+	// RunRO：同理，验证 fallback 到 EVAL_RO
+	c.ScriptFlush(ctx)
+	cmd = sRetry.RunRO(ctx, nil, "runro-val")
+	So(cmd.Err(), ShouldBeNil)
+	So(cmd.Val(), ShouldEqual, "runro-val")
+
+	c.ScriptFlush(ctx)
+	return nil
+}
+
+// testScriptRetryableWithName 覆盖 CreateScriptWithNameRetryable:SetName/Hash
+// 与 CreateScriptWithName 等价 + Run 正常。
+func testScriptRetryableWithName(ctx context.Context, c Cmdable) []string {
+	c.ScriptFlush(ctx)
+
+	sNormal := c.CreateScriptWithName("named", testScript)
+	sRetry := c.CreateScriptWithNameRetryable("named", testScript)
+	So(sRetry.Hash(), ShouldEqual, sNormal.Hash())
+
+	// SetName 二次设置不应崩溃
+	sRetry.SetName("renamed")
+
+	cmd := sRetry.Run(ctx, nil, "named-ok")
+	So(cmd.Err(), ShouldBeNil)
+	So(cmd.Val(), ShouldEqual, "named-ok")
+
+	c.ScriptFlush(ctx)
+	return nil
+}
+
 // ----- Function 系列（Redis 7.0+） -----
 
 const testFunctionLib = `#!lua name=mylib
@@ -167,6 +236,8 @@ func scriptExtraTestUnits() []TestUnit {
 		{CommandEvalSha, testScriptEvalShaRO},
 		{CommandEvalSha, testScriptRunRO},
 		{CommandEval, testScriptCreateWithName},
+		{CommandEval, testScriptRetryable},
+		{CommandEval, testScriptRetryableWithName},
 		{CommandFunctionLoad, testFunctionLifecycle},
 		{CommandFunctionDump, testFunctionDumpRestore},
 		{CommandFunctionKill, testFunctionKill},

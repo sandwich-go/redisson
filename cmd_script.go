@@ -75,6 +75,14 @@ type ScriptCmdable interface {
 	CreateScript(src string) Scripter
 	CreateScriptWithName(name, src string) Scripter
 
+	// CreateScriptRetryable 创建一个 retryable 版本的 Scripter。语义对齐
+	// rueidis.NewLuaScriptRetryable：整个实例的 Eval / EvalRO / EvalSha /
+	// EvalShaRO / Run / RunRO 所有调用都会走 rueidis 原生路径并把 Completed
+	// 标为 Retryable，让 rueidis 在网络类错误上自动重试。
+	// 调用方必须自行保证脚本幂等；不幂等的脚本会因重试产生副作用。
+	CreateScriptRetryable(src string) Scripter
+	CreateScriptWithNameRetryable(name, src string) Scripter
+
 	// Eval
 	// Available since: 2.6.0
 	// Time complexity: Depends on the script that is executed.
@@ -221,32 +229,63 @@ func (c *client) CreateScriptWithName(name, src string) Scripter {
 	s.SetName(name)
 	return s
 }
-func (c *client) CreateScript(src string) Scripter { return newScript(c, src) }
+func (c *client) CreateScript(src string) Scripter { return newScript(c, src, false) }
 
-func (c *client) eval(ctx context.Context, name, script string, keys []string, args ...any) Cmd {
+func (c *client) CreateScriptWithNameRetryable(name, src string) Scripter {
+	s := c.CreateScriptRetryable(src)
+	s.SetName(name)
+	return s
+}
+func (c *client) CreateScriptRetryable(src string) Scripter { return newScript(c, src, true) }
+
+// eval 执行 EVAL。retryable=true 时绕开 adapter，走 rueidis 原生 c.cmd 并把
+// Completed 标为 Retryable，让 rueidis 在网络类错误上自动重试；调用方需自行
+// 保证脚本幂等（对齐 rueidis.NewLuaScriptNoShaRetryable 的语义）。
+// retryable=false 保持既有 adapter 路径不变。
+func (c *client) eval(ctx context.Context, name, script string, keys []string, retryable bool, args ...any) Cmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandEval, func() []string { return keys })
-	r := c.adapter.Eval(ctx, script, keys, args...)
+	var r Cmd
+	if retryable {
+		r = newAnyCmd(c.Do(ctx, c.builder.EvalCompleted(script, keys, args...).ToRetryable()))
+	} else {
+		r = c.adapter.Eval(ctx, script, keys, args...)
+	}
 	c.handler.after(WithSubCommandName(ctx, name), r.Err())
 	return r
 }
 
-func (c *client) evalRO(ctx context.Context, name, script string, keys []string, args ...any) Cmd {
+func (c *client) evalRO(ctx context.Context, name, script string, keys []string, retryable bool, args ...any) Cmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandEvalRO, func() []string { return keys })
-	r := c.adapter.EvalRO(ctx, script, keys, args...)
+	var r Cmd
+	if retryable {
+		r = newAnyCmd(c.Do(ctx, c.builder.EvalROCompleted(script, keys, args...).ToRetryable()))
+	} else {
+		r = c.adapter.EvalRO(ctx, script, keys, args...)
+	}
 	c.handler.after(WithSubCommandName(ctx, name), r.Err())
 	return r
 }
 
-func (c *client) evalSha(ctx context.Context, name, sha1 string, keys []string, args ...any) Cmd {
+func (c *client) evalSha(ctx context.Context, name, sha1 string, keys []string, retryable bool, args ...any) Cmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandEvalSha, func() []string { return keys })
-	r := c.adapter.EvalSha(ctx, sha1, keys, args...)
+	var r Cmd
+	if retryable {
+		r = newAnyCmd(c.Do(ctx, c.builder.EvalShaCompleted(sha1, keys, args...).ToRetryable()))
+	} else {
+		r = c.adapter.EvalSha(ctx, sha1, keys, args...)
+	}
 	c.handler.after(WithSubCommandName(ctx, name), r.Err())
 	return r
 }
 
-func (c *client) evalShaRO(ctx context.Context, name, sha1 string, keys []string, args ...any) Cmd {
+func (c *client) evalShaRO(ctx context.Context, name, sha1 string, keys []string, retryable bool, args ...any) Cmd {
 	ctx = c.handler.beforeWithKeys(ctx, CommandEvalShaRO, func() []string { return keys })
-	r := c.adapter.EvalShaRO(ctx, sha1, keys, args...)
+	var r Cmd
+	if retryable {
+		r = newAnyCmd(c.Do(ctx, c.builder.EvalShaROCompleted(sha1, keys, args...).ToRetryable()))
+	} else {
+		r = c.adapter.EvalShaRO(ctx, sha1, keys, args...)
+	}
 	c.handler.after(WithSubCommandName(ctx, name), r.Err())
 	return r
 }
@@ -357,19 +396,19 @@ func (c *client) scriptLoad(ctx context.Context, name, script string) StringCmd 
 }
 
 func (c *client) Eval(ctx context.Context, script string, keys []string, args ...any) Cmd {
-	return c.eval(ctx, "", script, keys, args...)
+	return c.eval(ctx, "", script, keys, false, args...)
 }
 
 func (c *client) EvalRO(ctx context.Context, script string, keys []string, args ...any) Cmd {
-	return c.evalRO(ctx, "", script, keys, args...)
+	return c.evalRO(ctx, "", script, keys, false, args...)
 }
 
 func (c *client) EvalSha(ctx context.Context, sha1 string, keys []string, args ...any) Cmd {
-	return c.evalSha(ctx, "", sha1, keys, args...)
+	return c.evalSha(ctx, "", sha1, keys, false, args...)
 }
 
 func (c *client) EvalShaRO(ctx context.Context, sha1 string, keys []string, args ...any) Cmd {
-	return c.evalShaRO(ctx, "", sha1, keys, args...)
+	return c.evalShaRO(ctx, "", sha1, keys, false, args...)
 }
 
 func (c *client) FCall(ctx context.Context, function string, keys []string, args ...any) Cmd {
@@ -420,15 +459,20 @@ type script struct {
 	*client
 	name      string
 	src, hash string
+	// retryable 由 CreateScriptRetryable / CreateScriptWithNameRetryable 置 true,
+	// 让本 script 实例的 Eval / EvalRO / EvalSha / EvalShaRO / Run / RunRO 全部
+	// 走 rueidis 原生 + ToRetryable 路径。语义对齐 rueidis.NewLuaScriptRetryable。
+	retryable bool
 }
 
-func newScript(c *client, src string) Scripter {
+func newScript(c *client, src string, retryable bool) Scripter {
 	h := sha1.New()
 	_, _ = io.WriteString(h, src)
 	return &script{
-		client: c,
-		src:    src,
-		hash:   hex.EncodeToString(h.Sum(nil)),
+		client:    c,
+		src:       src,
+		hash:      hex.EncodeToString(h.Sum(nil)),
+		retryable: retryable,
 	}
 }
 
@@ -437,31 +481,31 @@ func (s *script) Hash() string                            { return s.hash }
 func (s *script) Load(ctx context.Context) StringCmd      { return s.scriptLoad(ctx, s.name, s.src) }
 func (s *script) Exists(ctx context.Context) BoolSliceCmd { return s.scriptExists(ctx, s.hash) }
 func (s *script) Eval(ctx context.Context, keys []string, args ...any) Cmd {
-	return s.eval(ctx, s.name, s.src, keys, args...)
+	return s.eval(ctx, s.name, s.src, keys, s.retryable, args...)
 }
 func (s *script) EvalRO(ctx context.Context, keys []string, args ...any) Cmd {
-	return s.evalRO(ctx, s.name, s.src, keys, args...)
+	return s.evalRO(ctx, s.name, s.src, keys, s.retryable, args...)
 }
 
 func (s *script) EvalSha(ctx context.Context, keys []string, args ...any) Cmd {
-	return s.evalSha(ctx, s.name, s.hash, keys, args...)
+	return s.evalSha(ctx, s.name, s.hash, keys, s.retryable, args...)
 }
 func (s *script) EvalShaRO(ctx context.Context, keys []string, args ...any) Cmd {
-	return s.evalShaRO(ctx, s.name, s.hash, keys, args...)
+	return s.evalShaRO(ctx, s.name, s.hash, keys, s.retryable, args...)
 }
 
 func (s *script) Run(ctx context.Context, keys []string, args ...any) Cmd {
-	r := s.evalSha(ctx, s.name, s.hash, keys, args...)
+	r := s.evalSha(ctx, s.name, s.hash, keys, s.retryable, args...)
 	if isNoScriptError(r.Err()) {
-		return s.eval(ctx, s.name, s.src, keys, args...)
+		return s.eval(ctx, s.name, s.src, keys, s.retryable, args...)
 	}
 	return r
 }
 
 func (s *script) RunRO(ctx context.Context, keys []string, args ...any) Cmd {
-	r := s.evalShaRO(ctx, s.name, s.hash, keys, args...)
+	r := s.evalShaRO(ctx, s.name, s.hash, keys, s.retryable, args...)
 	if isNoScriptError(r.Err()) {
-		return s.evalRO(ctx, s.name, s.src, keys, args...)
+		return s.evalRO(ctx, s.name, s.src, keys, s.retryable, args...)
 	}
 	return r
 }
