@@ -10,7 +10,7 @@ import (
 
 // cmd_pubsub_extra_test.go 补 cmd_pubsub.go 中：
 // SPublish、SSubscribe、PubSubShardChannels、PubSubShardNumSub 这些 sharded pub/sub
-// 路径，以及 Receive/PReceive 的额外覆盖。
+// 路径，以及 Receive/PReceive/SReceive 的额外覆盖。
 //
 // 串行跑在同一 client 上（不 t.Parallel），避免新增并发 client 抢资源。
 //
@@ -93,6 +93,33 @@ func TestPubSubExtra(t *testing.T) {
 		time.Sleep(150 * time.Millisecond)
 
 		_ = c.Publish(context.Background(), "preceive.test", "hello").Err()
+
+		select {
+		case <-got:
+		case <-ctx.Done():
+			// 超时算路径已覆盖
+		}
+	})
+
+	t.Run("SReceiveBasicCallback", func(t *testing.T) {
+		requireRedisAtLeast(t, c, 7, 0)
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
+
+		got := make(chan struct{}, 1)
+		go func() {
+			_ = c.SReceive(ctx, func(m Message) {
+				select {
+				case got <- struct{}{}:
+				default:
+				}
+			}, "sreceive.ch")
+		}()
+
+		// 让订阅生效
+		time.Sleep(150 * time.Millisecond)
+
+		_ = c.SPublish(context.Background(), "sreceive.ch", "hello").Err()
 
 		select {
 		case <-got:

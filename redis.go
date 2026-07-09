@@ -20,6 +20,7 @@ type XCmdable interface {
 	ForEachNodes(context.Context, func(context.Context, Cmdable) error) error
 	Receive(ctx context.Context, cb func(Message), channels ...string) error
 	PReceive(ctx context.Context, cb func(Message), patterns ...string) error
+	SReceive(ctx context.Context, cb func(Message), channels ...string) error
 	Do(ctx context.Context, completed Completed) RedisResult
 	Version() *semver.Version
 	// NewVirtualPubSubHub 创建一个进程级 PubSub 多路复用 Hub。详见 cmd_pubsub_virtual.go 文档注释。

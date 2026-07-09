@@ -253,6 +253,12 @@ func (c *client) PReceive(ctx context.Context, cb func(Message), patterns ...str
 	})
 }
 
+func (c *client) SReceive(ctx context.Context, cb func(Message), channels ...string) error {
+	return c.cmd.Receive(ctx, c.cmd.B().Ssubscribe().Channel(channels...).Build(), func(msg rueidis.PubSubMessage) {
+		cb(msg)
+	})
+}
+
 type pubSub struct {
 	client  *client
 	msgCh   *unboundedChan[Message]
