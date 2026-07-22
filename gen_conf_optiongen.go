@@ -25,6 +25,7 @@ type Conf struct {
 	EnableCache       bool          `xconf:"enable_cache" usage:"是否开启客户端缓存"`
 	CacheSizeEachConn int           `xconf:"cache_size_each_conn" usage:"开启客户端缓存时，单个连接缓存大小，默认128 MiB"`
 	RingScaleEachConn int           `xconf:"ring_scale_each_conn" usage:"单个连接ring buffer大小，默认2 ^ RingScaleEachConn, RingScaleEachConn默认情况下为10"`
+	PipelineMultiplex int           `xconf:"pipeline_multiplex" usage:"每个Redis节点的pipeline连接数指数，连接数为2 ^ PipelineMultiplex，0沿用rueidis默认值"`
 	Development       bool          `xconf:"development" usage:"是否为开发模式，开发模式下，使用部分接口会有警告日志输出，会校验多key是否为同一hash槽，会校验部分接口是否满足版本要求"`
 	T                 Tester        `xconf:"t" usage:"如果设置该值，则启动mock"`
 	ForceSingleClient bool          `xconf:"force_single_client" usage:"ForceSingleClient force the usage of a single client connection, without letting the lib guessing"`
@@ -203,6 +204,15 @@ func WithRingScaleEachConn(v int) ConfOptionFunc {
 	}
 }
 
+// WithPipelineMultiplex 每个Redis节点的pipeline连接数指数，连接数为2 ^ PipelineMultiplex，0沿用rueidis默认值
+func WithPipelineMultiplex(v int) ConfOptionFunc {
+	return func(cc *Conf) ConfOptionFunc {
+		previous := cc.PipelineMultiplex
+		cc.PipelineMultiplex = v
+		return WithPipelineMultiplex(previous)
+	}
+}
+
 // WithDevelopment 是否为开发模式，开发模式下，使用部分接口会有警告日志输出，会校验多key是否为同一hash槽，会校验部分接口是否满足版本要求
 func WithDevelopment(v bool) ConfOptionFunc {
 	return func(cc *Conf) ConfOptionFunc {
@@ -262,6 +272,7 @@ func setConfDefaultValue(cc *Conf) {
 		WithEnableCache(true),
 		WithCacheSizeEachConn(0),
 		WithRingScaleEachConn(0),
+		WithPipelineMultiplex(2),
 		WithDevelopment(true),
 		WithT(nil),
 		WithForceSingleClient(false),
@@ -330,6 +341,7 @@ func (cc *Conf) GetConnPoolSize() int           { return cc.ConnPoolSize }
 func (cc *Conf) GetEnableCache() bool           { return cc.EnableCache }
 func (cc *Conf) GetCacheSizeEachConn() int      { return cc.CacheSizeEachConn }
 func (cc *Conf) GetRingScaleEachConn() int      { return cc.RingScaleEachConn }
+func (cc *Conf) GetPipelineMultiplex() int      { return cc.PipelineMultiplex }
 func (cc *Conf) GetDevelopment() bool           { return cc.Development }
 func (cc *Conf) GetT() Tester                   { return cc.T }
 func (cc *Conf) GetForceSingleClient() bool     { return cc.ForceSingleClient }
@@ -351,6 +363,7 @@ type ConfVisitor interface {
 	GetEnableCache() bool
 	GetCacheSizeEachConn() int
 	GetRingScaleEachConn() int
+	GetPipelineMultiplex() int
 	GetDevelopment() bool
 	GetT() Tester
 	GetForceSingleClient() bool

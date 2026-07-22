@@ -81,6 +81,7 @@ func confVisitor2ClientOption(v ConfVisitor) rueidis.ClientOption {
 		SelectDB:          v.GetDB(),
 		CacheSizeEachConn: v.GetCacheSizeEachConn(),
 		RingScaleEachConn: v.GetRingScaleEachConn(),
+		PipelineMultiplex: v.GetPipelineMultiplex(),
 		BlockingPoolSize:  v.GetConnPoolSize(),
 		ConnWriteTimeout:  v.GetWriteTimeout(),
 		DisableCache:      !v.GetEnableCache(),
