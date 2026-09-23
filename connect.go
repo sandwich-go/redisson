@@ -132,7 +132,7 @@ var reconnectErrors = []func(*client, string) bool{
 		return false
 	},
 	func(c *client, errString string) bool {
-		if !c.v.GetAlwaysRESP2() && strings.Contains(errString, "elements in cluster info address, expected 2 or 3") || strings.Contains(errString, "unsupported command `hello`") {
+		if !c.v.GetAlwaysRESP2() && (strings.Contains(errString, "elements in cluster info address, expected 2 or 3") || isHelloCommandError(errString)) {
 			c.v.ApplyOption(WithAlwaysRESP2(true))
 			return true
 		}
@@ -147,6 +147,12 @@ var reconnectErrors = []func(*client, string) bool{
 	},
 }
 
+func isHelloCommandError(errString string) bool {
+	errString = strings.ToLower(errString)
+	return strings.Contains(errString, "hello") &&
+		(strings.Contains(errString, "unknown command") || strings.Contains(errString, "unsupported command"))
+}
+
 func (c *client) reconnectWhenError(err error) error {
 	if err == nil {
 		return nil
@@ -156,7 +162,15 @@ func (c *client) reconnectWhenError(err error) error {
 		if ok := f(c, errString); ok {
 			warning(fmt.Sprintf("%s, reconnect...", errString))
 			_ = c.Close()
-			return c.connect()
+			if err = c.connect(); err != nil {
+				return err
+			}
+			if isHelloCommandError(errString) {
+				if err = c.Ping(context.Background()).Err(); err != nil {
+					_ = c.Close()
+				}
+			}
+			return err
 		}
 	}
 	return err
