@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/redis/rueidis"
 )
@@ -31,6 +33,8 @@ type PubSub interface {
 	// Available since: 7.0.0
 	// Time complexity: O(N) where N is the number of shard channels to subscribe to.
 	// ACL categories: @pubsub @slow
+	// Active channels are automatically resubscribed after slot migration.
+	// Messages published during resubscription are not replayed.
 	SSubscribe(ctx context.Context, channels ...string) error
 
 	// SUnsubscribe
@@ -267,11 +271,22 @@ type pubSub struct {
 	ctx    context.Context
 	closed AtomicInt32
 	cancel context.CancelFunc
+
+	shardMu sync.Mutex
+	shards  map[string]*shardSubscription
+}
+
+type shardSubscription struct {
+	ctx    context.Context
+	cancel context.CancelFunc
+	done   chan struct{}
+	err    error // Cleanup result, read only after done is closed.
 }
 
 func newPubSub(ctx context.Context, client *client, handler handler) PubSub {
-	p := &pubSub{client: client, msgCh: newUnboundedChan[Message](ctx, client.v.GetPubSubChanSize()), handler: handler}
+	p := &pubSub{client: client, handler: handler}
 	p.ctx, p.cancel = context.WithCancel(ctx)
+	p.msgCh = newUnboundedChan[Message](p.ctx, client.v.GetPubSubChanSize())
 	return p
 }
 
@@ -283,7 +298,8 @@ func (p *pubSub) Close() error {
 	return nil
 }
 
-// 订阅类方法的 err 永远是同步路径上的 nil：rueidis.Receive 是阻塞调用，
+// Subscribe/PSubscribe 的 err 永远是同步路径上的 nil；SSubscribe 还会检查取消状态。
+// rueidis.Receive 是阻塞调用，
 // 必须放到独立 goroutine 后台跑；调用方拿到的 err 仅反映"启动是否成功"，
 // 真正的接收错误通过日志输出。
 //
@@ -337,22 +353,121 @@ func (p *pubSub) Subscribe(ctx context.Context, channels ...string) error {
 
 func (p *pubSub) SSubscribe(ctx context.Context, channels ...string) error {
 	ctx = p.handler.before(ctx, CommandSSubscribe)
-	go func() {
-		err := p.client.cmd.Receive(p.ctx, p.client.cmd.B().Ssubscribe().Channel(channels...).Build(), func(m rueidis.PubSubMessage) {
-			p.forwardMessage("ssubscribe", channels, m)
+	err := p.sSubscribe(ctx, channels)
+	p.handler.after(ctx, err)
+	return err
+}
+
+func (p *pubSub) sSubscribe(ctx context.Context, channels []string) error {
+	p.shardMu.Lock()
+	defer p.shardMu.Unlock()
+	if err := p.ctx.Err(); err != nil {
+		return err
+	}
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	if p.shards == nil {
+		p.shards = make(map[string]*shardSubscription)
+	}
+	for _, channel := range channels {
+		if prev := p.shards[channel]; prev != nil {
+			if prev.ctx.Err() == nil {
+				select {
+				case <-prev.done:
+				default:
+					continue // Already subscribed.
+				}
+			}
+			// A previous unsubscribe must finish before subscribing again.
+			select {
+			case <-prev.done:
+			case <-ctx.Done():
+				return ctx.Err()
+			case <-p.ctx.Done():
+				return p.ctx.Err()
+			}
+		}
+		subCtx, cancel := context.WithCancel(p.ctx)
+		sub := &shardSubscription{ctx: subCtx, cancel: cancel, done: make(chan struct{})}
+		p.shards[channel] = sub
+		go p.receiveShard(p.client.cmd, channel, sub)
+	}
+	return nil
+}
+
+func (p *pubSub) receiveShard(cmd rueidis.Client, channel string, sub *shardSubscription) {
+	defer close(sub.done)
+	defer sub.cancel()
+	defer func() {
+		// Canceling Receive removes the local listener, not the server subscription.
+		ctx, cancel := context.WithTimeout(context.Background(), p.client.v.GetWriteTimeout())
+		defer cancel()
+		sub.err = cmd.Do(ctx, cmd.B().Sunsubscribe().Channel(channel).Build()).Error()
+	}()
+	for sub.ctx.Err() == nil {
+		// Receive's command is recycled on success; rebuild it on every attempt.
+		err := cmd.Receive(sub.ctx, cmd.B().Ssubscribe().Channel(channel).Build(), func(m rueidis.PubSubMessage) {
+			select {
+			case p.msgCh.In <- m:
+			case <-sub.ctx.Done():
+			}
 		})
 		if err != nil {
-			e(fmt.Sprintf("ssubscribe failed, channels: %s, err: %s", strings.Join(channels, ", "), err.Error()))
+			if sub.ctx.Err() == nil && err != rueidis.ErrClosing {
+				e(fmt.Sprintf("ssubscribe failed, channel: %s, err: %s", channel, err))
+			}
+			return
 		}
-	}()
-	p.handler.after(ctx, nil)
-	return nil
+		// A slot migration sends SUNSUBSCRIBE without closing the connection.
+		// Retry through the cluster client so MOVED refreshes the destination.
+		timer := time.NewTimer(50 * time.Millisecond)
+		select {
+		case <-sub.ctx.Done():
+			timer.Stop()
+			return
+		case <-timer.C:
+		}
+	}
 }
 
 func (p *pubSub) SUnsubscribe(ctx context.Context, channels ...string) error {
 	ctx = p.handler.before(ctx, CommandSUnsubscribe)
-	err := p.client.cmd.Do(ctx, p.client.cmd.B().Sunsubscribe().Channel(channels...).Build()).Error()
+	err := p.sUnsubscribe(ctx, channels)
 	p.handler.after(ctx, err)
+	return err
+}
+
+func (p *pubSub) sUnsubscribe(ctx context.Context, channels []string) error {
+	p.shardMu.Lock()
+	defer p.shardMu.Unlock()
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	if len(channels) == 0 {
+		for channel := range p.shards {
+			channels = append(channels, channel)
+		}
+	}
+	for _, channel := range channels {
+		if sub := p.shards[channel]; sub != nil {
+			sub.cancel()
+		}
+	}
+	var err error
+	for _, channel := range channels {
+		if sub := p.shards[channel]; sub != nil {
+			select {
+			case <-sub.done:
+				if err == nil {
+					err = sub.err
+				}
+				delete(p.shards, channel)
+			case <-ctx.Done():
+				return ctx.Err()
+			}
+		}
+	}
 	return err
 }
 
