@@ -17,9 +17,10 @@ A Type-safe Golang Redis RESP2/RESP3 client.
 
 ## Requirement
 
-* Golang >= 1.18
+* Golang >= 1.25
 
-If you can't upgrade Golang to 1.18, install redisson/version/0.1.
+The root rueidis dependency is pinned to v1.0.76 for receive-return hooks.
+The compat, limiter and prob modules remain at v1.0.71.
 
 ## Base Library
 using [redis/rueidis](https://github.com/redis/rueidis) library
@@ -53,6 +54,38 @@ func main() {
 	_ = c.Get(ctx, "key").Val()
 }
 ```
+
+## Pub/Sub monitoring
+
+All PubSub calls go through `pubSubMonitor`. The default uses the original buffered
+queue and performs no collection or hook installation. `WithPubSubMonitoring`
+explicitly enables the existing observation implementation for that PubSub.
+`DefaultPubSubMonitorOptions` provides `z.MonoOffset()` and no-op callbacks;
+individual fields can be overridden. Callbacks must return quickly.
+
+Use the optional `PubSubObserver.PubSubStats` interface for queue and subscription
+snapshots. `Enabled=false` means readings were not collected. Existing queue
+implementations and buffering stay unchanged, and no extra Redis client or
+connection is created. `PubSubChanSize` still controls the default queue buffers.
+ACKs do not establish cache readiness or repair missing notifications. Existing
+rueidis context hooks and their return values are preserved. `ReceiveReturns`
+includes internal retries; `Retries` counts the shard worker's explicit retries.
+Isolated disconnect tests verify automatic RESP3 resubscription. RESP2 disconnects
+clear observed ACKs, but automatic recovery with the current dependency has not
+passed validation and remains a separate recovery acceptance item.
+
+## Tests
+
+Integration tests require `redis-server` on `PATH`. `TestMain` starts an owned Redis
+with TCP disabled, a private Unix socket, and persistence disabled. Default test
+clients connect to that socket; tests configured with `WithT` use miniredis.
+
+```sh
+go test ./...
+```
+
+The suite must not use an existing Redis instance: some integration tests clear
+the test database.
 
 ## Check
 Check only in development mode.

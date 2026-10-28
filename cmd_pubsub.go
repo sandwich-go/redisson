@@ -259,7 +259,6 @@ func (c *client) PReceive(ctx context.Context, cb func(Message), patterns ...str
 
 type pubSub struct {
 	client  *client
-	msgCh   *unboundedChan[Message]
 	handler handler
 
 	ctx    context.Context
@@ -268,6 +267,7 @@ type pubSub struct {
 
 	shardMu sync.Mutex
 	shards  map[string]*shardSubscription
+	monitor *pubSubMonitor
 }
 
 type shardSubscription struct {
@@ -280,7 +280,7 @@ type shardSubscription struct {
 func newPubSub(ctx context.Context, client *client, handler handler) PubSub {
 	p := &pubSub{client: client, handler: handler}
 	p.ctx, p.cancel = context.WithCancel(ctx)
-	p.msgCh = newUnboundedChan[Message](p.ctx, client.v.GetPubSubChanSize())
+	p.monitor = newPubSubMonitor(p.ctx, client.v.GetPubSubChanSize())
 	return p
 }
 
@@ -294,17 +294,17 @@ func (p *pubSub) Close() error {
 
 func (p *pubSub) PSubscribe(ctx context.Context, patterns ...string) error {
 	ctx = p.handler.before(ctx, CommandPSubscribe)
+	cmd := p.client.cmd
 	go func() {
-		err := p.client.cmd.Receive(p.ctx, p.client.cmd.B().Psubscribe().Pattern(patterns...).Build(), func(m rueidis.PubSubMessage) {
+		receiveCtx, finish := p.monitor.observeReceiver(p.ctx, "psubscribe", patterns)
+		err := cmd.Receive(receiveCtx, cmd.B().Psubscribe().Pattern(patterns...).Build(), func(m rueidis.PubSubMessage) {
 			if !p.isClosed() {
-				select {
-				case p.msgCh.In <- m:
-				case <-p.ctx.Done():
-				}
+				p.monitor.onMessage(p.ctx, m)
 			} else {
 				warning(fmt.Sprintf("psubscribe, channel closed, patterns: %s,", strings.Join(patterns, " ")))
 			}
 		})
+		finish(err)
 		if err != nil {
 			e(fmt.Sprintf("psubscribe failed, patterns: %s, err: %s", strings.Join(patterns, ", "), err.Error()))
 		}
@@ -315,17 +315,17 @@ func (p *pubSub) PSubscribe(ctx context.Context, patterns ...string) error {
 
 func (p *pubSub) Subscribe(ctx context.Context, channels ...string) error {
 	ctx = p.handler.before(ctx, CommandSubscribe)
+	cmd := p.client.cmd
 	go func() {
-		err := p.client.cmd.Receive(p.ctx, p.client.cmd.B().Subscribe().Channel(channels...).Build(), func(m rueidis.PubSubMessage) {
+		receiveCtx, finish := p.monitor.observeReceiver(p.ctx, "subscribe", channels)
+		err := cmd.Receive(receiveCtx, cmd.B().Subscribe().Channel(channels...).Build(), func(m rueidis.PubSubMessage) {
 			if !p.isClosed() {
-				select {
-				case p.msgCh.In <- m:
-				case <-p.ctx.Done():
-				}
+				p.monitor.onMessage(p.ctx, m)
 			} else {
 				warning(fmt.Sprintf("subscribe, channel closed, channels: %s,", strings.Join(channels, " ")))
 			}
 		})
+		finish(err)
 		if err != nil {
 			e(fmt.Sprintf("subscribe failed, channels: %s, err: %s", strings.Join(channels, ", "), err.Error()))
 		}
@@ -388,19 +388,23 @@ func (p *pubSub) receiveShard(cmd rueidis.Client, channel string, sub *shardSubs
 		defer cancel()
 		sub.err = cmd.Do(ctx, cmd.B().Sunsubscribe().Channel(channel).Build()).Error()
 	}()
+	receiveCtx, finish := p.monitor.observeReceiver(sub.ctx, "ssubscribe", []string{channel})
+	var receiveError error
+	defer func() { finish(receiveError) }()
 	for sub.ctx.Err() == nil {
 		// Receive's command is recycled on success; rebuild it on every attempt.
-		err := cmd.Receive(sub.ctx, cmd.B().Ssubscribe().Channel(channel).Build(), func(m rueidis.PubSubMessage) {
-			select {
-			case p.msgCh.In <- m:
-			case <-sub.ctx.Done():
-			}
+		err := cmd.Receive(receiveCtx, cmd.B().Ssubscribe().Channel(channel).Build(), func(m rueidis.PubSubMessage) {
+			p.monitor.onMessage(sub.ctx, m)
 		})
+		receiveError = err
 		if err != nil {
 			if sub.ctx.Err() == nil && err != rueidis.ErrClosing {
 				e(fmt.Sprintf("ssubscribe failed, channel: %s, err: %s", channel, err))
 			}
 			return
+		}
+		if sub.ctx.Err() == nil {
+			p.monitor.observeRetry("ssubscribe", channel)
 		}
 		// A slot migration sends SUNSUBSCRIBE without closing the connection.
 		// Retry through the cluster client so MOVED refreshes the destination.
@@ -469,5 +473,5 @@ func (p *pubSub) PUnsubscribe(ctx context.Context, patterns ...string) error {
 }
 
 func (p *pubSub) Channel() <-chan Message {
-	return p.msgCh.Out
+	return p.monitor.channel()
 }

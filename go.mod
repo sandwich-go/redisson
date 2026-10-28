@@ -1,18 +1,19 @@
 module github.com/sandwich-go/redisson
 
-go 1.24.9
+go 1.25.0
 
 require (
 	github.com/alicebob/miniredis/v2 v2.30.5
 	github.com/coreos/go-semver v0.3.1
 	github.com/modern-go/reflect2 v1.0.2
 	github.com/prometheus/client_golang v1.14.0
-	github.com/redis/rueidis v1.0.71
+	github.com/redis/rueidis v1.0.76
 	github.com/redis/rueidis/rueidiscompat v1.0.71
 	github.com/redis/rueidis/rueidislimiter v1.0.71
 	github.com/redis/rueidis/rueidisprob v1.0.71
+	github.com/sandwich-go/boost v1.3.117
 	github.com/smartystreets/goconvey v1.7.2
-	golang.org/x/net v0.48.0
+	golang.org/x/net v0.53.0
 )
 
 require (
@@ -29,6 +30,6 @@ require (
 	github.com/smartystreets/assertions v1.2.0 // indirect
 	github.com/twmb/murmur3 v1.1.8 // indirect
 	github.com/yuin/gopher-lua v1.1.0 // indirect
-	golang.org/x/sys v0.39.0 // indirect
-	google.golang.org/protobuf v1.34.2 // indirect
+	golang.org/x/sys v0.43.0 // indirect
+	google.golang.org/protobuf v1.36.11 // indirect
 )

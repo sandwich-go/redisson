@@ -17,9 +17,10 @@
 
 ## 要求
 
-* Golang >= 1.18
+* Golang >= 1.25
 
-如果不能升级`Golang`至`1.18`，请使用`redisson/version/0.1`版本。
+rueidis 主模块固定为 v1.0.76，以提供接收退出事件；
+compat、limiter、prob 子模块维持 v1.0.71。
 
 ## 基础库
 使用 [redis/rueidis](https://github.com/redis/rueidis)
@@ -53,6 +54,33 @@ func main() {
 	_ = c.Get(ctx, "key").Val()
 }
 ```
+
+## Pub/Sub 观测
+
+所有 PubSub 调用统一由 `pubSubMonitor` 封装。默认使用原有带缓冲队列，
+不采集统计，也不安装观测 Hook。通过 `WithPubSubMonitoring` 显式启用该订阅的既有观测实现。
+`DefaultPubSubMonitorOptions` 提供 `z.MonoOffset()` 和空回调，各字段可按需覆盖。
+回调必须快速返回。
+
+通过可选接口 `PubSubObserver.PubSubStats` 读取队列和订阅快照；`Enabled=false`
+表示没有采集读数。既有队列实现和缓冲机制保持不变，不新增 Redis Client 或连接，
+`PubSubChanSize` 继续控制默认队列的缓冲大小。
+ACK 不表示缓存已校正，也不会自动修复漏通知。已有 rueidis context Hook 及其返回值会保留。
+`ReceiveReturns` 包含内部重试期间的退出，`Retries` 仅统计分片接收 worker 显式发起的重试。
+隔离断线测试确认 RESP3 可自动重订阅；RESP2 断开后能观测到 ACK 清零，
+但当前依赖的自动恢复未通过验证，须在恢复功能验收中单独解决。
+
+## 测试
+
+集成测试需要 `PATH` 中存在 `redis-server`。`TestMain` 会启动测试独享的 Redis，
+关闭 TCP 和持久化，只使用临时目录中的私有 Unix socket。默认测试客户端连接该实例；
+配置 `WithT` 的测试使用 miniredis。
+
+```sh
+go test ./...
+```
+
+部分集成测试会清库，测试不得连接已有的 Redis 实例。
 
 ## 检查
 仅在development模式下才会检查
