@@ -132,20 +132,20 @@ func (r *ringBuffer[T]) Reset() {
 // In is used to write without blocking, which supports multiple writers.
 // and Out is used to read, which supports multiple readers.
 // You can close the in channel if you want.
-type unboundedChan[T any] struct {
+type unboundedChan[T, Out any] struct {
 	bufCount int64
 	In       chan<- T       // channel for write
-	Out      <-chan T       // channel for read
+	Out      <-chan Out     // channel for read
 	buffer   *ringBuffer[T] // buffer
 }
 
 // Len 所有待读取的数据的长度
-func (c unboundedChan[T]) Len() int {
+func (c *unboundedChan[T, Out]) Len() int {
 	return len(c.In) + c.BufLen() + len(c.Out)
 }
 
 // BufLen 获取缓存中的数据的长度，不包含外发Out channel中数据的长度
-func (c unboundedChan[T]) BufLen() int {
+func (c *unboundedChan[T, Out]) BufLen() int {
 	return int(atomic.LoadInt64(&c.bufCount))
 }
 
@@ -153,33 +153,52 @@ func (c unboundedChan[T]) BufLen() int {
 // in is used to write without blocking, which supports multiple writers.
 // and out is used to read, which supports multiple readers.
 // You can close the in channel if you want.
-func newUnboundedChan[T any](ctx context.Context, initCapacity int) *unboundedChan[T] {
+func newUnboundedChan[T any](ctx context.Context, initCapacity int) *unboundedChan[T, T] {
 	return newUnboundedChanSize[T](ctx, initCapacity, initCapacity, initCapacity)
 }
 
 // newUnboundedChanSize is like newUnboundedChan but you can set initial capacity for In, Out, Buffer.
-func newUnboundedChanSize[T any](ctx context.Context, initInCapacity, initOutCapacity, initBufCapacity int) *unboundedChan[T] {
-	in := make(chan T, initInCapacity)
-	out := make(chan T, initOutCapacity)
-	ch := unboundedChan[T]{In: in, Out: out, buffer: newRingBuffer[T](initBufCapacity)}
-
-	go process(ctx, in, out, &ch)
-
-	return &ch
+func newUnboundedChanSize[T any](ctx context.Context, initInCapacity, initOutCapacity, initBufCapacity int) *unboundedChan[T, T] {
+	return newUnboundedChanMapped(ctx, initInCapacity, initOutCapacity, initBufCapacity, func(value T) T { return value }, nil)
 }
 
-func process[T any](ctx context.Context, in, out chan T, ch *unboundedChan[T]) {
-	defer close(out)
+// 可选观测在原有转发 goroutine 内执行，不增加队列或转发 goroutine。
+type unboundedChanHooks[T any] struct {
+	onBuffer func(T)
+	onWrite  func(T, *ringBuffer[T])
+	onClose  func(int)
+}
+
+// 入队元素可携带本机观测信息，输出转换后仍保持原有消息类型和缓冲大小。
+func newUnboundedChanMapped[T, Out any](ctx context.Context, inCapacity, outCapacity, bufferCapacity int, project func(T) Out, hooks *unboundedChanHooks[T]) *unboundedChan[T, Out] {
+	in := make(chan T, inCapacity)
+	out := make(chan Out, outCapacity)
+	ch := &unboundedChan[T, Out]{In: in, Out: out, buffer: newRingBuffer[T](bufferCapacity)}
+	go process(ctx, in, out, ch, project, hooks)
+	return ch
+}
+
+func process[T, Out any](ctx context.Context, in chan T, out chan Out, ch *unboundedChan[T, Out], project func(T) Out, hooks *unboundedChanHooks[T]) {
+	defer func() {
+		close(out)
+		if hooks != nil {
+			hooks.onClose(len(in) + ch.buffer.Len())
+		}
+	}()
 	drain := func() {
 		for !ch.buffer.IsEmpty() {
+			value := ch.buffer.Peek()
 			select {
-			case out <- ch.buffer.Pop():
+			case out <- project(value):
+				ch.buffer.Pop()
 				atomic.AddInt64(&ch.bufCount, -1)
+				if hooks != nil {
+					hooks.onWrite(value, ch.buffer)
+				}
 			case <-ctx.Done():
 				return
 			}
 		}
-
 		ch.buffer.Reset()
 		atomic.StoreInt64(&ch.bufCount, 0)
 	}
@@ -188,45 +207,47 @@ func process[T any](ctx context.Context, in, out chan T, ch *unboundedChan[T]) {
 		case <-ctx.Done():
 			return
 		case val, ok := <-in:
-			if !ok { // in is closed
+			if !ok {
 				drain()
 				return
 			}
-
-			// make sure values' order
-			// buffer has some values
 			if atomic.LoadInt64(&ch.bufCount) > 0 {
 				ch.buffer.Write(val)
-				_ = atomic.AddInt64(&ch.bufCount, 1)
+				atomic.AddInt64(&ch.bufCount, 1)
 			} else {
-				// out is not full
 				select {
-				case out <- val:
-					//放入成功，说明out刚才还没有满，buffer中也没有额外的数据待处理，所以回到loop开始
+				case out <- project(val):
+					if hooks != nil {
+						hooks.onWrite(val, ch.buffer)
+					}
 					continue
 				default:
 				}
-
-				// out is full
+				if hooks != nil {
+					hooks.onBuffer(val)
+				}
 				ch.buffer.Write(val)
-				_ = atomic.AddInt64(&ch.bufCount, 1)
+				atomic.AddInt64(&ch.bufCount, 1)
 			}
-
 			for !ch.buffer.IsEmpty() {
+				value := ch.buffer.Peek()
 				select {
 				case <-ctx.Done():
 					return
 				case val, ok := <-in:
-					if !ok { // in is closed
+					if !ok {
 						drain()
 						return
 					}
 					ch.buffer.Write(val)
-					_ = atomic.AddInt64(&ch.bufCount, 1)
-				case out <- ch.buffer.Peek():
+					atomic.AddInt64(&ch.bufCount, 1)
+				case out <- project(value):
 					ch.buffer.Pop()
 					atomic.AddInt64(&ch.bufCount, -1)
-					if ch.buffer.IsEmpty() && ch.buffer.size > ch.buffer.initialSize { // after burst
+					if hooks != nil {
+						hooks.onWrite(value, ch.buffer)
+					}
+					if ch.buffer.IsEmpty() && ch.buffer.size > ch.buffer.initialSize {
 						ch.buffer.Reset()
 						atomic.StoreInt64(&ch.bufCount, 0)
 					}

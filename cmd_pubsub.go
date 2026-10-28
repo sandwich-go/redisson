@@ -281,6 +281,9 @@ func newPubSub(ctx context.Context, client *client, handler handler) PubSub {
 	p := &pubSub{client: client, handler: handler}
 	p.ctx, p.cancel = context.WithCancel(ctx)
 	p.monitor = newPubSubMonitor(p.ctx, client.v.GetPubSubChanSize())
+	if p.monitor.queue == nil {
+		p.monitor.defaultReceive = func(message Message) { p.monitor.forward(p.ctx, message) }
+	}
 	return p
 }
 
@@ -296,10 +299,10 @@ func (p *pubSub) PSubscribe(ctx context.Context, patterns ...string) error {
 	ctx = p.handler.before(ctx, CommandPSubscribe)
 	cmd := p.client.cmd
 	go func() {
-		receiveCtx, finish := p.monitor.observeReceiver(p.ctx, "psubscribe", patterns)
+		receiveCtx, receive, finish := p.monitor.observeReceiver(p.ctx, "psubscribe", patterns)
 		err := cmd.Receive(receiveCtx, cmd.B().Psubscribe().Pattern(patterns...).Build(), func(m rueidis.PubSubMessage) {
 			if !p.isClosed() {
-				p.monitor.onMessage(p.ctx, m)
+				receive(m)
 			} else {
 				warning(fmt.Sprintf("psubscribe, channel closed, patterns: %s,", strings.Join(patterns, " ")))
 			}
@@ -317,10 +320,10 @@ func (p *pubSub) Subscribe(ctx context.Context, channels ...string) error {
 	ctx = p.handler.before(ctx, CommandSubscribe)
 	cmd := p.client.cmd
 	go func() {
-		receiveCtx, finish := p.monitor.observeReceiver(p.ctx, "subscribe", channels)
+		receiveCtx, receive, finish := p.monitor.observeReceiver(p.ctx, "subscribe", channels)
 		err := cmd.Receive(receiveCtx, cmd.B().Subscribe().Channel(channels...).Build(), func(m rueidis.PubSubMessage) {
 			if !p.isClosed() {
-				p.monitor.onMessage(p.ctx, m)
+				receive(m)
 			} else {
 				warning(fmt.Sprintf("subscribe, channel closed, channels: %s,", strings.Join(channels, " ")))
 			}
@@ -388,14 +391,12 @@ func (p *pubSub) receiveShard(cmd rueidis.Client, channel string, sub *shardSubs
 		defer cancel()
 		sub.err = cmd.Do(ctx, cmd.B().Sunsubscribe().Channel(channel).Build()).Error()
 	}()
-	receiveCtx, finish := p.monitor.observeReceiver(sub.ctx, "ssubscribe", []string{channel})
+	receiveCtx, receive, finish := p.monitor.observeReceiver(sub.ctx, "ssubscribe", []string{channel})
 	var receiveError error
 	defer func() { finish(receiveError) }()
 	for sub.ctx.Err() == nil {
 		// Receive's command is recycled on success; rebuild it on every attempt.
-		err := cmd.Receive(receiveCtx, cmd.B().Ssubscribe().Channel(channel).Build(), func(m rueidis.PubSubMessage) {
-			p.monitor.onMessage(sub.ctx, m)
-		})
+		err := cmd.Receive(receiveCtx, cmd.B().Ssubscribe().Channel(channel).Build(), receive)
 		receiveError = err
 		if err != nil {
 			if sub.ctx.Err() == nil && err != rueidis.ErrClosing {

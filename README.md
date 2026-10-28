@@ -57,16 +57,28 @@ func main() {
 
 ## Pub/Sub monitoring
 
-All PubSub calls go through `pubSubMonitor`. The default uses the original buffered
-queue and performs no collection or hook installation. `WithPubSubMonitoring`
-explicitly enables the existing observation implementation for that PubSub.
+All PubSub calls go through `pubSubMonitor`. By default, no readings or hooks are
+collected. `WithPubSubMonitoring` explicitly enables observation for that PubSub.
+Both modes reuse `unboundedChan`, keeping its input, ring and output buffering
+without an additional forwarding goroutine.
+Receive handlers bind their state once. Each serialized receive task publishes its
+own byte total; snapshots aggregate active tasks and completed totals. Completion
+reclaims the task's observation state. Admission uses a nonblocking fast path while
+space is available and a cancelable wait when full. Per-message timestamps remain exact.
 `DefaultPubSubMonitorOptions` provides `z.MonoOffset()` and no-op callbacks;
 individual fields can be overridden. Callbacks must return quickly.
 
 Use the optional `PubSubObserver.PubSubStats` interface for queue and subscription
 snapshots. `Enabled=false` means readings were not collected. Existing queue
 implementations and buffering stay unchanged, and no extra Redis client or
-connection is created. `PubSubChanSize` still controls the default queue buffers.
+connection is created. `PubSubChanSize` controls both modes' input and output buffers.
+Queue depth, string bytes and oldest age include unread messages in `Out`; these
+are concurrent snapshots. `OnDequeue` measures admission to the `Out` buffer,
+excluding the wait for the consumer to read it. Wait callbacks sample one in 64
+messages by default; set `DequeueSampleEvery: 1` for every message. Depth, bytes,
+oldest age and subscription events remain unsampled. Histogram sample counts do
+not represent message counts. On close, `Dropped` counts only
+messages not forwarded to `Out`; buffered output remains readable.
 ACKs do not establish cache readiness or repair missing notifications. Existing
 rueidis context hooks and their return values are preserved. `ReceiveReturns`
 includes internal retries; `Retries` counts the shard worker's explicit retries.

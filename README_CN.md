@@ -57,14 +57,22 @@ func main() {
 
 ## Pub/Sub 观测
 
-所有 PubSub 调用统一由 `pubSubMonitor` 封装。默认使用原有带缓冲队列，
-不采集统计，也不安装观测 Hook。通过 `WithPubSubMonitoring` 显式启用该订阅的既有观测实现。
+所有 PubSub 调用统一由 `pubSubMonitor` 封装。默认不采集统计，也不安装观测 Hook。
+通过 `WithPubSubMonitoring` 显式启用该订阅的观测。两种模式都复用 `unboundedChan`，
+保持输入、环形和输出缓冲，不增加转发 goroutine。
+接收入口在任务初始化时绑定。每个接收任务串行累计字节，快照汇总；任务结束后合并最终值并回收观测对象。
+缓冲未满时直接入队，缓冲满时仍响应订阅取消。逐条时间戳保持精确。
 `DefaultPubSubMonitorOptions` 提供 `z.MonoOffset()` 和空回调，各字段可按需覆盖。
 回调必须快速返回。
 
 通过可选接口 `PubSubObserver.PubSubStats` 读取队列和订阅快照；`Enabled=false`
 表示没有采集读数。既有队列实现和缓冲机制保持不变，不新增 Redis Client 或连接，
-`PubSubChanSize` 继续控制默认队列的缓冲大小。
+`PubSubChanSize` 控制两种模式的输入和输出缓冲大小。
+队列长度、字节数和最老消息年龄包括 `Out` 中尚未被业务取走的消息；这些是并发快照。
+`OnDequeue` 的等待时长统计到写入 `Out` 缓冲时，不包含业务读取前的等待。
+等待时长默认每 64 条记录一次，`DequeueSampleEvery: 1` 可改为全量；
+长度、字节数、最老年龄和订阅事件始终全量统计。直方图的样本数不等于消息数。
+关闭时，`Dropped` 仅计算未转入 `Out` 的消息；已缓冲在 `Out` 中的消息仍可读取。
 ACK 不表示缓存已校正，也不会自动修复漏通知。已有 rueidis context Hook 及其返回值会保留。
 `ReceiveReturns` 包含内部重试期间的退出，`Retries` 仅统计分片接收 worker 显式发起的重试。
 隔离断线测试确认 RESP3 可自动重订阅；RESP2 断开后能观测到 ACK 清零，

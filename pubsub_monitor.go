@@ -15,17 +15,22 @@ import (
 // 回调必须快速返回，不能执行 Redis 命令或其他阻塞操作。
 // Receive 的 context Hook 会与已有业务 Hook 组合，不覆盖原有回调。
 type PubSubMonitorOptions struct {
-	Now       func() time.Duration
-	OnEvent   func(PubSubEvent)
+	Now     func() time.Duration
+	OnEvent func(PubSubEvent)
+	// OnDequeue 统计从本机入队到写入 Out 缓冲的时间，不包含业务从 Out 取走前的等待。
 	OnDequeue func(time.Duration)
+	// DequeueSampleEvery 仅控制等待时长回调的采样间隔；0 使用默认 64，1 为全量。
+	// 队列长度、字节数、最老消息年龄与订阅事件不采样。
+	DequeueSampleEvery uint32
 }
 
 // DefaultPubSubMonitorOptions 提供单调时钟和空回调；只有 WithPubSubMonitoring 才启用采集。
 func DefaultPubSubMonitorOptions() PubSubMonitorOptions {
 	return PubSubMonitorOptions{
-		Now:       func() time.Duration { return time.Duration(z.MonoOffset()) },
-		OnEvent:   func(PubSubEvent) {},
-		OnDequeue: func(time.Duration) {},
+		Now:                func() time.Duration { return time.Duration(z.MonoOffset()) },
+		OnEvent:            func(PubSubEvent) {},
+		OnDequeue:          func(time.Duration) {},
+		DequeueSampleEvery: 64,
 	}
 }
 
@@ -39,6 +44,9 @@ func (o PubSubMonitorOptions) withDefaults() PubSubMonitorOptions {
 	}
 	if o.OnDequeue == nil {
 		o.OnDequeue = defaults.OnDequeue
+	}
+	if o.DequeueSampleEvery == 0 {
+		o.DequeueSampleEvery = defaults.DequeueSampleEvery
 	}
 	return o
 }
@@ -104,26 +112,28 @@ type monitoredSubscription struct {
 }
 
 type pubSubMonitor struct {
-	options       PubSubMonitorOptions
-	queue         *pubSubMonitorQueue
-	messages      *unboundedChan[Message]
-	mu            sync.Mutex
-	subscriptions map[*monitoredSubscription]struct{}
-	stats         PubSubStats
+	options        PubSubMonitorOptions
+	queue          *pubSubMonitorQueue
+	messages       *unboundedChan[Message, Message]
+	mu             sync.Mutex
+	subscriptions  map[*monitoredSubscription]struct{}
+	stats          PubSubStats
+	ctx            context.Context
+	defaultReceive func(Message)
 }
 
 func newPubSubMonitor(ctx context.Context, initialCapacity int) *pubSubMonitor {
 	options, enabled := ctx.Value(pubSubMonitorContextKey{}).(PubSubMonitorOptions)
-	m := &pubSubMonitor{options: DefaultPubSubMonitorOptions()}
+	m := &pubSubMonitor{options: DefaultPubSubMonitorOptions(), ctx: ctx}
 	if !enabled {
 		m.messages = newUnboundedChan[Message](ctx, initialCapacity)
 		return m
 	}
 	m.options = options
 	m.subscriptions = make(map[*monitoredSubscription]struct{})
-	m.queue = newPubSubMonitorQueue(ctx, options.Now, options.OnDequeue, func(dropped int) {
+	m.queue = newPubSubMonitorQueue(ctx, initialCapacity, options.Now, options.OnDequeue, func(dropped int) {
 		m.emit(PubSubEvent{Kind: PubSubClosed, Dropped: dropped})
-	})
+	}, options.DequeueSampleEvery)
 	return m
 }
 
@@ -131,9 +141,10 @@ func (m *pubSubMonitor) emit(event PubSubEvent) {
 	m.options.OnEvent(event)
 }
 
-func (m *pubSubMonitor) observeReceiver(ctx context.Context, command string, channels []string) (context.Context, func(error)) {
+func (m *pubSubMonitor) observeReceiver(ctx context.Context, command string, channels []string) (context.Context, func(Message), func(error)) {
+	receive, release := m.onReceive(ctx)
 	if m.queue == nil {
-		return ctx, func(error) {}
+		return ctx, receive, func(error) { release() }
 	}
 	s := &monitoredSubscription{command: command, channels: append([]string(nil), channels...), confirmed: make(map[string]struct{})}
 	m.mu.Lock()
@@ -144,7 +155,10 @@ func (m *pubSubMonitor) observeReceiver(ctx context.Context, command string, cha
 		m.onReceiveReturn(ctx, s, err)
 		return err
 	})
-	return &pubSubHooksContext{Context: ctx, hooks: hooks}, func(err error) { m.onFinish(ctx, s, err) }
+	return &pubSubHooksContext{Context: ctx, hooks: hooks}, receive, func(err error) {
+		defer release()
+		m.onFinish(ctx, s, err)
+	}
 }
 
 // 两个 Hook context 仅查询官方工厂创建的 opaque key，不依赖其私有 key 编号。
@@ -243,17 +257,32 @@ func (m *pubSubMonitor) observeRetry(command, channel string) {
 	m.emit(PubSubEvent{Kind: PubSubRetry, Command: command, Channel: channel})
 }
 
-func (m *pubSubMonitor) onMessage(ctx context.Context, message Message) {
-	if m.queue != nil {
-		if ctx.Err() == nil {
-			m.queue.push(message)
-		}
+func (m *pubSubMonitor) forward(ctx context.Context, message Message) {
+	if ctx.Err() != nil {
 		return
 	}
+	in := m.messages.In
 	select {
-	case m.messages.In <- message:
+	case in <- message:
+		return
+	default:
+	}
+	select {
+	case in <- message:
 	case <-ctx.Done():
 	}
+}
+
+// 在接收任务初始化时选择入口，消息路径不重复判断是否启用观测。
+func (m *pubSubMonitor) onReceive(ctx context.Context) (func(Message), func()) {
+	if m.queue != nil {
+		sender := m.queue.newSender(ctx)
+		return func(message Message) { sender.push(message) }, sender.release
+	}
+	if ctx == m.ctx {
+		return m.defaultReceive, func() {}
+	}
+	return func(message Message) { m.forward(ctx, message) }, func() {}
 }
 
 func (m *pubSubMonitor) channel() <-chan Message {

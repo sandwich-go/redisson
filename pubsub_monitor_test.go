@@ -39,60 +39,363 @@ func TestPubSubMonitorQueueStats(t *testing.T) {
 	now.Store(10)
 	delivered := make(chan time.Duration, 2)
 	closed := make(chan int, 1)
-	q := newPubSubMonitorQueue(ctx, func() time.Duration { return time.Duration(now.Load()) }, func(wait time.Duration) { delivered <- wait }, func(dropped int) { closed <- dropped })
+	q := newPubSubMonitorQueue(ctx, 2, func() time.Duration { return time.Duration(now.Load()) }, func(wait time.Duration) { delivered <- wait }, func(dropped int) { closed <- dropped }, 1)
+	sender := q.newSender(ctx)
+	t.Cleanup(sender.release)
+	if cap(q.messages.In) != 2 || cap(q.out) != 2 {
+		t.Fatal("monitor changed the original input/output buffering")
+	}
 	first := Message{Channel: "foo", Message: "公会"}
 	second := Message{Channel: "foo", Pattern: "f*", Message: "two"}
-	if !q.push(first) {
-		t.Fatal("first enqueue rejected")
-	}
-	now.Store(20)
-	if !q.push(second) {
-		t.Fatal("second enqueue rejected")
+	timer := time.NewTimer(5 * time.Second)
+	defer timer.Stop()
+	for index, message := range []Message{first, second} {
+		now.Store(int64(10 + index*10))
+		if !sender.push(message) {
+			t.Fatal("enqueue rejected")
+		}
+		select {
+		case wait := <-delivered:
+			if wait != 0 {
+				t.Fatalf("forwarding to an available Out buffer took %v", wait)
+			}
+		case <-timer.C:
+			t.Fatal("forwarding to buffered Out timed out without a consumer")
+		}
 	}
 	now.Store(30)
 	depth, bytes, age, _ := q.snapshot()
 	if depth != 2 || bytes != messageBytes(first)+messageBytes(second) || age != 20 {
-		t.Fatalf("unexpected queue stats: %d %d %v", depth, bytes, age)
+		t.Fatalf("Out backlog was omitted: %d %d %v", depth, bytes, age)
 	}
-	timer := time.NewTimer(5 * time.Second)
-	defer timer.Stop()
-	for index, want := range []Message{first, second} {
-		select {
-		case got := <-q.out:
-			if got != want {
-				t.Fatalf("FIFO changed: got=%+v want=%+v", got, want)
-			}
-		case <-timer.C:
-			t.Fatal("delivery timed out")
-		}
-		select {
-		case wait := <-delivered:
-			if wait != time.Duration(20-index*10) {
-				t.Fatalf("unexpected wait: %v", wait)
-			}
-		case <-timer.C:
-			t.Fatal("dequeue observation timed out")
+	for _, want := range []Message{first, second} {
+		if got := <-q.out; got != want {
+			t.Fatalf("FIFO changed: got=%+v want=%+v", got, want)
 		}
 	}
 	depth, bytes, age, _ = q.snapshot()
 	if depth != 0 || bytes != 0 || age != 0 {
 		t.Fatalf("drained queue retained observations: %d %d %v", depth, bytes, age)
 	}
-	if !q.push(first) || !q.push(second) {
-		t.Fatal("enqueue before close rejected")
+	// Out 中两条仍可在 Close 后读取，只有 In/环形缓冲中的三条被丢弃。
+	for _, message := range []Message{first, second} {
+		if !sender.push(message) {
+			t.Fatal("enqueue before close rejected")
+		}
+		select {
+		case <-delivered:
+		case <-timer.C:
+			t.Fatal("output buffer did not fill")
+		}
+	}
+	for range 3 {
+		if !sender.push(first) {
+			t.Fatal("enqueue beyond output capacity rejected")
+		}
 	}
 	cancel()
 	select {
 	case dropped := <-closed:
-		if dropped != 2 {
+		if dropped != 3 {
 			t.Fatalf("unexpected close discard: %d", dropped)
 		}
 	case <-timer.C:
 		t.Fatal("close timed out")
 	}
 	depth, bytes, age, isClosed := q.snapshot()
-	if !isClosed || depth != 0 || bytes != 0 || age != 0 || q.push(first) {
+	if !isClosed || depth != 0 || bytes != 0 || age != 0 || sender.push(first) {
 		t.Fatal("closed queue accepted data or retained state")
+	}
+	var retained []Message
+	for message := range q.out {
+		retained = append(retained, message)
+	}
+	if len(retained) != 2 || retained[0] != first || retained[1] != second {
+		t.Fatalf("closing discarded buffered output: %+v", retained)
+	}
+}
+
+func TestPubSubMonitorOutputBacklogAfterWrap(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	var now atomic.Int64
+	forwarded := make(chan struct{}, 1)
+	q := newPubSubMonitorQueue(ctx, 2, func() time.Duration { return time.Duration(now.Load()) }, func(time.Duration) { forwarded <- struct{}{} }, nil, 1)
+	sender := q.newSender(ctx)
+	t.Cleanup(sender.release)
+	type pending struct {
+		message Message
+		at      time.Duration
+	}
+	var expected []pending
+	for index := range 64 {
+		if len(expected) == 2 {
+			if got := <-q.out; got != expected[0].message {
+				t.Fatalf("FIFO changed after output metadata wrap: %+v", got)
+			}
+			expected = expected[1:]
+		}
+		now.Store(int64(index * 10))
+		message := Message{Channel: "channel", Pattern: "ch*", Message: fmt.Sprintf("%0*d", index+1, index)}
+		if !sender.push(message) {
+			t.Fatal("enqueue rejected")
+		}
+		select {
+		case <-forwarded:
+		case <-ctx.Done():
+			t.Fatal("forwarding timed out")
+		}
+		expected = append(expected, pending{message: message, at: time.Duration(index * 10)})
+		now.Store(int64(index*10 + 7))
+		var wantBytes int64
+		for _, value := range expected {
+			wantBytes += messageBytes(value.message)
+		}
+		depth, bytes, age, _ := q.snapshot()
+		if depth != len(expected) || bytes != wantBytes || age != time.Duration(now.Load())-expected[0].at {
+			t.Fatalf("output metadata retained a consumed message at %d: depth=%d bytes=%d age=%v", index, depth, bytes, age)
+		}
+	}
+}
+
+func TestPubSubMonitorDequeueCanReadStats(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	observed := make(chan int, 1)
+	var q *pubSubMonitorQueue
+	q = newPubSubMonitorQueue(ctx, 2, func() time.Duration { return 1 }, func(time.Duration) {
+		depth, _, _, _ := q.snapshot()
+		observed <- depth
+	}, nil, 1)
+	sender := q.newSender(ctx)
+	t.Cleanup(sender.release)
+	if !sender.push(Message{Message: "pending"}) {
+		t.Fatal("enqueue rejected")
+	}
+	select {
+	case depth := <-observed:
+		if depth != 1 {
+			t.Fatalf("dequeue callback omitted buffered output: %d", depth)
+		}
+	case <-ctx.Done():
+		t.Fatal("reading stats from the dequeue callback blocked forwarding")
+	}
+}
+
+func TestPubSubMonitorWaitSamplingKeepsFullBacklog(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	var samples atomic.Int64
+	q := newPubSubMonitorQueue(ctx, 8, func() time.Duration { return 10 }, func(time.Duration) { samples.Add(1) }, nil, 4)
+	sender := q.newSender(ctx)
+	t.Cleanup(sender.release)
+	message := Message{Channel: "sample", Message: "payload"}
+	for range 8 {
+		if !sender.push(message) {
+			t.Fatal("enqueue rejected")
+		}
+	}
+	waitShardTest(t, func() bool { return q.sent.Load() == 8 && samples.Load() == 2 })
+	depth, bytes, age, _ := q.snapshot()
+	if depth != 8 || bytes != 8*messageBytes(message) || age != 0 {
+		t.Fatalf("wait sampling changed full backlog statistics: depth=%d bytes=%d age=%v", depth, bytes, age)
+	}
+	defaults := (PubSubMonitorOptions{}).withDefaults()
+	if defaults.DequeueSampleEvery != 64 || (PubSubMonitorOptions{DequeueSampleEvery: 1}).withDefaults().DequeueSampleEvery != 1 {
+		t.Fatal("default or explicit wait sampling interval was lost")
+	}
+}
+
+func TestPubSubMonitorQueueCancelsBlockedSubscription(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	release := make(chan struct{})
+	t.Cleanup(func() { close(release); cancel() })
+	forwarding := make(chan struct{}, 1)
+	q := newPubSubMonitorQueue(ctx, 1, func() time.Duration { return 1 }, func(time.Duration) {
+		select {
+		case forwarding <- struct{}{}:
+		default:
+		}
+		<-release
+	}, nil, 1)
+	sender := q.newSender(ctx)
+	t.Cleanup(sender.release)
+	message := Message{Channel: "blocked", Message: "payload"}
+	if !sender.push(message) {
+		t.Fatal("initial enqueue rejected")
+	}
+	select {
+	case <-forwarding:
+	case <-ctx.Done():
+		t.Fatal("forwarding did not reach the pause")
+	}
+	if !sender.push(message) {
+		t.Fatal("input buffer did not accept the pending message")
+	}
+	subscription, unsubscribe := context.WithCancel(ctx)
+	defer unsubscribe()
+	subscriptionSender := q.newSender(subscription)
+	t.Cleanup(subscriptionSender.release)
+	result := make(chan bool, 1)
+	go func() { result <- subscriptionSender.push(message) }()
+	waitShardTest(t, func() bool { return q.admittedBytes() == 3*messageBytes(message) })
+	unsubscribe()
+	select {
+	case accepted := <-result:
+		if accepted || ctx.Err() != nil {
+			t.Fatal("subscription cancellation must reject the blocked enqueue while the queue stays alive")
+		}
+	case <-ctx.Done():
+		t.Fatal("blocked enqueue waited for the whole PubSub to close")
+	}
+	depth, bytes, _, closed := q.snapshot()
+	if closed || depth != 2 || bytes != 2*messageBytes(message) {
+		t.Fatalf("canceled admission retained statistics: depth=%d bytes=%d closed=%v", depth, bytes, closed)
+	}
+}
+
+func TestPubSubMonitorSenderReuseKeepsFullBytes(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	q := newPubSubMonitorQueue(ctx, 64, func() time.Duration { return 10 }, nil, nil, 1)
+	var expected []Message
+	var wantBytes int64
+	// 接收任务反复创建和取消后，累计入队字节不能丢失或重复计算。
+	for index := range 40 {
+		subscription, unsubscribe := context.WithCancel(ctx)
+		sender := q.newSender(subscription)
+		message := Message{Channel: fmt.Sprintf("channel-%d", index), Pattern: "ch*", Message: fmt.Sprintf("%0*d", index+1, index)}
+		if !sender.push(message) {
+			t.Fatal("new receiver rejected an enqueue")
+		}
+		unsubscribe()
+		sender.release()
+		sender.release()
+		if sender.push(message) {
+			t.Fatal("canceled receiver accepted another message")
+		}
+		expected = append(expected, message)
+		wantBytes += messageBytes(message)
+	}
+	waitShardTest(t, func() bool { return q.sent.Load() == uint64(len(expected)) })
+	q.sendersMu.Lock()
+	active := len(q.senders)
+	q.sendersMu.Unlock()
+	if active != 0 {
+		t.Fatalf("finished receivers retained observation objects: %d", active)
+	}
+	depth, bytes, age, _ := q.snapshot()
+	if depth != len(expected) || bytes != wantBytes || age != 0 {
+		t.Fatalf("receiver reuse changed full statistics: depth=%d bytes=%d age=%v", depth, bytes, age)
+	}
+	for _, want := range expected {
+		if got := <-q.out; got != want {
+			t.Fatalf("receiver reuse changed FIFO: got=%+v want=%+v", got, want)
+		}
+	}
+	depth, bytes, age, _ = q.snapshot()
+	if depth != 0 || bytes != 0 || age != 0 {
+		t.Fatalf("receiver reuse left pending observations: %d %d %v", depth, bytes, age)
+	}
+}
+
+type pubSubDoneSignalContext struct {
+	context.Context
+	entered chan struct{}
+}
+
+func (c pubSubDoneSignalContext) Done() <-chan struct{} {
+	select {
+	case c.entered <- struct{}{}:
+	default:
+	}
+	return c.Context.Done()
+}
+
+func TestPubSubMonitorDefaultFastPathCancellation(t *testing.T) {
+	input := make(chan Message, 1)
+	first := Message{Message: "first"}
+	input <- first
+	monitor := &pubSubMonitor{messages: &unboundedChan[Message, Message]{In: input}}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	entered := make(chan struct{}, 1)
+	done := make(chan struct{})
+	go func() {
+		monitor.forward(pubSubDoneSignalContext{Context: ctx, entered: entered}, Message{Message: "canceled"})
+		close(done)
+	}()
+	timer := time.NewTimer(5 * time.Second)
+	defer timer.Stop()
+	select {
+	case <-entered:
+	case <-timer.C:
+		t.Fatal("full input did not enter the cancelable wait")
+	}
+	cancel()
+	select {
+	case <-done:
+	case <-timer.C:
+		t.Fatal("default receiver did not stop waiting on cancellation")
+	}
+	if len(input) != 1 || <-input != first {
+		t.Fatal("canceled wait changed buffered input")
+	}
+	monitor.forward(ctx, Message{Message: "already canceled"})
+	if len(input) != 0 {
+		t.Fatal("default fast path accepted data after cancellation")
+	}
+}
+
+func TestPubSubMonitorPrefixBeforePublication(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	q := newPubSubMonitorQueue(ctx, 2, func() time.Duration { return 200 }, nil, nil, 1)
+	sender := q.newSender(ctx)
+	defer sender.release()
+	// 只填观测记录，暂停在“消息已写入 Out，sent 尚未发布”的交接点。
+	out := make(chan Message, 2)
+	q.out = out
+	var messages []Message
+	var cumulative []int64
+	var total int64
+	for index := 1; index <= 11; index++ {
+		message := Message{Channel: "c", Pattern: "p", Message: fmt.Sprintf("%0*d", index, index)}
+		messages = append(messages, message)
+		total += messageBytes(message)
+		cumulative = append(cumulative, total)
+		if index <= 10 {
+			record := &q.output[uint64(index-1)%uint64(len(q.output))]
+			record.enqueued.Store(int64(index * 10))
+			record.totalBytes.Store(total)
+		}
+	}
+	sender.total = cumulative[9]
+	sender.admitted.Store(sender.total)
+	q.sent.Store(10)
+	out <- messages[8]
+	out <- messages[9]
+	depth, bytes, age, _ := q.snapshot()
+	if depth != 2 || bytes != messageBytes(messages[8])+messageBytes(messages[9]) || age != 110 {
+		t.Fatalf("wrapped prefix changed stable output: depth=%d bytes=%d age=%v", depth, bytes, age)
+	}
+	<-out
+	sender.total = cumulative[10]
+	sender.admitted.Store(sender.total)
+	out <- messages[10]
+	record := &q.output[10%uint64(len(q.output))]
+	record.enqueued.Store(110)
+	record.totalBytes.Store(cumulative[10])
+	// 新写入的记录不能覆盖旧 sent 对应的已消费前缀，避免误报零积压。
+	depth, bytes, age, _ = q.snapshot()
+	wantBytes := messageBytes(messages[9]) + messageBytes(messages[10])
+	if depth != 2 || bytes < wantBytes || age < 100 {
+		t.Fatalf("unpublished write hid pending output: depth=%d bytes=%d age=%v", depth, bytes, age)
+	}
+	q.sent.Store(11)
+	depth, bytes, age, _ = q.snapshot()
+	if depth != 2 || bytes != wantBytes || age != 100 {
+		t.Fatalf("published prefix did not converge: depth=%d bytes=%d age=%v", depth, bytes, age)
 	}
 }
 
@@ -102,14 +405,16 @@ func TestPubSubMonitorQueueConcurrent(t *testing.T) {
 	var now atomic.Int64
 	const writers, each = 8, 100
 	delivered := make(chan struct{}, writers*each)
-	q := newPubSubMonitorQueue(ctx, func() time.Duration { return time.Duration(now.Add(1)) }, func(time.Duration) { delivered <- struct{}{} }, nil)
+	q := newPubSubMonitorQueue(ctx, 32, func() time.Duration { return time.Duration(now.Add(1)) }, func(time.Duration) { delivered <- struct{}{} }, nil, 1)
 	var wg sync.WaitGroup
 	for i := range writers {
 		wg.Add(1)
 		go func(writer int) {
 			defer wg.Done()
+			sender := q.newSender(ctx)
+			defer sender.release()
 			for j := range each {
-				if !q.push(Message{Channel: strconv.Itoa(writer), Message: strconv.Itoa(j)}) {
+				if !sender.push(Message{Channel: strconv.Itoa(writer), Message: strconv.Itoa(j)}) {
 					return
 				}
 				q.snapshot()
@@ -466,9 +771,11 @@ func BenchmarkPubSubQueueMonitoring(b *testing.B) {
 				}
 				return
 			}
-			queue := newPubSubMonitorQueue(ctx, func() time.Duration { return 1 }, nil, nil)
+			queue := newPubSubMonitorQueue(ctx, 1024, func() time.Duration { return 1 }, nil, nil, 1)
+			sender := queue.newSender(ctx)
+			defer sender.release()
 			for b.Loop() {
-				queue.push(message)
+				sender.push(message)
 				<-queue.out
 			}
 		})
