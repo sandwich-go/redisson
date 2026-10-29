@@ -285,11 +285,10 @@ func BenchmarkPubSubMonitorRecording(b *testing.B) {
 			}
 			q := newPubSubMonitorQueue(ctx, 1024, func() time.Duration { return time.Duration(z.MonoOffset()) }, observe, nil, 1)
 			value := pubSubQueuedMessage{message: Message{Channel: "bench", Message: "payload"}, enqueued: q.now()}
-			value.bytes = messageBytes(value.message)
 			buffer := newRingBuffer[pubSubQueuedMessage](2)
 			b.ReportAllocs()
 			for b.Loop() {
-				q.onWrite(value, buffer)
+				q.onWrite(value, buffer, true)
 			}
 		})
 	}
@@ -306,7 +305,12 @@ func BenchmarkPubSubMonitorSnapshot(b *testing.B) {
 			}
 			timer := time.NewTimer(5 * time.Second)
 			defer timer.Stop()
-			for queue.sent.Load() != uint64(backlog) {
+			wantBytes := int64(backlog) * messageBytes(message)
+			for {
+				depth, bytes, _, _ := queue.snapshot()
+				if queue.sent.Load() == uint64(backlog) && depth == backlog && bytes == wantBytes {
+					break
+				}
 				select {
 				case <-timer.C:
 					b.Fatal("snapshot benchmark did not fill output")
@@ -314,7 +318,6 @@ func BenchmarkPubSubMonitorSnapshot(b *testing.B) {
 					runtime.Gosched()
 				}
 			}
-			wantBytes := int64(backlog) * messageBytes(message)
 			b.ReportAllocs()
 			for b.Loop() {
 				depth, bytes, age, closed := queue.snapshot()

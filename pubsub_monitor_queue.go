@@ -10,7 +10,7 @@ import (
 type pubSubQueuedMessage struct {
 	message  Message
 	enqueued time.Duration
-	bytes    int64
+	sender   *pubSubQueueSender
 }
 
 type pubSubOutputRecord struct {
@@ -35,9 +35,10 @@ type pubSubMonitorQueue struct {
 	retiredBytes int64
 	_            [128]byte // 将接收侧只读状态与转发侧热写入隔开。
 
-	oldest atomic.Int64
-	sent   atomic.Uint64
-	output []pubSubOutputRecord
+	oldest    atomic.Int64
+	ringCount atomic.Int64
+	sent      atomic.Uint64
+	output    []pubSubOutputRecord
 
 	// 以下累计量只有 unboundedChan 的转发 goroutine 修改。
 	totalBytes   int64
@@ -63,86 +64,148 @@ func messageBytes(message Message) int64 {
 	return int64(len(message.Channel) + len(message.Pattern) + len(message.Message))
 }
 
-// rueidis.Receive 在接收循环内串行执行回调。累计值只有本接收任务写入，
-// 快照只读 admitted；后置填充隔开不同接收任务的热数据。
+// 输入历史只保存时间戳，最多覆盖输入容量及两个交接中的元素。
+// produced 由接收任务写，received 由转发任务写；完成的任务保留到输入被接走。
 type pubSubQueueSender struct {
-	queue    *pubSubMonitorQueue
-	ctx      context.Context
-	done     <-chan struct{}
-	in       chan<- pubSubQueuedMessage
-	now      func() time.Duration
-	total    int64
-	admitted atomic.Int64
-	_        [128]byte
+	queue         *pubSubMonitorQueue
+	writer        *unboundedChanSender[pubSubQueuedMessage, Message]
+	now           func() time.Duration
+	total         int64
+	admitted      atomic.Int64
+	input         []atomic.Int64
+	totalProduced uint64
+	inputNext     int
+	produced      atomic.Uint64
+	finished      atomic.Bool
+	_             [128]byte
+	totalReceived uint64
+	received      atomic.Uint64
+	_             [128]byte
 }
 
 func (q *pubSubMonitorQueue) newSender(ctx context.Context) *pubSubQueueSender {
-	sender := &pubSubQueueSender{queue: q, ctx: ctx, done: ctx.Done(), in: q.messages.In, now: q.now}
+	sender := &pubSubQueueSender{
+		queue: q, writer: q.messages.newSender(ctx), now: q.now,
+		input: make([]atomic.Int64, cap(q.messages.In)+2),
+	}
 	q.sendersMu.Lock()
-	q.senders[sender] = struct{}{}
+	if !q.closed.Load() {
+		q.senders[sender] = struct{}{}
+	}
 	q.sendersMu.Unlock()
 	return sender
 }
 
-// 与 push 在同一接收任务中串行调用，必须等 Receive 返回后才能释放。
+// Receive 返回后不再有回调；输入尚未接走时，仍需保留其队首观测。
 func (s *pubSubQueueSender) release() {
-	q := s.queue
+	s.finished.Store(true)
+	s.queue.retire(s)
+	s.writer.release()
+}
+
+func (q *pubSubMonitorQueue) retire(sender *pubSubQueueSender) {
 	q.sendersMu.Lock()
-	if _, exists := q.senders[s]; exists {
-		q.retiredBytes += s.admitted.Load()
-		delete(q.senders, s)
+	if _, exists := q.senders[sender]; exists && sender.finished.Load() && sender.received.Load() == sender.produced.Load() {
+		q.retiredBytes += sender.admitted.Load()
+		delete(q.senders, sender)
 	}
 	q.sendersMu.Unlock()
 }
 
-// ctx 是队列的生命周期 context 或子订阅 context，任一层取消都应结束等待入队。
 func (s *pubSubQueueSender) push(message Message) bool {
-	if s.queue.closed.Load() || s.ctx.Err() != nil {
+	if !s.writer.begin() {
+		s.writer.end()
 		return false
 	}
-	value := pubSubQueuedMessage{message: message, enqueued: s.now(), bytes: messageBytes(message)}
-	bytes := value.bytes
+	defer s.writer.end()
+	value := pubSubQueuedMessage{message: message, enqueued: s.now(), sender: s}
+	bytes := messageBytes(message)
+	index := s.inputNext
+	s.input[index].Store(int64(value.enqueued))
+	s.inputNext++
+	if s.inputNext == len(s.input) {
+		s.inputNext = 0
+	}
+	s.totalProduced++
+	s.produced.Store(s.totalProduced)
 	s.total += bytes
 	s.admitted.Store(s.total)
-	select {
-	case s.in <- value:
+	if s.writer.commit(value) {
 		return true
-	default:
 	}
-	select {
-	case s.in <- value:
-		return true
-	case <-s.done:
-		s.total -= bytes
-		s.admitted.Store(s.total)
-		return false
+	s.totalProduced--
+	s.inputNext = index
+	s.produced.Store(s.totalProduced)
+	s.total -= bytes
+	s.admitted.Store(s.total)
+	return false
+}
+
+func (q *pubSubMonitorQueue) admissions() (bytes int64, pending uint64, oldest time.Duration, hasOldest bool) {
+	q.sendersMu.Lock()
+	defer q.sendersMu.Unlock()
+	bytes = q.retiredBytes
+	for sender := range q.senders {
+		bytes += sender.admitted.Load()
+		for attempt := 0; attempt < 2; attempt++ {
+			received := sender.received.Load()
+			produced := sender.produced.Load()
+			if produced <= received {
+				break
+			}
+			at := time.Duration(sender.input[received%uint64(len(sender.input))].Load())
+			if sender.received.Load() != received && attempt == 0 {
+				continue
+			}
+			pending += produced - received
+			if !hasOldest || at < oldest {
+				oldest, hasOldest = at, true
+			}
+			break
+		}
 	}
+	return
 }
 
 func (q *pubSubMonitorQueue) admittedBytes() int64 {
-	q.sendersMu.Lock()
-	defer q.sendersMu.Unlock()
-	total := q.retiredBytes
-	for sender := range q.senders {
-		total += sender.admitted.Load()
+	bytes, _, _, _ := q.admissions()
+	return bytes
+}
+
+func (q *pubSubMonitorQueue) acceptInput(sender *pubSubQueueSender) {
+	if sender != nil {
+		sender.totalReceived++
+		sender.received.Store(sender.totalReceived)
+		if sender.finished.Load() {
+			q.retire(sender)
+		}
 	}
-	return total
 }
 
-func (q *pubSubMonitorQueue) onBuffer(value pubSubQueuedMessage) {
-	q.oldest.Store(int64(value.enqueued))
+func (q *pubSubMonitorQueue) onBuffer(value pubSubQueuedMessage, buffer *ringBuffer[pubSubQueuedMessage]) {
+	// 先发布环形阶段的队首和深度，再核销输入，交接时允许保守重叠但不能漏记。
+	if buffer.Len() == 1 {
+		q.oldest.Store(int64(value.enqueued))
+	}
+	q.ringCount.Store(int64(buffer.Len()))
+	q.acceptInput(value.sender)
 }
 
-func (q *pubSubMonitorQueue) onWrite(value pubSubQueuedMessage, buffer *ringBuffer[pubSubQueuedMessage]) {
-	bytes := value.bytes
+func (q *pubSubMonitorQueue) onWrite(value pubSubQueuedMessage, buffer *ringBuffer[pubSubQueuedMessage], fromInput bool) {
+	bytes := messageBytes(value.message)
 	record := &q.output[q.totalSent%uint64(len(q.output))]
 	q.totalBytes += bytes
 	record.enqueued.Store(int64(value.enqueued))
 	record.totalBytes.Store(q.totalBytes)
 	q.totalSent++
 	q.sent.Store(q.totalSent)
-	if !buffer.IsEmpty() {
-		q.oldest.Store(int64(buffer.Peek().enqueued))
+	if fromInput {
+		q.acceptInput(value.sender)
+	} else {
+		if !buffer.IsEmpty() {
+			q.oldest.Store(int64(buffer.Peek().enqueued))
+		}
+		q.ringCount.Store(int64(buffer.Len()))
 	}
 	if q.onDequeue != nil {
 		if q.dequeueNext == 0 {
@@ -155,6 +218,11 @@ func (q *pubSubMonitorQueue) onWrite(value pubSubQueuedMessage, buffer *ringBuff
 
 func (q *pubSubMonitorQueue) finish(dropped int) {
 	q.closed.Store(true)
+	q.ringCount.Store(0)
+	q.sendersMu.Lock()
+	q.senders = nil
+	q.retiredBytes = 0
+	q.sendersMu.Unlock()
 	if q.onClose != nil {
 		q.onClose(dropped)
 	}
@@ -170,21 +238,33 @@ func (q *pubSubMonitorQueue) snapshot() (int, int64, time.Duration, bool) {
 	var bytes int64
 	var age time.Duration
 	for attempt := 0; attempt < 2; attempt++ {
+		var input uint64
+		var oldest time.Duration
+		var hasOldest bool
+		// 先读输入，再读下游；若输入已被核销，必须看得到此前发布的阶段状态。
+		bytes, input, oldest, hasOldest = q.admissions()
+		ring := int(q.ringCount.Load())
 		sent := q.sent.Load()
 		buffered := len(q.out)
-		depth = len(q.messages.In) + q.messages.BufLen() + buffered
-		bytes = q.admittedBytes()
-		oldest := time.Duration(q.oldest.Load())
+		depth = int(input) + ring + buffered
+		include := func(at time.Duration) {
+			if !hasOldest || at < oldest {
+				oldest, hasOldest = at, true
+			}
+		}
+		if ring > 0 {
+			include(time.Duration(q.oldest.Load()))
+		}
 		tracked := min(uint64(buffered), sent)
 		consumed := sent - tracked
 		if consumed > 0 {
 			bytes -= q.output[(consumed-1)%uint64(len(q.output))].totalBytes.Load()
 		}
 		if tracked > 0 {
-			oldest = time.Duration(q.output[consumed%uint64(len(q.output))].enqueued.Load())
+			include(time.Duration(q.output[consumed%uint64(len(q.output))].enqueued.Load()))
 		}
 		age = 0
-		if tracked > 0 || q.messages.BufLen() > 0 {
+		if hasOldest {
 			age = max(q.now()-oldest, 0)
 		}
 		if q.sent.Load() == sent {

@@ -281,9 +281,6 @@ func newPubSub(ctx context.Context, client *client, handler handler) PubSub {
 	p := &pubSub{client: client, handler: handler}
 	p.ctx, p.cancel = context.WithCancel(ctx)
 	p.monitor = newPubSubMonitor(p.ctx, client.v.GetPubSubChanSize())
-	if p.monitor.queue == nil {
-		p.monitor.defaultReceive = func(message Message) { p.monitor.forward(p.ctx, message) }
-	}
 	return p
 }
 

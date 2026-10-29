@@ -3,6 +3,7 @@ package redisson
 import (
 	"context"
 	"errors"
+	"sync"
 	"sync/atomic"
 )
 
@@ -42,6 +43,7 @@ func (r *ringBuffer[T]) Read() (T, error) {
 	}
 
 	v := r.buf[r.r]
+	r.buf[r.r] = t
 	r.r++
 	if r.r == r.size {
 		r.r = 0
@@ -121,6 +123,12 @@ func (r *ringBuffer[T]) Len() int {
 	return r.size - r.r + r.w
 }
 
+// Release 仅由已停止转发的持有方调用，释放丢弃元素及扩容存储。
+func (r *ringBuffer[T]) Release() {
+	r.buf = nil
+	r.size, r.r, r.w = 0, 0, 0
+}
+
 func (r *ringBuffer[T]) Reset() {
 	r.r = 0
 	r.w = 0
@@ -129,14 +137,23 @@ func (r *ringBuffer[T]) Reset() {
 }
 
 // unboundedChan is an unbounded chan.
-// In is used to write without blocking, which supports multiple writers.
-// and Out is used to read, which supports multiple readers.
-// You can close the in channel if you want.
+// Writers bind a sender so shutdown can wait for accepted input operations.
+// Out supports multiple readers; CloseInput stops writers and drains accepted data.
 type unboundedChan[T, Out any] struct {
 	bufCount int64
-	In       chan<- T       // channel for write
+	In       <-chan T       // occupancy inspection; writes use newSender
 	Out      <-chan Out     // channel for read
 	buffer   *ringBuffer[T] // buffer
+	in       chan T
+
+	_                [128]byte
+	stopped          atomic.Bool
+	stopping         chan struct{}
+	stopOnce         sync.Once
+	closeInputOnce   sync.Once
+	producersMu      sync.Mutex
+	producersChanged *sync.Cond
+	producers        map[*unboundedChanSender[T, Out]]struct{}
 }
 
 // Len 所有待读取的数据的长度
@@ -150,9 +167,7 @@ func (c *unboundedChan[T, Out]) BufLen() int {
 }
 
 // newUnboundedChan creates the unbounded chan.
-// in is used to write without blocking, which supports multiple writers.
-// and out is used to read, which supports multiple readers.
-// You can close the in channel if you want.
+// Each writer binds newSender; Out supports multiple readers.
 func newUnboundedChan[T any](ctx context.Context, initCapacity int) *unboundedChan[T, T] {
 	return newUnboundedChanSize[T](ctx, initCapacity, initCapacity, initCapacity)
 }
@@ -164,8 +179,8 @@ func newUnboundedChanSize[T any](ctx context.Context, initInCapacity, initOutCap
 
 // 可选观测在原有转发 goroutine 内执行，不增加队列或转发 goroutine。
 type unboundedChanHooks[T any] struct {
-	onBuffer func(T)
-	onWrite  func(T, *ringBuffer[T])
+	onBuffer func(T, *ringBuffer[T])
+	onWrite  func(T, *ringBuffer[T], bool)
 	onClose  func(int)
 }
 
@@ -173,16 +188,35 @@ type unboundedChanHooks[T any] struct {
 func newUnboundedChanMapped[T, Out any](ctx context.Context, inCapacity, outCapacity, bufferCapacity int, project func(T) Out, hooks *unboundedChanHooks[T]) *unboundedChan[T, Out] {
 	in := make(chan T, inCapacity)
 	out := make(chan Out, outCapacity)
-	ch := &unboundedChan[T, Out]{In: in, Out: out, buffer: newRingBuffer[T](bufferCapacity)}
+	ch := &unboundedChan[T, Out]{In: in, in: in, Out: out, buffer: newRingBuffer[T](bufferCapacity),
+		stopping: make(chan struct{}), producers: make(map[*unboundedChanSender[T, Out]]struct{}),
+	}
+	ch.producersChanged = sync.NewCond(&ch.producersMu)
 	go process(ctx, in, out, ch, project, hooks)
 	return ch
 }
 
 func process[T, Out any](ctx context.Context, in chan T, out chan Out, ch *unboundedChan[T, Out], project func(T) Out, hooks *unboundedChanHooks[T]) {
 	defer func() {
+		ch.stopProducers()
+		dropped := ch.buffer.Len()
+	collect:
+		for {
+			select {
+			case _, ok := <-in:
+				if !ok {
+					break collect
+				}
+				dropped++
+			default:
+				break collect
+			}
+		}
+		ch.buffer.Release()
+		atomic.StoreInt64(&ch.bufCount, 0)
 		close(out)
-		if hooks != nil {
-			hooks.onClose(len(in) + ch.buffer.Len())
+		if hooks != nil && hooks.onClose != nil {
+			hooks.onClose(dropped)
 		}
 	}()
 	drain := func() {
@@ -193,13 +227,12 @@ func process[T, Out any](ctx context.Context, in chan T, out chan Out, ch *unbou
 				ch.buffer.Pop()
 				atomic.AddInt64(&ch.bufCount, -1)
 				if hooks != nil {
-					hooks.onWrite(value, ch.buffer)
+					hooks.onWrite(value, ch.buffer, false)
 				}
 			case <-ctx.Done():
 				return
 			}
 		}
-		ch.buffer.Reset()
 		atomic.StoreInt64(&ch.bufCount, 0)
 	}
 	for {
@@ -214,20 +247,23 @@ func process[T, Out any](ctx context.Context, in chan T, out chan Out, ch *unbou
 			if atomic.LoadInt64(&ch.bufCount) > 0 {
 				ch.buffer.Write(val)
 				atomic.AddInt64(&ch.bufCount, 1)
+				if hooks != nil {
+					hooks.onBuffer(val, ch.buffer)
+				}
 			} else {
 				select {
 				case out <- project(val):
 					if hooks != nil {
-						hooks.onWrite(val, ch.buffer)
+						hooks.onWrite(val, ch.buffer, true)
 					}
 					continue
 				default:
 				}
-				if hooks != nil {
-					hooks.onBuffer(val)
-				}
 				ch.buffer.Write(val)
 				atomic.AddInt64(&ch.bufCount, 1)
+				if hooks != nil {
+					hooks.onBuffer(val, ch.buffer)
+				}
 			}
 			for !ch.buffer.IsEmpty() {
 				value := ch.buffer.Peek()
@@ -241,11 +277,14 @@ func process[T, Out any](ctx context.Context, in chan T, out chan Out, ch *unbou
 					}
 					ch.buffer.Write(val)
 					atomic.AddInt64(&ch.bufCount, 1)
+					if hooks != nil {
+						hooks.onBuffer(val, ch.buffer)
+					}
 				case out <- project(value):
 					ch.buffer.Pop()
 					atomic.AddInt64(&ch.bufCount, -1)
 					if hooks != nil {
-						hooks.onWrite(value, ch.buffer)
+						hooks.onWrite(value, ch.buffer, false)
 					}
 					if ch.buffer.IsEmpty() && ch.buffer.size > ch.buffer.initialSize {
 						ch.buffer.Reset()

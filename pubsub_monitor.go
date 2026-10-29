@@ -112,19 +112,17 @@ type monitoredSubscription struct {
 }
 
 type pubSubMonitor struct {
-	options        PubSubMonitorOptions
-	queue          *pubSubMonitorQueue
-	messages       *unboundedChan[Message, Message]
-	mu             sync.Mutex
-	subscriptions  map[*monitoredSubscription]struct{}
-	stats          PubSubStats
-	ctx            context.Context
-	defaultReceive func(Message)
+	options       PubSubMonitorOptions
+	queue         *pubSubMonitorQueue
+	messages      *unboundedChan[Message, Message]
+	mu            sync.Mutex
+	subscriptions map[*monitoredSubscription]struct{}
+	stats         PubSubStats
 }
 
 func newPubSubMonitor(ctx context.Context, initialCapacity int) *pubSubMonitor {
 	options, enabled := ctx.Value(pubSubMonitorContextKey{}).(PubSubMonitorOptions)
-	m := &pubSubMonitor{options: DefaultPubSubMonitorOptions(), ctx: ctx}
+	m := &pubSubMonitor{options: DefaultPubSubMonitorOptions()}
 	if !enabled {
 		m.messages = newUnboundedChan[Message](ctx, initialCapacity)
 		return m
@@ -257,32 +255,14 @@ func (m *pubSubMonitor) observeRetry(command, channel string) {
 	m.emit(PubSubEvent{Kind: PubSubRetry, Command: command, Channel: channel})
 }
 
-func (m *pubSubMonitor) forward(ctx context.Context, message Message) {
-	if ctx.Err() != nil {
-		return
-	}
-	in := m.messages.In
-	select {
-	case in <- message:
-		return
-	default:
-	}
-	select {
-	case in <- message:
-	case <-ctx.Done():
-	}
-}
-
 // 在接收任务初始化时选择入口，消息路径不重复判断是否启用观测。
 func (m *pubSubMonitor) onReceive(ctx context.Context) (func(Message), func()) {
 	if m.queue != nil {
 		sender := m.queue.newSender(ctx)
 		return func(message Message) { sender.push(message) }, sender.release
 	}
-	if ctx == m.ctx {
-		return m.defaultReceive, func() {}
-	}
-	return func(message Message) { m.forward(ctx, message) }, func() {}
+	sender := m.messages.newSender(ctx)
+	return func(message Message) { sender.send(message) }, sender.release
 }
 
 func (m *pubSubMonitor) channel() <-chan Message {

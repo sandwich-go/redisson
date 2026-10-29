@@ -62,8 +62,9 @@ collected. `WithPubSubMonitoring` explicitly enables observation for that PubSub
 Both modes reuse `unboundedChan`, keeping its input, ring and output buffering
 without an additional forwarding goroutine.
 Receive handlers bind their state once. Each serialized receive task publishes its
-own byte total; snapshots aggregate active tasks and completed totals. Completion
-reclaims the task's observation state. Admission uses a nonblocking fast path while
+own byte total and retains its input head timestamp. Snapshots aggregate source
+records and completed totals. A completed source remains observable until its
+admitted input is handed off; handoff or queue shutdown reclaims its state. Admission uses a nonblocking fast path while
 space is available and a cancelable wait when full. Per-message timestamps remain exact.
 `DefaultPubSubMonitorOptions` provides `z.MonoOffset()` and no-op callbacks;
 individual fields can be overridden. Callbacks must return quickly.
@@ -72,13 +73,17 @@ Use the optional `PubSubObserver.PubSubStats` interface for queue and subscripti
 snapshots. `Enabled=false` means readings were not collected. Existing queue
 implementations and buffering stay unchanged, and no extra Redis client or
 connection is created. `PubSubChanSize` controls both modes' input and output buffers.
-Queue depth, string bytes and oldest age include unread messages in `Out`; these
-are concurrent snapshots. `OnDequeue` measures admission to the `Out` buffer,
+Queue depth, string bytes and oldest age cover input, forwarding handoffs, the
+ring buffer, and unread messages in `Out`. Zero timestamps remain valid. Concurrent
+snapshots conservatively include admissions and handoffs in progress. `OnDequeue` measures admission to the `Out` buffer,
 excluding the wait for the consumer to read it. Wait callbacks sample one in 64
 messages by default; set `DequeueSampleEvery: 1` for every message. Depth, bytes,
 oldest age and subscription events remain unsampled. Histogram sample counts do
 not represent message counts. On close, `Dropped` counts only
-messages not forwarded to `Out`; buffered output remains readable.
+messages not forwarded to `Out`; buffered output remains readable. Shutdown first
+stops new admissions and waits for entered send operations, then clears discarded
+input references and releases expanded ring storage. The close event follows
+cleanup, so retaining a closed PubSub for diagnostics retains no discarded payloads.
 ACKs do not establish cache readiness or repair missing notifications. Existing
 rueidis context hooks and their return values are preserved. `ReceiveReturns`
 includes internal retries; `Retries` counts the shard worker's explicit retries.

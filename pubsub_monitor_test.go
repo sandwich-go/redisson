@@ -299,51 +299,51 @@ func TestPubSubMonitorSenderReuseKeepsFullBytes(t *testing.T) {
 	}
 }
 
-type pubSubDoneSignalContext struct {
+type pubSubErrCheckpointContext struct {
 	context.Context
-	entered chan struct{}
+	checked chan struct{}
+	resume  chan struct{}
 }
 
-func (c pubSubDoneSignalContext) Done() <-chan struct{} {
-	select {
-	case c.entered <- struct{}{}:
-	default:
-	}
-	return c.Context.Done()
+func (c pubSubErrCheckpointContext) Err() error {
+	err := c.Context.Err()
+	close(c.checked)
+	<-c.resume
+	return err
 }
 
 func TestPubSubMonitorDefaultFastPathCancellation(t *testing.T) {
 	input := make(chan Message, 1)
 	first := Message{Message: "first"}
 	input <- first
-	monitor := &pubSubMonitor{messages: &unboundedChan[Message, Message]{In: input}}
-	ctx, cancel := context.WithCancel(context.Background())
+	parent, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	entered := make(chan struct{}, 1)
-	done := make(chan struct{})
-	go func() {
-		monitor.forward(pubSubDoneSignalContext{Context: ctx, entered: entered}, Message{Message: "canceled"})
-		close(done)
-	}()
+	checked, resume := make(chan struct{}), make(chan struct{})
+	fixture := &unboundedChan[Message, Message]{In: input, in: input, stopping: make(chan struct{}), producers: make(map[*unboundedChanSender[Message, Message]]struct{})}
+	fixture.producersChanged = sync.NewCond(&fixture.producersMu)
+	sender := fixture.newSender(pubSubErrCheckpointContext{Context: parent, checked: checked, resume: resume})
+	defer sender.release()
+	result := make(chan bool, 1)
+	go func() { result <- sender.send(Message{Message: "canceled"}) }()
 	timer := time.NewTimer(5 * time.Second)
 	defer timer.Stop()
 	select {
-	case <-entered:
+	case <-checked:
 	case <-timer.C:
-		t.Fatal("full input did not enter the cancelable wait")
+		t.Fatal("sender did not check cancellation")
 	}
 	cancel()
+	close(resume)
 	select {
-	case <-done:
+	case accepted := <-result:
+		if accepted {
+			t.Fatal("full input accepted a canceled send")
+		}
 	case <-timer.C:
 		t.Fatal("default receiver did not stop waiting on cancellation")
 	}
 	if len(input) != 1 || <-input != first {
 		t.Fatal("canceled wait changed buffered input")
-	}
-	monitor.forward(ctx, Message{Message: "already canceled"})
-	if len(input) != 0 {
-		t.Fatal("default fast path accepted data after cancellation")
 	}
 }
 
@@ -765,8 +765,10 @@ func BenchmarkPubSubQueueMonitoring(b *testing.B) {
 			b.ReportAllocs()
 			if !observed {
 				queue := newUnboundedChan[Message](ctx, 1024)
+				sender := queue.newSender(ctx)
+				defer sender.release()
 				for b.Loop() {
-					queue.In <- message
+					sender.send(message)
 					<-queue.Out
 				}
 				return
