@@ -63,12 +63,18 @@ type PubSubEvent struct {
 }
 
 const (
-	PubSubSubscribeAck   = "subscribe_ack"
+	// PubSubSubscribeAck 表示 Redis 已确认订阅频道或 pattern，不代表业务缓存已校正。
+	PubSubSubscribeAck = "subscribe_ack"
+	// PubSubUnsubscribeAck 表示 Redis 已确认取消订阅频道或 pattern。
 	PubSubUnsubscribeAck = "unsubscribe_ack"
-	PubSubReceiveReturn  = "receive_return"
-	PubSubReceiveError   = "receive_error"
-	PubSubRetry          = "retry"
-	PubSubClosed         = "closed"
+	// PubSubReceiveReturn 表示底层一次 Receive 返回并清空对应 ACK，之后仍可能内部重试。
+	PubSubReceiveReturn = "receive_return"
+	// PubSubReceiveError 表示接收任务最终因错误结束，且 context 尚未取消或超时。
+	PubSubReceiveError = "receive_error"
+	// PubSubRetry 表示分片接收任务准备再次执行 SSUBSCRIBE，不包含 rueidis 内部重试。
+	PubSubRetry = "retry"
+	// PubSubClosed 表示本地接收队列已停止生产者并完成丢弃清理，Dropped 不含 Out 未读消息。
+	PubSubClosed = "closed"
 )
 
 // PubSubStats 是本机观测快照；Enabled 为 false 时，其余读数未被采集。
